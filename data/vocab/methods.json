@@ -1,0 +1,240 @@
+{
+  "_meta": {
+    "vocab": "methods",
+    "version": "0.1.0",
+    "description": "Perturbation methods and actuators, with the valence a given actuator canonically implies.",
+    "valence_policy": [
+      "canonical_valence is the valence the ACTUATOR implies when used as designed, and matches the SCHEMA.md 3.4 enum (activation, inhibition, ablation, unclear).",
+      "It is a prior, not a verdict. A paper's actual valence field must come from the paper. Example: hM4Di in a neuron whose output is itself inhibitory produces net downstream activation; the record still says inhibition for the perturbation and the circuit interpretation lives elsewhere.",
+      "unclear is used wherever the net effect on the targeted population genuinely depends on context: electrical stimulation, lesion, tetanus toxin, conditional knockout, conditional overexpression and local pharmacology."
+    ],
+    "method_enum_note": "'method' values are the SCHEMA.md 3.4 enum: optogenetic, chemogenetic, electrical_stimulation, lesion, genetic_ablation, conditional_knockout, conditional_overexpression, local_pharmacology, other."
+  },
+  "entries": {
+    "optogenetic_unspecified": {
+      "id": "optogenetic_unspecified",
+      "method": "optogenetic",
+      "actuator": null,
+      "ligand": null,
+      "canonical_valence": "unclear",
+      "synonyms": ["optogenetic", "optogenetics", "optogenetically", "optogenetic manipulation", "optogenetic approach", "opsin", "light-evoked manipulation", "fiber photometry with optogenetics"],
+      "notes": "For papers that say only 'optogenetic' without naming the opsin. Valence is unclear BY CONSTRUCTION here: the actuator decides it, and we do not know the actuator. Also the generic-term block used for literature search."
+    },
+    "chemogenetic_unspecified": {
+      "id": "chemogenetic_unspecified",
+      "method": "chemogenetic",
+      "actuator": null,
+      "ligand": "CNO",
+      "canonical_valence": "unclear",
+      "synonyms": ["chemogenetic", "chemogenetics", "chemogenetically", "chemogenetic manipulation", "DREADD", "DREADDs", "designer receptor exclusively activated by designer drugs", "CNO", "clozapine-N-oxide", "deschloroclozapine", "DCZ", "compound 21", "C21"],
+      "notes": "For papers that say only 'chemogenetic'/'DREADD' without naming the receptor. Valence unclear by construction, as above."
+    },
+    "ablation_unspecified": {
+      "id": "ablation_unspecified",
+      "method": "genetic_ablation",
+      "actuator": null,
+      "ligand": null,
+      "canonical_valence": "ablation",
+      "synonyms": ["ablation", "neuronal ablation", "selective ablation", "targeted ablation", "cell-type-specific ablation", "ablation of neurons", "neuron-specific ablation", "cell death induction"],
+      "notes": "For papers reporting ablation without naming the construct. Valence is ablation because cell loss is the stated intent, but the construct and its completeness are unknown."
+    },
+    "opto_chr2": {
+      "id": "opto_chr2",
+      "method": "optogenetic",
+      "actuator": "ChR2",
+      "ligand": null,
+      "canonical_valence": "activation",
+      "synonyms": ["ChR2", "channelrhodopsin", "channelrhodopsin-2", "ChR2(H134R)", "ChETA", "optogenetic activation", "optogenetic stimulation", "photostimulation", "blue light stimulation", "AAV-ChR2", "ChR2-EYFP"],
+      "notes": "Blue-light cation channel. Includes faster/high-photocurrent variants. Frequency, pulse width and power must be captured; high-frequency drive can depolarisation-block, which is the main way ChR2 produces a non-activating effect."
+    },
+    "opto_chrimson": {
+      "id": "opto_chrimson",
+      "method": "optogenetic",
+      "actuator": "ChrimsonR",
+      "ligand": null,
+      "canonical_valence": "activation",
+      "synonyms": ["Chrimson", "ChrimsonR", "red-shifted channelrhodopsin", "CsChrimson", "red light optogenetic activation"],
+      "notes": "Red-shifted excitatory opsin."
+    },
+    "opto_enphr": {
+      "id": "opto_enphr",
+      "method": "optogenetic",
+      "actuator": "eNpHR",
+      "ligand": null,
+      "canonical_valence": "inhibition",
+      "synonyms": ["eNpHR", "eNpHR3.0", "halorhodopsin", "NpHR", "halorhodopsin-mediated inhibition", "optogenetic silencing with halorhodopsin", "yellow light inhibition"],
+      "notes": "Chloride pump. Prolonged use shifts the chloride gradient and can paradoxically increase excitability on light-off rebound."
+    },
+    "opto_archt": {
+      "id": "opto_archt",
+      "method": "optogenetic",
+      "actuator": "ArchT",
+      "ligand": null,
+      "canonical_valence": "inhibition",
+      "synonyms": ["ArchT", "archaerhodopsin", "Arch", "eArch3.0", "ArchT-mediated silencing", "proton pump optogenetic inhibition"],
+      "notes": "Proton pump. Alkalinises terminals and can increase spontaneous release, a known confound for terminal inhibition."
+    },
+    "opto_gtacr": {
+      "id": "opto_gtacr",
+      "method": "optogenetic",
+      "actuator": "GtACR",
+      "ligand": null,
+      "canonical_valence": "inhibition",
+      "synonyms": ["GtACR", "GtACR1", "GtACR2", "stGtACR2", "anion channelrhodopsin", "ACR", "chloride-conducting channelrhodopsin", "optogenetic inhibition with GtACR"],
+      "notes": "Anion channelrhodopsin. At axon terminals GtACRs can be excitatory because of the local chloride gradient."
+    },
+    "chemo_hm3dq": {
+      "id": "chemo_hm3dq",
+      "method": "chemogenetic",
+      "actuator": "hM3Dq",
+      "ligand": "CNO",
+      "canonical_valence": "activation",
+      "synonyms": ["hM3Dq", "hM3D(Gq)", "Gq-DREADD", "Gq DREADD", "excitatory DREADD", "DREADD activation", "chemogenetic activation", "AAV-hM3Dq", "CNO-induced activation"],
+      "notes": "Ligands in use are CNO, deschloroclozapine (DCZ) and compound 21 (C21); CNO back-metabolises to clozapine, so a ligand-in-non-expressing control is required for the record to be interpretable."
+    },
+    "chemo_hm4di": {
+      "id": "chemo_hm4di",
+      "method": "chemogenetic",
+      "actuator": "hM4Di",
+      "ligand": "CNO",
+      "canonical_valence": "inhibition",
+      "synonyms": ["hM4Di", "hM4D(Gi)", "Gi-DREADD", "Gi DREADD", "inhibitory DREADD", "DREADD inhibition", "chemogenetic inhibition", "chemogenetic silencing", "AAV-hM4Di", "CNO-induced inhibition"],
+      "notes": "Gi-coupled; also suppresses terminal release independently of somatic silencing. Same ligand caveats as hM3Dq."
+    },
+    "chemo_kord": {
+      "id": "chemo_kord",
+      "method": "chemogenetic",
+      "actuator": "KORD",
+      "ligand": "salvinorin B",
+      "canonical_valence": "inhibition",
+      "synonyms": ["KORD", "kappa opioid receptor DREADD", "SalB-activated DREADD", "salvinorin B DREADD", "KOR-DREADD"],
+      "notes": "Gi-coupled, orthogonal ligand to CNO so it is used for sequential bidirectional designs."
+    },
+    "chemo_gq_other": {
+      "id": "chemo_gq_other",
+      "method": "chemogenetic",
+      "actuator": "Gq-DREADD (unspecified)",
+      "ligand": "CNO",
+      "canonical_valence": "activation",
+      "synonyms": ["Gq-coupled DREADD", "stimulatory DREADD", "Gq designer receptor", "DREADD Gq"],
+      "notes": "Bucket for papers that name only the coupling, not the receptor variant."
+    },
+    "chemo_psam": {
+      "id": "chemo_psam",
+      "method": "chemogenetic",
+      "actuator": "PSAM-GlyR",
+      "ligand": "PSEM",
+      "canonical_valence": "inhibition",
+      "synonyms": ["PSAM", "PSAM-GlyR", "PSEM308", "PSEM89S", "pharmacologically selective actuator module", "chemogenetic chloride channel"],
+      "notes": "Ligand-gated chloride channel; older literature."
+    },
+    "ablation_casp3": {
+      "id": "ablation_casp3",
+      "method": "genetic_ablation",
+      "actuator": "Casp3",
+      "ligand": null,
+      "canonical_valence": "ablation",
+      "synonyms": ["Casp3", "caspase-3", "AAV-Casp3", "AAV-flex-Casp3", "caspase-3 mediated ablation", "Casp3-TEVp", "caspase ablation"],
+      "notes": "AAV-flex-Casp3-TEVp is the usual Cre-dependent construct. Ablation is partial and must be quantified in the paper to be usable."
+    },
+    "ablation_dta": {
+      "id": "ablation_dta",
+      "method": "genetic_ablation",
+      "actuator": "DTA",
+      "ligand": null,
+      "canonical_valence": "ablation",
+      "synonyms": ["DTA", "diphtheria toxin A", "diphtheria toxin fragment A", "Rosa26-DTA", "iDTA", "DTA-mediated ablation", "genetic ablation with DTA"],
+      "notes": "Cell-autonomous, usually constitutive from the time of Cre expression, so developmental compensation is a real confound for chronic phenotypes."
+    },
+    "ablation_dtr": {
+      "id": "ablation_dtr",
+      "method": "genetic_ablation",
+      "actuator": "DTR",
+      "ligand": "diphtheria toxin",
+      "canonical_valence": "ablation",
+      "synonyms": ["DTR", "diphtheria toxin receptor", "iDTR", "human HB-EGF receptor", "diphtheria toxin-induced ablation", "DT injection", "inducible ablation with diphtheria toxin"],
+      "notes": "Timed version of DTA; the inducing ligand is diphtheria toxin itself."
+    },
+    "ablation_toxin_chemical": {
+      "id": "ablation_toxin_chemical",
+      "method": "lesion",
+      "actuator": "neurotoxin",
+      "ligand": null,
+      "canonical_valence": "ablation",
+      "synonyms": ["monosodium glutamate lesion", "MSG lesion", "gold thioglucose", "6-OHDA", "6-hydroxydopamine", "ibotenic acid", "kainic acid lesion", "NMDA lesion", "saporin", "leptin-saporin", "orexin-saporin", "excitotoxic lesion", "chemical lesion", "neurotoxic lesion"],
+      "notes": "Chemically specific only in a loose sense; selectivity claims must come from the paper's own histology. Classed as lesion with ablation valence because cell loss is the intended effect."
+    },
+    "lesion_electrolytic": {
+      "id": "lesion_electrolytic",
+      "method": "lesion",
+      "actuator": "electrolytic/mechanical lesion",
+      "ligand": null,
+      "canonical_valence": "unclear",
+      "synonyms": ["electrolytic lesion", "radiofrequency lesion", "thermal lesion", "knife cut", "surgical lesion", "VMH lesion", "hypothalamic lesion", "deafferentation", "transection", "ablation of the hypothalamus"],
+      "notes": "Destroys cell bodies, passing fibres and local glia indiscriminately, so the net effect on any one population is not determinable: valence unclear even though tissue is destroyed."
+    },
+    "electrical_stimulation": {
+      "id": "electrical_stimulation",
+      "method": "electrical_stimulation",
+      "actuator": "electrode",
+      "ligand": null,
+      "canonical_valence": "unclear",
+      "synonyms": ["electrical stimulation", "deep brain stimulation", "DBS", "electrical microstimulation", "high-frequency stimulation", "intracranial self-stimulation", "stimulating electrode", "hypothalamic stimulation", "electrode stimulation"],
+      "notes": "Activates cell bodies, afferents and fibres of passage; high-frequency DBS can functionally inhibit. Valence genuinely unclear."
+    },
+    "tetx": {
+      "id": "tetx",
+      "method": "other",
+      "actuator": "TeTx",
+      "ligand": null,
+      "canonical_valence": "unclear",
+      "synonyms": ["TeTx", "tetanus toxin light chain", "TeNT", "TetTox", "tetanus neurotoxin", "synaptic silencing with tetanus toxin", "TeLC"],
+      "notes": "Blocks vesicular release while leaving the cell electrically alive and peptide release partly intact (peptides use large dense-core vesicles with different SNARE dependence). Net effect on the population's output is therefore unclear, not a clean inhibition."
+    },
+    "conditional_knockout": {
+      "id": "conditional_knockout",
+      "method": "conditional_knockout",
+      "actuator": null,
+      "ligand": null,
+      "canonical_valence": "unclear",
+      "synonyms": ["conditional knockout", "conditional deletion", "cKO", "floxed", "flox/flox", "Cre-lox deletion", "cell-type-specific knockout", "neuron-specific deletion", "tissue-specific knockout", "conditional gene deletion", "AAV-Cre mediated deletion", "CRISPR knockout in vivo", "shRNA knockdown", "siRNA knockdown", "gene silencing"],
+      "notes": "Deleting a gene can raise or lower the excitability and output of the population depending on the gene, so valence is unclear by default and must be taken from the paper's own functional data if any."
+    },
+    "conditional_overexpression": {
+      "id": "conditional_overexpression",
+      "method": "conditional_overexpression",
+      "actuator": null,
+      "ligand": null,
+      "canonical_valence": "unclear",
+      "synonyms": ["conditional overexpression", "overexpression", "gain-of-function", "constitutively active", "AAV-mediated overexpression", "transgenic overexpression", "ectopic expression", "rescue expression", "IKKbeta constitutively active", "dominant negative"],
+      "notes": "Same reasoning as conditional_knockout."
+    },
+    "local_pharmacology": {
+      "id": "local_pharmacology",
+      "method": "local_pharmacology",
+      "actuator": null,
+      "ligand": null,
+      "canonical_valence": "unclear",
+      "synonyms": ["intracerebroventricular injection", "ICV injection", "i.c.v.", "intrahypothalamic injection", "microinjection", "local infusion", "cannula infusion", "reverse microdialysis", "intra-ARC injection", "intra-PVN injection", "muscimol", "bicuculline", "lidocaine inactivation", "pharmacological inhibition in vivo", "agonist microinjection", "antagonist microinjection"],
+      "notes": "Receptor-level, not cell-type level, and the affected cell population is defined only by diffusion. Valence unclear; also frequently fails the population-specificity requirement for a Tier A record."
+    },
+    "opto_terminal": {
+      "id": "opto_terminal",
+      "method": "optogenetic",
+      "actuator": "projection-targeted opsin",
+      "ligand": null,
+      "canonical_valence": "unclear",
+      "synonyms": ["terminal stimulation", "axon terminal photostimulation", "projection-specific optogenetics", "pathway-specific stimulation", "retrograde AAV optogenetics", "AAVretro", "CAV-2 Cre", "projection-targeted manipulation"],
+      "notes": "Bucket for projection-specific designs; the opsin identity determines the real valence, so record both this and the opsin entry. Flagged unclear because terminal manipulation can antidromically drive or inhibit the soma population."
+    },
+    "thermogenetic": {
+      "id": "thermogenetic",
+      "method": "other",
+      "actuator": "TRPV1/capsaicin or magnetothermal",
+      "ligand": "capsaicin",
+      "canonical_valence": "activation",
+      "synonyms": ["TRPV1 chemogenetics", "capsaicin-induced activation", "magnetogenetics", "magnetothermal stimulation", "Magneto", "thermogenetic activation", "sonogenetics", "ultrasound neuromodulation"],
+      "notes": "Heterogeneous and methodologically contested family (magnetogenetics in particular). Grouped as activation because that is the intended use, with low curation certainty; treat records from here sceptically."
+    }
+  }
+}

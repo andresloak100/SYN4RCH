@@ -1,0 +1,44 @@
+# --- harvest and intermediate layers are not version controlled -----------
+# data/raw/ is append-only machine output; data/interim/ is reproducible from
+# it. Both can be large and neither is citable evidence on its own. The
+# .gitkeep markers stay tracked so the layer structure survives a clone.
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+
+# Derived layers: regenerate, never cite (SCHEMA.md 4).
+data/inferred/*
+!data/inferred/.gitkeep
+data/predictions/*
+!data/predictions/.gitkeep
+
+# data/curated/ and data/vocab/ ARE tracked in full: they are the dataset and
+# its controlled vocabularies. Nothing below may exclude them.
+!data/curated/
+!data/curated/**
+!data/vocab/
+!data/vocab/**
+
+# Generated reports (the QC CLI writes here); keep the directory.
+reports/*
+!reports/.gitkeep
+
+# --- python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- os / editor -----------------------------------------------------------
+.DS_Store
+*.swp
+.idea/
+.vscode/

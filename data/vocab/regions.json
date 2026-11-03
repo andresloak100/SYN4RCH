@@ -1,0 +1,176 @@
+{
+  "_meta": {
+    "vocab": "regions",
+    "version": "0.1.0",
+    "description": "Hypothalamic (and immediately adjacent) brain regions used by SYN4RCH. 'synonyms' exist for string matching only and carry no anatomical claim.",
+    "allen_id_policy": "allen_id is the numeric Allen Mouse Brain Atlas / CCFv3 structure id. It is set ONLY where the curator is certain of the exact integer. The curator was not certain of ANY of them from memory, so every allen_id in this file is null. A wrong atlas id is worse than a missing one; these are to be filled from a downloaded copy of the Allen structure graph, not from recall. See docs/QUERIES.md."
+  },
+  "entries": {
+    "hy": {
+      "id": "hy",
+      "label": "Hypothalamus",
+      "abbreviation": "HY",
+      "synonyms": ["hypothalamus", "hypothalamic", "diencephalic hypothalamus"],
+      "allen_id": null
+    },
+    "mbh": {
+      "id": "mbh",
+      "label": "Mediobasal hypothalamus",
+      "abbreviation": "MBH",
+      "synonyms": ["mediobasal hypothalamus", "medial basal hypothalamus", "mediobasal hypothalamic", "MBH"],
+      "allen_id": null,
+      "notes": "Operational/experimental term (ARC + VMH + median eminence), not a single Allen structure."
+    },
+    "arc": {
+      "id": "arc",
+      "label": "Arcuate nucleus of the hypothalamus",
+      "abbreviation": "ARC",
+      "synonyms": ["arcuate nucleus", "arcuate hypothalamic nucleus", "nucleus arcuatus", "ARC", "ARH", "infundibular nucleus", "arcuate nucleus of the hypothalamus"],
+      "allen_id": null,
+      "notes": "Allen abbreviation is ARH; the physiology literature overwhelmingly writes ARC."
+    },
+    "vmh": {
+      "id": "vmh",
+      "label": "Ventromedial hypothalamic nucleus",
+      "abbreviation": "VMH",
+      "synonyms": ["ventromedial hypothalamus", "ventromedial hypothalamic nucleus", "ventromedial nucleus of the hypothalamus", "VMH", "VMN"],
+      "allen_id": null
+    },
+    "dmh": {
+      "id": "dmh",
+      "label": "Dorsomedial hypothalamic nucleus",
+      "abbreviation": "DMH",
+      "synonyms": ["dorsomedial hypothalamus", "dorsomedial hypothalamic nucleus", "dorsomedial nucleus of the hypothalamus", "DMH"],
+      "allen_id": null
+    },
+    "pvh": {
+      "id": "pvh",
+      "label": "Paraventricular nucleus of the hypothalamus",
+      "abbreviation": "PVH",
+      "synonyms": ["paraventricular nucleus of the hypothalamus", "paraventricular hypothalamic nucleus", "hypothalamic paraventricular nucleus", "PVH", "PVN", "PaV"],
+      "allen_id": null,
+      "notes": "PVN is ambiguous in the wider literature (thalamic PVT also abbreviated PVN/PV); screening must check the hypothalamic context."
+    },
+    "lha": {
+      "id": "lha",
+      "label": "Lateral hypothalamic area",
+      "abbreviation": "LHA",
+      "synonyms": ["lateral hypothalamus", "lateral hypothalamic area", "LHA"],
+      "allen_id": null,
+      "notes": "The abbreviation 'LH' collides with luteinizing hormone; never resolve bare 'LH' from text to this region."
+    },
+    "poa": {
+      "id": "poa",
+      "label": "Preoptic area",
+      "abbreviation": "POA",
+      "synonyms": ["preoptic area", "preoptic region", "POA", "preoptic hypothalamus"],
+      "allen_id": null
+    },
+    "mpo": {
+      "id": "mpo",
+      "label": "Medial preoptic area / nucleus",
+      "abbreviation": "MPO",
+      "synonyms": ["medial preoptic area", "medial preoptic nucleus", "MPA", "MPO", "MPN"],
+      "allen_id": null
+    },
+    "vmpo": {
+      "id": "vmpo",
+      "label": "Ventromedial preoptic nucleus",
+      "abbreviation": "VMPO",
+      "synonyms": ["ventromedial preoptic", "ventromedial preoptic nucleus", "VMPO"],
+      "allen_id": null
+    },
+    "mnpo": {
+      "id": "mnpo",
+      "label": "Median preoptic nucleus",
+      "abbreviation": "MnPO",
+      "synonyms": ["median preoptic nucleus", "median preoptic area", "MnPO"],
+      "allen_id": null
+    },
+    "lpo": {
+      "id": "lpo",
+      "label": "Lateral preoptic area",
+      "abbreviation": "LPO",
+      "synonyms": ["lateral preoptic area", "lateral preoptic nucleus", "LPO"],
+      "allen_id": null
+    },
+    "scn": {
+      "id": "scn",
+      "label": "Suprachiasmatic nucleus",
+      "abbreviation": "SCN",
+      "synonyms": ["suprachiasmatic nucleus", "suprachiasmatic nuclei", "SCN", "SCH"],
+      "allen_id": null
+    },
+    "tmn": {
+      "id": "tmn",
+      "label": "Tuberomammillary nucleus",
+      "abbreviation": "TMN",
+      "synonyms": ["tuberomammillary nucleus", "tuberomamillary nucleus", "TMN", "TM nucleus"],
+      "allen_id": null
+    },
+    "pmv": {
+      "id": "pmv",
+      "label": "Ventral premammillary nucleus",
+      "abbreviation": "PMv",
+      "synonyms": ["ventral premammillary nucleus", "premammillary nucleus", "PMv", "PMV"],
+      "allen_id": null
+    },
+    "avpv": {
+      "id": "avpv",
+      "label": "Anteroventral periventricular nucleus",
+      "abbreviation": "AVPV",
+      "synonyms": ["anteroventral periventricular nucleus", "AVPV", "rostral periventricular area of the third ventricle", "RP3V"],
+      "allen_id": null
+    },
+    "pvp": {
+      "id": "pvp",
+      "label": "Periventricular hypothalamic nucleus",
+      "abbreviation": "PVa/PVp",
+      "synonyms": ["periventricular hypothalamic nucleus", "periventricular nucleus", "periventricular hypothalamus"],
+      "allen_id": null
+    },
+    "sch_on": {
+      "id": "sch_on",
+      "label": "Supraoptic nucleus",
+      "abbreviation": "SON",
+      "synonyms": ["supraoptic nucleus", "SON", "supraoptic"],
+      "allen_id": null
+    },
+    "me": {
+      "id": "me",
+      "label": "Median eminence",
+      "abbreviation": "ME",
+      "synonyms": ["median eminence", "ME"],
+      "allen_id": null
+    },
+    "zi": {
+      "id": "zi",
+      "label": "Zona incerta",
+      "abbreviation": "ZI",
+      "synonyms": ["zona incerta", "ZI", "incertal"],
+      "allen_id": null,
+      "notes": "Subthalamic, not strictly hypothalamic; included because the perturbation literature treats it alongside LHA."
+    },
+    "ah": {
+      "id": "ah",
+      "label": "Anterior hypothalamic nucleus / area",
+      "abbreviation": "AHN",
+      "synonyms": ["anterior hypothalamic nucleus", "anterior hypothalamic area", "anterior hypothalamus", "AHN", "AHA"],
+      "allen_id": null
+    },
+    "ph": {
+      "id": "ph",
+      "label": "Posterior hypothalamic nucleus",
+      "abbreviation": "PH",
+      "synonyms": ["posterior hypothalamic nucleus", "posterior hypothalamus", "PH nucleus"],
+      "allen_id": null
+    },
+    "pefa": {
+      "id": "pefa",
+      "label": "Perifornical area",
+      "abbreviation": "PeFA",
+      "synonyms": ["perifornical area", "perifornical hypothalamus", "PeFA", "perifornical"],
+      "allen_id": null
+    }
+  }
+}

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "syn4rch"
+version = "0.1.0"
+description = "Curated hypothalamic neuronal perturbation -> systemic physiology dataset, with its schema and QC core"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+readme = "README.md"
+
+# No runtime dependencies, deliberately. The schema and QC layers use the
+# Python standard library only so they run on any 3.10+ interpreter with no
+# install step and no network. See docs/DECISIONS.md (D-001).
+dependencies = []
+
+[project.optional-dependencies]
+# Reserved for later, strictly optional layers (modelling, KG). Nothing in
+# src/syn4rch/schema or src/syn4rch/qc may ever require these.
+dev = []
+
+[project.scripts]
+syn4rch-qc = "syn4rch.qc.run:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
