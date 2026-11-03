@@ -20,9 +20,13 @@ data/predictions/*
 !data/vocab/
 !data/vocab/**
 
-# Generated reports (the QC CLI writes here); keep the directory.
+# Generated reports. The markdown reports ARE tracked: they are the project's
+# deliverables and the only durable record of a run, because data/raw/ and
+# data/interim/ are not version controlled (see DECISIONS.md D-016). Anything
+# else written here (dumps, figures, large tables) stays untracked.
 reports/*
 !reports/.gitkeep
+!reports/*.md
 
 # --- python ----------------------------------------------------------------
 __pycache__/

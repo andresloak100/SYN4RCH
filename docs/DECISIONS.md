@@ -230,3 +230,71 @@ molar mass), it will not catch a value recorded in the wrong one of two
 declared units, and it never converts or rewrites anything. Vocabulary units
 that are free prose (`"UCP1 protein a.u."`) are effectively unverifiable.
 A dimensional unit system is out of scope for v0.1.0.
+
+---
+
+## D-015 - Verbatim `support_quote` verification is now mechanised
+
+**Decision.** `src/syn4rch/curate/verify.py` checks that `support_quote`
+occurs as a substring of the paper's retrieved full text, under one
+normalisation: whitespace runs collapse to a single space, and unicode dashes,
+quotation marks and non-breaking spaces fold to ASCII. No case folding, no
+stemming, no fuzzy matching. A proposal that fails is rejected and logged, and
+is never repaired.
+
+**Supersedes.** The bullet "Semantic verification of `support_quote`" in
+D-013, but only in part. D-013 said code "cannot check that the quote is
+verbatim from the source". That was true when no source text was held locally.
+It is no longer true: stage 3 of `docs/CURATION_PROTOCOL.md` writes
+open-access full text to `data/raw/fulltext/`, so the source string is on disk
+and the check is a normalised substring test.
+
+**Still deferred, unchanged from D-013.** Code cannot check that the stated
+`direction` follows from the quote, nor that the quote is representative of
+the paper rather than the one sentence that suits a conclusion. Those remain
+reading judgements, and `extraction_method` plus `review_status` are the only
+honest record of whether a human made them.
+
+**Scope limit.** The check applies only to papers whose full text was
+retrieved. Abstract-only candidates cannot yield records at all (SCHEMA.md
+rule 2.5), so there is no unverifiable remainder — a record either has a
+locally held source to check against or it does not exist.
+
+---
+
+## D-016 - Markdown reports are version controlled
+
+**Decision.** `.gitignore` tracks `reports/*.md` while continuing to ignore
+everything else written to `reports/`.
+
+**Why.** `data/raw/` and `data/interim/` are deliberately untracked (they are
+large, and reproducible from the harvest). A reader who clones this repository
+therefore holds the curated dataset and the code, but not the harvest. If the
+reports were also untracked, every measured claim this project makes about its
+own coverage would be absent from the clone and unreproducible by the reader.
+Tracking the reports keeps the claim and its provenance together.
+
+**Cost, knowingly accepted.** A committed report can fall out of date with
+respect to a regenerated dataset. Mitigation: every report states the run
+timestamp and the inputs it was computed from, and is regenerable by a
+committed CLI. A report that cannot be regenerated is a defect.
+
+---
+
+## D-017 - Records are proposed and then gated, never written directly
+
+**Decision.** Nothing writes to `data/curated/records.jsonl` except the gate
+in `src/syn4rch/curate/run.py`. Extraction produces *proposals* in
+`data/interim/`; admission is a separate, deterministic step that runs the
+verbatim check (D-015), then `syn4rch.schema.validate`, then QC.
+
+**Why.** The stage that reads papers is the only stage capable of fabricating
+a record, and it is the stage that cannot be made deterministic. Separating
+proposal from admission means the fallible stage never holds the pen on the
+dataset. Collapsing the two — letting an extractor append directly to the
+curated file — would leave no point at which a fabricated record could be
+caught, and the anti-fabrication rules of SCHEMA.md 2 would be advisory.
+
+**Consequence.** The rejection report is part of the dataset's documentation,
+not a debugging artefact. The ratio of proposals to admitted records is a
+published statistic.

@@ -16,12 +16,21 @@ readme = "README.md"
 dependencies = []
 
 [project.optional-dependencies]
-# Reserved for later, strictly optional layers (modelling, KG). Nothing in
-# src/syn4rch/schema or src/syn4rch/qc may ever require these.
-dev = []
+# Strictly optional layers. The invariant from DECISIONS.md D-001 still holds
+# and is not negotiable: nothing in src/syn4rch/schema, src/syn4rch/qc,
+# src/syn4rch/vocab, src/syn4rch/harvest, src/syn4rch/curate or
+# src/syn4rch/feasibility may import any of these. Only src/syn4rch/models
+# may, and it must guard every such import so that `import syn4rch.models`
+# still succeeds when they are absent.
+models = ["numpy>=1.23", "scikit-learn>=1.1"]
+dev = ["pytest>=7"]
 
 [project.scripts]
 syn4rch-qc = "syn4rch.qc.run:main"
+syn4rch-harvest = "syn4rch.harvest.run:main"
+syn4rch-curate = "syn4rch.curate.run:main"
+syn4rch-feasibility = "syn4rch.feasibility.run:main"
+syn4rch-models = "syn4rch.models.run:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
