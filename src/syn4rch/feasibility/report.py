@@ -1,0 +1,1011 @@
+"""Assembly and Markdown rendering of the Phase 2 feasibility report.
+
+The report answers the five Phase 2 questions in order, from counted records
+only. Three rules govern it:
+
+1. **It opens with the verdict.** :func:`top_line` is one sentence and it is
+   the first thing in the file. A reader who stops there must not be left with
+   a more optimistic impression than a reader who finishes.
+2. **A small corpus is described as small, in that sentence.** Below the floors
+   below, the top line says the dataset is too small and the tables are
+   labelled a census of what exists rather than statistics about a field.
+   Degenerate numbers are suppressed, not formatted: a 1x1 matrix has no
+   meaningful sparsity, and "0% empty" on one cell would read as complete
+   coverage.
+3. **Nothing is estimated.** Every figure is a count, a ratio of counts, or a
+   confidence interval on such a ratio with its method named. No imputation,
+   no projection of how many records curation "should" yield.
+
+Python 3.10 compatible, standard library only.
+"""
+
+import datetime
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Sequence, Tuple
+
+from . import gates as gates_mod
+from .coverage import (
+    EXCLUSION_CODES,
+    CoverageMatrix,
+    build_matrix,
+    exclusion_note,
+    exclusion_reasons,
+)
+from .gates import PairVerdict, TaskVerdict, pair_verdicts, summarize_verdicts
+from .replication import (
+    CONFIDENCE_LEVEL,
+    ReplicationCell,
+    build_replication_cells,
+    summarize_replication,
+)
+from .splits import FoldSet, all_fold_sets
+
+__all__ = [
+    "MAX_GRID_DIM",
+    "MAX_TABLE_ROWS",
+    "MIN_MATRIX_DIM_FOR_SPARSITY",
+    "SMALL_CORPUS_RECORDS",
+    "SMALL_CORPUS_STUDIES",
+    "FeasibilityReport",
+    "build_report",
+    "render_markdown",
+    "top_line",
+]
+
+#: Below this many usable records the corpus is described as too small in the
+#: top line. 30 = 10 x :data:`syn4rch.feasibility.gates.MIN_STUDIES_FEASIBLE`:
+#: beneath it, not even ten tasks could clear the study gate in the best case,
+#: so no distributional claim in this report would have ten points behind it.
+SMALL_CORPUS_RECORDS = 30
+
+#: Below this many distinct studies the corpus is described as too small.
+#: Ten, because :data:`syn4rch.feasibility.gates.MIN_LABS_FEASIBLE` is 2 and
+#: each study appears in one lab: with fewer than ten studies the corpus is a
+#: reading list, and a matrix sparsity computed from it measures which papers
+#: have been curated so far, not which relationships are unstudied.
+SMALL_CORPUS_STUDIES = 10
+
+#: Sparsity is printed only when both axes have at least this many entries. A
+#: 1xN matrix's emptiness is an artefact of its own axes being drawn from the
+#: records that exist.
+MIN_MATRIX_DIM_FOR_SPARSITY = 2
+
+#: The dense grid (with its explicit zeros) is drawn only up to this many rows
+#: and columns; beyond it the grid is unreadable in Markdown and the zeros are
+#: reported as a count instead.
+MAX_GRID_DIM = 12
+
+#: Row cap for the long tables; the remainder is reported as "... N more".
+MAX_TABLE_ROWS = 40
+
+
+@dataclass
+class FeasibilityReport:
+    """Everything the feasibility pass measured."""
+
+    coverage: CoverageMatrix = field(default_factory=CoverageMatrix)
+    cells: List[ReplicationCell] = field(default_factory=list)
+    verdicts: List[TaskVerdict] = field(default_factory=list)
+    pairs: List[PairVerdict] = field(default_factory=list)
+    fold_sets: Dict[str, FoldSet] = field(default_factory=dict)
+    replication_summary: Dict[str, Any] = field(default_factory=dict)
+    verdict_summary: Dict[str, Any] = field(default_factory=dict)
+    source_path: Optional[str] = None
+    source_exists: bool = True
+    load_errors: List[str] = field(default_factory=list)
+    generated_at: Optional[str] = None
+
+    # --- shape of the corpus ---------------------------------------------
+
+    @property
+    def n_records_read(self) -> int:
+        return self.coverage.n_records_read
+
+    @property
+    def n_records_usable(self) -> int:
+        return self.coverage.n_records_usable
+
+    @property
+    def is_empty(self) -> bool:
+        return self.n_records_read == 0
+
+    @property
+    def has_usable_records(self) -> bool:
+        return self.n_records_usable > 0
+
+    @property
+    def is_small_corpus(self) -> bool:
+        """True if the corpus is too small for the tables to be statistics."""
+        return (
+            self.n_records_usable < SMALL_CORPUS_RECORDS
+            or self.coverage.n_studies < SMALL_CORPUS_STUDIES
+        )
+
+    @property
+    def n_feasible(self) -> int:
+        return sum(1 for p in self.pairs if p.verdict == gates_mod.VERDICT_FEASIBLE)
+
+    @property
+    def n_marginal(self) -> int:
+        return sum(1 for p in self.pairs if p.verdict == gates_mod.VERDICT_MARGINAL)
+
+    @property
+    def n_insufficient(self) -> int:
+        return sum(
+            1 for p in self.pairs if p.verdict == gates_mod.VERDICT_INSUFFICIENT
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "generated_at": self.generated_at,
+            "source_path": self.source_path,
+            "source_exists": self.source_exists,
+            "load_errors": list(self.load_errors),
+            "top_line": top_line(self),
+            "is_empty": self.is_empty,
+            "is_small_corpus": self.is_small_corpus,
+            "coverage": self.coverage.to_dict(),
+            "replication_summary": dict(self.replication_summary),
+            "verdict_summary": dict(self.verdict_summary),
+            "replication_cells": [c.to_dict() for c in self.cells],
+            "task_verdicts": [v.to_dict() for v in self.verdicts],
+            "pair_verdicts": [p.to_dict() for p in self.pairs],
+            "fold_sets": {
+                name: {
+                    k: v
+                    for k, v in fs.to_dict().items()
+                    # The per-fold record id lists are large and are an index
+                    # into the dataset, not a finding; the shape is what the
+                    # report is about.
+                    if k != "folds"
+                }
+                for name, fs in self.fold_sets.items()
+            },
+        }
+
+
+def build_report(
+    records: Sequence,
+    source_path: Optional[str] = None,
+    source_exists: bool = True,
+    load_errors: Optional[Sequence[str]] = None,
+    generated_at: Optional[str] = None,
+) -> FeasibilityReport:
+    """Measure ``records`` and assemble the report.
+
+    Safe on an empty sequence: every section degrades to an explicit zero and
+    :func:`top_line` says the dataset is empty.
+    """
+    records = list(records)
+    coverage = build_matrix(records)
+    # Replication is computed over the usable records only, for the same
+    # reason the matrix axes are: a record with no stated direction cannot
+    # agree or disagree with anything. The held-out records stay counted in
+    # coverage.excluded_counts.
+    usable = [r for r in records if not _is_excluded(r)]
+    cells = build_replication_cells(usable)
+    verdicts = gates_mod.evaluate_cells(cells)
+    return FeasibilityReport(
+        coverage=coverage,
+        cells=cells,
+        verdicts=verdicts,
+        pairs=pair_verdicts(verdicts),
+        fold_sets=all_fold_sets(usable),
+        replication_summary=summarize_replication(cells),
+        verdict_summary=summarize_verdicts(verdicts),
+        source_path=source_path,
+        source_exists=source_exists,
+        load_errors=list(load_errors or []),
+        generated_at=generated_at or _utc_now(),
+    )
+
+
+def _is_excluded(record) -> bool:
+    return bool(exclusion_reasons(record))
+
+
+def _utc_now() -> str:
+    return (
+        datetime.datetime.now(datetime.timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
+# --- the top line -----------------------------------------------------------
+
+
+def top_line(report: "FeasibilityReport") -> str:
+    """One sentence. The first thing in the file, and the whole verdict.
+
+    It never leads with a statistic computed over a corpus too small to
+    support it.
+    """
+    path = report.source_path or "the curated records file"
+    if report.load_errors and report.n_records_read == 0:
+        return (
+            "**Verdict: not computed — `%s` could not be read (%d load error(s)), "
+            "so no feasibility question is answered below.**" % (path, len(report.load_errors))
+        )
+    if report.n_records_read == 0:
+        reason = "does not exist yet" if not report.source_exists else "is empty"
+        return (
+            "**Verdict: insufficient evidence — `%s` %s (0 records), so none of "
+            "the five Phase 2 questions can be answered and no prediction task "
+            "is modellable.**" % (path, reason)
+        )
+    if not report.has_usable_records:
+        return (
+            "**Verdict: insufficient evidence — %d record(s) were read but none "
+            "carries a usable (population, intervention, measured outcome) "
+            "triple, so no population x outcome task exists to assess.**"
+            % report.n_records_read
+        )
+
+    shape = "%d usable record(s) from %d stud%s and %d identified lab(s)" % (
+        report.n_records_usable,
+        report.coverage.n_studies,
+        "y" if report.coverage.n_studies == 1 else "ies",
+        report.coverage.n_labs,
+    )
+    n_pairs = len(report.pairs)
+    if report.is_small_corpus:
+        if report.n_feasible:
+            return (
+                "**Verdict: insufficient evidence overall — the corpus is %s, "
+                "below the floor of %d records and %d studies at which these "
+                "tables become statistics, and only %d of %d (population, "
+                "outcome) task(s) clear the promotion gates.**"
+                % (
+                    shape,
+                    SMALL_CORPUS_RECORDS,
+                    SMALL_CORPUS_STUDIES,
+                    report.n_feasible,
+                    n_pairs,
+                )
+            )
+        return (
+            "**Verdict: insufficient evidence — the corpus is %s, below the "
+            "floor of %d records and %d studies at which these tables become "
+            "statistics, and no (population, outcome) task clears the "
+            "promotion gates; the counts below are a census of what has been "
+            "curated, not a description of the field.**"
+            % (shape, SMALL_CORPUS_RECORDS, SMALL_CORPUS_STUDIES)
+        )
+    if report.n_feasible == 0:
+        return (
+            "**Verdict: insufficient evidence — none of the %d (population, "
+            "outcome) task(s) in %s clears the promotion gates (%d marginal, "
+            "%d insufficient).**"
+            % (n_pairs, shape, report.n_marginal, report.n_insufficient)
+        )
+    return (
+        "**Verdict: %d of %d (population, outcome) task(s) are feasible for "
+        "predictive modelling (%d marginal, %d insufficient), from %s.**"
+        % (
+            report.n_feasible,
+            n_pairs,
+            report.n_marginal,
+            report.n_insufficient,
+            shape,
+        )
+    )
+
+
+# --- rendering helpers ------------------------------------------------------
+
+
+def _fmt_ratio(value: Optional[float]) -> str:
+    return "undefined" if value is None else "%.2f" % value
+
+
+def _fmt_pct(value: Optional[float]) -> str:
+    return "not meaningful" if value is None else "%.1f%%" % (100.0 * value)
+
+
+def _fmt_ci(ci: Optional[Tuple[float, float]]) -> str:
+    if ci is None:
+        return "undefined"
+    return "[%.2f, %.2f]" % (ci[0], ci[1])
+
+
+def _table(header: Sequence[str], rows: Sequence[Sequence[str]], cap: int = MAX_TABLE_ROWS) -> List[str]:
+    lines = [
+        "| " + " | ".join(header) + " |",
+        "|" + "|".join("---" for _ in header) + "|",
+    ]
+    for row in rows[:cap]:
+        lines.append("| " + " | ".join(str(c) for c in row) + " |")
+    if len(rows) > cap:
+        lines.append("")
+        lines.append("... %d more row(s) not shown." % (len(rows) - cap))
+    if not rows:
+        lines.append("| _none_ |" + " |" * (len(header) - 1))
+    return lines
+
+
+def _studies_phrase(n: int) -> str:
+    return "%d study" % n if n == 1 else "%d studies" % n
+
+
+def _census_caveat(report: "FeasibilityReport") -> List[str]:
+    if not report.is_small_corpus or not report.has_usable_records:
+        return []
+    return [
+        "> **Read the tables below as a census, not as statistics.** The corpus "
+        "holds %d usable record(s) from %s, below the floors of %d records and "
+        "%d studies this report requires before a proportion computed over it "
+        "describes anything but the curation queue."
+        % (
+            report.n_records_usable,
+            _studies_phrase(report.coverage.n_studies),
+            SMALL_CORPUS_RECORDS,
+            SMALL_CORPUS_STUDIES,
+        ),
+        "",
+    ]
+
+
+# --- sections ---------------------------------------------------------------
+
+
+def _section_run(report: "FeasibilityReport") -> List[str]:
+    coverage = report.coverage
+    rows = [
+        ["generated (UTC)", report.generated_at or "-"],
+        ["input", "`%s`" % (report.source_path or "<in memory>")],
+        [
+            "input present",
+            "yes" if report.source_exists else "no (treated as 0 records)",
+        ],
+        ["records read", str(coverage.n_records_read)],
+        ["records usable as observations", str(coverage.n_records_usable)],
+        ["records held out of the matrix", str(coverage.n_records_excluded)],
+        ["distinct studies", str(coverage.n_studies)],
+        ["distinct labs (last author + affiliation)", str(coverage.n_labs)],
+        ["usable records with no lab identity", str(coverage.n_records_without_lab)],
+        ["load errors", str(len(report.load_errors))],
+    ]
+    lines = ["## Run", "", *_table(["field", "value"], rows), ""]
+    if report.load_errors:
+        lines.append("### Load errors")
+        lines.append("")
+        for err in report.load_errors:
+            lines.append("- `%s`" % err)
+        lines.append("")
+    if coverage.excluded_counts:
+        lines.append("### Why records were held out of the matrix")
+        lines.append("")
+        lines.append(
+            "Counted by reason, so nothing is filtered silently. A record may "
+            "appear under more than one reason. Being held out here says "
+            "nothing about its admissibility to `data/curated/`, which is "
+            "`syn4rch.schema.validate`'s decision."
+        )
+        lines.append("")
+        lines.extend(
+            _table(
+                ["reason", "records", "meaning"],
+                [
+                    [code, str(count), exclusion_note(code)]
+                    for code, count in coverage.excluded_counts.items()
+                ],
+                cap=len(EXCLUSION_CODES),
+            )
+        )
+        lines.append("")
+    return lines
+
+
+def _section_populations(report: "FeasibilityReport") -> List[str]:
+    coverage = report.coverage
+    lines = [
+        "## 1. How many neuronal populations have usable intervention data?",
+        "",
+        "**%d.** A population counts when at least one record names it, names a "
+        "perturbation `method`, and carries a `valence` that is neither absent "
+        "nor `unclear` — a perturbation of unstated direction states nothing "
+        "an input could encode. Of these, %d are unresolved populations "
+        "grouped by their raw name under a `raw:` prefix (no vocabulary match; "
+        "SCHEMA.md 3.2 forbids force-mapping them)."
+        % (coverage.n_populations, coverage.n_populations_unresolved),
+        "",
+    ]
+    rows = [
+        [
+            "`%s`" % pop,
+            str(coverage.records_per_population.get(pop, 0)),
+            str(coverage.studies_per_population.get(pop, 0)),
+            str(sum(1 for c in coverage.row(pop) if not c.is_empty)),
+        ]
+        for pop in sorted(
+            coverage.populations,
+            key=lambda p: (-coverage.records_per_population.get(p, 0), p),
+        )
+    ]
+    lines.extend(
+        _table(["population", "records", "studies", "outcomes measured"], rows)
+    )
+    lines.append("")
+    return lines
+
+
+def _section_outcomes(report: "FeasibilityReport") -> List[str]:
+    coverage = report.coverage
+    lines = [
+        "## 2. How many physiological outcomes have been measured?",
+        "",
+        "**%d.** An outcome counts when at least one record resolves it to an "
+        "`outcome_id` and states a `direction` other than `not_reported`. "
+        "`no_change` counts: SCHEMA.md 3.5 keeps null results, and dropping "
+        "them is the leading source of direction bias."
+        % coverage.n_outcomes,
+        "",
+    ]
+    rows = [
+        [
+            "`%s`" % out,
+            ", ".join(coverage.outcome_tiers.get(out, ())) or "-",
+            str(coverage.records_per_outcome.get(out, 0)),
+            str(coverage.studies_per_outcome.get(out, 0)),
+            str(
+                sum(
+                    1
+                    for pop in coverage.populations
+                    if not coverage.cell(pop, out).is_empty
+                )
+            ),
+        ]
+        for out in sorted(
+            coverage.outcomes,
+            key=lambda o: (-coverage.records_per_outcome.get(o, 0), o),
+        )
+    ]
+    lines.extend(
+        _table(
+            ["outcome", "tier", "records", "studies", "populations measured"], rows
+        )
+    )
+    lines.append("")
+    return lines
+
+
+def _section_matrix(report: "FeasibilityReport") -> List[str]:
+    coverage = report.coverage
+    lines = [
+        "## Coverage matrix (population x outcome)",
+        "",
+        "The matrix is built dense and the zeros are kept: which relationships "
+        "nobody has measured is half the Phase 2 answer, and it disappears if "
+        "only the populated cells are stored.",
+        "",
+    ]
+    sparsity_printable = (
+        coverage.n_populations >= MIN_MATRIX_DIM_FOR_SPARSITY
+        and coverage.n_outcomes >= MIN_MATRIX_DIM_FOR_SPARSITY
+    )
+    rows = [
+        ["matrix shape", "%d x %d" % (coverage.n_populations, coverage.n_outcomes)],
+        ["cells", str(coverage.n_cells_total)],
+        ["cells with at least one record", str(coverage.n_cells_populated)],
+        ["cells with no records", str(coverage.n_cells_empty)],
+        [
+            "cells with two or more labs",
+            str(coverage.n_cells_multi_lab),
+        ],
+        [
+            "sparsity (fraction of cells empty)",
+            _fmt_pct(coverage.sparsity)
+            if sparsity_printable
+            else "not meaningful at %d x %d (needs at least %d x %d)"
+            % (
+                coverage.n_populations,
+                coverage.n_outcomes,
+                MIN_MATRIX_DIM_FOR_SPARSITY,
+                MIN_MATRIX_DIM_FOR_SPARSITY,
+            ),
+        ],
+    ]
+    lines.extend(_table(["field", "value"], rows))
+    lines.append("")
+
+    if (
+        coverage.n_populations
+        and coverage.n_outcomes
+        and coverage.n_populations <= MAX_GRID_DIM
+        and coverage.n_outcomes <= MAX_GRID_DIM
+    ):
+        lines.append("### Record counts per cell (zeros shown)")
+        lines.append("")
+        header = ["population \\ outcome"] + ["`%s`" % o for o in coverage.outcomes]
+        grid_rows = [
+            ["`%s`" % pop]
+            + [str(coverage.cell(pop, out).n_records) for out in coverage.outcomes]
+            for pop in coverage.populations
+        ]
+        lines.extend(_table(header, grid_rows, cap=MAX_GRID_DIM))
+        lines.append("")
+    elif coverage.n_cells_total:
+        lines.append(
+            "The dense grid is not drawn: %d x %d exceeds the %d x %d printable "
+            "limit. %d cell(s) are empty and are listed in the JSON output by "
+            "omission from `populated_cells`."
+            % (
+                coverage.n_populations,
+                coverage.n_outcomes,
+                MAX_GRID_DIM,
+                MAX_GRID_DIM,
+                coverage.n_cells_empty,
+            )
+        )
+        lines.append("")
+
+    lines.append("### Populated cells")
+    lines.append("")
+    lines.extend(
+        _table(
+            ["population", "outcome", "records", "studies", "labs"],
+            [
+                [
+                    "`%s`" % c.population,
+                    "`%s`" % c.outcome,
+                    str(c.n_records),
+                    str(c.n_studies),
+                    str(c.n_labs),
+                ]
+                for c in coverage.populated_cells()
+            ],
+        )
+    )
+    lines.append("")
+    return lines
+
+
+def _section_replication(report: "FeasibilityReport") -> List[str]:
+    summary = report.replication_summary
+    lines = [
+        "## 3. How many neuron-outcome relationships have independent "
+        "replication?",
+        "",
+        "The unit is the claim `(population, valence, outcome)`: SCHEMA.md 1 "
+        "forbids aggregating across valences, so an activation result and an "
+        "inhibition result on the same pair are two claims, not two "
+        "observations of one.",
+        "",
+        "**%d of %d claim(s) are replicated across two or more labs**; a "
+        "further %d are replicated across studies within a single lab and are "
+        "discounted (SCHEMA.md 5.2 names repeat publication by one group as "
+        "the largest leakage risk here); %d claim(s) rest on a single "
+        "observation."
+        % (
+            summary.get("n_cells_replicated_across_labs", 0),
+            summary.get("n_cells", 0),
+            summary.get("n_cells_same_lab_only", 0),
+            summary.get("n_cells_single_observation", 0),
+        ),
+        "",
+    ]
+    rows = [
+        ["claims (population x valence x outcome)", summary.get("n_cells", 0)],
+        ["single observation", summary.get("n_cells_single_observation", 0)],
+        [
+            "replicated across >= 2 studies",
+            summary.get("n_cells_replicated_across_studies", 0),
+        ],
+        [
+            "replicated across >= 2 labs",
+            summary.get("n_cells_replicated_across_labs", 0),
+        ],
+        ["same lab only (discounted)", summary.get("n_cells_same_lab_only", 0)],
+        [
+            "claims containing records with no lab identity",
+            summary.get("n_cells_with_unknown_lab_records", 0),
+        ],
+    ]
+    lines.extend(_table(["field", "count"], [[r[0], str(r[1])] for r in rows]))
+    lines.append("")
+    return lines
+
+
+def _section_agreement(report: "FeasibilityReport") -> List[str]:
+    summary = report.replication_summary
+    defined = summary.get("n_cells_agreement_defined", 0)
+    lines = [
+        "## 4. How often do independent studies agree on effect direction?",
+        "",
+        "Agreement is the fraction of independent studies stating the modal "
+        "direction, with a %d%% Wilson score interval (chosen because the Wald "
+        "interval has width zero at a unanimous 2 of 2, and the standard "
+        "library has no incomplete beta for Clopper-Pearson; "
+        "`syn4rch.feasibility.replication` documents this)."
+        % int(round(100 * CONFIDENCE_LEVEL)),
+        "",
+        "**Agreement is undefined, not 100%%, for a claim with one independent "
+        "observation**: %d of %d claim(s) have no second independent study, "
+        "and a defined agreement exists for only %d."
+        % (
+            summary.get("n_cells_agreement_undefined", 0),
+            summary.get("n_cells", 0),
+            defined,
+        ),
+        "",
+    ]
+    if defined:
+        lines.append(
+            "Of the %d claim(s) with a defined agreement, %d are unanimous and "
+            "%d are contested (independent studies state incompatible "
+            "directions, by the QC definition in docs/DECISIONS.md D-011). "
+            "Mean agreement where defined: %s. Nothing was resolved, averaged "
+            "or dropped."
+            % (
+                defined,
+                summary.get("n_cells_unanimous_where_defined", 0),
+                summary.get("n_cells_contested", 0),
+                _fmt_ratio(summary.get("mean_agreement_where_defined")),
+            )
+        )
+        lines.append("")
+        replicated = [c for c in report.cells if c.agreement_is_defined]
+        lines.extend(
+            _table(
+                [
+                    "population",
+                    "valence",
+                    "outcome",
+                    "studies",
+                    "labs",
+                    "modal direction",
+                    "agreement",
+                    "%d%% CI" % int(round(100 * CONFIDENCE_LEVEL)),
+                    "conflicts",
+                ],
+                [
+                    [
+                        "`%s`" % c.population,
+                        c.valence,
+                        "`%s`" % c.outcome,
+                        str(c.n_studies),
+                        str(c.n_labs),
+                        (c.modal_direction or "-")
+                        + (" (tied)" if c.modal_direction_is_tied else ""),
+                        _fmt_ratio(c.agreement_studies),
+                        _fmt_ci(c.agreement_studies_ci),
+                        ", ".join(c.conflict_codes) or "-",
+                    ]
+                    for c in sorted(
+                        replicated,
+                        key=lambda c: (-c.n_labs, -c.n_studies, c.population, c.outcome),
+                    )
+                ],
+            )
+        )
+        lines.append("")
+    else:
+        lines.append(
+            "No claim in this corpus has two independent studies stating a "
+            "direction, so there is no agreement rate to report. This is the "
+            "measured answer to question 4, not a gap in the computation."
+        )
+        lines.append("")
+
+    directions = summary.get("modal_direction_counts", {})
+    if directions:
+        lines.append("### Modal direction per claim")
+        lines.append("")
+        lines.extend(
+            _table(
+                ["modal direction", "claims"],
+                [[k, str(v)] for k, v in directions.items()],
+            )
+        )
+        lines.append("")
+    return lines
+
+
+def _section_gates(report: "FeasibilityReport") -> List[str]:
+    summary = report.verdict_summary
+    by_verdict = summary.get("by_verdict", {})
+    lines = [
+        "## 5. Which outcomes have sufficient evidence for predictive "
+        "modelling?",
+        "",
+        "**%s**"
+        % (
+            "None."
+            if not summary.get("any_feasible")
+            else "Feasible for at least one population and valence: "
+            + ", ".join("`%s`" % o for o in summary.get("outcomes_feasible", []))
+            + "."
+        ),
+        "",
+        "Verdicts are per task `(population, valence, outcome)` and then rolled "
+        "up to the `(population, outcome)` pairs the Phase 2 question is "
+        "phrased in; a pair is as feasible as its best valence and the rollup "
+        "names which one.",
+        "",
+    ]
+    lines.extend(
+        _table(
+            ["verdict", "tasks", "(population, outcome) pairs"],
+            [
+                [
+                    "feasible",
+                    str(by_verdict.get("feasible", 0)),
+                    str(report.n_feasible),
+                ],
+                [
+                    "marginal",
+                    str(by_verdict.get("marginal", 0)),
+                    str(report.n_marginal),
+                ],
+                [
+                    "insufficient",
+                    str(by_verdict.get("insufficient", 0)),
+                    str(report.n_insufficient),
+                ],
+            ],
+        )
+    )
+    lines.append("")
+
+    promoted = [
+        v
+        for v in report.verdicts
+        if v.verdict in (gates_mod.VERDICT_FEASIBLE, gates_mod.VERDICT_MARGINAL)
+    ]
+    if promoted:
+        lines.append("### Tasks reaching marginal or better")
+        lines.append("")
+        lines.extend(
+            _table(
+                [
+                    "population",
+                    "valence",
+                    "outcome",
+                    "verdict",
+                    "records",
+                    "studies",
+                    "labs",
+                    "agreement",
+                    "reasons",
+                ],
+                [
+                    [
+                        "`%s`" % v.population,
+                        v.valence,
+                        "`%s`" % v.outcome,
+                        v.verdict,
+                        str(v.numbers.get("n_records", 0)),
+                        str(v.numbers.get("n_studies", 0)),
+                        str(v.numbers.get("n_labs", 0)),
+                        _fmt_ratio(v.numbers.get("agreement_studies")),
+                        ", ".join("`%s`" % r for r in v.reasons),
+                    ]
+                    for v in sorted(
+                        promoted,
+                        key=lambda v: (
+                            -v.rank,
+                            -v.numbers.get("n_labs", 0),
+                            v.population,
+                            v.outcome,
+                        ),
+                    )
+                ],
+            )
+        )
+        lines.append("")
+    else:
+        lines.append(
+            "No task reaches `marginal`. Every task in this corpus is "
+            "`insufficient`, which is a legitimate Phase 2 conclusion: it says "
+            "the corpus does not yet support a prediction task, and it is "
+            "reached from counts rather than from an opinion about the "
+            "literature."
+        )
+        lines.append("")
+
+    by_reason = summary.get("by_reason", {})
+    if by_reason:
+        lines.append("### Why tasks did not pass")
+        lines.append("")
+        lines.extend(
+            _table(
+                ["reason", "tasks", "meaning"],
+                [
+                    [
+                        "`%s`" % code,
+                        str(count),
+                        gates_mod.REASON_NOTES.get(code, "-"),
+                    ]
+                    for code, count in by_reason.items()
+                ],
+                cap=len(gates_mod.REASON_NOTES) + 1,
+            )
+        )
+        lines.append("")
+
+    lines.append("### Promotion gates")
+    lines.append("")
+    lines.append(
+        "Every threshold is a named constant in "
+        "`src/syn4rch/feasibility/gates.py`, each with the reason that number "
+        "was chosen. They are deliberately pessimistic: lab-level "
+        "independence is required for `feasible`, agreement at one "
+        "observation is undefined and undefined never passes, and the Wilson "
+        "lower bound must clear the chance rate, so unanimity among very few "
+        "studies lands at `marginal`."
+    )
+    lines.append("")
+    lines.extend(
+        _table(
+            ["gate", "value"],
+            [
+                [k, ("%.4g" % v) if isinstance(v, float) else str(v)]
+                for k, v in gates_mod.THRESHOLDS.items()
+            ],
+            cap=len(gates_mod.THRESHOLDS),
+        )
+    )
+    lines.append("")
+    return lines
+
+
+def _section_splits(report: "FeasibilityReport") -> List[str]:
+    lines = [
+        "## Leakage-aware splits available on this corpus",
+        "",
+        "SCHEMA.md 5: a cross-validated number reported without naming its "
+        "grouping is an invalid result in this project. "
+        "`syn4rch.feasibility.splits` therefore returns folds only inside a "
+        "labelled fold set, and `attach_metric` raises if a caller tries to "
+        "bind a number to folds without the label. Shared animal cohorts "
+        "(SCHEMA.md 5 item 3) are not controlled by any grouping here: the "
+        "schema records no cohort identity.",
+        "",
+    ]
+    rows = []
+    for name, fold_set in report.fold_sets.items():
+        rows.append(
+            [
+                "`%s`" % name,
+                str(fold_set.n_groups),
+                str(fold_set.n_usable_folds),
+                "yes" if fold_set.is_usable else "no",
+                str(fold_set.n_ungroupable),
+            ]
+        )
+    lines.extend(
+        _table(
+            [
+                "grouping",
+                "groups",
+                "usable folds",
+                "cross-validation possible",
+                "records excluded as ungroupable",
+            ],
+            rows,
+            cap=len(report.fold_sets) + 1,
+        )
+    )
+    lines.append("")
+    unusable = [n for n, fs in report.fold_sets.items() if not fs.is_usable]
+    if unusable:
+        lines.append(
+            "Cross-validation is impossible under %s on this corpus: fewer "
+            "than two folds have both a train and a test side."
+            % ", ".join("`%s`" % n for n in unusable)
+        )
+        lines.append("")
+    return lines
+
+
+def _section_limits(report: "FeasibilityReport") -> List[str]:
+    return [
+        "## What this report does not claim",
+        "",
+        "- It does not estimate how many records curation will eventually "
+        "yield. Every number above is a count of what is in the input file at "
+        "the time shown.",
+        "- It does not resolve, average, prefer or drop either side of a "
+        "disagreement. Contested claims are reported as contested.",
+        "- It does not treat a single observation as agreement, and it does "
+        "not treat repeated publication by one lab as independent replication.",
+        "- It cannot rule out two studies sharing one animal cohort "
+        "(SCHEMA.md 5 item 3): the schema records no cohort identity.",
+        "- A `feasible` verdict says a prediction task can be posed and "
+        "cross-validated with the grouping named, not that a model will work.",
+        "- Tier B outcomes are excluded as prediction targets by "
+        "`EXCLUDE_TIER_B_AS_TARGET` (SCHEMA.md 6: Tier B is an annotation "
+        "layer, not a training target).",
+        "",
+    ]
+
+
+def _section_nothing_to_measure(report: "FeasibilityReport") -> List[str]:
+    """Replaces sections 1-5 when no record is usable.
+
+    Printing "0 of 0 claims agree" and a sparsity over a 0x0 matrix would be
+    arithmetic performed on nothing. The five questions are answered, in
+    words, with the single fact that decides all five.
+    """
+    if report.n_records_read == 0:
+        cause = (
+            "the input file does not exist yet"
+            if not report.source_exists
+            else "the input file is empty"
+        )
+    else:
+        cause = (
+            "all %d record(s) read were held out of the matrix (see the Run "
+            "table for the reasons)" % report.n_records_read
+        )
+    return [
+        "## The five Phase 2 questions",
+        "",
+        "**None of the five can be answered: %s, so there are 0 usable "
+        "observations.** No table below is computed over more than zero "
+        "records, and no derived statistic is printed for them: a sparsity, an "
+        "agreement rate or a mean over an empty corpus would be arithmetic on "
+        "nothing." % cause,
+        "",
+        *_table(
+            ["question", "measured answer"],
+            [
+                ["1. populations with usable intervention data", "0"],
+                ["2. physiological outcomes measured", "0"],
+                ["3. relationships with independent replication", "0"],
+                [
+                    "4. direction agreement among independent studies",
+                    "undefined (no claim has two independent studies)",
+                ],
+                [
+                    "5. outcomes with sufficient evidence for modelling",
+                    "none",
+                ],
+            ],
+            cap=5,
+        ),
+        "",
+        "The promotion gates these answers were judged against are listed "
+        "below, so the verdict can be re-checked when the corpus grows.",
+        "",
+        *_table(
+            ["gate", "value"],
+            [
+                [k, ("%.4g" % v) if isinstance(v, float) else str(v)]
+                for k, v in gates_mod.THRESHOLDS.items()
+            ],
+            cap=len(gates_mod.THRESHOLDS),
+        ),
+        "",
+    ]
+
+
+def render_markdown(report: "FeasibilityReport") -> str:
+    """The full report. First line after the title is the verdict sentence."""
+    lines: List[str] = [
+        "# SYN4RCH feasibility report (Phase 2)",
+        "",
+        top_line(report),
+        "",
+        "Every number below is counted from the input named in the Run table. "
+        "Nothing is estimated, imputed or projected. An `insufficient` verdict "
+        "is a measurement of the corpus, not a failure of this module.",
+        "",
+    ]
+    lines.extend(_census_caveat(report))
+    lines.extend(_section_run(report))
+    if report.has_usable_records:
+        lines.extend(_section_populations(report))
+        lines.extend(_section_outcomes(report))
+        lines.extend(_section_replication(report))
+        lines.extend(_section_agreement(report))
+        lines.extend(_section_gates(report))
+        lines.extend(_section_matrix(report))
+        lines.extend(_section_splits(report))
+    else:
+        lines.extend(_section_nothing_to_measure(report))
+    lines.extend(_section_limits(report))
+    text = "\n".join(lines).rstrip() + "\n"
+    return text

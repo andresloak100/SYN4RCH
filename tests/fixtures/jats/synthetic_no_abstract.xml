@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FABRICATED TEST DATA - NEVER EVIDENCE. Hand-written synthetic JATS; see
+  tests/fixtures/README.md. A paper with no <abstract>, one unlabelled
+  figure, a roman-numbered table and a section whose heading is not one of
+  the five canonical ones.
+-->
+<article article-type="research-article">
+  <front>
+    <journal-meta>
+      <journal-title>Journal of Synthetic Test Data</journal-title>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="doi">10.0000/synthetic.0002</article-id>
+      <title-group>
+        <article-title>Synthetic fixture with no abstract</article-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author">
+          <name><surname>Soleauthor</surname><given-names>F.</given-names></name>
+        </contrib>
+      </contrib-group>
+      <aff>Institute of Synthetic Data, Nowhere</aff>
+      <pub-date pub-type="ppub"><year>2002</year></pub-date>
+    </article-meta>
+  </front>
+  <body>
+    <sec sec-type="results">
+      <title>Results</title>
+      <p>Optogenetic stimulation of AgRP neurons increased food intake in this
+        invented result.</p>
+    </sec>
+    <sec>
+      <title>Limitations of this invented study</title>
+      <p>An invented paragraph in a section whose heading is not one of the
+        five canonical ones.</p>
+    </sec>
+  </body>
+  <floats-group>
+    <fig id="figX">
+      <caption>
+        <p>An invented caption on a figure that carries no label at all.</p>
+      </caption>
+    </fig>
+    <table-wrap id="tblII">
+      <label>Table II</label>
+      <caption>
+        <p>An invented caption on a table numbered with a roman numeral.</p>
+      </caption>
+    </table-wrap>
+  </floats-group>
+</article>

@@ -1,0 +1,680 @@
+<title>SYN4RCH Hypothalamic Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: flight-console grid. Header strip, index rail | 3D viewport with HUD | selection telemetry, evidence bus below. One dark look. */
+:root {
+  color-scheme: dark;
+  --void: #04070a;          /* page ground */
+  --panel: #070b10;         /* rails */
+  --panel-2: #0b1118;       /* raised readout wells */
+  --rule: #18222c;          /* hairlines */
+  --rule-2: #26333f;        /* stronger hairlines, ticks */
+  --ink: #dbe4ec;           /* primary text */
+  --ink-2: #8796a4;         /* secondary text */
+  --ink-3: #4f5e6b;         /* captions, units */
+  --accent: #79e2ff;        /* the single cold accent: selection, live state */
+  --accent-dim: #2a5f70;
+  --accent-wash: rgba(121, 226, 255, 0.08);
+  --lit: #c9d3dc;           /* literature layer ink (neutral, never accent) */
+  --lit-2: #5c6b78;
+  --nucleus: #1d2a35;       /* 3D nucleus body */
+  --nucleus-ctx: #121b23;   /* 3D context nucleus body */
+  --edge: #8fb4c8;          /* 3D nucleus linework */
+  --shell: #a9d8ea;         /* 3D brain rim light */
+  --warn: #d9b26a;          /* semantic: not available / missing */
+
+  --f-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --f-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --s-0: 10px; --s-1: 11px; --s-2: 12.5px; --s-3: 14px; --s-4: 18px; --s-5: 30px; --s-6: 44px;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: var(--s-3);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--void); }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--f-display); font-weight: 500; font-size: var(--s-1); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-3); }
+.u { color: var(--ink-3); }
+
+/* ---------- shell ---------- */
+.console { display: grid; grid-template-columns: 272px minmax(0, 1fr) 340px; grid-template-rows: auto minmax(560px, 72vh) auto; min-height: 100%; }
+.top { grid-column: 1 / -1; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; padding-block: 12px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); border-bottom: 1px solid var(--rule); background: var(--void); }
+.mark { display: flex; align-items: baseline; gap: 14px; min-width: 0; }
+.mark b { font-family: var(--f-display); font-weight: 600; font-size: 22px; letter-spacing: 0.34em; }
+.mark span { font-family: var(--f-display); font-size: var(--s-2); letter-spacing: 0.24em; color: var(--ink-2); text-transform: uppercase; }
+.status { margin-left: auto; display: flex; gap: 22px; flex-wrap: wrap; font-family: var(--f-data); font-size: var(--s-1); color: var(--ink-2); }
+.status i { font-style: normal; color: var(--ink-3); margin-right: 6px; }
+.status .live::before { content: ""; display: inline-block; width: 5px; height: 5px; background: var(--accent); margin-right: 8px; vertical-align: 1px; box-shadow: 0 0 6px var(--accent); }
+
+.rail { background: var(--panel); min-width: 0; overflow-y: auto; }
+.rail.left { border-right: 1px solid var(--rule); }
+.rail.right { border-left: 1px solid var(--rule); }
+.sec { padding: 16px 18px; border-bottom: 1px solid var(--rule); display: grid; gap: 10px; align-content: start; }
+.sec h2 { margin: 0; font-family: var(--f-display); font-weight: 500; font-size: var(--s-1); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
+.sec h2 em { font-style: normal; font-family: var(--f-data); letter-spacing: 0; color: var(--ink-3); }
+
+/* structure index */
+.idx { display: grid; }
+.idx button { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 6px 8px; margin: 0 -8px; border-left: 1px solid transparent; }
+.idx button:hover { background: var(--accent-wash); }
+.idx button[aria-pressed="true"] { border-left-color: var(--accent); background: var(--accent-wash); }
+.idx .acr { font-family: var(--f-data); font-size: var(--s-2); color: var(--ink); }
+.idx button[aria-pressed="true"] .acr { color: var(--accent); }
+.idx .nm { font-size: var(--s-2); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.idx .np { font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-3); }
+.unmapped { display: grid; gap: 8px; font-size: var(--s-2); color: var(--ink-2); }
+.unmapped div { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; }
+.unmapped code { font-family: var(--f-data); color: var(--warn); font-size: var(--s-1); }
+
+/* ---------- viewport ---------- */
+.view { position: relative; min-width: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 55%, #0a121a 0%, var(--void) 70%); touch-action: none; }
+.view canvas { display: block; width: 100%; height: 100%; }
+.hud { position: absolute; inset: 0; pointer-events: none; font-family: var(--f-data); font-size: var(--s-1); color: var(--ink-2); }
+.hud .corner { position: absolute; width: 18px; height: 18px; border-color: var(--rule-2); border-style: solid; }
+.hud .tl { top: 12px; left: 12px; border-width: 1px 0 0 1px; } .hud .tr { top: 12px; right: 12px; border-width: 1px 1px 0 0; }
+.hud .bl { bottom: 12px; left: 12px; border-width: 0 0 1px 1px; } .hud .br { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
+.readout { position: absolute; display: grid; gap: 3px; }
+.readout.r-tl { top: 22px; left: 26px; } .readout.r-tr { top: 22px; right: 26px; text-align: right; }
+.readout.r-bl { bottom: 24px; left: 26px; } .readout.r-br { bottom: 24px; right: 26px; text-align: right; }
+.readout .k { color: var(--ink-3); display: inline-block; min-width: 46px; margin-right: 8px; }
+.readout .v { color: var(--ink); }
+.readout .hit { color: var(--accent); }
+.scalebar { display: grid; gap: 4px; justify-items: start; }
+.scalebar .bar { height: 6px; border: 1px solid var(--ink-2); border-top: 0; }
+.ax { position: absolute; transform: translate(-50%, -50%); font-family: var(--f-display); font-size: var(--s-1); letter-spacing: 0.18em; color: var(--ink-3); }
+svg.lead { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+svg.lead polyline { fill: none; stroke: var(--accent); stroke-width: 1; }
+svg.lead circle { fill: none; stroke: var(--accent); stroke-width: 1; }
+.tag { position: absolute; padding: 5px 9px 6px; border: 1px solid var(--accent-dim); background: rgba(4, 7, 10, 0.82); color: var(--ink); white-space: nowrap; display: grid; gap: 1px; }
+.tag b { font-family: var(--f-display); font-weight: 600; font-size: var(--s-3); letter-spacing: 0.16em; color: var(--accent); }
+.tag span { font-size: var(--s-0); color: var(--ink-2); }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-data); font-size: var(--s-1); color: var(--ink-3); letter-spacing: 0.1em; }
+
+/* ---------- selection telemetry ---------- */
+.sel-head { display: grid; gap: 4px; }
+.sel-acr { font-family: var(--f-display); font-weight: 600; font-size: var(--s-6); line-height: 0.95; letter-spacing: 0.08em; color: var(--accent); text-wrap: balance; }
+.sel-acr.pop { font-size: var(--s-5); letter-spacing: 0.04em; }
+.sel-name { font-size: var(--s-3); color: var(--ink); text-wrap: balance; }
+dl.kv { margin: 0; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 5px 12px; font-size: var(--s-2); }
+dl.kv dt { font-family: var(--f-display); letter-spacing: 0.16em; text-transform: uppercase; font-size: var(--s-1); color: var(--ink-3); padding-top: 1px; }
+dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: var(--ink); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font-family: var(--f-data); font-size: var(--s-0); padding: 1px 6px; border: 1px solid var(--rule-2); color: var(--ink); }
+.conf { font-family: var(--f-data); font-size: var(--s-0); letter-spacing: 0.06em; text-transform: uppercase; }
+.conf::before { content: ""; display: inline-block; width: 18px; height: 3px; margin-right: 6px; vertical-align: 2px; background: linear-gradient(90deg, var(--ink) var(--c), var(--rule-2) var(--c)); }
+.note { font-size: var(--s-2); color: var(--ink-2); max-width: 62ch; }
+.note.place { border-left: 1px solid var(--accent-dim); padding-left: 10px; }
+.pops { display: grid; gap: 0; }
+.pops button { display: grid; gap: 4px; padding: 10px 0; border-top: 1px solid var(--rule); }
+.pops button:hover .pl { color: var(--accent); }
+.pops .pl { font-size: var(--s-3); color: var(--ink); }
+.pops .pm { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-2); }
+.pops .pm i { font-style: normal; color: var(--ink-3); }
+
+/* ---------- evidence bus ---------- */
+.bus { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1fr); border-top: 1px solid var(--rule); background: var(--panel); padding-left: calc(var(--gutter-l) - 16px); padding-right: calc(var(--gutter-r) - 16px); }
+.mod { padding: 18px 16px 22px; display: grid; gap: 12px; align-content: start; min-width: 0; border-right: 1px solid var(--rule); }
+.mod:last-child { border-right: 0; }
+.mod-h { display: grid; gap: 4px; }
+.mod-h .ch { font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-3); letter-spacing: 0.08em; }
+.mod-h h3 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: var(--s-4); letter-spacing: 0.14em; text-transform: uppercase; }
+.mod-h p { margin: 0; font-size: var(--s-2); color: var(--ink-2); max-width: 62ch; }
+.src { font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-3); display: grid; gap: 2px; overflow-wrap: anywhere; }
+.src b { font-weight: 400; color: var(--ink-2); }
+
+.lit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.lit button { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 2px 10px; align-items: center; padding: 5px 0; border-top: 1px solid var(--rule); }
+.lit button:hover .ln, .lit button[aria-pressed="true"] .ln { color: var(--accent); }
+.lit .ln { font-family: var(--f-data); font-size: var(--s-1); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lit .lv { font-family: var(--f-data); font-size: var(--s-1); color: var(--lit); text-align: right; font-variant-numeric: tabular-nums; }
+.lit .lv small { color: var(--ink-3); font-size: var(--s-0); }
+.lit .track { grid-column: 1 / -1; height: 4px; position: relative; background: repeating-linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 10%); }
+.lit .track .all { position: absolute; inset: 0 auto 0 0; background: var(--lit-2); }
+.lit .track .inc { position: absolute; inset: 0 auto 0 0; background: var(--lit); }
+.lit .zero { color: var(--warn); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-2); }
+.legend span::before { content: ""; display: inline-block; width: 14px; height: 4px; margin-right: 6px; vertical-align: 2px; background: var(--sw); }
+
+.void-slot { border: 1px dashed var(--rule-2); padding: 18px 16px; display: grid; gap: 8px; background: repeating-linear-gradient(135deg, transparent 0 7px, rgba(143, 180, 200, 0.035) 7px 8px); }
+.big { font-family: var(--f-data); font-size: var(--s-6); line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.big small { font-family: var(--f-display); font-size: var(--s-3); letter-spacing: 0.2em; color: var(--ink-3); margin-left: 10px; }
+.state { font-family: var(--f-display); font-weight: 600; font-size: var(--s-4); letter-spacing: 0.2em; color: var(--warn); text-transform: uppercase; }
+.state-line { font-family: var(--f-data); font-size: var(--s-1); color: var(--ink-2); }
+
+/* ---------- narrow ---------- */
+@media (max-width: 1180px) {
+  .console { grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: auto minmax(520px, 68vh) auto auto; }
+  .rail.right { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--rule); display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+  .bus { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .mod.m-a { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--rule); }
+}
+@media (max-width: 760px) {
+  .console { display: flex; flex-direction: column; }
+  .view { height: 64vh; min-height: 380px; order: 1; }
+  .top { order: 0; }
+  .rail.right { order: 2; display: block; }
+  .bus { order: 3; grid-template-columns: minmax(0, 1fr); padding-left: 0; padding-right: 0; }
+  .mod { border-right: 0; border-bottom: 1px solid var(--rule); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+  .rail.left { order: 4; border-right: 0; border-top: 1px solid var(--rule); }
+  .sec { padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+  .lit { grid-template-columns: minmax(0, 1fr); }
+  .status { margin-left: 0; gap: 14px; }
+  .readout.r-tr { display: none; }
+  .readout { font-size: var(--s-0); }
+  .sel-acr { font-size: var(--s-5); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="console">
+  <header class="top">
+    <div class="mark"><b>SYN4RCH</b><span>Hypothalamic atlas &middot; Allen CCFv3 2017</span></div>
+    <div class="status" id="status"></div>
+  </header>
+
+  <nav class="rail left" aria-label="Structure index">
+    <section class="sec">
+      <h2>Nuclei with populations <em id="n-pop"></em></h2>
+      <div class="idx" id="idx-pop"></div>
+    </section>
+    <section class="sec">
+      <h2>Context structures <em id="n-ctx"></em></h2>
+      <div class="idx" id="idx-ctx"></div>
+    </section>
+    <section class="sec">
+      <h2>Not mapped to Allen <em id="n-un"></em></h2>
+      <div class="unmapped" id="unmapped"></div>
+      <p class="note">Exact acronym or name match inside the Allen hypothalamus subtree only. These vocabulary terms have no single Allen structure, so they have no volume here.</p>
+    </section>
+  </nav>
+
+  <main class="view" id="view" aria-label="3D view of the mouse brain in Allen CCF coordinates. Drag to rotate, scroll or pinch to zoom.">
+    <div class="loading" id="loading">INITIALISING RENDERER</div>
+    <div class="hud" aria-hidden="true">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div id="axes"></div>
+      <svg class="lead" id="lead"><polyline id="lead-line" points=""></polyline><circle id="lead-dot" r="3" cx="-10" cy="-10"></circle></svg>
+      <div class="tag" id="tag" hidden><b id="tag-a"></b><span id="tag-b"></span></div>
+      <div class="readout r-tl">
+        <div><span class="k">VIEW</span><span class="v" id="ro-view">ORBIT</span></div>
+        <div><span class="k">AZ</span><span class="v" id="ro-az">0.0&deg;</span></div>
+        <div><span class="k">EL</span><span class="v" id="ro-el">0.0&deg;</span></div>
+        <div><span class="k">RANGE</span><span class="v" id="ro-rng">0.00 mm</span></div>
+      </div>
+      <div class="readout r-tr">
+        <div><span class="k">SECTION</span><span class="v" id="ro-sweep">AP &mdash;</span></div>
+        <div class="u">coronal contours every 400 &micro;m</div>
+      </div>
+      <div class="readout r-bl">
+        <div class="u">SURFACE PROBE &middot; CCF &micro;m</div>
+        <div><span class="k">AP x</span><span class="v" id="ro-x">&mdash;</span></div>
+        <div><span class="k">DV y</span><span class="v" id="ro-y">&mdash;</span></div>
+        <div><span class="k">ML z</span><span class="v" id="ro-z">&mdash;</span></div>
+        <div><span class="k">HIT</span><span class="hit" id="ro-hit">&mdash;</span></div>
+      </div>
+      <div class="readout r-br scalebar">
+        <div class="bar" id="sb-bar" style="width:80px"></div>
+        <div id="sb-label">1 mm at target</div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="rail right" aria-label="Selection" aria-live="polite" id="sel"></aside>
+
+  <section class="bus" aria-label="Evidence layers">
+    <div class="mod m-a">
+      <div class="mod-h">
+        <span class="ch">LAYER A &middot; LITERATURE COVERAGE</span>
+        <h3>Papers that mention each population</h3>
+        <p>Count of harvested papers whose title, abstract or MeSH terms mention the population. A mention count, not evidence that any perturbation had an effect.</p>
+      </div>
+      <div class="legend"><span style="--sw: var(--lit-2)">mentioned in text</span><span style="--sw: var(--lit)">of which passed screen (include)</span></div>
+      <div class="lit" id="lit"></div>
+      <div class="src" id="lit-src"></div>
+    </div>
+    <div class="mod m-b">
+      <div class="mod-h">
+        <span class="ch">LAYER B &middot; CAUSAL PERTURBATION RECORDS</span>
+        <h3>Curated records</h3>
+        <p>Verified population &times; perturbation &times; readout observations, each with a verbatim quote and locator.</p>
+      </div>
+      <div class="void-slot">
+        <div class="big" id="causal-n">0<small>RECORDS</small></div>
+        <div class="state-line" id="causal-line"></div>
+      </div>
+      <div class="src" id="causal-src"></div>
+    </div>
+    <div class="mod m-c">
+      <div class="mod-h">
+        <span class="ch">LAYER C &middot; BRAIN-TO-BODY LINKS</span>
+        <h3>Projections and organ targets</h3>
+        <p>Links from nuclei to peripheral physiology come from the knowledge graph.</p>
+      </div>
+      <div class="void-slot">
+        <div class="state">Not yet available</div>
+        <div class="state-line" id="kg-line"></div>
+      </div>
+      <div class="src" id="kg-src"></div>
+    </div>
+  </section>
+</div>
+
+<script type="application/json" id="scene">__SCENE_JSON__</script>
+<script type="application/json" id="geom">__GEOMETRY_JSON__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  "use strict";
+  var S = JSON.parse(document.getElementById("scene").textContent);
+  var G = JSON.parse(document.getElementById("geom").textContent);
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var css = getComputedStyle(document.documentElement);
+  function tok(n) { return css.getPropertyValue(n).trim(); }
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function fmt(n) { return Math.round(n).toLocaleString("en-US"); }
+
+  var lit = S.evidence.literature, causal = S.evidence.causal, kg = S.evidence.kg;
+  var popsByNucleus = {}, popById = {};
+  S.populations.forEach(function (p) { (popsByNucleus[p.nucleus] = popsByNucleus[p.nucleus] || []).push(p); popById[p.id] = p; });
+  var regionById = {}; S.regions.forEach(function (r) { regionById[r.region_id] = r; });
+  var structByAllen = {}; S.structures.forEach(function (s) { structByAllen[s.allen_id] = s; });
+  var brain = S.structures.filter(function (s) { return s.role === "outline"; })[0];
+  var hy = S.structures.filter(function (s) { return s.role === "context"; })[0];
+  var nuclei = S.structures.filter(function (s) { return s.role === "nucleus"; });
+  function litOf(pid) { return (lit.counts && lit.counts[pid]) || null; }
+
+  /* ---------- header status ---------- */
+  var resolved = S.regions.filter(function (r) { return r.status === "resolved"; }).length;
+  $("status").innerHTML =
+    '<span><i>REGIONS MAPPED</i>' + resolved + "/" + S.regions.length + "</span>" +
+    "<span><i>POPULATIONS</i>" + S.populations.length + "</span>" +
+    "<span><i>MESHES</i>" + S.structures.length + "</span>" +
+    "<span><i>BUILD</i>" + esc(S.built_at) + "</span>" +
+    '<span class="live" id="clock">UTC --:--:--</span>';
+  function tick() { var d = new Date(); $("clock").textContent = "UTC " + d.toISOString().slice(11, 19); }
+  tick(); setInterval(tick, 1000);
+
+  /* ---------- structure index ---------- */
+  var withPop = nuclei.filter(function (s) { return popsByNucleus[s.region_id]; });
+  var ctx = nuclei.filter(function (s) { return !popsByNucleus[s.region_id]; });
+  function idxRow(s) {
+    var n = (popsByNucleus[s.region_id] || []).length;
+    return '<button type="button" data-allen="' + s.allen_id + '" aria-pressed="false" title="' + esc(s.allen_name) + '">' +
+      '<span class="acr">' + esc(s.allen_acronym) + '</span><span class="nm">' + esc(s.allen_name) + '</span>' +
+      '<span class="np">' + (n ? n + " pop" : s.allen_id) + "</span></button>";
+  }
+  $("idx-pop").innerHTML = withPop.map(idxRow).join("");
+  $("idx-ctx").innerHTML = ctx.map(idxRow).join("");
+  $("n-pop").textContent = withPop.length; $("n-ctx").textContent = ctx.length;
+  var un = S.regions.filter(function (r) { return r.status !== "resolved"; });
+  $("n-un").textContent = un.length;
+  $("unmapped").innerHTML = un.map(function (r) {
+    var aff = (popsByNucleus[r.region_id] || []).map(function (p) { return p.id; });
+    return "<div><code>" + esc(r.region_id.toUpperCase()) + "</code><span>" + esc(r.label) +
+      (aff.length ? ' <span class="u">&middot; holds ' + esc(aff.join(", ")) + "</span>" : "") + "</span></div>";
+  }).join("");
+
+  /* ---------- evidence layers ---------- */
+  var ordered = S.populations.slice().sort(function (a, b) {
+    var ca = litOf(a.id), cb = litOf(b.id);
+    return ((cb && cb.matched_in_text) || 0) - ((ca && ca.matched_in_text) || 0);
+  });
+  var maxLit = Math.max.apply(null, ordered.map(function (p) { var c = litOf(p.id); return c ? c.matched_in_text : 0; }).concat([1]));
+  $("lit").innerHTML = ordered.map(function (p) {
+    var c = litOf(p.id), m = c ? c.matched_in_text : null, inc = c ? c.include : null;
+    var v = m == null ? '<span class="zero">n/a</span>' : (m === 0 ? '<span class="zero">0</span>' : fmt(m) + " <small>/" + fmt(inc) + "</small>");
+    return '<button type="button" data-pop="' + p.id + '" aria-pressed="false" aria-label="' + esc(p.label) + ": " + (m == null ? "no count" : m + " papers mention it, " + inc + " passed screening") + '">' +
+      '<span class="ln">' + esc(p.id) + '</span><span class="lv">' + v + "</span>" +
+      '<span class="track"><span class="all" style="width:' + (100 * (m || 0) / maxLit).toFixed(1) + '%"></span><span class="inc" style="width:' + (100 * (inc || 0) / maxLit).toFixed(1) + '%"></span></span></button>';
+  }).join("");
+  $("lit-src").innerHTML =
+    "<span>SOURCE <b>" + esc(lit.source) + "</b></span>" +
+    "<span>RUN <b>" + esc(lit.run_timestamp) + "</b> (" + esc(lit.run_timestamp_kind) + ")</span>" +
+    (lit.total_papers ? "<span>CORPUS <b>" + fmt(lit.total_papers) + "</b> unique papers, title/abstract screen</span>" : "") +
+    (lit.note ? "<span>" + esc(lit.note) + "</span>" : "") +
+    "<span>Bars share one linear scale, 0 to " + fmt(maxLit) + " papers. A paper can mention several populations.</span>";
+  $("causal-n").innerHTML = fmt(causal.n_records) + "<small>RECORDS</small>";
+  $("causal-line").textContent = causal.exists ? causal.status : "Curation in progress. No record has passed the verbatim gate yet.";
+  $("causal-src").innerHTML = "<span>SOURCE <b>" + esc(causal.source) + "</b> " + (causal.exists ? "" : "(file not present at build)") + "</span>";
+  $("kg-line").textContent = "The knowledge graph is not built. No projections or organ links are drawn.";
+  $("kg-src").innerHTML = "<span>SOURCE <b>" + esc(kg.path) + "</b> (" + (kg.module_files.length ? kg.module_files.length + " modules" : "empty") + ")</span>";
+
+  /* ---------- selection panel ---------- */
+  var CONF = { high: "100%", medium: "60%", low: "25%" };
+  function popMeta(p) {
+    var c = litOf(p.id);
+    return '<span><i>NT</i> ' + esc(p.neurotransmitter.join(", ")) + "</span>" +
+      '<span><i>PAPERS</i> ' + (c ? c.matched_in_text : "n/a") + "</span>" +
+      '<span><i>RECORDS</i> ' + ((causal.by_population || {})[p.id] || 0) + "</span>" +
+      '<span class="conf" style="--c:' + (CONF[p.curation_confidence] || "0%") + '">' + esc(p.curation_confidence) + "</span>";
+  }
+  function chips(arr) { return arr.length ? '<div class="chips">' + arr.map(function (g) { return '<span class="chip">' + esc(g) + "</span>"; }).join("") + "</div>" : '<span class="u">none asserted</span>'; }
+  function mm(a, b) { return ((b - a) / 1000).toFixed(2); }
+
+  function renderOverview() {
+    $("sel").innerHTML =
+      '<section class="sec"><span class="eyebrow">Selection</span><div class="sel-head"><div class="sel-acr">HY</div>' +
+      '<div class="sel-name">' + esc(hy ? hy.allen_name : "Hypothalamus") + " &middot; Allen " + (hy ? hy.allen_id : "") + "</div></div>" +
+      '<p class="note">Select a nucleus in the view or the index, or a population in Layer A. The camera moves to the nucleus and this panel lists what the vocabulary and the harvest say about it.</p></section>' +
+      '<section class="sec"><h2>Frame</h2><dl class="kv">' +
+      "<dt>Atlas</dt><dd>" + esc(S.ccf.version) + "</dd>" +
+      "<dt>Units</dt><dd>" + esc(S.ccf.units) + "</dd>" +
+      "<dt>x / y / z</dt><dd>AP / DV / ML</dd>" +
+      "<dt>Brain bbox</dt><dd>" + (brain ? mm(brain.bbox_um[0][0], brain.bbox_um[1][0]) + " &times; " + mm(brain.bbox_um[0][1], brain.bbox_um[1][1]) + " &times; " + mm(brain.bbox_um[0][2], brain.bbox_um[1][2]) + " mm" : "") + "</dd>" +
+      "<dt>Meshes</dt><dd>Allen CCF 2017 structure meshes, vertex-clustered</dd>" +
+      "</dl></section>" +
+      '<section class="sec"><h2>Placement</h2><p class="note place">Populations are attached to the whole Allen volume of their nucleus. The dataset has no single-cell or subregion positions, and none are drawn.</p></section>';
+  }
+
+  function renderNucleus(s, focusPop) {
+    var r = regionById[s.region_id] || {};
+    var pops = popsByNucleus[s.region_id] || [];
+    var alt = (r.alternates || []).map(function (a) { return a.allen_acronym + " " + a.allen_id; });
+    var html =
+      '<section class="sec"><span class="eyebrow">Allen structure</span><div class="sel-head"><div class="sel-acr">' + esc(s.allen_acronym) + '</div>' +
+      '<div class="sel-name">' + esc(s.allen_name) + "</div></div>" +
+      '<dl class="kv"><dt>Allen id</dt><dd>' + s.allen_id + "</dd>" +
+      "<dt>Vocab region</dt><dd>" + esc(s.region_id) + " &middot; " + esc(r.label) + "</dd>" +
+      "<dt>Matched by</dt><dd>" + esc((r.matched_by || []).slice(0, 2).join("; ")) + "</dd>" +
+      (alt.length ? "<dt>Also matched</dt><dd>" + esc(alt.join(", ")) + " (synonym only; not used)</dd>" : "") +
+      "<dt>Centroid</dt><dd>" + s.vertex_mean_um.map(fmt).join(" / ") + " &micro;m</dd>" +
+      "<dt>Extent</dt><dd>" + mm(s.bbox_um[0][0], s.bbox_um[1][0]) + " &times; " + mm(s.bbox_um[0][1], s.bbox_um[1][1]) + " &times; " + mm(s.bbox_um[0][2], s.bbox_um[1][2]) + " mm</dd>" +
+      "<dt>Mesh</dt><dd>" + fmt(s.source_vertex_count) + " &rarr; " + fmt(s.vertex_count) + " vtx &middot; cell " + s.cluster_cell_um + " &micro;m</dd>" +
+      "</dl><p class=\"note\">Centroid is the mean of mesh vertices, both hemispheres.</p></section>";
+    if (focusPop) html += renderPop(focusPop);
+    html += '<section class="sec"><h2>Populations in this nucleus <em>' + pops.length + "</em></h2>";
+    if (pops.length) {
+      html += '<div class="pops">' + pops.map(function (p) {
+        return '<button type="button" data-pop="' + p.id + '"><span class="pl">' + esc(p.label) + '</span><span class="pm">' + popMeta(p) + "</span></button>";
+      }).join("") + "</div>";
+      html += '<p class="note place">Nucleus-level placement: each population sits somewhere inside this volume. Its cells are not localised further here.</p>';
+    } else {
+      html += '<p class="note">No population in the SYN4RCH vocabulary is assigned to this nucleus. It is shown for anatomical context.</p>';
+    }
+    html += "</section>";
+    $("sel").innerHTML = html;
+  }
+
+  function renderPop(p) {
+    var c = litOf(p.id), nrec = (causal.by_population || {})[p.id] || 0;
+    return '<section class="sec"><span class="eyebrow">Population &middot; ' + esc(p.id) + '</span><div class="sel-head"><div class="sel-acr pop">' + esc(p.label) + "</div></div>" +
+      '<dl class="kv">' +
+      "<dt>Markers</dt><dd>" + chips(p.marker_genes) + "</dd>" +
+      "<dt>Transmitter</dt><dd>" + esc(p.neurotransmitter.join(", ")) + "</dd>" +
+      "<dt>Cre lines</dt><dd>" + chips(p.cre_lines) + "</dd>" +
+      '<dt>Confidence</dt><dd><span class="conf" style="--c:' + (CONF[p.curation_confidence] || "0%") + '">' + esc(p.curation_confidence) + "</span></dd>" +
+      "<dt>A &middot; papers</dt><dd>" + (c ? c.matched_in_text + " mention it &middot; " + c.include + " passed screen" : "no count") + "</dd>" +
+      "<dt>B &middot; records</dt><dd>" + nrec + (causal.exists ? "" : " &middot; curation in progress") + "</dd>" +
+      "<dt>C &middot; links</dt><dd>not yet available</dd>" +
+      "</dl>" + (p.notes ? '<p class="note">' + esc(p.notes) + "</p>" : "") + "</section>";
+  }
+
+  function renderOrphanPop(p) {
+    var r = regionById[p.nucleus] || {};
+    $("sel").innerHTML = renderPop(p) +
+      '<section class="sec"><h2>No volume</h2><p class="note place">Its nucleus, ' + esc(p.nucleus.toUpperCase()) + " (" + esc(r.label || p.nucleus) +
+      "), has no single Allen structure, so nothing is highlighted in the view. " + esc(r.reason || "") + ".</p></section>";
+  }
+
+  /* ---------- 3D ---------- */
+  var view = $("view");
+  if (!window.THREE || !THREE.OrbitControls) { $("loading").textContent = "3D LIBRARY FAILED TO LOAD"; renderOverview(); wire(); return; }
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  view.insertBefore(renderer.domElement, view.firstChild);
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(32, 1, 0.05, 200);
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = !REDUCED; controls.dampingFactor = 0.08; controls.rotateSpeed = 0.6;
+  controls.minDistance = 1.2; controls.maxDistance = 40;
+  controls.autoRotate = !REDUCED; controls.autoRotateSpeed = 0.35;
+
+  // CCF (x AP, y DV, z ML, um, PIR) -> three (mm): right-handed, dorsal up, anterior toward +Z, animal right toward -X.
+  var C = (hy || brain).vertex_mean_um;
+  function toW(x, y, z) { return new THREE.Vector3(-(z - C[2]) / 1000, -(y - C[1]) / 1000, -(x - C[0]) / 1000); }
+  function toCCF(v) { return [C[0] - v.z * 1000, C[1] - v.y * 1000, C[2] - v.x * 1000]; }
+
+  function geometryFor(id) {
+    var g = G[String(id)], p = g.p, pos = new Float32Array(p.length);
+    for (var k = 0; k < p.length; k += 3) {
+      pos[k] = -(p[k + 2] - C[2]) / 1000; pos[k + 1] = -(p[k + 1] - C[1]) / 1000; pos[k + 2] = -(p[k] - C[0]) / 1000;
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setIndex(g.i); geo.computeVertexNormals(); geo.computeBoundingSphere();
+    return geo;
+  }
+
+  var rimVS = "varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.0); vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }";
+  var rimFS = "uniform vec3 uColor; uniform float uPow; uniform float uAmp; uniform float uBase; varying vec3 vN; varying vec3 vV; void main(){ float f = 1.0-abs(dot(normalize(vN), normalize(vV))); float a = uBase + uAmp*pow(f,uPow); gl_FragColor = vec4(uColor*a, a); }";
+  function rim(color, pow, amp, base) {
+    return new THREE.ShaderMaterial({ vertexShader: rimVS, fragmentShader: rimFS, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+      uniforms: { uColor: { value: new THREE.Color(color) }, uPow: { value: pow }, uAmp: { value: amp }, uBase: { value: base } } });
+  }
+
+  var sweepU = { value: 0 }, contourObj = null;
+  var pickables = [], nucleusObjs = {};
+  var brainMesh = null;
+  if (brain) {
+    var bg = geometryFor(brain.allen_id);
+    brainMesh = new THREE.Mesh(bg, rim(tok("--shell"), 2.6, 0.42, 0.006));
+    brainMesh.renderOrder = 3; scene.add(brainMesh);
+    scene.add(contours(bg, brain));
+  }
+  if (hy) {
+    var hm = new THREE.Mesh(geometryFor(hy.allen_id), rim(tok("--accent"), 3.0, 0.22, 0.0));
+    hm.renderOrder = 2; scene.add(hm);
+  }
+  var colBody = new THREE.Color(tok("--nucleus")), colCtx = new THREE.Color(tok("--nucleus-ctx")), colEdge = new THREE.Color(tok("--edge")), colAcc = new THREE.Color(tok("--accent"));
+  nuclei.forEach(function (s) {
+    var geo = geometryFor(s.allen_id), hasPop = !!popsByNucleus[s.region_id];
+    var mat = new THREE.MeshStandardMaterial({ color: hasPop ? colBody : colCtx, roughness: 0.55, metalness: 0.15, emissive: new THREE.Color(0x000000), transparent: true, opacity: hasPop ? 0.96 : 0.7 });
+    var mesh = new THREE.Mesh(geo, mat); mesh.userData.s = s; mesh.renderOrder = 1;
+    var edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 28), new THREE.LineBasicMaterial({ color: colEdge, transparent: true, opacity: hasPop ? 0.55 : 0.22 }));
+    mesh.add(edges); scene.add(mesh); pickables.push(mesh);
+    nucleusObjs[s.allen_id] = { mesh: mesh, edges: edges, hasPop: hasPop, center: toW(s.vertex_mean_um[0], s.vertex_mean_um[1], s.vertex_mean_um[2]),
+      radius: geo.boundingSphere.radius };
+  });
+  scene.add(new THREE.AmbientLight(0x9fb4c4, 0.45));
+  var key = new THREE.DirectionalLight(0xe6f4ff, 0.9); key.position.set(4, 8, 6); scene.add(key);
+  var fill = new THREE.DirectionalLight(0x5f8aa0, 0.5); fill.position.set(-6, -3, -5); scene.add(fill);
+
+  // Coronal section contours: exact intersections of the brain mesh with AP planes.
+  function contours(geo, s) {
+    var pos = geo.attributes.position.array, idx = geo.index.array, step = 0.4, out = [], ap = [];
+    var zmin = Infinity, zmax = -Infinity;
+    for (var k = 2; k < pos.length; k += 3) { zmin = Math.min(zmin, pos[k]); zmax = Math.max(zmax, pos[k]); }
+    var z0 = Math.ceil(zmin / step) * step;
+    for (var t = 0; t < idx.length; t += 3) {
+      var a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
+      var za = pos[a + 2], zb = pos[b + 2], zc = pos[c + 2];
+      var lo = Math.min(za, zb, zc), hi = Math.max(za, zb, zc);
+      for (var pz = Math.max(z0, Math.ceil(lo / step) * step); pz <= hi; pz += step) {
+        var pts = [];
+        [[a, b], [b, c], [c, a]].forEach(function (e) {
+          var z1 = pos[e[0] + 2], z2 = pos[e[1] + 2];
+          if ((z1 - pz) * (z2 - pz) < 0) {
+            var f = (pz - z1) / (z2 - z1);
+            pts.push(pos[e[0]] + f * (pos[e[1]] - pos[e[0]]), pos[e[0] + 1] + f * (pos[e[1] + 1] - pos[e[0] + 1]), pz);
+          }
+        });
+        if (pts.length === 6) { out.push.apply(out, pts); ap.push(pz, pz); }
+      }
+    }
+    var lg = new THREE.BufferGeometry();
+    lg.setAttribute("position", new THREE.Float32BufferAttribute(out, 3));
+    lg.setAttribute("aZ", new THREE.Float32BufferAttribute(ap, 1));
+    var m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { uSweep: sweepU, uColor: { value: new THREE.Color(tok("--shell")) }, uHot: { value: new THREE.Color(tok("--accent")) }, uGlow: { value: REDUCED ? 0.0 : 1.0 } },
+      vertexShader: "attribute float aZ; varying float vZ; void main(){ vZ = aZ; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+      fragmentShader: "uniform float uSweep; uniform vec3 uColor; uniform vec3 uHot; uniform float uGlow; varying float vZ; void main(){ float d = (vZ-uSweep)/0.35; float g = uGlow*exp(-d*d); float a = 0.075 + 0.6*g; vec3 c = mix(uColor, uHot, g); gl_FragColor = vec4(c*a, a); }" });
+    var ls = new THREE.LineSegments(lg, m); ls.renderOrder = 4;
+    ls.userData.zmin = zmin; ls.userData.zmax = zmax;
+    contourObj = ls;
+    return ls;
+  }
+
+  // Axis tags at real brain extents.
+  var axes = [];
+  if (brain) {
+    var b0 = brain.bbox_um[0], b1 = brain.bbox_um[1], m = brain.vertex_mean_um;
+    [["ANT", b0[0] - 300, C[1], C[2]], ["POST", b1[0] + 300, C[1], C[2]], ["DOR", C[0], b0[1] - 300, C[2]], ["VEN", C[0], b1[1] + 300, C[2]],
+     ["L", C[0], C[1], b0[2] - 300], ["R", C[0], C[1], b1[2] + 300]].forEach(function (a) {
+      var el = document.createElement("div"); el.className = "ax"; el.textContent = a[0]; $("axes").appendChild(el);
+      axes.push({ el: el, p: toW(a[1], a[2], a[3]) });
+    });
+  }
+
+  // Initial camera: anterior-left-dorsal oblique, framing the whole brain.
+  var home = { target: new THREE.Vector3(0, 0.6, 1.2), pos: new THREE.Vector3(-11.5, 6.5, 15.5) };
+  camera.position.copy(home.pos); controls.target.copy(home.target); controls.update();
+
+  function resize() {
+    var w = view.clientWidth, h = view.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / Math.max(h, 1); camera.updateProjectionMatrix();
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(view); else window.addEventListener("resize", resize);
+  resize();
+
+  /* camera tween */
+  var tween = null;
+  function flyTo(target, dist) {
+    var dir = camera.position.clone().sub(controls.target).normalize();
+    var endPos = target.clone().add(dir.multiplyScalar(dist));
+    if (REDUCED) { controls.target.copy(target); camera.position.copy(endPos); controls.update(); return; }
+    tween = { t0: performance.now(), dur: 1100, fromT: controls.target.clone(), toT: target.clone(), fromP: camera.position.clone(), toP: endPos };
+  }
+  function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+  /* selection */
+  var selected = null, hovered = null, selectedPop = null;
+  function paint() {
+    nuclei.forEach(function (s) {
+      var o = nucleusObjs[s.allen_id], isSel = selected === s.allen_id, isHov = hovered === s.allen_id;
+      o.mesh.material.color.copy(isSel ? colAcc.clone().multiplyScalar(0.32) : (o.hasPop ? colBody : colCtx));
+      o.mesh.material.emissive.copy(isSel ? colAcc.clone().multiplyScalar(0.28) : (isHov ? colAcc.clone().multiplyScalar(0.08) : new THREE.Color(0)));
+      o.mesh.material.opacity = (selected && !isSel) ? (o.hasPop ? 0.55 : 0.32) : (o.hasPop ? 0.96 : 0.7);
+      o.edges.material.color.copy(isSel || isHov ? colAcc : colEdge);
+      o.edges.material.opacity = isSel ? 0.95 : isHov ? 0.8 : (o.hasPop ? 0.55 : 0.22);
+    });
+    document.querySelectorAll(".idx button").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.allen === selected)); });
+    document.querySelectorAll(".lit button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pop === selectedPop)); });
+  }
+  function selectNucleus(allenId, pop) {
+    var o = nucleusObjs[allenId]; if (!o) return;
+    selected = allenId; selectedPop = pop ? pop.id : null;
+    renderNucleus(o.mesh.userData.s, pop || null);
+    flyTo(o.center, Math.max(3.2, o.radius * 6));
+    $("ro-view").textContent = "TRACK " + o.mesh.userData.s.allen_acronym;
+    controls.autoRotate = false; paint();
+  }
+  function selectPop(pid) {
+    var p = popById[pid]; if (!p) return;
+    if (p.allen_id && nucleusObjs[p.allen_id]) { selectNucleus(p.allen_id, p); }
+    else { selected = null; selectedPop = pid; renderOrphanPop(p); $("ro-view").textContent = "NO VOLUME"; paint(); }
+  }
+  function clearSel() {
+    selected = null; selectedPop = null; renderOverview(); $("ro-view").textContent = "ORBIT";
+    flyTo(home.target, home.pos.distanceTo(home.target)); paint();
+  }
+
+  /* picking */
+  var ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), downAt = null, lastMove = null;
+  function setNdc(e) { var r = renderer.domElement.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); }
+  function probe() {
+    ray.setFromCamera(ndc, camera);
+    var hit = ray.intersectObjects(pickables, false)[0];
+    var shell = hit ? null : (brainMesh ? ray.intersectObject(brainMesh, false)[0] : null);
+    var h = hit || shell;
+    if (h) {
+      var c = toCCF(h.point);
+      $("ro-x").textContent = fmt(c[0]); $("ro-y").textContent = fmt(c[1]); $("ro-z").textContent = fmt(c[2]);
+      $("ro-hit").textContent = hit ? hit.object.userData.s.allen_acronym + " · " + hit.object.userData.s.allen_id : "root · 997 (outline)";
+    } else { ["ro-x", "ro-y", "ro-z", "ro-hit"].forEach(function (id) { $(id).textContent = "—"; }); }
+    var nh = hit ? hit.object.userData.s.allen_id : null;
+    if (nh !== hovered) { hovered = nh; renderer.domElement.style.cursor = nh ? "pointer" : "grab"; paint(); }
+  }
+  renderer.domElement.addEventListener("pointermove", function (e) { setNdc(e); lastMove = true; });
+  renderer.domElement.addEventListener("pointerdown", function (e) { downAt = [e.clientX, e.clientY]; });
+  renderer.domElement.addEventListener("pointerup", function (e) {
+    if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+    setNdc(e); ray.setFromCamera(ndc, camera);
+    var hit = ray.intersectObjects(pickables, false)[0];
+    if (hit) selectNucleus(hit.object.userData.s.allen_id);
+  });
+  renderer.domElement.addEventListener("pointerleave", function () { hovered = null; paint(); ["ro-x", "ro-y", "ro-z", "ro-hit"].forEach(function (id) { $(id).textContent = "—"; }); });
+  var idleTimer = null;
+  controls.addEventListener("start", function () { tween = null; controls.autoRotate = false; clearTimeout(idleTimer); });
+  controls.addEventListener("end", function () { if (REDUCED) return; clearTimeout(idleTimer); idleTimer = setTimeout(function () { if (!selected) controls.autoRotate = true; }, 9000); });
+
+  /* frame loop */
+  var tmp = new THREE.Vector3(), t0 = performance.now();
+  function project(v) { tmp.copy(v).project(camera); return [(tmp.x + 1) / 2 * view.clientWidth, (1 - tmp.y) / 2 * view.clientHeight, tmp.z]; }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (tween) {
+      var k = Math.min(1, (now - tween.t0) / tween.dur), e = ease(k);
+      controls.target.lerpVectors(tween.fromT, tween.toT, e); camera.position.lerpVectors(tween.fromP, tween.toP, e);
+      if (k >= 1) tween = null;
+    }
+    controls.update();
+    if (contourObj && !REDUCED) {
+      var span = contourObj.userData.zmax - contourObj.userData.zmin, ph = ((now - t0) / 16000) % 1;
+      sweepU.value = contourObj.userData.zmax - ph * span;
+      $("ro-sweep").textContent = "AP " + fmt(C[0] - sweepU.value * 1000) + " µm";
+    } else if (contourObj) { sweepU.value = -999; $("ro-sweep").textContent = "AP static"; }
+    if (lastMove) { lastMove = false; probe(); }
+    renderer.render(scene, camera);
+
+    var off = camera.position.clone().sub(controls.target), dist = off.length();
+    var az = Math.atan2(off.x, off.z) * 180 / Math.PI, el = Math.asin(off.y / dist) * 180 / Math.PI;
+    $("ro-az").textContent = az.toFixed(1) + "°"; $("ro-el").textContent = el.toFixed(1) + "°"; $("ro-rng").textContent = dist.toFixed(2) + " mm";
+    var pxPerMm = view.clientHeight / (2 * dist * Math.tan(camera.fov * Math.PI / 360));
+    var opts = [0.25, 0.5, 1, 2, 5], len = opts[0];
+    for (var i = 0; i < opts.length; i++) { if (opts[i] * pxPerMm <= 150) len = opts[i]; }
+    $("sb-bar").style.width = Math.round(len * pxPerMm) + "px";
+    $("sb-label").textContent = (len < 1 ? Math.round(len * 1000) + " µm" : len + " mm") + " at target depth";
+    axes.forEach(function (a) { var p = project(a.p); a.el.style.left = p[0] + "px"; a.el.style.top = p[1] + "px"; a.el.style.opacity = p[2] < 1 ? "1" : "0"; });
+
+    if (selected) {
+      var o = nucleusObjs[selected], p = project(o.center), W = view.clientWidth;
+      var dx = p[0] > W * 0.6 ? -1 : 1, ex = p[0] + dx * 46, ey = p[1] - 46, fx = ex + dx * 34;
+      $("lead-line").setAttribute("points", p[0] + "," + p[1] + " " + ex + "," + ey + " " + fx + "," + ey);
+      $("lead-dot").setAttribute("cx", p[0]); $("lead-dot").setAttribute("cy", p[1]);
+      var tg = $("tag"); tg.hidden = false;
+      $("tag-a").textContent = o.mesh.userData.s.allen_acronym;
+      $("tag-b").textContent = "ALLEN " + o.mesh.userData.s.allen_id + " · " + (popsByNucleus[o.mesh.userData.s.region_id] || []).length + " POP · NUCLEUS-LEVEL";
+      var tw = tg.offsetWidth;
+      tg.style.left = (dx > 0 ? fx + 4 : fx - tw - 4) + "px"; tg.style.top = (ey - tg.offsetHeight / 2) + "px";
+    } else { $("lead-line").setAttribute("points", ""); $("lead-dot").setAttribute("cx", -10); $("tag").hidden = true; }
+  }
+  $("loading").remove();
+  renderOverview(); wire(); paint();
+  requestAnimationFrame(frame);
+
+  function wire() {
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.allen) selectNucleus(+b.dataset.allen);
+      else if (b.dataset.pop) selectPop(b.dataset.pop);
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && (selected || selectedPop)) clearSel(); });
+  }
+})();
+</script>

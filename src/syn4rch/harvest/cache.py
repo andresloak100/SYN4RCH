@@ -26,6 +26,7 @@ import os
 import sqlite3
 import time
 import urllib.error
+import http.client
 import urllib.request
 from typing import Dict, Optional, Tuple
 
@@ -244,6 +245,18 @@ def fetch(url: str, *, source: str, query: str, cache: Optional[Cache] = None,
                 time.sleep(2.0 ** attempt)
                 continue
             raise FetchError(url, None, "timeout")
+        except (http.client.HTTPException, ConnectionError, OSError) as exc:
+            # A server that drops the connection mid-response (e.g.
+            # http.client.RemoteDisconnected) is a transient network failure,
+            # exactly like a URLError. It must be retried and, if it persists,
+            # surfaced as a FetchError the caller already handles. Letting it
+            # escape aborted a whole harvest run during full-text retrieval and
+            # discarded the in-memory record store before candidates were written.
+            if attempt < max_retries:
+                last_status, last_err = None, "%s: %s" % (type(exc).__name__, exc)
+                time.sleep(2.0 ** attempt)
+                continue
+            raise FetchError(url, None, "%s: %s" % (type(exc).__name__, exc))
 
         if raw_log is not None:
             raw_log.record(source, query, url, status, body, ext=ext)

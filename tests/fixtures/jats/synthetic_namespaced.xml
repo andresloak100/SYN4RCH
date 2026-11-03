@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FABRICATED TEST DATA - NEVER EVIDENCE. Hand-written synthetic JATS; see
+  tests/fixtures/README.md.
+
+  The same structure as synthetic_complete.xml but served in a namespace with
+  a prefix, which some archive conversions do. It must parse identically:
+  comparing namespace-stripped local names is what makes that true.
+-->
+<j:article xmlns:j="http://jats.nlm.nih.gov" article-type="research-article">
+  <j:front>
+    <j:journal-meta>
+      <j:journal-title>Journal of Synthetic Test Data</j:journal-title>
+    </j:journal-meta>
+    <j:article-meta>
+      <j:article-id pub-id-type="pmcid">PMC0000005</j:article-id>
+      <j:article-id pub-id-type="doi">10.0000/synthetic.0005</j:article-id>
+      <j:title-group>
+        <j:article-title>Synthetic namespaced fixture</j:article-title>
+      </j:title-group>
+      <j:contrib-group>
+        <j:contrib contrib-type="author">
+          <j:name><j:surname>Namespaced</j:surname><j:given-names>H.</j:given-names></j:name>
+        </j:contrib>
+      </j:contrib-group>
+      <j:pub-date pub-type="epub"><j:year>2005</j:year></j:pub-date>
+      <j:abstract>
+        <j:p>An invented namespaced abstract paragraph.</j:p>
+      </j:abstract>
+    </j:article-meta>
+  </j:front>
+  <j:body>
+    <j:sec sec-type="results">
+      <j:title>Results</j:title>
+      <j:p>Chemogenetic inhibition of AgRP neurons decreased food intake in this
+        invented namespaced result.</j:p>
+    </j:sec>
+  </j:body>
+  <j:floats-group>
+    <j:fig id="fig1">
+      <j:label>Fig. 1</j:label>
+      <j:caption>
+        <j:p>An invented namespaced figure caption.</j:p>
+      </j:caption>
+    </j:fig>
+  </j:floats-group>
+</j:article>

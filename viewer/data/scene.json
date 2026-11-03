@@ -1,0 +1,1726 @@
+{
+ "built_at": "2026-11-03T23:39:29Z",
+ "ccf": {
+  "version": "CCFv3 2017",
+  "units": "micrometres",
+  "axes": {
+   "x": "anterior->posterior",
+   "y": "dorsal->ventral",
+   "z": "left->right"
+  },
+  "ontology_url": "https://api.brain-map.org/api/v2/structure_graph_download/1.json",
+  "mesh_url_template": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/{id}.obj"
+ },
+ "placement": "nucleus-level: populations are attached to the Allen volume of their nucleus; no single-cell positions exist in this dataset",
+ "structures": [
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 15744,
+   "triangle_count": 31721,
+   "bbox_um": [
+    [
+     -17,
+     134,
+     486
+    ],
+    [
+     13192,
+     7563,
+     10891
+    ]
+   ],
+   "vertex_mean_um": [
+    7531,
+    4149,
+    5691
+   ],
+   "allen_id": 997,
+   "allen_acronym": "root",
+   "allen_name": "root",
+   "allen_color": "FFFFFF",
+   "role": "outline",
+   "region_id": null,
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/997.obj",
+   "source_vertex_count": 49324,
+   "source_triangle_count": 98638,
+   "cluster_cell_um": 173.4
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 2568,
+   "triangle_count": 5130,
+   "bbox_um": [
+    [
+     4534,
+     3131,
+     3168
+    ],
+    [
+     8461,
+     7425,
+     8213
+    ]
+   ],
+   "vertex_mean_um": [
+    6610,
+    5765,
+    5707
+   ],
+   "allen_id": 1097,
+   "allen_acronym": "HY",
+   "allen_name": "Hypothalamus",
+   "allen_color": "E64438",
+   "role": "context",
+   "region_id": "hy",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/1097.obj",
+   "source_vertex_count": 6217,
+   "source_triangle_count": 12329,
+   "cluster_cell_um": 142.5
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 349,
+   "triangle_count": 694,
+   "bbox_um": [
+    [
+     6368,
+     6732,
+     5195
+    ],
+    [
+     7440,
+     7265,
+     6181
+    ]
+   ],
+   "vertex_mean_um": [
+    6963,
+    7077,
+    5690
+   ],
+   "allen_id": 223,
+   "allen_acronym": "ARH",
+   "allen_name": "Arcuate hypothalamic nucleus",
+   "allen_color": "FF5D50",
+   "role": "nucleus",
+   "region_id": "arc",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/223.obj",
+   "source_vertex_count": 349,
+   "source_triangle_count": 694,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 554,
+   "triangle_count": 1100,
+   "bbox_um": [
+    [
+     6333,
+     6306,
+     4873
+    ],
+    [
+     7293,
+     7063,
+     6491
+    ]
+   ],
+   "vertex_mean_um": [
+    6809,
+    6713,
+    5686
+   ],
+   "allen_id": 693,
+   "allen_acronym": "VMH",
+   "allen_name": "Ventromedial hypothalamic nucleus",
+   "allen_color": "FF4C3E",
+   "role": "nucleus",
+   "region_id": "vmh",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/693.obj",
+   "source_vertex_count": 554,
+   "source_triangle_count": 1100,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 477,
+   "triangle_count": 946,
+   "bbox_um": [
+    [
+     6678,
+     5740,
+     4996
+    ],
+    [
+     7469,
+     6717,
+     6389
+    ]
+   ],
+   "vertex_mean_um": [
+    7067,
+    6217,
+    5703
+   ],
+   "allen_id": 830,
+   "allen_acronym": "DMH",
+   "allen_name": "Dorsomedial nucleus of the hypothalamus",
+   "allen_color": "FF5547",
+   "role": "nucleus",
+   "region_id": "dmh",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/830.obj",
+   "source_vertex_count": 477,
+   "source_triangle_count": 946,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 250,
+   "triangle_count": 496,
+   "bbox_um": [
+    [
+     5672,
+     5323,
+     5304
+    ],
+    [
+     6432,
+     6025,
+     6074
+    ]
+   ],
+   "vertex_mean_um": [
+    6050,
+    5635,
+    5699
+   ],
+   "allen_id": 38,
+   "allen_acronym": "PVH",
+   "allen_name": "Paraventricular hypothalamic nucleus",
+   "allen_color": "FF5D50",
+   "role": "nucleus",
+   "region_id": "pvh",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/38.obj",
+   "source_vertex_count": 250,
+   "source_triangle_count": 496,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 1395,
+   "triangle_count": 2792,
+   "bbox_um": [
+    [
+     5784,
+     5332,
+     3923
+    ],
+    [
+     7842,
+     6598,
+     7460
+    ]
+   ],
+   "vertex_mean_um": [
+    6743,
+    5966,
+    5694
+   ],
+   "allen_id": 194,
+   "allen_acronym": "LHA",
+   "allen_name": "Lateral hypothalamic area",
+   "allen_color": "F2483B",
+   "role": "nucleus",
+   "region_id": "lha",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/194.obj",
+   "source_vertex_count": 1672,
+   "source_triangle_count": 3336,
+   "cluster_cell_um": 78.5
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 893,
+   "triangle_count": 1782,
+   "bbox_um": [
+    [
+     4697,
+     5742,
+     4759
+    ],
+    [
+     5812,
+     6742,
+     6604
+    ]
+   ],
+   "vertex_mean_um": [
+    5203,
+    6228,
+    5689
+   ],
+   "allen_id": 523,
+   "allen_acronym": "MPO",
+   "allen_name": "Medial preoptic area",
+   "allen_color": "FF5547",
+   "role": "nucleus",
+   "region_id": "mpo",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/523.obj",
+   "source_vertex_count": 893,
+   "source_triangle_count": 1782,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 129,
+   "triangle_count": 250,
+   "bbox_um": [
+    [
+     5242,
+     6678,
+     5099
+    ],
+    [
+     5556,
+     6945,
+     6267
+    ]
+   ],
+   "vertex_mean_um": [
+    5410,
+    6813,
+    5709
+   ],
+   "allen_id": 576073699,
+   "allen_acronym": "VMPO",
+   "allen_name": "Ventromedial preoptic nucleus",
+   "allen_color": "FF5547",
+   "role": "nucleus",
+   "region_id": "vmpo",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/576073699.obj",
+   "source_vertex_count": 129,
+   "source_triangle_count": 250,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 135,
+   "triangle_count": 266,
+   "bbox_um": [
+    [
+     4872,
+     4536,
+     5615
+    ],
+    [
+     5353,
+     6334,
+     5765
+    ]
+   ],
+   "vertex_mean_um": [
+    5135,
+    5430,
+    5695
+   ],
+   "allen_id": 452,
+   "allen_acronym": "MEPO",
+   "allen_name": "Median preoptic nucleus",
+   "allen_color": "FF5547",
+   "role": "nucleus",
+   "region_id": "mnpo",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/452.obj",
+   "source_vertex_count": 137,
+   "source_triangle_count": 270,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 779,
+   "triangle_count": 1550,
+   "bbox_um": [
+    [
+     4549,
+     5525,
+     4179
+    ],
+    [
+     5790,
+     6670,
+     7181
+    ]
+   ],
+   "vertex_mean_um": [
+    5287,
+    6218,
+    5668
+   ],
+   "allen_id": 226,
+   "allen_acronym": "LPO",
+   "allen_name": "Lateral preoptic area",
+   "allen_color": "F2483B",
+   "role": "nucleus",
+   "region_id": "lpo",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/226.obj",
+   "source_vertex_count": 779,
+   "source_triangle_count": 1550,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 138,
+   "triangle_count": 272,
+   "bbox_um": [
+    [
+     5667,
+     6678,
+     5397
+    ],
+    [
+     6155,
+     6993,
+     5990
+    ]
+   ],
+   "vertex_mean_um": [
+    5904,
+    6845,
+    5700
+   ],
+   "allen_id": 286,
+   "allen_acronym": "SCH",
+   "allen_name": "Suprachiasmatic nucleus",
+   "allen_color": "FF5547",
+   "role": "nucleus",
+   "region_id": "scn",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/286.obj",
+   "source_vertex_count": 138,
+   "source_triangle_count": 272,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 327,
+   "triangle_count": 644,
+   "bbox_um": [
+    [
+     7352,
+     6304,
+     4403
+    ],
+    [
+     7739,
+     6938,
+     6957
+    ]
+   ],
+   "vertex_mean_um": [
+    7537,
+    6600,
+    5683
+   ],
+   "allen_id": 557,
+   "allen_acronym": "TM",
+   "allen_name": "Tuberomammillary nucleus",
+   "allen_color": "FF4C3E",
+   "role": "nucleus",
+   "region_id": "tmn",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/557.obj",
+   "source_vertex_count": 327,
+   "source_triangle_count": 644,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 292,
+   "triangle_count": 576,
+   "bbox_um": [
+    [
+     7328,
+     6360,
+     4765
+    ],
+    [
+     7820,
+     6877,
+     6597
+    ]
+   ],
+   "vertex_mean_um": [
+    7552,
+    6608,
+    5684
+   ],
+   "allen_id": 1004,
+   "allen_acronym": "PMv",
+   "allen_name": "Ventral premammillary nucleus",
+   "allen_color": "FF4C3E",
+   "role": "nucleus",
+   "region_id": "pmv",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/1004.obj",
+   "source_vertex_count": 292,
+   "source_triangle_count": 576,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 262,
+   "triangle_count": 516,
+   "bbox_um": [
+    [
+     4588,
+     6072,
+     5266
+    ],
+    [
+     5208,
+     6833,
+     6100
+    ]
+   ],
+   "vertex_mean_um": [
+    4947,
+    6503,
+    5695
+   ],
+   "allen_id": 272,
+   "allen_acronym": "AVPV",
+   "allen_name": "Anteroventral periventricular nucleus",
+   "allen_color": "FF5547",
+   "role": "nucleus",
+   "region_id": "avpv",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/272.obj",
+   "source_vertex_count": 262,
+   "source_triangle_count": 516,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 168,
+   "triangle_count": 328,
+   "bbox_um": [
+    [
+     5580,
+     6534,
+     4174
+    ],
+    [
+     6151,
+     6941,
+     7193
+    ]
+   ],
+   "vertex_mean_um": [
+    5876,
+    6738,
+    5668
+   ],
+   "allen_id": 390,
+   "allen_acronym": "SO",
+   "allen_name": "Supraoptic nucleus",
+   "allen_color": "FF5D50",
+   "role": "nucleus",
+   "region_id": "sch_on",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/390.obj",
+   "source_vertex_count": 170,
+   "source_triangle_count": 332,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 156,
+   "triangle_count": 308,
+   "bbox_um": [
+    [
+     6680,
+     7146,
+     5405
+    ],
+    [
+     7603,
+     7422,
+     5964
+    ]
+   ],
+   "vertex_mean_um": [
+    7161,
+    7277,
+    5696
+   ],
+   "allen_id": 10671,
+   "allen_acronym": "ME",
+   "allen_name": "Median eminence",
+   "allen_color": "F2483B",
+   "role": "nucleus",
+   "region_id": "me",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/10671.obj",
+   "source_vertex_count": 157,
+   "source_triangle_count": 310,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 1386,
+   "triangle_count": 2777,
+   "bbox_um": [
+    [
+     5877,
+     4102,
+     3166
+    ],
+    [
+     8198,
+     5571,
+     8216
+    ]
+   ],
+   "vertex_mean_um": [
+    7248,
+    4964,
+    5678
+   ],
+   "allen_id": 797,
+   "allen_acronym": "ZI",
+   "allen_name": "Zona incerta",
+   "allen_color": "F2483B",
+   "role": "nucleus",
+   "region_id": "zi",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/797.obj",
+   "source_vertex_count": 1927,
+   "source_triangle_count": 3846,
+   "cluster_cell_um": 83.4
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 713,
+   "triangle_count": 1418,
+   "bbox_um": [
+    [
+     5551,
+     5777,
+     4779
+    ],
+    [
+     6654,
+     6805,
+     6606
+    ]
+   ],
+   "vertex_mean_um": [
+    6107,
+    6279,
+    5700
+   ],
+   "allen_id": 88,
+   "allen_acronym": "AHN",
+   "allen_name": "Anterior hypothalamic nucleus",
+   "allen_color": "FF4C3E",
+   "role": "nucleus",
+   "region_id": "ah",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/88.obj",
+   "source_vertex_count": 713,
+   "source_triangle_count": 1418,
+   "cluster_cell_um": 12.0
+  },
+  {
+   "units": "um",
+   "frame": "CCFv3 (x=AP, y=DV, z=ML)",
+   "vertex_count": 723,
+   "triangle_count": 1442,
+   "bbox_um": [
+    [
+     6998,
+     4755,
+     4899
+    ],
+    [
+     8020,
+     6314,
+     6466
+    ]
+   ],
+   "vertex_mean_um": [
+    7436,
+    5570,
+    5690
+   ],
+   "allen_id": 946,
+   "allen_acronym": "PH",
+   "allen_name": "Posterior hypothalamic nucleus",
+   "allen_color": "FF4C3E",
+   "role": "nucleus",
+   "region_id": "ph",
+   "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/946.obj",
+   "source_vertex_count": 723,
+   "source_triangle_count": 1442,
+   "cluster_cell_um": 12.0
+  }
+ ],
+ "regions": [
+  {
+   "region_id": "hy",
+   "label": "Hypothalamus",
+   "status": "resolved",
+   "allen_id": 1097,
+   "allen_acronym": "HY",
+   "allen_name": "Hypothalamus",
+   "matched_by": [
+    "abbreviation=acronym:HY",
+    "label=name",
+    "synonym=name:hypothalamus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "mbh",
+   "label": "Mediobasal hypothalamus",
+   "status": "unresolved",
+   "allen_id": null,
+   "allen_acronym": null,
+   "allen_name": null,
+   "matched_by": [],
+   "alternates": [],
+   "reason": "no exact acronym or name match in the Allen HY subtree"
+  },
+  {
+   "region_id": "arc",
+   "label": "Arcuate nucleus of the hypothalamus",
+   "status": "resolved",
+   "allen_id": 223,
+   "allen_acronym": "ARH",
+   "allen_name": "Arcuate hypothalamic nucleus",
+   "matched_by": [
+    "synonym=name:arcuate hypothalamic nucleus",
+    "synonym=acronym:ARH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "vmh",
+   "label": "Ventromedial hypothalamic nucleus",
+   "status": "resolved",
+   "allen_id": 693,
+   "allen_acronym": "VMH",
+   "allen_name": "Ventromedial hypothalamic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:VMH",
+    "label=name",
+    "synonym=name:ventromedial hypothalamic nucleus",
+    "synonym=acronym:VMH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "dmh",
+   "label": "Dorsomedial hypothalamic nucleus",
+   "status": "resolved",
+   "allen_id": 830,
+   "allen_acronym": "DMH",
+   "allen_name": "Dorsomedial nucleus of the hypothalamus",
+   "matched_by": [
+    "abbreviation=acronym:DMH",
+    "synonym=name:dorsomedial nucleus of the hypothalamus",
+    "synonym=acronym:DMH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "pvh",
+   "label": "Paraventricular nucleus of the hypothalamus",
+   "status": "resolved",
+   "allen_id": 38,
+   "allen_acronym": "PVH",
+   "allen_name": "Paraventricular hypothalamic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:PVH",
+    "synonym=name:paraventricular hypothalamic nucleus",
+    "synonym=acronym:PVH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "lha",
+   "label": "Lateral hypothalamic area",
+   "status": "resolved",
+   "allen_id": 194,
+   "allen_acronym": "LHA",
+   "allen_name": "Lateral hypothalamic area",
+   "matched_by": [
+    "abbreviation=acronym:LHA",
+    "label=name",
+    "synonym=name:lateral hypothalamic area",
+    "synonym=acronym:LHA"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "poa",
+   "label": "Preoptic area",
+   "status": "unresolved",
+   "allen_id": null,
+   "allen_acronym": null,
+   "allen_name": null,
+   "matched_by": [],
+   "alternates": [],
+   "reason": "no exact acronym or name match in the Allen HY subtree"
+  },
+  {
+   "region_id": "mpo",
+   "label": "Medial preoptic area / nucleus",
+   "status": "resolved",
+   "allen_id": 523,
+   "allen_acronym": "MPO",
+   "allen_name": "Medial preoptic area",
+   "matched_by": [
+    "abbreviation=acronym:MPO",
+    "synonym=name:medial preoptic area",
+    "synonym=acronym:MPO"
+   ],
+   "alternates": [
+    {
+     "allen_id": 515,
+     "allen_acronym": "MPN",
+     "allen_name": "Medial preoptic nucleus",
+     "matched_by": [
+      "synonym=name:medial preoptic nucleus",
+      "synonym=acronym:MPN"
+     ]
+    }
+   ],
+   "reason": null
+  },
+  {
+   "region_id": "vmpo",
+   "label": "Ventromedial preoptic nucleus",
+   "status": "resolved",
+   "allen_id": 576073699,
+   "allen_acronym": "VMPO",
+   "allen_name": "Ventromedial preoptic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:VMPO",
+    "label=name",
+    "synonym=name:ventromedial preoptic nucleus",
+    "synonym=acronym:VMPO"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "mnpo",
+   "label": "Median preoptic nucleus",
+   "status": "resolved",
+   "allen_id": 452,
+   "allen_acronym": "MEPO",
+   "allen_name": "Median preoptic nucleus",
+   "matched_by": [
+    "label=name",
+    "synonym=name:median preoptic nucleus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "lpo",
+   "label": "Lateral preoptic area",
+   "status": "resolved",
+   "allen_id": 226,
+   "allen_acronym": "LPO",
+   "allen_name": "Lateral preoptic area",
+   "matched_by": [
+    "abbreviation=acronym:LPO",
+    "label=name",
+    "synonym=name:lateral preoptic area",
+    "synonym=acronym:LPO"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "scn",
+   "label": "Suprachiasmatic nucleus",
+   "status": "resolved",
+   "allen_id": 286,
+   "allen_acronym": "SCH",
+   "allen_name": "Suprachiasmatic nucleus",
+   "matched_by": [
+    "label=name",
+    "synonym=name:suprachiasmatic nucleus",
+    "synonym=acronym:SCH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "tmn",
+   "label": "Tuberomammillary nucleus",
+   "status": "resolved",
+   "allen_id": 557,
+   "allen_acronym": "TM",
+   "allen_name": "Tuberomammillary nucleus",
+   "matched_by": [
+    "label=name",
+    "synonym=name:tuberomammillary nucleus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "pmv",
+   "label": "Ventral premammillary nucleus",
+   "status": "resolved",
+   "allen_id": 1004,
+   "allen_acronym": "PMv",
+   "allen_name": "Ventral premammillary nucleus",
+   "matched_by": [
+    "abbreviation=acronym:PMv",
+    "label=name",
+    "synonym=name:ventral premammillary nucleus",
+    "synonym=acronym:PMv"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "avpv",
+   "label": "Anteroventral periventricular nucleus",
+   "status": "resolved",
+   "allen_id": 272,
+   "allen_acronym": "AVPV",
+   "allen_name": "Anteroventral periventricular nucleus",
+   "matched_by": [
+    "abbreviation=acronym:AVPV",
+    "label=name",
+    "synonym=name:anteroventral periventricular nucleus",
+    "synonym=acronym:AVPV"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "pvp",
+   "label": "Periventricular hypothalamic nucleus",
+   "status": "unresolved",
+   "allen_id": null,
+   "allen_acronym": null,
+   "allen_name": null,
+   "matched_by": [],
+   "alternates": [],
+   "reason": "no exact acronym or name match in the Allen HY subtree"
+  },
+  {
+   "region_id": "sch_on",
+   "label": "Supraoptic nucleus",
+   "status": "resolved",
+   "allen_id": 390,
+   "allen_acronym": "SO",
+   "allen_name": "Supraoptic nucleus",
+   "matched_by": [
+    "label=name",
+    "synonym=name:supraoptic nucleus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "me",
+   "label": "Median eminence",
+   "status": "resolved",
+   "allen_id": 10671,
+   "allen_acronym": "ME",
+   "allen_name": "Median eminence",
+   "matched_by": [
+    "abbreviation=acronym:ME",
+    "label=name",
+    "synonym=name:median eminence",
+    "synonym=acronym:ME"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "zi",
+   "label": "Zona incerta",
+   "status": "resolved",
+   "allen_id": 797,
+   "allen_acronym": "ZI",
+   "allen_name": "Zona incerta",
+   "matched_by": [
+    "abbreviation=acronym:ZI",
+    "label=name",
+    "synonym=name:zona incerta",
+    "synonym=acronym:ZI"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "ah",
+   "label": "Anterior hypothalamic nucleus / area",
+   "status": "resolved",
+   "allen_id": 88,
+   "allen_acronym": "AHN",
+   "allen_name": "Anterior hypothalamic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:AHN",
+    "synonym=name:anterior hypothalamic nucleus",
+    "synonym=acronym:AHN"
+   ],
+   "alternates": [
+    {
+     "allen_id": 80,
+     "allen_acronym": "AHA",
+     "allen_name": "Anterior hypothalamic area",
+     "matched_by": [
+      "synonym=name:anterior hypothalamic area",
+      "synonym=acronym:AHA"
+     ]
+    }
+   ],
+   "reason": null
+  },
+  {
+   "region_id": "ph",
+   "label": "Posterior hypothalamic nucleus",
+   "status": "resolved",
+   "allen_id": 946,
+   "allen_acronym": "PH",
+   "allen_name": "Posterior hypothalamic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:PH",
+    "label=name",
+    "synonym=name:posterior hypothalamic nucleus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "pefa",
+   "label": "Perifornical area",
+   "status": "unresolved",
+   "allen_id": null,
+   "allen_acronym": null,
+   "allen_name": null,
+   "matched_by": [],
+   "alternates": [],
+   "reason": "no exact acronym or name match in the Allen HY subtree"
+  }
+ ],
+ "populations": [
+  {
+   "id": "arc_agrp",
+   "label": "ARC AgRP/NPY neurons",
+   "nucleus": "arc",
+   "allen_id": 223,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Agrp",
+    "Npy"
+   ],
+   "neurotransmitter": [
+    "GABA"
+   ],
+   "cre_lines": [
+    "Agrp-IRES-Cre",
+    "Npy-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Best-characterised population in this corpus. GABAergic (Vgat-expressing) is firmly established. 'NPY neurons' is a looser label: NPY is expressed outside ARC, so NPY-only papers need region confirmation."
+  },
+  {
+   "id": "arc_pomc",
+   "label": "ARC POMC neurons",
+   "nucleus": "arc",
+   "allen_id": 223,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Pomc",
+    "Cartpt"
+   ],
+   "neurotransmitter": [
+    "mixed"
+   ],
+   "cre_lines": [
+    "Pomc-Cre",
+    "Pomc-CreERT2"
+   ],
+   "curation_confidence": "high",
+   "notes": "POMC neurons are transcriptionally heterogeneous with both GABAergic and glutamatergic subsets, hence 'mixed' rather than a single transmitter. Cartpt co-marks a large fraction but not all. Pomc-Cre also labels some NTS POMC neurons and (for Tg lines) non-neuronal POMC lineages, which matters for whole-body phenotypes."
+  },
+  {
+   "id": "arc_kisspeptin",
+   "label": "ARC kisspeptin (KNDy) neurons",
+   "nucleus": "arc",
+   "allen_id": 223,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Kiss1",
+    "Tac2",
+    "Pdyn"
+   ],
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "cre_lines": [
+    "Kiss1-Cre",
+    "Tac2-Cre",
+    "Pdyn-IRES-Cre"
+   ],
+   "curation_confidence": "medium",
+   "notes": "Tac2 is the mouse symbol for neurokinin B (human TAC3). Glutamatergic phenotype is reported but weaker evidence than for AgRP GABA, so confidence is medium. Kiss1-Cre also labels the AVPV/RP3V kisspeptin population, which is a distinct population (see avpv_kisspeptin); papers must be read for which one was targeted. Pdyn-IRES-Cre and Tac2-Cre are far from ARC-specific."
+  },
+  {
+   "id": "avpv_kisspeptin",
+   "label": "AVPV/RP3V kisspeptin neurons",
+   "nucleus": "avpv",
+   "allen_id": 272,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Kiss1"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [
+    "Kiss1-Cre"
+   ],
+   "curation_confidence": "medium",
+   "notes": "Added because Kiss1-Cre work is split between this and the ARC population and conflating them would be an error. Fast transmitter phenotype not firmly established to the curator's knowledge."
+  },
+  {
+   "id": "arc_th",
+   "label": "ARC tyrosine-hydroxylase (dopaminergic/TIDA) neurons",
+   "nucleus": "arc",
+   "allen_id": 223,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Th"
+   ],
+   "neurotransmitter": [
+    "dopamine"
+   ],
+   "cre_lines": [
+    "Th-IRES-Cre"
+   ],
+   "curation_confidence": "medium",
+   "notes": "Classical TIDA neurons are dopaminergic and control prolactin. However Th-IRES-Cre labels ARC cells that are not uniformly fully dopaminergic (variable Slc6a3/Ddc expression), and some ARC TH neurons are reported to be GABA/glutamate co-releasing. Listed as dopamine with medium confidence."
+  },
+  {
+   "id": "arc_ghrh",
+   "label": "ARC GHRH neurons",
+   "nucleus": "arc",
+   "allen_id": 223,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Ghrh"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [],
+   "curation_confidence": "medium",
+   "notes": "Peptidergic identity is definitional; the fast transmitter phenotype is not firmly established to the curator, hence 'unknown'. A Ghrh-driver line is used in the GH field but the curator could not vouch for its exact allele name, so cre_lines is deliberately empty rather than guessed."
+  },
+  {
+   "id": "arc_sst",
+   "label": "ARC somatostatin neurons",
+   "nucleus": "arc",
+   "allen_id": 223,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Sst"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [
+    "Sst-IRES-Cre"
+   ],
+   "curation_confidence": "low",
+   "notes": "Sst-IRES-Cre is pan-brain, so region confirmation is essential. Note that the somatostatin population controlling GH secretion is classically periventricular/anterior (PeV), not arcuate; papers must be read for which was targeted. Fast transmitter phenotype not firmly established here."
+  },
+  {
+   "id": "arc_tbx3",
+   "label": "ARC Tbx3 neurons",
+   "nucleus": "arc",
+   "allen_id": 223,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Tbx3"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [],
+   "curation_confidence": "low",
+   "notes": "Tbx3 is a transcription factor required for ARC neuropeptidergic identity and is expressed across AgRP and POMC cells rather than marking one functional population; so this is a developmental/identity handle, not a transmitter-defined population. Published perturbations use floxed Tbx3 plus AAV-Cre rather than a Tbx3 driver line, so cre_lines is empty."
+  },
+  {
+   "id": "vmh_sf1",
+   "label": "VMH SF1 (Nr5a1) neurons",
+   "nucleus": "vmh",
+   "allen_id": 693,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Nr5a1"
+   ],
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "cre_lines": [
+    "Sf1-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Nr5a1 marks the dorsomedial/central VMH. Glutamatergic identity is well supported. Sf1-Cre also acts in adrenal cortex and gonads in some lines, which is a confound for endocrine readouts; this must be checked per paper."
+  },
+  {
+   "id": "vmh_bdnf",
+   "label": "VMH BDNF neurons",
+   "nucleus": "vmh",
+   "allen_id": 693,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Bdnf"
+   ],
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "cre_lines": [],
+   "curation_confidence": "medium",
+   "notes": "VMH is predominantly glutamatergic, so glutamate is inferred at the nucleus level rather than demonstrated for the Bdnf-defined subset: medium confidence. Most published perturbations are region-targeted Bdnf deletion (floxed Bdnf plus AAV-Cre or stereotaxic knockdown), not driver-line targeting, so cre_lines is empty rather than guessed."
+  },
+  {
+   "id": "dmh_lepr",
+   "label": "DMH leptin receptor (LepR) neurons",
+   "nucleus": "dmh",
+   "allen_id": 830,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Lepr"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [
+    "Lepr-IRES-Cre"
+   ],
+   "curation_confidence": "medium",
+   "notes": "Lepr-Cre is expressed in many hypothalamic and extrahypothalamic sites, so region restriction (usually by AAV injection site) defines the population. Transmitter phenotype of the DMH LepR subset not firmly established to the curator."
+  },
+  {
+   "id": "dmh_bdnf",
+   "label": "DMH BDNF neurons",
+   "nucleus": "dmh",
+   "allen_id": 830,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Bdnf"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [],
+   "curation_confidence": "low",
+   "notes": "Thinly characterised relative to VMH BDNF. Transmitter unknown; no driver line asserted."
+  },
+  {
+   "id": "pvh_crh",
+   "label": "PVH CRH neurons",
+   "nucleus": "pvh",
+   "allen_id": 38,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Crh"
+   ],
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "cre_lines": [
+    "Crh-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Apex of the HPA axis; the neuroendocrine subset projects to the median eminence. Crh-Cre also labels extrahypothalamic CRH populations (BNST, CeA, Barrington's), so region confirmation matters."
+  },
+  {
+   "id": "pvh_oxt",
+   "label": "PVH oxytocin neurons",
+   "nucleus": "pvh",
+   "allen_id": 38,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Oxt"
+   ],
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "cre_lines": [
+    "Oxt-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Magnocellular (neurohypophysial) and parvocellular (central-projecting) subsets have different physiology and are frequently not distinguished in abstracts. SON oxytocin neurons are a separate anatomical population often studied together with PVH."
+  },
+  {
+   "id": "pvh_avp",
+   "label": "PVH vasopressin neurons",
+   "nucleus": "pvh",
+   "allen_id": 38,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Avp"
+   ],
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "cre_lines": [
+    "Avp-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Overlaps anatomically with SON AVP neurons for osmoregulatory readouts, and is distinct from SCN AVP neurons (see scn_avp). Abstract-level text often does not say which."
+  },
+  {
+   "id": "pvh_trh",
+   "label": "PVH TRH neurons",
+   "nucleus": "pvh",
+   "allen_id": 38,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Trh"
+   ],
+   "neurotransmitter": [
+    "peptidergic"
+   ],
+   "cre_lines": [],
+   "curation_confidence": "medium",
+   "notes": "Controls the HPT axis. 'peptidergic' is definitional; the fast transmitter phenotype is not firmly established here. A Trh driver line is used in the field but the curator could not vouch for its exact name, so cre_lines is empty rather than guessed."
+  },
+  {
+   "id": "pvh_mc4r",
+   "label": "PVH MC4R neurons",
+   "nucleus": "pvh",
+   "allen_id": 38,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Mc4r"
+   ],
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "cre_lines": [
+    "Mc4r-t2a-Cre"
+   ],
+   "curation_confidence": "medium",
+   "notes": "Downstream target of ARC AgRP/POMC input; strong energy-balance literature. Glutamatergic identity follows from PVH being predominantly glutamatergic plus direct reports: medium-high, recorded as glutamate with medium confidence."
+  },
+  {
+   "id": "pvh_sim1",
+   "label": "PVH Sim1 neurons",
+   "nucleus": "pvh",
+   "allen_id": 38,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Sim1"
+   ],
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "cre_lines": [
+    "Sim1-Cre"
+   ],
+   "curation_confidence": "medium",
+   "notes": "Sim1 is a developmental transcription factor marking most of PVH (plus SON and parts of the amygdala), so it is a broad nucleus-level handle rather than a cell type. Glutamate recorded at medium confidence on nucleus-level grounds."
+  },
+  {
+   "id": "pvh_nos1",
+   "label": "PVH Nos1 neurons",
+   "nucleus": "pvh",
+   "allen_id": 38,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Nos1"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [
+    "Nos1-IRES-Cre"
+   ],
+   "curation_confidence": "low",
+   "notes": "Nos1 overlaps partially with CRH, OXT and TRH subsets, so this entry is not disjoint from the other PVH entries. Transmitter unknown."
+  },
+  {
+   "id": "lha_orexin",
+   "label": "LHA orexin/hypocretin neurons",
+   "nucleus": "lha",
+   "allen_id": 194,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Hcrt"
+   ],
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "cre_lines": [
+    "Hcrt-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Glutamatergic (Vglut2-expressing) is well supported. An orexin-tTA / Hcrt-tTA transgenic system is also widely used for conditional ablation (orexin-DTA); the curator is confident such a system exists but has not verified an exact allele name, so only the Cre line is listed."
+  },
+  {
+   "id": "lha_mch",
+   "label": "LHA MCH neurons",
+   "nucleus": "lha",
+   "allen_id": 194,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Pmch"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [
+    "Pmch-Cre"
+   ],
+   "curation_confidence": "medium",
+   "notes": "Transmitter phenotype is contested: MCH neurons have been reported as glutamatergic and as GABA-marker-expressing, with subset heterogeneity. Recorded as 'unknown' rather than taking a side."
+  },
+  {
+   "id": "lha_vgat",
+   "label": "LHA GABAergic (Vgat) neurons",
+   "nucleus": "lha",
+   "allen_id": 194,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Slc32a1"
+   ],
+   "neurotransmitter": [
+    "GABA"
+   ],
+   "cre_lines": [
+    "Vgat-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Transmitter is definitional (Slc32a1 = Vgat). This is a transmitter-class population, not a cell type, and is heterogeneous; it overlaps partially with lha_mch and other LHA peptidergic cells."
+  },
+  {
+   "id": "lha_vglut2",
+   "label": "LHA glutamatergic (Vglut2) neurons",
+   "nucleus": "lha",
+   "allen_id": 194,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Slc17a6"
+   ],
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "cre_lines": [
+    "Vglut2-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Transmitter is definitional (Slc17a6 = Vglut2). Overlaps lha_orexin."
+  },
+  {
+   "id": "poa_warm_sensitive",
+   "label": "Preoptic warm-sensitive neurons (VMPO/MPA)",
+   "nucleus": "vmpo",
+   "allen_id": 576073699,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Qrfp",
+    "Adcyap1",
+    "Bdnf"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [
+    "Adcyap1-2A-Cre"
+   ],
+   "curation_confidence": "low",
+   "notes": "This is a FUNCTIONAL definition (warm-activated) onto which several molecular markers have been mapped by different groups: Qrfp-expressing VMPO neurons, and Adcyap1(PACAP)/Bdnf co-expressing VMPO neurons. These marker sets are not established to be the same cells, so marker_genes here is a union of candidate markers, not a conjunction. A Qrfp driver line is used in this literature but the curator could not vouch for its exact name, so only Adcyap1-2A-Cre is listed. Transmitter heterogeneous/unknown."
+  },
+  {
+   "id": "poa_galanin",
+   "label": "Preoptic galanin neurons",
+   "nucleus": "mpo",
+   "allen_id": 523,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Gal"
+   ],
+   "neurotransmitter": [
+    "GABA"
+   ],
+   "cre_lines": [
+    "Gal-Cre"
+   ],
+   "curation_confidence": "medium",
+   "notes": "Two partly distinct literatures use this label: sleep-promoting VLPO/MnPO galanin neurons and parental-behaviour MPOA galanin neurons. GABAergic is reported for the sleep-active population; recorded at medium confidence and not asserted for all galanin preoptic cells."
+  },
+  {
+   "id": "scn_vip",
+   "label": "SCN VIP neurons",
+   "nucleus": "scn",
+   "allen_id": 286,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Vip"
+   ],
+   "neurotransmitter": [
+    "GABA",
+    "peptidergic"
+   ],
+   "cre_lines": [
+    "Vip-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Essentially all SCN neurons are GABAergic, so GABA here is on firm nucleus-level grounds. VIP marks the retinorecipient core and mediates network synchrony."
+  },
+  {
+   "id": "scn_avp",
+   "label": "SCN AVP neurons",
+   "nucleus": "scn",
+   "allen_id": 286,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Avp"
+   ],
+   "neurotransmitter": [
+    "GABA",
+    "peptidergic"
+   ],
+   "cre_lines": [
+    "Avp-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Distinct from pvh_avp despite sharing the Avp marker and the Avp-IRES-Cre driver; disambiguation requires the region. Circadian output rather than osmoregulation."
+  },
+  {
+   "id": "tmn_histamine",
+   "label": "TMN histaminergic neurons",
+   "nucleus": "tmn",
+   "allen_id": 557,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Hdc"
+   ],
+   "neurotransmitter": [
+    "histamine"
+   ],
+   "cre_lines": [
+    "Hdc-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "The sole source of brain histamine; Hdc is definitional. Many TMN histamine neurons also express GABA markers; GABA co-release is reported but not listed as established here."
+  },
+  {
+   "id": "zi_gaba",
+   "label": "Zona incerta GABAergic neurons",
+   "nucleus": "zi",
+   "allen_id": 797,
+   "nucleus_status": "resolved",
+   "marker_genes": [
+    "Slc32a1"
+   ],
+   "neurotransmitter": [
+    "GABA"
+   ],
+   "cre_lines": [
+    "Vgat-IRES-Cre"
+   ],
+   "curation_confidence": "high",
+   "notes": "Subthalamic rather than strictly hypothalamic; included because the feeding/sleep perturbation literature treats it alongside LHA. Transmitter definitional."
+  },
+  {
+   "id": "mbh_ikkb",
+   "label": "Mediobasal hypothalamic IKKbeta/NF-kB signalling",
+   "nucleus": "mbh",
+   "allen_id": null,
+   "nucleus_status": "unresolved",
+   "marker_genes": [
+    "Ikbkb",
+    "Nfkb1",
+    "Rela"
+   ],
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "cre_lines": [],
+   "curation_confidence": "low",
+   "notes": "NOT a neuronal population. This is a signalling-pathway perturbation (constitutively active IKKbeta or Ikbkb deletion delivered to MBH, sometimes in neurons, sometimes in microglia/astrocytes) that the aging-hypothalamus literature treats as a hypothalamic manipulation. Kept so the harvest can find that literature; any downstream record must mark the cell type honestly as not a defined population. marker_genes are pathway genes, not cell-identity markers."
+  }
+ ],
+ "evidence": {
+  "literature": {
+   "source": "reports/harvest_summary.md",
+   "source_kind": "harvest_summary.md",
+   "run_timestamp": "2026-11-03T18:45:49Z",
+   "run_started": "2026-11-03T18:43:31Z",
+   "run_timestamp_kind": "harvest run finished (UTC)",
+   "total_papers": 9654,
+   "counts": {
+    "arc_agrp": {
+     "matched_in_text": 321,
+     "include": 208
+    },
+    "lha_orexin": {
+     "matched_in_text": 257,
+     "include": 161
+    },
+    "arc_pomc": {
+     "matched_in_text": 225,
+     "include": 148
+    },
+    "arc_kisspeptin": {
+     "matched_in_text": 216,
+     "include": 80
+    },
+    "pvh_crh": {
+     "matched_in_text": 171,
+     "include": 91
+    },
+    "pvh_oxt": {
+     "matched_in_text": 161,
+     "include": 61
+    },
+    "lha_mch": {
+     "matched_in_text": 102,
+     "include": 57
+    },
+    "pvh_avp": {
+     "matched_in_text": 89,
+     "include": 40
+    },
+    "tmn_histamine": {
+     "matched_in_text": 82,
+     "include": 45
+    },
+    "scn_vip": {
+     "matched_in_text": 58,
+     "include": 17
+    },
+    "vmh_sf1": {
+     "matched_in_text": 46,
+     "include": 23
+    },
+    "pvh_trh": {
+     "matched_in_text": 35,
+     "include": 19
+    },
+    "arc_ghrh": {
+     "matched_in_text": 29,
+     "include": 17
+    },
+    "avpv_kisspeptin": {
+     "matched_in_text": 28,
+     "include": 15
+    },
+    "pvh_mc4r": {
+     "matched_in_text": 26,
+     "include": 6
+    },
+    "arc_th": {
+     "matched_in_text": 25,
+     "include": 13
+    },
+    "lha_vgat": {
+     "matched_in_text": 25,
+     "include": 16
+    },
+    "zi_gaba": {
+     "matched_in_text": 22,
+     "include": 8
+    },
+    "pvh_sim1": {
+     "matched_in_text": 19,
+     "include": 8
+    },
+    "pvh_nos1": {
+     "matched_in_text": 18,
+     "include": 6
+    },
+    "poa_warm_sensitive": {
+     "matched_in_text": 18,
+     "include": 10
+    },
+    "dmh_lepr": {
+     "matched_in_text": 14,
+     "include": 7
+    },
+    "poa_galanin": {
+     "matched_in_text": 14,
+     "include": 5
+    },
+    "lha_vglut2": {
+     "matched_in_text": 12,
+     "include": 7
+    },
+    "arc_sst": {
+     "matched_in_text": 9,
+     "include": 3
+    },
+    "vmh_bdnf": {
+     "matched_in_text": 4,
+     "include": 1
+    },
+    "scn_avp": {
+     "matched_in_text": 4,
+     "include": 2
+    },
+    "mbh_ikkb": {
+     "matched_in_text": 2,
+     "include": 0
+    },
+    "arc_tbx3": {
+     "matched_in_text": 0,
+     "include": 0
+    },
+    "dmh_bdnf": {
+     "matched_in_text": 0,
+     "include": 0
+    }
+   },
+   "note": "data/interim/candidates.jsonl not present at build time; counts read from the summary report written by the same harvest run"
+  },
+  "causal": {
+   "source": "data/curated/records.jsonl",
+   "exists": false,
+   "n_records": 0,
+   "by_population": {},
+   "status": "curation in progress; no curated records exist yet"
+  },
+  "kg": {
+   "available": false,
+   "path": "src/syn4rch/kg/",
+   "module_files": [],
+   "status": "knowledge graph not built; no brain-to-body links are drawn"
+  }
+ }
+}

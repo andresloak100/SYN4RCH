@@ -1,0 +1,366 @@
+{
+ "built_at": "2026-11-03T23:39:29Z",
+ "ontology_url": "https://api.brain-map.org/api/v2/structure_graph_download/1.json",
+ "rules": "Resolve SYN4RCH region vocabulary entries to Allen structure ids.\n\nMatching rules (exact, never fuzzy):\n\n* Search scope is the Allen Hypothalamus subtree (acronym ``HY``) only, so a\n  synonym such as ``ARC`` cannot accidentally hit an unrelated structure\n  elsewhere in the brain.\n* Tier 1: the entry's ``abbreviation`` equals an Allen acronym (case\n  sensitive), or its ``label`` equals an Allen name (normalised).\n* Tier 2: any ``synonym`` equals an Allen acronym (case sensitive) or name\n  (normalised).\n* One distinct tier-1 id wins; other ids hit only by synonyms are reported as\n  ``alternates`` so the reviewer can see the ambiguity. With no tier-1 hit,\n  exactly one distinct tier-2 id resolves. Anything else is unresolved.",
+ "regions": [
+  {
+   "region_id": "hy",
+   "label": "Hypothalamus",
+   "status": "resolved",
+   "allen_id": 1097,
+   "allen_acronym": "HY",
+   "allen_name": "Hypothalamus",
+   "matched_by": [
+    "abbreviation=acronym:HY",
+    "label=name",
+    "synonym=name:hypothalamus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "mbh",
+   "label": "Mediobasal hypothalamus",
+   "status": "unresolved",
+   "allen_id": null,
+   "allen_acronym": null,
+   "allen_name": null,
+   "matched_by": [],
+   "alternates": [],
+   "reason": "no exact acronym or name match in the Allen HY subtree"
+  },
+  {
+   "region_id": "arc",
+   "label": "Arcuate nucleus of the hypothalamus",
+   "status": "resolved",
+   "allen_id": 223,
+   "allen_acronym": "ARH",
+   "allen_name": "Arcuate hypothalamic nucleus",
+   "matched_by": [
+    "synonym=name:arcuate hypothalamic nucleus",
+    "synonym=acronym:ARH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "vmh",
+   "label": "Ventromedial hypothalamic nucleus",
+   "status": "resolved",
+   "allen_id": 693,
+   "allen_acronym": "VMH",
+   "allen_name": "Ventromedial hypothalamic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:VMH",
+    "label=name",
+    "synonym=name:ventromedial hypothalamic nucleus",
+    "synonym=acronym:VMH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "dmh",
+   "label": "Dorsomedial hypothalamic nucleus",
+   "status": "resolved",
+   "allen_id": 830,
+   "allen_acronym": "DMH",
+   "allen_name": "Dorsomedial nucleus of the hypothalamus",
+   "matched_by": [
+    "abbreviation=acronym:DMH",
+    "synonym=name:dorsomedial nucleus of the hypothalamus",
+    "synonym=acronym:DMH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "pvh",
+   "label": "Paraventricular nucleus of the hypothalamus",
+   "status": "resolved",
+   "allen_id": 38,
+   "allen_acronym": "PVH",
+   "allen_name": "Paraventricular hypothalamic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:PVH",
+    "synonym=name:paraventricular hypothalamic nucleus",
+    "synonym=acronym:PVH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "lha",
+   "label": "Lateral hypothalamic area",
+   "status": "resolved",
+   "allen_id": 194,
+   "allen_acronym": "LHA",
+   "allen_name": "Lateral hypothalamic area",
+   "matched_by": [
+    "abbreviation=acronym:LHA",
+    "label=name",
+    "synonym=name:lateral hypothalamic area",
+    "synonym=acronym:LHA"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "poa",
+   "label": "Preoptic area",
+   "status": "unresolved",
+   "allen_id": null,
+   "allen_acronym": null,
+   "allen_name": null,
+   "matched_by": [],
+   "alternates": [],
+   "reason": "no exact acronym or name match in the Allen HY subtree"
+  },
+  {
+   "region_id": "mpo",
+   "label": "Medial preoptic area / nucleus",
+   "status": "resolved",
+   "allen_id": 523,
+   "allen_acronym": "MPO",
+   "allen_name": "Medial preoptic area",
+   "matched_by": [
+    "abbreviation=acronym:MPO",
+    "synonym=name:medial preoptic area",
+    "synonym=acronym:MPO"
+   ],
+   "alternates": [
+    {
+     "allen_id": 515,
+     "allen_acronym": "MPN",
+     "allen_name": "Medial preoptic nucleus",
+     "matched_by": [
+      "synonym=name:medial preoptic nucleus",
+      "synonym=acronym:MPN"
+     ]
+    }
+   ],
+   "reason": null
+  },
+  {
+   "region_id": "vmpo",
+   "label": "Ventromedial preoptic nucleus",
+   "status": "resolved",
+   "allen_id": 576073699,
+   "allen_acronym": "VMPO",
+   "allen_name": "Ventromedial preoptic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:VMPO",
+    "label=name",
+    "synonym=name:ventromedial preoptic nucleus",
+    "synonym=acronym:VMPO"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "mnpo",
+   "label": "Median preoptic nucleus",
+   "status": "resolved",
+   "allen_id": 452,
+   "allen_acronym": "MEPO",
+   "allen_name": "Median preoptic nucleus",
+   "matched_by": [
+    "label=name",
+    "synonym=name:median preoptic nucleus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "lpo",
+   "label": "Lateral preoptic area",
+   "status": "resolved",
+   "allen_id": 226,
+   "allen_acronym": "LPO",
+   "allen_name": "Lateral preoptic area",
+   "matched_by": [
+    "abbreviation=acronym:LPO",
+    "label=name",
+    "synonym=name:lateral preoptic area",
+    "synonym=acronym:LPO"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "scn",
+   "label": "Suprachiasmatic nucleus",
+   "status": "resolved",
+   "allen_id": 286,
+   "allen_acronym": "SCH",
+   "allen_name": "Suprachiasmatic nucleus",
+   "matched_by": [
+    "label=name",
+    "synonym=name:suprachiasmatic nucleus",
+    "synonym=acronym:SCH"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "tmn",
+   "label": "Tuberomammillary nucleus",
+   "status": "resolved",
+   "allen_id": 557,
+   "allen_acronym": "TM",
+   "allen_name": "Tuberomammillary nucleus",
+   "matched_by": [
+    "label=name",
+    "synonym=name:tuberomammillary nucleus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "pmv",
+   "label": "Ventral premammillary nucleus",
+   "status": "resolved",
+   "allen_id": 1004,
+   "allen_acronym": "PMv",
+   "allen_name": "Ventral premammillary nucleus",
+   "matched_by": [
+    "abbreviation=acronym:PMv",
+    "label=name",
+    "synonym=name:ventral premammillary nucleus",
+    "synonym=acronym:PMv"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "avpv",
+   "label": "Anteroventral periventricular nucleus",
+   "status": "resolved",
+   "allen_id": 272,
+   "allen_acronym": "AVPV",
+   "allen_name": "Anteroventral periventricular nucleus",
+   "matched_by": [
+    "abbreviation=acronym:AVPV",
+    "label=name",
+    "synonym=name:anteroventral periventricular nucleus",
+    "synonym=acronym:AVPV"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "pvp",
+   "label": "Periventricular hypothalamic nucleus",
+   "status": "unresolved",
+   "allen_id": null,
+   "allen_acronym": null,
+   "allen_name": null,
+   "matched_by": [],
+   "alternates": [],
+   "reason": "no exact acronym or name match in the Allen HY subtree"
+  },
+  {
+   "region_id": "sch_on",
+   "label": "Supraoptic nucleus",
+   "status": "resolved",
+   "allen_id": 390,
+   "allen_acronym": "SO",
+   "allen_name": "Supraoptic nucleus",
+   "matched_by": [
+    "label=name",
+    "synonym=name:supraoptic nucleus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "me",
+   "label": "Median eminence",
+   "status": "resolved",
+   "allen_id": 10671,
+   "allen_acronym": "ME",
+   "allen_name": "Median eminence",
+   "matched_by": [
+    "abbreviation=acronym:ME",
+    "label=name",
+    "synonym=name:median eminence",
+    "synonym=acronym:ME"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "zi",
+   "label": "Zona incerta",
+   "status": "resolved",
+   "allen_id": 797,
+   "allen_acronym": "ZI",
+   "allen_name": "Zona incerta",
+   "matched_by": [
+    "abbreviation=acronym:ZI",
+    "label=name",
+    "synonym=name:zona incerta",
+    "synonym=acronym:ZI"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "ah",
+   "label": "Anterior hypothalamic nucleus / area",
+   "status": "resolved",
+   "allen_id": 88,
+   "allen_acronym": "AHN",
+   "allen_name": "Anterior hypothalamic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:AHN",
+    "synonym=name:anterior hypothalamic nucleus",
+    "synonym=acronym:AHN"
+   ],
+   "alternates": [
+    {
+     "allen_id": 80,
+     "allen_acronym": "AHA",
+     "allen_name": "Anterior hypothalamic area",
+     "matched_by": [
+      "synonym=name:anterior hypothalamic area",
+      "synonym=acronym:AHA"
+     ]
+    }
+   ],
+   "reason": null
+  },
+  {
+   "region_id": "ph",
+   "label": "Posterior hypothalamic nucleus",
+   "status": "resolved",
+   "allen_id": 946,
+   "allen_acronym": "PH",
+   "allen_name": "Posterior hypothalamic nucleus",
+   "matched_by": [
+    "abbreviation=acronym:PH",
+    "label=name",
+    "synonym=name:posterior hypothalamic nucleus"
+   ],
+   "alternates": [],
+   "reason": null
+  },
+  {
+   "region_id": "pefa",
+   "label": "Perifornical area",
+   "status": "unresolved",
+   "allen_id": null,
+   "allen_acronym": null,
+   "allen_name": null,
+   "matched_by": [],
+   "alternates": [],
+   "reason": "no exact acronym or name match in the Allen HY subtree"
+  }
+ ],
+ "unresolved": [
+  "mbh",
+  "poa",
+  "pvp",
+  "pefa"
+ ]
+}

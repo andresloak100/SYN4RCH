@@ -298,3 +298,28 @@ caught, and the anti-fabrication rules of SCHEMA.md 2 would be advisory.
 **Consequence.** The rejection report is part of the dataset's documentation,
 not a debugging artefact. The ratio of proposals to admitted records is a
 published statistic.
+
+---
+
+## D-018 - A quote must sit in the passage its locator names
+
+**Decision.** The curation gate rejects a record whose `support_quote` is
+verbatim in the paper but not in the passage named by `source_locator`
+(`W101_QUOTE_NOT_IN_LOCATED_PASSAGE` blocks by default). `--lenient-passage`
+downgrades it to a note, for hand-curated records only.
+
+**Why.** CURATION_PROTOCOL.md 3.3 requires the locator to be the extraction
+unit's locator, unmodified, and units are built from the same passage
+segmentation the gate uses, so in the normal pipeline the two can never
+disagree by accident. When they do disagree, the likeliest cause is a reader
+pairing a direction from one passage with a quote from another, which is the
+fabrication pattern the gate exists to catch. The lenient mode exists because
+a human counting paragraphs in a PDF may number them differently from the
+parser; that is a reason to allow an override, not to make the override the
+default.
+
+**Also recorded, not yet acted on** (raised while building the gate):
+supplementary-material locators (e.g. "Fig S1A") can never be admitted,
+because supplements are not in the retrieved XML; and `record_id` (D-002)
+does not include the quote, so two proposals differing only in quote share an
+id in the rejection report.

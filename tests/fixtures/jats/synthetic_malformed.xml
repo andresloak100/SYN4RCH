@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FABRICATED TEST DATA - NEVER EVIDENCE. Hand-written synthetic JATS; see
+  tests/fixtures/README.md.
+
+  Deliberately malformed: the first results paragraph is closed with
+  </paragraph> instead of </p>, and <sec> is never closed. Parsing must not
+  raise and must recover the text read before the mismatch.
+-->
+<article article-type="research-article">
+  <front>
+    <article-meta>
+      <article-id pub-id-type="doi">10.0000/synthetic.0004</article-id>
+      <title-group>
+        <article-title>Synthetic fixture with a mismatched closing tag</article-title>
+      </title-group>
+    </article-meta>
+  </front>
+  <body>
+    <sec sec-type="results">
+      <title>Results</title>
+      <p>An invented results paragraph closed with the wrong tag.</paragraph>
+      <p>An invented paragraph that the parser will never reach.</p>
+    </sec>
+  </body>
+</article>

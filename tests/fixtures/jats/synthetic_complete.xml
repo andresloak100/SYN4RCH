@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FABRICATED TEST DATA - NEVER EVIDENCE.
+
+  Hand-written synthetic JATS, invented to exercise src/syn4rch/curate/.
+  No sentence, number, author, affiliation, journal, identifier or finding
+  below was copied from any publication; every one of them was made up. The
+  DOI and PMCID are deliberately unissuable forms (10.0000/..., PMC0000001).
+  The only strings taken from anywhere are controlled-vocabulary terms
+  ("AgRP neurons", "chemogenetic", "food intake"), which are this project's
+  own vocabulary, not anybody's prose.
+
+  See tests/fixtures/README.md.
+-->
+<article article-type="research-article" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-ta">J Synth Test Data</journal-id>
+      <journal-title-group>
+        <journal-title>Journal of Synthetic Test Data</journal-title>
+      </journal-title-group>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">10000001</article-id>
+      <article-id pub-id-type="pmcid">PMC0000001</article-id>
+      <article-id pub-id-type="doi">10.0000/synthetic.0001</article-id>
+      <title-group>
+        <article-title>Synthetic fixture: chemogenetic activation of
+          <italic>Agrp</italic> neurons and food intake</article-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author">
+          <name><surname>Firstauthor</surname><given-names>A. B.</given-names></name>
+          <xref ref-type="aff" rid="aff1"/>
+        </contrib>
+        <contrib contrib-type="author">
+          <name><surname>Middleauthor</surname><given-names>C.</given-names></name>
+          <xref ref-type="aff" rid="aff1"/>
+        </contrib>
+        <contrib contrib-type="author">
+          <name><surname>Lastauthor</surname><given-names>D. E.</given-names></name>
+          <xref ref-type="aff" rid="aff2"/>
+        </contrib>
+      </contrib-group>
+      <aff id="aff1"><label>1</label>Institute of Synthetic Data, Nowhere</aff>
+      <aff id="aff2"><label>2</label>Department of Fixtures, University of Nowhere</aff>
+      <history>
+        <date date-type="accepted"><day>1</day><month>1</month><year>2000</year></date>
+      </history>
+      <pub-date pub-type="epub"><year>2001</year><month>1</month></pub-date>
+      <pub-date pub-type="collection"><year>2001</year></pub-date>
+      <abstract>
+        <title>Abstract</title>
+        <p>Synthetic abstract paragraph. Chemogenetic activation of AgRP neurons
+          increased food intake in this invented experiment.</p>
+      </abstract>
+      <abstract abstract-type="graphical">
+        <p>Invented graphical abstract that must not become the Abstract section.</p>
+      </abstract>
+    </article-meta>
+  </front>
+  <body>
+    <sec sec-type="intro">
+      <title>Introduction</title>
+      <p>Invented introduction sentence about the arcuate nucleus.</p>
+      <p>A second invented introduction paragraph, which mentions chemogenetic
+        manipulation of AgRP neurons and food intake only in order to cite
+        imaginary prior work<xref ref-type="bibr" rid="b1">1</xref>.</p>
+    </sec>
+    <sec sec-type="materials|methods">
+      <title>Materials and Methods</title>
+      <p>Invented methods paragraph one.</p>
+      <sec>
+        <title>Chemogenetics</title>
+        <p>Invented methods paragraph two: hM3Dq was expressed in AgRP neurons
+          of the arcuate nucleus and food intake was measured.</p>
+      </sec>
+    </sec>
+    <sec sec-type="results">
+      <title>Results</title>
+      <p>Chemogenetic activation of <italic>Agrp</italic> neurons increased food
+        intake (<italic>n</italic> = 8 mice, <italic>p</italic> &lt; 0.01), and
+        oxygen consumption<sup>2</sup> was unchanged<sub>24h</sub>.</p>
+      <sec>
+        <title>Blood glucose</title>
+        <p>Blood glucose decreased<xref ref-type="bibr" rid="b2">12</xref> after
+          chemogenetic activation of AgRP neurons in the arcuate nucleus.</p>
+        <fig id="fig3">
+          <label>Figure 3</label>
+          <caption>
+            <title>Food intake after chemogenetic activation.</title>
+            <p>(C) Food intake increased after chemogenetic activation of AgRP
+              neurons. Invented panel description.</p>
+          </caption>
+          <graphic xlink:href="fig3.jpg"/>
+        </fig>
+      </sec>
+    </sec>
+    <sec sec-type="discussion">
+      <title>Discussion</title>
+      <p>Invented discussion paragraph speculating about AgRP neurons,
+        chemogenetic tools and food intake.</p>
+    </sec>
+  </body>
+  <back>
+    <ack>
+      <p>Invented acknowledgement that must not become a passage.</p>
+    </ack>
+    <ref-list>
+      <ref id="b1"><mixed-citation>Invented reference one.</mixed-citation></ref>
+      <ref id="b2"><mixed-citation>Invented reference two.</mixed-citation></ref>
+    </ref-list>
+  </back>
+  <floats-group>
+    <table-wrap id="tbl1">
+      <label>Table 1</label>
+      <caption>
+        <p>Invented table caption: food intake and body weight after
+          chemogenetic activation of AgRP neurons.</p>
+      </caption>
+      <table>
+        <tbody>
+          <tr><td>Group</td><td>Food intake</td></tr>
+        </tbody>
+      </table>
+    </table-wrap>
+  </floats-group>
+</article>
