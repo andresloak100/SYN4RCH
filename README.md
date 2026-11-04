@@ -153,6 +153,27 @@ No claim in the corpus reaches specificity 4 of 4, so **no replication figure he
 describes two experiments known to have run under the same conditions** — the same
 caveat as before the pass, still true after it.
 
+## What is being tested next, written down in advance
+
+The replication reach of the two halves, at the level of a
+`(population, perturbation, outcome)` cell:
+
+| class | rows | labs | cells | cells with ≥2 labs |
+|---|---|---|---|---|
+| circuit | 170 | 26 | 56 | **17** |
+| molecular | 170 | 16 | 132 | **0** |
+
+290 uncurated circuit papers already have retrieved full text. The plan is to
+curate 60 of them and evaluate **once**: the circuit direction comparison must
+reach verdict `established` (today `suggestive`, +0.121 [+0.008, +0.271],
+McNemar p=0.156), and multi-lab circuit cells must rise from 17 to ≥40.
+
+The target, the stopping point and the results that would abandon the plan are
+fixed in `docs/DECISIONS.md` D-048, committed before the first new paper is read,
+because a target chosen after seeing the data is not a target. **"Adding 60
+circuit papers did not make direction of effect predictable" is a result**, and
+reporting it is what this project is for.
+
 So "the evidence is insufficient" was an artifact of a missing field for half
 the corpus, and remains the right answer for the other half. What to curate next
 changed accordingly: more optogenetic and chemogenetic papers, whose

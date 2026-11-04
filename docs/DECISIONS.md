@@ -1636,3 +1636,86 @@ specificity 4 of 4, so no replication figure here describes two experiments know
 to have matched on all four conditions — the same sentence this project wrote
 before the pass, still true after it. Closing that needs the condition recorded
 per figure panel by a human reading the paper, which is curation, not parsing.
+
+---
+
+## D-048 - Pre-registration: what curating more circuit papers must achieve, and what would abandon the plan
+
+**Written before any new paper is curated**, and committed first so that the
+result can fail. D-028 concluded that curating more optogenetic and chemogenetic
+papers was the first measured reason this project had to prefer one paper over
+another. This entry fixes what "it worked" means, because a target chosen after
+seeing the data is not a target.
+
+**The hypothesis.** A circuit manipulation is specified by a population and a
+sign — "activate AgRP neurons" — and that specification recurs across
+laboratories. A molecular manipulation is specified by a gene, and in this
+corpus no gene is manipulated by more than one laboratory. So adding circuit
+papers should add *replicated cells*, where adding molecular papers adds only
+singletons (D-027).
+
+**The baseline, measured today on the 362 committed records:**
+
+| class | rows | studies | labs | cells | cells with >=2 labs |
+|---|---|---|---|---|---|
+| circuit_activity | 170 | 26 | 26 | 56 | **17** |
+| molecular | 170 | 16 | 16 | 132 | **0** |
+| structural | 17 | 1 | 1 | 12 | 0 |
+| pharmacological | 5 | 2 | 2 | 3 | 0 |
+
+Cell here is `(population, perturbation, outcome)`. Under the full claim key,
+which also carries the condition, the whole corpus holds 5 multi-lab claims
+(D-047) — conditions split those 17 circuit cells down to a handful, and that is
+expected rather than a new problem.
+
+**A correction to my own earlier framing.** I had said circuit perturbation
+identity "recurs across laboratories by construction". It does, and for a weaker
+reason than the phrase implies: `perturbation_key` is
+`(class, polarity, target)` and a circuit record has no target, so the entire
+circuit half of the corpus holds **3** distinct identities and 0% of rows have an
+unseen identity in leave-one-study-out. That is a property of a coarse key, not
+of the biology. The population — which is what actually distinguishes one
+circuit manipulation from another — lives in the cell key, not the perturbation
+key. So the claim is about *cells*, and the table above is the honest version of
+it. Any metric defined on perturbation identity alone would have been trivially
+satisfied and would have measured nothing.
+
+**The material.** 290 papers with a circuit-manipulation extraction unit have
+retrieved full text and are not yet curated, carrying 4,436 candidate units.
+The plan is not limited by what is on disk.
+
+**The target.** Curate **60** uncurated circuit papers, then evaluate **once**:
+
+1. *Primary.* The circuit-subset direction comparison
+   (`perturbation_axis_cell_majority` against `global_majority`, leave-one-study-out)
+   reaches verdict `established` — the study-clustered bootstrap interval excludes
+   zero **and** the row-level exact McNemar test reaches p < 0.05. Today it is
+   `suggestive`: +0.121 [+0.008, +0.271] with p=0.156.
+2. *Secondary.* Circuit cells with >=2 laboratories rises from 17 to **>=40**,
+   i.e. the added papers land in existing cells rather than founding new
+   singletons.
+
+**Evaluated once, at 60 papers.** Not after each batch. A suggestive result
+tested repeatedly becomes significant by chance, and this project has one
+suggestive result it would be easy to flatter. One mechanism check is permitted
+at 30 papers, on the secondary metric only: if multi-lab circuit cells have not
+risen at all by then, the hypothesis is already wrong and curation stops.
+
+**What would abandon the plan.** Any of:
+
+* multi-lab circuit cells flat at 30 papers (the mechanism check above);
+* the secondary metric reached while the primary is not — the papers replicate
+  each other and direction is still unpredictable, which would say the signal
+  in D-028 was a 116-row artefact;
+* the primary reached only after the planned stopping point is passed.
+
+**And the result that would be reported either way.** "Adding 60 circuit papers
+did not make direction of effect predictable" is a publishable finding about the
+state of this literature, and is the answer this project was built to be able to
+give (README, milestone 1). It is not a reason to curate a 61st paper.
+
+**One thing this does not fix.** `perturbation_key` still has no slot for a
+ligand or a population, so pharmacological identity remains unmeasurable and
+circuit identity remains coarse. Changing it is a schema version and is out of
+scope here; it is recorded so that the 3-identity figure above is not mistaken
+for a finding.
