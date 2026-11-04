@@ -562,13 +562,57 @@ def cmd_gate(args) -> int:
         started=started,
     )
 
+    # --out is REPLACED, which is correct for a first corpus written into an
+    # empty file and catastrophic for a second curation pass aimed at a dataset
+    # that already holds records. So a non-empty target is refused unless the
+    # caller says which they meant.
+    existing: List[TierARecord] = []
+    if not args.dry_run and os.path.exists(args.out) and os.path.getsize(args.out):
+        if not (args.append or args.replace):
+            sys.stderr.write(
+                "error: %s already holds records. This command REPLACES its "
+                "output. Pass --append to merge the admitted records into it, "
+                "or --replace to overwrite it deliberately.\n" % args.out
+            )
+            return 1
+        if args.append:
+            with open(args.out, "r", encoding="utf-8") as handle:
+                for number, line in enumerate(handle, start=1):
+                    if not line.strip():
+                        continue
+                    try:
+                        existing.append(
+                            loads_record(
+                                line, expect_version=None,
+                                path=args.out, line_number=number,
+                            )
+                        )
+                    except Exception as exc:
+                        sys.stderr.write(
+                            "error: %s is not readable at line %d: %s\n"
+                            % (args.out, number, exc)
+                        )
+                        return 1
+            seen = {r.record_id for r in existing}
+            clash = [r for r in admitted if r.record_id in seen]
+            if clash:
+                sys.stderr.write(
+                    "error: %d admitted record(s) already have that "
+                    "record_id in %s. An identical observation re-curated is "
+                    "not a second observation, and this command will not "
+                    "decide which to keep:\n" % (len(clash), args.out)
+                )
+                for r in clash[:5]:
+                    sys.stderr.write("  %s  %s\n" % (r.record_id, r.study_id))
+                return 1
+
     if not args.dry_run:
         parent = os.path.dirname(os.path.abspath(args.report))
         if parent:
             os.makedirs(parent, exist_ok=True)
         with open(args.report, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(report)
-        write_jsonl(args.out, admitted)
+        write_jsonl(args.out, existing + admitted)
 
     print("stage 7-8: verbatim gate and schema validation")
     print("  proposals:    %s" % args.proposals)
@@ -715,6 +759,21 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="count and print, write nothing",
+    )
+    gate.add_argument(
+        "--append",
+        action="store_true",
+        help="merge the admitted records into a non-empty --out instead of "
+        "replacing it. Refuses if an admitted record_id is already present: a "
+        "re-curated identical observation is not a second observation, and "
+        "this command will not pick which copy survives",
+    )
+    gate.add_argument(
+        "--replace",
+        action="store_true",
+        help="overwrite a non-empty --out deliberately, discarding what is "
+        "there. Required because this command replaces its output, which is "
+        "right for a first corpus and destroys a second curation pass",
     )
     gate.set_defaults(func=cmd_gate)
     return parser

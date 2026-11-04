@@ -11,7 +11,7 @@ from contextlib import redirect_stdout, redirect_stderr
 
 import synthetic
 from syn4rch.curate.run import main
-from syn4rch.schema.io import read_jsonl, write_jsonl
+from syn4rch.schema.io import dumps_record, read_jsonl, write_jsonl
 
 FIX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "jats")
 DOI = "10.0000/synthetic.0001"
@@ -156,3 +156,69 @@ class FillDerivedTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GateWillNotSilentlyReplaceADataset(unittest.TestCase):
+    """The gate replaces --out. Right for a first corpus, fatal for a second pass."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        self.out = os.path.join(self.dir, "records.jsonl")
+        self.report = os.path.join(self.dir, "rejects.md")
+        self.proposals = os.path.join(self.dir, "proposals.jsonl")
+
+    def _write_existing(self, records):
+        with open(self.out, "w", encoding="utf-8") as fh:
+            for r in records:
+                fh.write(dumps_record(r) + "\n")
+
+    def _write_proposals(self, records):
+        with open(self.proposals, "w", encoding="utf-8") as fh:
+            for r in records:
+                data = r.to_dict()
+                data.pop("record_id", None)
+                fh.write(json.dumps(data) + "\n")
+
+    def _run(self, *extra):
+        return main([
+            "gate", self.proposals, "--out", self.out, "--report", self.report,
+            "--fulltext-dir", self.dir, *extra,
+        ])
+
+    def test_a_non_empty_output_is_refused_without_an_explicit_choice(self):
+        existing = synthetic.good_record()
+        self._write_existing([existing])
+        self._write_proposals([synthetic.other_lab_record()])
+        code = self._run()
+        self.assertEqual(code, 1)
+        with open(self.out, encoding="utf-8") as fh:
+            kept = [l for l in fh if l.strip()]
+        self.assertEqual(len(kept), 1, "the existing dataset must be untouched")
+
+    def test_an_empty_output_needs_no_flag(self):
+        open(self.out, "w").close()
+        self._write_proposals([])
+        self.assertEqual(self._run(), 0)
+
+    def test_dry_run_never_touches_the_output(self):
+        """Exit code says what the gate decided; the file must not move either way.
+
+        With no retrieved text the proposal is rejected and the gate exits 1,
+        which is its contract. What is at stake here is that the existing
+        dataset survives a run that was only ever going to count.
+        """
+        self._write_existing([synthetic.good_record()])
+        self._write_proposals([synthetic.other_lab_record()])
+        self._run("--dry-run")
+        with open(self.out, encoding="utf-8") as fh:
+            self.assertEqual(len([l for l in fh if l.strip()]), 1)
+
+    def test_append_merges_and_refuses_a_record_id_already_present(self):
+        existing = synthetic.good_record()
+        self._write_existing([existing])
+        # the same observation re-proposed: same record_id
+        self._write_proposals([synthetic.good_record()])
+        code = self._run("--append")
+        self.assertEqual(code, 1)
+        with open(self.out, encoding="utf-8") as fh:
+            self.assertEqual(len([l for l in fh if l.strip()]), 1)
