@@ -79,7 +79,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from ..models.task import GROUPINGS, group_keys_for
-from ..qc.keys import NULL, lab_key, perturbation_key, study_key
+from ..qc.keys import NULL, lab_key, perturbation_key, population_key, study_key
 from .splits import UnlabelledResultError
 
 __all__ = [
@@ -89,6 +89,7 @@ __all__ = [
     "STATUS_UNRESOLVABLE",
     "STATUSES",
     "TARGET_CONSTITUTIVE_CLASSES",
+    "ClassCellReach",
     "ClassIdentityCoverage",
     "ClassStructure",
     "Identity",
@@ -97,6 +98,7 @@ __all__ = [
     "UnlabelledIdentityError",
     "analyse",
     "build_report",
+    "cell_reach",
     "class_structure",
     "identity_coverage",
     "perturbation_identity",
@@ -367,6 +369,97 @@ class IdentityCoverage:
             ],
             "by_class": [entry.to_dict() for entry in self.by_class],
         }
+
+
+@dataclass
+class ClassCellReach:
+    """Cell-level reach for one perturbation class under one grouping.
+
+    A *cell* here is ``(population, perturbation identity, outcome)`` -- the
+    claim key without its condition slots. This is the level at which the
+    circuit/molecular contrast is a fact about the literature rather than an
+    artefact of the key, and the distinction matters enough to measure both:
+
+    :func:`identity_coverage` measures whether a *perturbation identity*
+    recurs across groups, and for circuit records that is trivially satisfied.
+    ``perturbation_key`` is ``(class, polarity, target)`` and a circuit record
+    has no target, so the whole circuit half of a corpus holds about three
+    identities and none of them is confined to one group. That is a coarse key,
+    not a finding (D-048).
+
+    What actually distinguishes one circuit manipulation from another is the
+    **population** it was applied to, and the population lives in the cell.
+    So the honest question -- "would a held-out record of this class have
+    anything specific to learn from?" -- is answered here.
+    """
+
+    perturbation_class: str
+    grouping: str
+    n_records: int = 0
+    n_cells: int = 0
+    n_cells_multi_group: int = 0
+    n_records_in_multi_group_cells: int = 0
+
+    @property
+    def fraction_cells_multi_group(self) -> Optional[float]:
+        if not self.n_cells:
+            return None
+        return self.n_cells_multi_group / self.n_cells
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "perturbation_class": self.perturbation_class,
+            "grouping": self.grouping,
+            "n_records": self.n_records,
+            "n_cells": self.n_cells,
+            "n_cells_multi_group": self.n_cells_multi_group,
+            "n_records_in_multi_group_cells": self.n_records_in_multi_group_cells,
+            "fraction_cells_multi_group": self.fraction_cells_multi_group,
+        }
+
+
+def cell_reach(records: Iterable, grouping: str) -> List[ClassCellReach]:
+    """Cell-level reach per perturbation class. See :class:`ClassCellReach`.
+
+    Records with no group key are excluded from a cell's group count for the
+    same reason :func:`identity_coverage` excludes them (D-009): a record that
+    cannot be placed on either side of a split says nothing about reach.
+    """
+    if grouping not in GROUPINGS:
+        raise UnlabelledIdentityError(
+            "undeclared grouping %r; declared: %s"
+            % (grouping, ", ".join(sorted(GROUPINGS)))
+        )
+    by_class: Dict[str, Dict[tuple, set]] = {}
+    counts: Dict[str, int] = {}
+    for record in records:
+        cls = getattr(record.perturbation_class, "value", record.perturbation_class)
+        cls = cls or "unclassified"
+        counts[cls] = counts.get(cls, 0) + 1
+        cell = (
+            population_key(record),
+            perturbation_identity(record).key,
+            getattr(record.outcome_id, "value", record.outcome_id),
+        )
+        group = group_keys_for(record).get(grouping)
+        bucket = by_class.setdefault(cls, {})
+        members = bucket.setdefault(cell, set())
+        if group:
+            members.add(group)
+    out: List[ClassCellReach] = []
+    for cls in sorted(set(counts) | set(by_class)):
+        cells = by_class.get(cls, {})
+        multi = [c for c, g in cells.items() if len(g) > 1]
+        out.append(
+            ClassCellReach(
+                perturbation_class=cls,
+                grouping=grouping,
+                n_records=counts.get(cls, 0),
+                n_cells=len(cells),
+                n_cells_multi_group=len(multi),
+            )
+        )
+    return out
 
 
 def identity_coverage(records: Iterable, grouping: str) -> IdentityCoverage:
@@ -683,6 +776,11 @@ class IdentityReport:
 
     coverages: List[IdentityCoverage] = field(default_factory=list)
     structures: List[ClassStructure] = field(default_factory=list)
+    #: Cell-level reach per class per grouping (D-048). See ClassCellReach for
+    #: why this is reported beside the identity tables rather than instead of
+    #: them: they answer different questions and only one of them is vacuous
+    #: for circuit records.
+    cell_reaches: List[ClassCellReach] = field(default_factory=list)
     target_resolution: TargetResolution = field(default_factory=TargetResolution)
     scope: str = "all records read"
     n_records: int = 0
@@ -747,6 +845,9 @@ def analyse(
         )
     return IdentityReport(
         coverages=[identity_coverage(records, name) for name in names],
+        cell_reaches=[
+            row for name in names for row in cell_reach(records, name)
+        ],
         structures=class_structure(records),
         target_resolution=_target_resolution(records),
         scope=scope,
@@ -1005,6 +1106,62 @@ def _section_groupings(report: "IdentityReport") -> List[str]:
         "grouping beside it."
     )
     lines.append("")
+    return lines
+
+
+def _section_cell_reach(report: "IdentityReport") -> List[str]:
+    """The same contrast at cell level, which is where it is a real finding."""
+    lines = [
+        "## The same contrast at cell level — and why this is the honest one",
+        "",
+        "A *cell* is `(population, perturbation identity, outcome)`: the claim "
+        "key without its condition slots. The identity tables above ask whether "
+        "a **perturbation identity** recurs across groups, and for "
+        "`circuit_activity` that question is close to vacuous. "
+        "`perturbation_key` is `(class, polarity, target)` and a circuit record "
+        "has no target, so the whole circuit half of this corpus holds a "
+        "handful of identities and none of them is confined to one group. That "
+        "is a property of a coarse key, not of the literature.",
+        "",
+        "What actually tells one circuit manipulation from another is the "
+        "**population** it was applied to, and the population lives in the "
+        "cell. So the question a held-out record cares about — *is there "
+        "anything specific here to have learned from?* — is the one below. "
+        "See `docs/DECISIONS.md` D-048, which records this correction and the "
+        "target it fixes.",
+        "",
+        "One table below is 0 by construction and is printed anyway. A cell "
+        "contains the population, so a cell can never span two `population` "
+        "groups, and the same holds for `population_outcome`. Those rows "
+        "measure nothing; dropping them would be tidier and would also be the "
+        "habit of dropping the grouping whose number is inconvenient, so every "
+        "declared grouping is shown and this sentence says which to ignore.",
+        "",
+    ]
+    by_grouping: Dict[str, List[ClassCellReach]] = {}
+    for row in report.cell_reaches:
+        by_grouping.setdefault(row.grouping, []).append(row)
+    for grouping in sorted(by_grouping):
+        rows = by_grouping[grouping]
+        if not rows:
+            continue
+        lines.append("### Grouping `%s`" % grouping)
+        lines.append("")
+        lines.append("| class | records | cells | cells spanning >=2 groups | share |")
+        lines.append("|---|---|---|---|---|")
+        for row in rows:
+            share = row.fraction_cells_multi_group
+            lines.append(
+                "| `%s` | %d | %d | %d | %s |"
+                % (
+                    row.perturbation_class,
+                    row.n_records,
+                    row.n_cells,
+                    row.n_cells_multi_group,
+                    "not measurable" if share is None else "%.0f%%" % (100 * share),
+                )
+            )
+        lines.append("")
     return lines
 
 
@@ -1294,6 +1451,7 @@ def render_markdown(report: "IdentityReport") -> str:
         lines.extend(_section_identity(report))
         lines.extend(_section_groupings(report))
         lines.extend(_section_classes(report))
+        lines.extend(_section_cell_reach(report))
         lines.extend(_section_structure(report))
         lines.extend(_section_conclusion(report))
     lines.extend(_section_limits(report))

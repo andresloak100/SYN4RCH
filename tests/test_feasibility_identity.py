@@ -23,7 +23,9 @@ import unittest
 
 import synthetic
 from syn4rch.feasibility.identity import (
+    ClassCellReach,
     IDENTITY_FIELDS,
+    cell_reach,
     STATUS_RESOLVED,
     STATUS_TARGET_UNRESOLVED,
     STATUS_UNRESOLVABLE,
@@ -574,3 +576,46 @@ class TestCli(unittest.TestCase):
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
+
+
+class CellReachTest(unittest.TestCase):
+    """Cell-level reach: the level at which the class contrast is real."""
+
+    def test_two_labs_sharing_a_cell_make_it_multi_group(self):
+        rows = [
+            synthetic.good_record(population_raw="p1", population_id="syn:p1",
+                                  outcome_id="food_intake", outcome_raw="o"),
+            synthetic.other_lab_record(population_raw="p1", population_id="syn:p1",
+                                       outcome_id="food_intake", outcome_raw="o"),
+        ]
+        got = {r.perturbation_class: r for r in cell_reach(rows, "lab")}
+        circuit = got["circuit_activity"]
+        self.assertEqual(circuit.n_cells, 1)
+        self.assertEqual(circuit.n_cells_multi_group, 1)
+        self.assertEqual(circuit.fraction_cells_multi_group, 1.0)
+
+    def test_one_lab_per_cell_makes_none_multi_group(self):
+        rows = [
+            synthetic.good_record(population_raw="p1", population_id="syn:p1",
+                                  outcome_id="food_intake", outcome_raw="o"),
+            synthetic.other_lab_record(population_raw="p2", population_id="syn:p2",
+                                       outcome_id="body_weight", outcome_raw="o2"),
+        ]
+        got = {r.perturbation_class: r for r in cell_reach(rows, "lab")}
+        circuit = got["circuit_activity"]
+        self.assertEqual(circuit.n_cells, 2)
+        self.assertEqual(circuit.n_cells_multi_group, 0)
+
+    def test_the_share_is_none_not_zero_when_there_are_no_cells(self):
+        """"No cells" and "no cell reaches two groups" are opposite findings."""
+        row = ClassCellReach(perturbation_class="molecular", grouping="lab")
+        self.assertIsNone(row.fraction_cells_multi_group)
+
+    def test_an_undeclared_grouping_raises_rather_than_defaulting(self):
+        with self.assertRaises(UnlabelledIdentityError):
+            cell_reach([synthetic.good_record()], "by_vibes")
+
+    def test_the_report_carries_cell_reach_for_every_grouping(self):
+        report = analyse([synthetic.good_record()])
+        groupings = {r.grouping for r in report.cell_reaches}
+        self.assertEqual(groupings, {c.grouping for c in report.coverages})

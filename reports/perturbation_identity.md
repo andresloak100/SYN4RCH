@@ -8,7 +8,7 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-04T04:23:39Z |
+| generated (UTC) | 2026-11-04T21:18:57Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
 | scope | all records read |
@@ -89,6 +89,59 @@ This is the breakdown the analysis exists for. `circuit_activity` and `molecular
 | `molecular` | 170 | 170 | 22 | 170 | 0 | 100.0% | 0 |
 | `pharmacological` | 5 | 0 | 0 | 0 | 0 | not measurable | 5 |
 | `structural` | 17 | 17 | 1 | 17 | 0 | 100.0% | 0 |
+
+## The same contrast at cell level — and why this is the honest one
+
+A *cell* is `(population, perturbation identity, outcome)`: the claim key without its condition slots. The identity tables above ask whether a **perturbation identity** recurs across groups, and for `circuit_activity` that question is close to vacuous. `perturbation_key` is `(class, polarity, target)` and a circuit record has no target, so the whole circuit half of this corpus holds a handful of identities and none of them is confined to one group. That is a property of a coarse key, not of the literature.
+
+What actually tells one circuit manipulation from another is the **population** it was applied to, and the population lives in the cell. So the question a held-out record cares about — *is there anything specific here to have learned from?* — is the one below. See `docs/DECISIONS.md` D-048, which records this correction and the target it fixes.
+
+One table below is 0 by construction and is printed anyway. A cell contains the population, so a cell can never span two `population` groups, and the same holds for `population_outcome`. Those rows measure nothing; dropping them would be tidier and would also be the habit of dropping the grouping whose number is inconvenient, so every declared grouping is shown and this sentence says which to ignore.
+
+### Grouping `lab`
+
+| class | records | cells | cells spanning >=2 groups | share |
+|---|---|---|---|---|
+| `circuit_activity` | 170 | 56 | 17 | 30% |
+| `molecular` | 170 | 132 | 0 | 0% |
+| `pharmacological` | 5 | 3 | 0 | 0% |
+| `structural` | 17 | 12 | 0 | 0% |
+
+### Grouping `population`
+
+| class | records | cells | cells spanning >=2 groups | share |
+|---|---|---|---|---|
+| `circuit_activity` | 170 | 56 | 0 | 0% |
+| `molecular` | 170 | 132 | 0 | 0% |
+| `pharmacological` | 5 | 3 | 0 | 0% |
+| `structural` | 17 | 12 | 0 | 0% |
+
+### Grouping `population_outcome`
+
+| class | records | cells | cells spanning >=2 groups | share |
+|---|---|---|---|---|
+| `circuit_activity` | 170 | 56 | 0 | 0% |
+| `molecular` | 170 | 132 | 0 | 0% |
+| `pharmacological` | 5 | 3 | 0 | 0% |
+| `structural` | 17 | 12 | 0 | 0% |
+
+### Grouping `record`
+
+| class | records | cells | cells spanning >=2 groups | share |
+|---|---|---|---|---|
+| `circuit_activity` | 170 | 56 | 29 | 52% |
+| `molecular` | 170 | 132 | 30 | 23% |
+| `pharmacological` | 5 | 3 | 1 | 33% |
+| `structural` | 17 | 12 | 3 | 25% |
+
+### Grouping `study_id`
+
+| class | records | cells | cells spanning >=2 groups | share |
+|---|---|---|---|---|
+| `circuit_activity` | 170 | 56 | 17 | 30% |
+| `molecular` | 170 | 132 | 0 | 0% |
+| `pharmacological` | 5 | 3 | 0 | 0% |
+| `structural` | 17 | 12 | 0 | 0% |
 
 ## Why: the structure of how this field publishes
 
