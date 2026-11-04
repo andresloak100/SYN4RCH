@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SYN4RCH Hypothalamic Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,6 +47,24 @@
   /* Sequential, one hue, four log10 steps; passes the ordinal checks. */
   --seq-1: #6b4a1e; --seq-2: #a9752c; --seq-3: #e0a53f; --seq-4: #ffd47a;
 
+  /* Measured signalling (Layer D). These encode the MEASURED DIRECTION of a
+     bodily readout, which is a diverging quantity, so: two poles and a neutral
+     midpoint, no hue at the midpoint. Checked with the dataviz validator
+     against this page's own ground (#04070a, dark mode): all-pairs CVD dE 15.2
+     (protan) / tritan 14.8, normal vision 17.5, contrast 6.10 / 6.13 / 9.87 to
+     1. The neutral is the grey the palette already carries for "more than one
+     here": it is the same statement, no single signed value, and no sixth hue
+     family is introduced for it.
+     Known limit, mitigated rather than hidden: the warm pole is NOT separable
+     from the --seq amber ramp under protanopia (dE 1.8 against --seq-2), and
+     that ramp can be colouring nucleus bodies while these colour pulses out on
+     the bus. So direction is never carried by hue alone -- every pulse also
+     carries a glyph (up, down, bar) and the readout names the direction in
+     words. Selection stays the cold accent and is never one of these. */
+  --dir-up: #f4593c;        /* the readout went up */
+  --dir-dn: #4a90e2;        /* the readout went down */
+  --dir-flat: #aab7c2;      /* no change, and the diverging neutral */
+
   --f-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
   --f-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
   --f-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -70,7 +90,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .u { color: var(--ink-3); }
 
 /* ---------- shell ---------- */
-.console { display: grid; grid-template-columns: 272px minmax(0, 1fr) 340px; grid-template-rows: auto auto minmax(560px, 72vh) auto; min-height: 100%; }
+.console { display: grid; grid-template-columns: 272px minmax(0, 1fr) 340px; grid-template-rows: auto auto auto minmax(560px, 72vh) auto; min-height: 100%; }
 .top { grid-column: 1 / -1; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; padding-block: 12px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); border-bottom: 1px solid var(--rule); background: var(--void); }
 .mark { display: flex; align-items: baseline; gap: 14px; min-width: 0; }
 .mark b { font-family: var(--f-display); font-weight: 600; font-size: 22px; letter-spacing: 0.34em; }
@@ -203,12 +223,59 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 .state { font-family: var(--f-display); font-weight: 600; font-size: var(--s-4); letter-spacing: 0.2em; color: var(--warn); text-transform: uppercase; }
 .state-line { font-family: var(--f-data); font-size: var(--s-1); color: var(--ink-2); }
 
+/* ---------- layer D: measured signalling ---------- */
+.sigbar { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding-block: 9px 10px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); border-bottom: 1px solid var(--rule); background: var(--void); }
+.sigbar .seg button[aria-pressed="true"] { color: var(--void); background: var(--ink); }
+.sigbar .st { font-family: var(--f-data); font-size: var(--s-0); letter-spacing: 0.12em; color: var(--ink-2); }
+.sigbar .st b { font-weight: 400; color: var(--ink); }
+.pill { font-family: var(--f-data); font-size: var(--s-0); letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--rule-2); padding: 2px 8px; color: var(--ink-2); }
+.pill.hot { border-color: var(--accent-dim); color: var(--accent); }
+
+/* glyph key: the shape is the primary channel, the hue is the reinforcement */
+.gk { display: flex; align-items: center; gap: 7px; font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-2); }
+.gk svg { flex: none; display: block; }
+.gk b { font-weight: 400; color: var(--ink); }
+.gk .n { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* bus labels floating over the viewport. NOT .bl: that is the HUD's
+   bottom-left corner bracket, which sets bottom and left. */
+.buslab { position: absolute; transform: translate(-50%, -50%); font-family: var(--f-data); font-size: 9px; letter-spacing: 0.06em; color: var(--ink-3); white-space: nowrap; pointer-events: none; padding: 1px 4px; background: rgba(4, 7, 10, 0.74); transition: color 0.2s linear; }
+.buslab.sys { font-family: var(--f-display); font-size: var(--s-1); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+.buslab.on { color: var(--ink); }
+
+.sig { grid-column: 1 / -1; border-top: 1px solid var(--rule); background: var(--panel); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.05fr); padding-left: calc(var(--gutter-l) - 16px); padding-right: calc(var(--gutter-r) - 16px); }
+.sig .mod { border-right: 1px solid var(--rule); }
+.sig .mod:last-child { border-right: 0; }
+.sig-rows { display: grid; }
+#sig-edges { max-height: 430px; overflow-y: auto; padding-right: 10px; }
+.sig-count { font-family: var(--f-data); font-size: var(--s-0); letter-spacing: 0.1em; color: var(--ink-3); text-transform: uppercase; }
+.sig-rows button, .sig-rows .row-static { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 3px 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--rule); text-align: left; }
+.sig-rows button:hover { background: var(--accent-wash); }
+.sig-rows button[aria-pressed="true"] { background: var(--accent-wash); }
+.sig-rows button[aria-pressed="true"] .sn { color: var(--accent); }
+.sig-rows .sg { grid-row: span 2; align-self: start; padding-top: 2px; }
+.sig-rows .sn { font-family: var(--f-data); font-size: var(--s-1); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sig-rows .sv { font-family: var(--f-data); font-size: var(--s-1); color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
+.sig-rows .sm { grid-column: 2 / -1; font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.sig-rows .sm i { font-style: normal; }
+.sig-rows .warnish { color: var(--warn); }
+.split { display: flex; height: 5px; gap: 1px; margin-top: 2px; grid-column: 2 / -1; }
+.split span { display: block; height: 100%; background: var(--sw); }
+.honest { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.honest li { font-size: var(--s-2); line-height: 1.5; color: var(--ink-2); padding-left: 13px; position: relative; max-width: 64ch; }
+.honest li::before { content: ""; position: absolute; left: 0; top: 8px; width: 6px; height: 1px; background: var(--rule-2); }
+.honest li b { font-weight: 500; color: var(--ink); }
+.sig-empty { border: 1px dashed var(--warn); padding: 12px 14px; display: grid; gap: 5px; }
+.sig-empty .state { font-size: var(--s-3); letter-spacing: 0.14em; }
+
 /* ---------- narrow ---------- */
 @media (max-width: 1180px) {
-  .console { grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: auto auto minmax(520px, 68vh) auto auto; }
+  .console { grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: auto auto auto minmax(520px, 68vh) auto auto; }
   .rail.right { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--rule); display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
   .bus { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .mod.m-a { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--rule); }
+  .sig { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .sig .mod.m-d { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--rule); }
 }
 @media (max-width: 760px) {
   .console { display: flex; flex-direction: column; }
@@ -217,9 +284,12 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   .enc { order: 0; gap: 8px 16px; }
   .enc-note { font-size: 9.5px; }
   .rail.right { order: 2; display: block; }
-  .bus { order: 3; grid-template-columns: minmax(0, 1fr); padding-left: 0; padding-right: 0; }
+  .sig { order: 3; grid-template-columns: minmax(0, 1fr); padding-left: 0; padding-right: 0; }
+  .bus { order: 4; grid-template-columns: minmax(0, 1fr); padding-left: 0; padding-right: 0; }
   .mod { border-right: 0; border-bottom: 1px solid var(--rule); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
-  .rail.left { order: 4; border-right: 0; border-top: 1px solid var(--rule); }
+  .sigbar { gap: 8px 14px; }
+  .buslab:not(.sys) { display: none; }
+  .rail.left { order: 5; border-right: 0; border-top: 1px solid var(--rule); }
   .sec { padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
   .lit { grid-template-columns: minmax(0, 1fr); }
   .status { margin-left: 0; gap: 14px; }
@@ -243,6 +313,19 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     <p class="enc-note" id="enc-note"></p>
   </section>
 
+  <section class="sigbar" aria-label="Measured signalling playback">
+    <span class="enc-lab">Signalling</span>
+    <div class="seg" role="group" aria-label="Signalling playback controls">
+      <button type="button" id="sig-show" aria-pressed="true">BODY BUS</button>
+      <button type="button" id="sig-play" aria-pressed="true">PLAY</button>
+      <button type="button" id="sig-all">FIRE ALL</button>
+      <button type="button" id="sig-clear">CLEAR</button>
+    </div>
+    <span class="st" id="sig-state"></span>
+    <div class="enc-key" id="sig-key"></div>
+    <p class="enc-note" id="sig-note"></p>
+  </section>
+
   <nav class="rail left" aria-label="Structure index">
     <section class="sec">
       <h2>Nuclei with populations <em id="n-pop"></em></h2>
@@ -264,6 +347,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     <div class="hud" aria-hidden="true">
       <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
       <div id="axes"></div>
+      <div id="sig-labels"></div>
       <svg class="lead" id="lead"><polyline id="lead-line" points=""></polyline><circle id="lead-dot" r="3" cx="-10" cy="-10"></circle></svg>
       <div class="tag" id="tag" hidden><b id="tag-a"></b><span id="tag-b"></span></div>
       <div class="readout r-tl">
@@ -291,6 +375,35 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   </main>
 
   <aside class="rail right" aria-label="Selection" aria-live="polite" id="sel"></aside>
+
+  <section class="sig" aria-label="Measured signalling">
+    <div class="mod m-d">
+      <div class="mod-h">
+        <span class="ch" id="sig-ch">LAYER D &middot; MEASURED SIGNALLING</span>
+        <h3 id="sig-h">Evidence playback</h3>
+        <p id="sig-p"></p>
+      </div>
+      <div id="sig-focus"></div>
+      <div class="sig-rows" id="sig-edges"></div>
+      <div class="src" id="sig-src"></div>
+    </div>
+    <div class="mod m-e">
+      <div class="mod-h">
+        <span class="ch">SELECTED EDGE &middot; PROVENANCE</span>
+        <h3 id="sig-edge-h">No edge selected</h3>
+        <p id="sig-edge-p">Fire a nucleus, then pick one of its edges here or tap its readout plate on the bus.</p>
+      </div>
+      <div id="sig-edge"></div>
+    </div>
+    <div class="mod m-f">
+      <div class="mod-h">
+        <span class="ch">WHAT THIS IS AND IS NOT</span>
+        <h3>Read this with the animation</h3>
+      </div>
+      <ul class="honest" id="sig-honest"></ul>
+      <div class="src" id="sig-rules"></div>
+    </div>
+  </section>
 
   <section class="bus" aria-label="Evidence layers">
     <div class="mod m-a">
@@ -339,6 +452,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 
 <script type="application/json" id="scene">__SCENE_JSON__</script>
 <script type="application/json" id="geom">__GEOMETRY_JSON__</script>
+<script type="application/json" id="sig">__SIGNALING_JSON__</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
@@ -364,6 +478,236 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   function litOf(pid) { return (lit.counts && lit.counts[pid]) || null; }
   var reg = S.evidence.regions || { available: false, status: "region counts not built" };
   function regOf(rid) { return (reg.available && reg.counts && reg.counts[rid]) || null; }
+
+  /* ---------- layer D: measured signalling ----------
+     SIG is derived at build time by src/syn4rch/atlas/signaling.py from
+     data/curated/records.jsonl. Every number drawn or printed below is read
+     out of it. Nothing here is integrated, fitted or extrapolated: an edge is
+     a count of curated records, the right-hand nodes are bodily readouts and
+     not brain regions, and no projection is drawn because the dataset has
+     almost none. The honesty block is rendered verbatim from SIG._honesty. */
+  var SIG = JSON.parse(document.getElementById("sig").textContent);
+  var sigPopById = {}, sigOutById = {}, sigEdgesByPop = {}, sigEdgesByOut = {};
+  SIG.populations.forEach(function (p) { sigPopById[p.id] = p; });
+  SIG.outcomes.forEach(function (o) { sigOutById[o.id] = o; });
+  SIG.edges.forEach(function (e, i) {
+    e._i = i;
+    (sigEdgesByPop[e.population_id] = sigEdgesByPop[e.population_id] || []).push(e);
+    (sigEdgesByOut[e.outcome_id] = sigEdgesByOut[e.outcome_id] || []).push(e);
+  });
+
+  // Playback state. The 3D layer owns the drawing; these say what is on.
+  var sigOn = true, playing = !REDUCED, firedPops = [], activeEdges = [], selEdge = null, livePulses = 0;
+  var sigReady = false;   // true once the bus exists in the scene
+
+  // Direction of the measured readout. Hue is the reinforcement; the glyph is
+  // the primary channel, so the encoding survives colour-vision deficiency and
+  // survives sitting next to the amber ramp on the nucleus bodies.
+  var DIR_TOK = { increase: "--dir-up", decrease: "--dir-dn", no_change: "--dir-flat" };
+  var DIR_SHAPE = { increase: 0, decrease: 1, no_change: 2 };   // glyph id, shared with the point shader
+  var DIR_WORD = { increase: "went up", decrease: "went down", no_change: "did not change",
+                   non_monotonic: "moved non-monotonically" };
+  var DIR_ORDER = ["increase", "decrease", "no_change"];
+  function dirTok(d) { return DIR_TOK[d] || "--dir-flat"; }
+  function dirShape(d) { return DIR_SHAPE[d] == null ? 3 : DIR_SHAPE[d]; }
+  function dirWord(d) { return d == null ? "no single direction" : (DIR_WORD[d] || String(d).replace(/_/g, " ")); }
+  // "unclear" is the axis of the perturbation, never the direction of the
+  // readout. An unpolarised edge is drawn hollow and dashed: the readout was
+  // measured, but whether the neurons were switched on is not established.
+  function unpolarised(axis) { return !axis || axis === "unclear" || axis === "unknown"; }
+
+  function glyph(dir, hollow) {
+    var c = "var(" + dirTok(dir) + ")", s = dirShape(dir), body;
+    if (s === 0) body = '<path d="M7 1.6 12.2 9.2 1.8 9.2Z"/>';
+    else if (s === 1) body = '<path d="M7 9.4 1.8 1.8h10.4Z"/>';
+    else if (s === 2) body = '<rect x="1.8" y="4" width="10.4" height="3"/>';
+    else body = '<path d="M7 1.6 12.4 5.5 7 9.4 1.6 5.5Z"/>';
+    return '<svg width="14" height="11" viewBox="0 0 14 11" aria-hidden="true" ' +
+      (hollow ? 'fill="none" stroke="' + c + '" stroke-width="1.4"' : 'fill="' + c + '"') +
+      ">" + body + "</svg>";
+  }
+
+  function dirBreakdown(e) {
+    var out = [];
+    DIR_ORDER.forEach(function (d) { if (e.directions[d]) out.push([d, e.directions[d]]); });
+    Object.keys(e.directions).sort().forEach(function (d) {
+      if (DIR_ORDER.indexOf(d) < 0) out.push([d, e.directions[d]]);
+    });
+    return out;
+  }
+  function breakdownText(e) {
+    return dirBreakdown(e).map(function (r) { return r[1] + " " + r[0].replace(/_/g, " "); }).join(", ");
+  }
+  function splitBar(e) {
+    var bd = dirBreakdown(e);
+    return '<span class="split" aria-hidden="true">' + bd.map(function (r) {
+      return '<span style="--sw:var(' + dirTok(r[0]) + ");width:" + (100 * r[1] / e.n_records).toFixed(1) + '%"></span>';
+    }).join("") + "</span>";
+  }
+  function popLabel(pid) { var p = sigPopById[pid]; return p ? p.label : pid; }
+  function outLabel(oid) { var o = sigOutById[oid]; return o ? o.label : oid; }
+
+  function edgeRow(e) {
+    var ht = e.contested ? "contested" : (e.consensus ? dirWord(e.consensus) : "no single direction");
+    var lab = outLabel(e.outcome_id) + ": " + e.n_records + " records, " + e.n_studies +
+      " studies, " + e.n_labs + " labs; " + breakdownText(e) + "; perturbation " + e.axis_phrase +
+      "; " + ht;
+    return '<button type="button" data-sigedge="' + e._i + '" aria-pressed="false" aria-label="' + esc(lab) + '">' +
+      '<span class="sg">' + glyph(e.consensus, unpolarised(e.axis)) + "</span>" +
+      '<span class="sn">' + esc(outLabel(e.outcome_id)) + "</span>" +
+      '<span class="sv">' + e.n_records + " <small>rec</small></span>" +
+      '<span class="sm"><i>' + esc(e.axis_phrase) + "</i>" +
+      "<i>" + e.n_studies + " studies &middot; " + e.n_labs + " labs</i>" +
+      (e.contested ? '<i class="warnish">contested ' + (100 * e.agreement).toFixed(0) + "% agree</i>"
+                   : "<i>" + (100 * e.agreement).toFixed(0) + "% agree</i>") +
+      (e.minority_replicated && !e.contested ? "<i>replicated minority</i>" : "") +
+      "</span>" + splitBar(e) + "</button>";
+  }
+
+  /* the bar: controls, glyph key, one note */
+  function renderSigBar() {
+    var ds = SIG.directions_seen || {};
+    var keys = DIR_ORDER.filter(function (d) { return ds[d] != null; }).map(function (d) {
+      return { g: glyph(d, false), label: "readout " + dirWord(d), n: fmt(ds[d]) + " records" };
+    });
+    Object.keys(ds).sort().forEach(function (d) {
+      if (DIR_ORDER.indexOf(d) < 0) keys.push({ g: glyph(d, false), label: "readout " + dirWord(d), n: fmt(ds[d]) + " records" });
+    });
+    keys.push({ g: glyph(null, true), label: "unpolarised perturbation",
+                n: SIG.n_edges_unclear_axis + " of " + SIG.n_edges + " edges &middot; dashed, hollow: the readout was measured, but whether the neurons fired more or less is not established" });
+    keys.push({ g: '<svg width="14" height="11" viewBox="0 0 14 11" aria-hidden="true"><path d="M0 3.5h14" stroke="var(--dir-up)" stroke-width="1.6"/><path d="M0 7.5h14" stroke="var(--dir-dn)" stroke-width="1.6"/></svg>',
+                label: "contested", n: SIG.n_edges_contested + " of " + SIG.n_edges + " edges &middot; split channel, pulses running both ways, never averaged" });
+    $("sig-key").innerHTML = keys.map(function (k) {
+      return '<span class="gk">' + k.g + "<b>" + esc(k.label) + '</b><span class="n">' + k.n + "</span></span>";
+    }).join("");
+    $("sig-note").innerHTML = esc(SIG.mode_note) +
+      " A pulse is one of " + fmt(SIG.n_records_used) + " curated records travelling from the population that was perturbed to the readout that was measured, and its glyph is what the readout did. Pulse size and count rise with the record count (log); they are not a rate, a latency or an effect size. " +
+      "Tap a nucleus to fire it. " + esc(SIG.system_note);
+  }
+
+  function sigStateText() {
+    if (!sigOn) return "<b>BUS HIDDEN</b> &middot; " + SIG.n_edges + " edges available";
+    if (!firedPops.length) return "<b>IDLE</b> &middot; select a nucleus to fire it";
+    var n = activeEdges.length;
+    return "<b>" + (playing ? "PLAYING" : "PAUSED") + "</b> &middot; " + firedPops.join(" + ") +
+      " &middot; " + n + (n === 1 ? " edge" : " edges") + " &middot; " + livePulses + " pulses";
+  }
+  function renderSigState() {
+    $("sig-state").innerHTML = sigStateText();
+    $("sig-play").setAttribute("aria-pressed", String(playing));
+    $("sig-show").setAttribute("aria-pressed", String(sigOn));
+  }
+
+  /* the panel: what is fired, its edges, the selected edge, the caveats */
+  function renderSigFocus() {
+    var html = "", rows = "";
+    if (!firedPops.length) {
+      html = '<p class="note">Nothing is firing. Select a nucleus in the view or the index, or a population in Layer A, and its curated records will play out to the readouts they were measured in. ' +
+        SIG.n_populations_with_records + " of " + SIG.populations.length +
+        " vocabulary populations carry a record; the rest carry none yet.</p>";
+      $("sig-h").textContent = "Evidence playback";
+      $("sig-focus").innerHTML = html;
+      $("sig-edges").innerHTML = "";
+      return;
+    }
+    var withRec = firedPops.filter(function (pid) { return (sigEdgesByPop[pid] || []).length; });
+    var without = firedPops.filter(function (pid) { return !(sigEdgesByPop[pid] || []).length; });
+    $("sig-h").textContent = firedPops.length === 1 ? popLabel(firedPops[0])
+      : withRec.length + " of " + firedPops.length + " populations here carry records";
+    if (without.length) {
+      html += '<div class="sig-empty"><div class="state">No curated records ' +
+        (without.length === 1 ? "for this population yet" : "for " + without.length + " of these populations yet") +
+        "</div>" +
+        '<div class="state-line">' + esc(without.map(popLabel).join(", ")) +
+        (without.length === 1 ? " (" + esc(without[0]) + ") has" : " have") + " 0 records in " +
+        esc(SIG.generated_from) + ", so nothing fires from " + (without.length === 1 ? "it" : "them") +
+        ". That is a statement about how far curation has got, not a finding about the literature.</div></div>";
+    }
+    if (withRec.length) {
+      var tot = 0, studies = {};
+      withRec.forEach(function (pid) {
+        var p = sigPopById[pid]; if (p) { tot += p.n_records; studies[pid] = p.n_studies; }
+      });
+      html += '<dl class="kv"><dt>Records</dt><dd>' + fmt(tot) + " of " + fmt(SIG.n_records_used) + " used</dd>" +
+        "<dt>Edges</dt><dd>" + activeEdges.length + " drawn &middot; " +
+        activeEdges.filter(function (e) { return e.contested; }).length + " contested &middot; " +
+        activeEdges.filter(function (e) { return unpolarised(e.axis); }).length + " unpolarised</dd>" +
+        "<dt>Readouts</dt><dd>" + Object.keys(activeEdges.reduce(function (a, e) { a[e.outcome_id] = 1; return a; }, {})).length +
+        " of " + SIG.outcomes.length + " on the bus</dd></dl>";
+      rows = '<div class="sig-count">' + activeEdges.length + " edges, heaviest first \u00b7 pick one for its provenance</div>" +
+        activeEdges.map(edgeRow).join("");
+    }
+    $("sig-focus").innerHTML = html;
+    $("sig-edges").innerHTML = rows;
+    markSigRows();
+  }
+
+  function renderSigEdge() {
+    if (!selEdge) {
+      $("sig-edge-h").textContent = "No edge selected";
+      $("sig-edge-p").textContent = "Fire a nucleus, then pick one of its edges here or tap its readout plate on the bus.";
+      $("sig-edge").innerHTML = "";
+      return;
+    }
+    var e = selEdge, o = sigOutById[e.outcome_id] || {}, bd = dirBreakdown(e);
+    $("sig-edge-h").textContent = popLabel(e.population_id) + " → " + outLabel(e.outcome_id);
+    $("sig-edge-p").textContent = e.n_records + " curated records, " + e.n_studies + " studies, " +
+      e.n_labs + " labs. " + bd.map(function (r) {
+        return r[1] + (r[1] === 1 ? " record says" : " records say") + " the readout " + dirWord(r[0]);
+      }).join(", ") + ".";
+    $("sig-edge").innerHTML =
+      '<dl class="kv">' +
+      "<dt>Population</dt><dd>" + esc(e.population_id) + " &middot; " + esc(popLabel(e.population_id)) + "</dd>" +
+      "<dt>Readout</dt><dd>" + esc(e.outcome_id) + " &middot; tier " + esc(o.tier || "?") +
+      (o.modality ? " &middot; " + esc(o.modality) : "") + "</dd>" +
+      "<dt>System</dt><dd>" + esc((SIG.system_labels || {})[o.system] || o.system || "?") + " <span class=\"u\">(layout grouping only)</span></dd>" +
+      "<dt>Perturbation</dt><dd>" + esc(e.axis_phrase) + " &middot; " + esc(e.axis_class.replace(/_/g, " ")) +
+      ' <span class="u">(axis = ' + esc(e.axis) + ")</span></dd>" +
+      "<dt>Direction</dt><dd>" + bd.map(function (r) {
+        return '<span class="chip">' + r[1] + " " + esc(r[0].replace(/_/g, " ")) + "</span>";
+      }).join(" ") + "</dd>" +
+      "<dt>Consensus</dt><dd>" + (e.consensus ? esc(dirWord(e.consensus)) + " &middot; " + (100 * e.agreement).toFixed(1) + "% agree"
+        : "none &middot; two directions tie at " + (100 * e.agreement).toFixed(1) + "%") + "</dd>" +
+      "<dt>Contested</dt><dd>" + (e.contested ? "yes" : "no") +
+      (e.minority_replicated ? " &middot; minority direction reported by more than one study" : "") + "</dd>" +
+      "<dt>Counts</dt><dd>" + e.n_records + " records &middot; " + e.n_studies + " studies &middot; " + e.n_labs + " labs</dd>" +
+      "<dt>Record ids</dt><dd>" + esc(e.record_ids.join(" ")) +
+      (e.record_ids_truncated ? ' <span class="u">(first ' + SIG.record_ids_cap + " of " + e.n_records + ")</span>" : "") + "</dd>" +
+      "</dl>" +
+      '<p class="note place">' + (e.n_labs < e.n_studies
+        ? (e.n_studies - e.n_labs) + " of the " + e.n_studies + " studies carry no lab identity, so they are not counted as labs rather than being pooled as one unknown lab. "
+        : "") +
+      "This edge says these records measured this readout after this perturbation. It does not say a signal travels from the population to the readout, and no projection is drawn.</p>";
+  }
+
+  function markSigRows() {
+    document.querySelectorAll("#sig-edges button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(!!selEdge && +b.dataset.sigedge === selEdge._i));
+    });
+  }
+
+  function renderSigStatic() {
+    $("sig-ch").textContent = "LAYER D · " + SIG.mode_label.toUpperCase();
+    $("sig-p").textContent = SIG.mode_note;
+    $("sig-honest").innerHTML = (SIG._honesty || []).map(function (s) {
+      return "<li>" + esc(s) + "</li>";
+    }).join("");
+    $("sig-rules").innerHTML =
+      "<span>SOURCE <b>" + esc(SIG.generated_from) + "</b> &middot; " + fmt(SIG.n_records_in) +
+      " records in, " + fmt(SIG.n_records_used) + " used, " + fmt(SIG.n_records_in - SIG.n_records_used) + " excluded</span>" +
+      Object.keys(SIG.excluded || {}).map(function (k) {
+        return "<span>EXCLUDED <b>" + fmt(SIG.excluded[k]) + "</b> " + esc(k) + "</span>";
+      }).join("") +
+      "<span>DERIVED <b>" + esc(SIG.generated_at) + "</b> by src/syn4rch/atlas/signaling.py</span>" +
+      "<span>EDGE <b>" + esc(SIG.edge_identity) + "</b></span>" +
+      "<span>AXIS <b>" + esc(SIG.axis_source) + "</b></span>" +
+      "<span>" + esc(SIG.axis_trap_note) + "</span>" +
+      "<span>CONSENSUS <b>" + esc(SIG.consensus_rule) + "</b>, agreement = " + esc(SIG.agreement_rule) + "</span>" +
+      "<span>CONTESTED <b>" + esc(SIG.contested_rule) + "</b></span>" +
+      "<span>FLAG <b>" + esc(SIG.minority_replicated_rule) + "</b></span>" +
+      "<span>RECORD IDS listed per edge up to <b>" + SIG.record_ids_cap + "</b></span>";
+    renderSigBar();
+  }
 
   /* ---------- header status ---------- */
   var resolved = S.regions.filter(function (r) { return r.status === "resolved"; }).length;
@@ -773,7 +1117,14 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 
   /* ---------- 3D ---------- */
   var view = $("view");
-  if (!window.THREE || !THREE.OrbitControls) { $("loading").textContent = "3D LIBRARY FAILED TO LOAD"; renderKey(); renderOverview(); wire(); return; }
+  if (!window.THREE || !THREE.OrbitControls) {
+    // The panel, the legend and the caveats are plain DOM and still render;
+    // only the bus and the pulses need a renderer.
+    $("loading").textContent = "3D LIBRARY FAILED TO LOAD";
+    $("sig-note").textContent = "The 3D library did not load, so the bus and the pulses are not drawn. The counts below are unaffected.";
+    renderKey(); renderOverview(); renderSigStatic(); renderSigFocus(); renderSigEdge(); renderSigState(); wire();
+    return;
+  }
   var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   view.insertBefore(renderer.domElement, view.firstChild);
@@ -781,7 +1132,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   var camera = new THREE.PerspectiveCamera(32, 1, 0.05, 200);
   var controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = !REDUCED; controls.dampingFactor = 0.08; controls.rotateSpeed = 0.6;
-  controls.minDistance = 1.2; controls.maxDistance = 40;
+  controls.minDistance = 1.2; controls.maxDistance = 46;
   controls.autoRotate = !REDUCED; controls.autoRotateSpeed = 0.35;
 
   // CCF (x AP, y DV, z ML, um, PIR) -> three (mm): right-handed, dorsal up, anterior toward +Z, animal right toward -X.
@@ -883,9 +1234,368 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     });
   }
 
+  /* ---------- the body bus ----------
+     The readouts are not anatomy and have no CCF coordinates, because a
+     measured bodily readout has no position in the brain. So they are drawn
+     outside it, below it, as a flat instrument ring: unlit flat plates, square,
+     on a drawn console line, grouped into systems. Nothing about the ring is a
+     claim -- not its radius, not its angles, not the order of the systems. It
+     is a layout, and the panel says so. */
+  // The ring is a layout, not a measurement, so its radius is allowed to
+  // follow the viewport: a narrow phone viewport gets a tighter ring rather
+  // than half the readouts off-screen.
+  var BUS_ASPECT = view.clientWidth / Math.max(view.clientHeight, 1);
+  var BUS_R = BUS_ASPECT >= 1.2 ? 8.4 : (BUS_ASPECT >= 0.9 ? 7.2 : 6.0);
+  var BUS_PAD = BUS_ASPECT >= 0.9 ? 2.4 : 1.0;   // room for the readout labels
+  var BUS_TH0 = Math.atan2(-11.5, 15.5);
+  var BUS_Y = (brain ? -(brain.bbox_um[1][1] - C[1]) / 1000 : -2.0) - 5.6;
+  var busCenter = new THREE.Vector3(0, BUS_Y, 0);
+  var busGroup = new THREE.Group(); busGroup.visible = sigOn; scene.add(busGroup);
+  var plateOf = {}, busPick = [], busLabels = [];
+  var colDirs = {};
+  ["--dir-up", "--dir-dn", "--dir-flat"].forEach(function (t) { colDirs[t] = new THREE.Color(tok(t)); });
+  function dirColour(d) { return colDirs[dirTok(d)] || colDirs["--dir-flat"]; }
+
+  function busPos(a, r, y) {
+    return new THREE.Vector3(Math.sin(a + BUS_TH0) * r, y == null ? BUS_Y : y, Math.cos(a + BUS_TH0) * r);
+  }
+  function busLabel(text, cls, pos) {
+    var el = document.createElement("div");
+    el.className = "buslab" + (cls ? " " + cls : ""); el.textContent = text;
+    $("sig-labels").appendChild(el);
+    busLabels.push({ el: el, p: pos, on: false });
+    return el;
+  }
+
+  (function buildBus() {
+    var order = SIG.system_order.filter(function (s) {
+      return SIG.outcomes.some(function (o) { return o.system === s; });
+    });
+    var slots = SIG.outcomes.length + order.length * 0.8;
+    var step = (Math.PI * 2) / slots, cursor = 0.4 * step;
+    var lp = [], lc = [];
+    var cDim = new THREE.Color(tok("--rule-2")), cMid = new THREE.Color(tok("--ink-3"));
+    function seg(a, b, c) { lp.push(a.x, a.y, a.z, b.x, b.y, b.z); lc.push(c.r, c.g, c.b, c.r, c.g, c.b); }
+    order.forEach(function (sys) {
+      var list = SIG.outcomes.filter(function (o) { return o.system === sys; });
+      var a0 = cursor, a1 = cursor + list.length * step;
+      // sector arc, just outside the plates, and a tick at each end
+      var n = Math.max(2, Math.round((a1 - a0) / 0.05));
+      for (var i = 0; i < n; i++) {
+        seg(busPos(a0 + (a1 - a0) * i / n, BUS_R + 0.62),
+            busPos(a0 + (a1 - a0) * (i + 1) / n, BUS_R + 0.62), cMid);
+      }
+      [a0 - 0.3 * step, a1 + 0.3 * step].forEach(function (a) {
+        seg(busPos(a, BUS_R - 0.55), busPos(a, BUS_R + 0.95), cDim);
+      });
+      busLabel((SIG.system_labels || {})[sys] || sys, "sys", busPos((a0 + a1) / 2, BUS_R + 1.95));
+      list.forEach(function (o, k) {
+        var a = a0 + (k + 0.5) * step, p = busPos(a, BUS_R);
+        var g = new THREE.PlaneGeometry(0.62, 0.62);
+        g.rotateX(-Math.PI / 2);
+        var mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+          color: new THREE.Color(tok("--panel-2")), transparent: true, opacity: 0.9,
+          side: THREE.DoubleSide, depthWrite: false }));
+        mesh.position.copy(p); mesh.userData.outcome = o.id;
+        busGroup.add(mesh); busPick.push(mesh);
+        // square bezel, drawn not shaded, so a plate cannot read as a volume
+        var h = 0.35, corners = [[-h, -h], [h, -h], [h, h], [-h, h]];
+        for (var q = 0; q < 4; q++) {
+          var c0 = corners[q], c1 = corners[(q + 1) % 4];
+          seg(new THREE.Vector3(p.x + c0[0], BUS_Y, p.z + c0[1]),
+              new THREE.Vector3(p.x + c1[0], BUS_Y, p.z + c1[1]), cMid);
+        }
+        var lab = busLabel(o.label, null, busPos(a, BUS_R + 1.08));
+        lab.title = o.label + " (" + o.id + ")";
+        plateOf[o.id] = { mesh: mesh, pos: p, label: busLabels[busLabels.length - 1], outcome: o };
+      });
+      cursor = a1 + 0.8 * step;
+    });
+    var bg = new THREE.BufferGeometry();
+    bg.setAttribute("position", new THREE.Float32BufferAttribute(lp, 3));
+    bg.setAttribute("color", new THREE.Float32BufferAttribute(lc, 3));
+    var bus = new THREE.LineSegments(bg, new THREE.LineBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 0.85, depthWrite: false }));
+    bus.renderOrder = 2; busGroup.add(bus);
+  })();
+
+  /* ---------- channels and pulses ----------
+     One LineSegments holds every drawn channel and one Points holds every
+     pulse, so the whole layer is two draw calls however much is fired. Pulse
+     count and size rise with log(records): a channel of 24 records is heavier
+     than one of 1, not twenty-four times heavier. Nothing here is a rate: the
+     dataset has no latencies. */
+  var SEGS = 22, MAX_STRANDS = SIG.edges.length * 2, MAX_PULSES = 480;
+  var strands = [];          // {pts: Float32Array, edge, dir, rev, v0, vn}
+  var pulses = [];           // {s, phase, speed, rev}
+  var sigClock = 0, sigLast = null, camWas = null, busDirty = true;
+
+  var chGeo = new THREE.BufferGeometry();
+  chGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(MAX_STRANDS * SEGS * 6), 3));
+  chGeo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(MAX_STRANDS * SEGS * 6), 3));
+  var channels = new THREE.LineSegments(chGeo, new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false,
+    blending: THREE.AdditiveBlending }));
+  channels.renderOrder = 5; channels.frustumCulled = false; busGroup.add(channels);
+
+  var puGeo = new THREE.BufferGeometry();
+  puGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(MAX_PULSES * 3), 3));
+  puGeo.setAttribute("aColor", new THREE.BufferAttribute(new Float32Array(MAX_PULSES * 3), 3));
+  puGeo.setAttribute("aSize", new THREE.BufferAttribute(new Float32Array(MAX_PULSES), 1));
+  puGeo.setAttribute("aShape", new THREE.BufferAttribute(new Float32Array(MAX_PULSES), 1));
+  var puMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uScale: { value: 10.0 * Math.min(window.devicePixelRatio || 1, 2) } },
+    vertexShader: "attribute float aSize; attribute vec3 aColor; attribute float aShape;" +
+      "uniform float uScale; varying vec3 vC; varying float vS;" +
+      "void main(){ vC = aColor; vS = aShape; vec4 mv = modelViewMatrix*vec4(position,1.0);" +
+      " gl_Position = projectionMatrix*mv;" +
+      " gl_PointSize = clamp(aSize*uScale/max(0.6,-mv.z), 2.0, 26.0); }",
+    // glyph ids match DIR_SHAPE; +10 means hollow, which is the unpolarised axis
+    fragmentShader: "precision mediump float; varying vec3 vC; varying float vS;" +
+      "float ins(vec2 p, float s){" +
+      " if (s < 0.5) return (p.y < 0.44 - 1.7*abs(p.x) && p.y > -0.32) ? 1.0 : 0.0;" +
+      " if (s < 1.5) return (-p.y < 0.44 - 1.7*abs(p.x) && -p.y > -0.32) ? 1.0 : 0.0;" +
+      " if (s < 2.5) return (abs(p.y) < 0.17 && abs(p.x) < 0.46) ? 1.0 : 0.0;" +
+      " return (abs(p.x) + abs(p.y) < 0.44) ? 1.0 : 0.0; }" +
+      "void main(){ vec2 p = vec2(gl_PointCoord.x-0.5, 0.5-gl_PointCoord.y);" +
+      " float s = vS, a; if (s >= 10.0) { s -= 10.0; a = ins(p,s) - ins(p/0.46,s); } else { a = ins(p,s); }" +
+      " if (a <= 0.0) discard; gl_FragColor = vec4(vC, 1.0); }"
+  });
+  var points = new THREE.Points(puGeo, puMat);
+  points.renderOrder = 6; points.frustumCulled = false; busGroup.add(points);
+  puGeo.setDrawRange(0, 0);
+
+  function popCentre(pid) {
+    var p = sigPopById[pid], sp = popById[pid];
+    var rid = (p && p.region_id) || (sp && sp.nucleus);
+    var m = rid ? regionById[rid] : null;
+    var o = m && m.allen_id ? nucleusObjs[m.allen_id] : null;
+    return o ? o.center : null;
+  }
+
+  function sampleStrand(p0, p1, off) {
+    // quadratic bezier, bowed outward and down: it leaves the brain, it does
+    // not tunnel through it. The curve is a drawing, not a path.
+    var mid = p0.clone().add(p1).multiplyScalar(0.5);
+    var out = new THREE.Vector3(p1.x, 0, p1.z).normalize().multiplyScalar(1.15);
+    var cp = mid.clone().add(out);
+    cp.y = Math.min(p0.y, p1.y) - 0.9;
+    var perp = new THREE.Vector3().subVectors(p1, p0).cross(new THREE.Vector3(0, 1, 0)).normalize().multiplyScalar(off || 0);
+    var pts = new Float32Array((SEGS + 1) * 3), v = new THREE.Vector3();
+    for (var i = 0; i <= SEGS; i++) {
+      var t = i / SEGS, u = 1 - t;
+      v.set(u * u * p0.x + 2 * u * t * cp.x + t * t * p1.x,
+            u * u * p0.y + 2 * u * t * cp.y + t * t * p1.y,
+            u * u * p0.z + 2 * u * t * cp.z + t * t * p1.z).add(perp);
+      pts[i * 3] = v.x; pts[i * 3 + 1] = v.y; pts[i * 3 + 2] = v.z;
+    }
+    return pts;
+  }
+
+  function pulsesFor(n) { return Math.max(1, Math.min(6, Math.round(1 + Math.log(n) / Math.log(2.6)))); }
+  function pulseSize(n) { return 5.0 + 4.2 * Math.log(1 + n) / Math.LN10; }
+
+  function buildActive() {
+    strands = []; pulses = [];
+    var pos = chGeo.attributes.position.array, col = chGeo.attributes.color.array, vi = 0;
+    var budget = MAX_PULSES;
+    var order = activeEdges.slice().sort(function (a, b) { return b.n_records - a.n_records; });
+    // One population can reach one readout through several perturbations --
+    // more firing, less firing, more or less of a gene product. They are
+    // separate edges and must not be drawn on top of each other, so the bundle
+    // is fanned out. The fan is spacing, not a quantity.
+    var bundle = {}, bundleN = {};
+    order.forEach(function (e) {
+      var k = e.population_id + "\u0000" + e.outcome_id;
+      bundleN[k] = (bundleN[k] || 0) + 1;
+    });
+    order.forEach(function (e) {
+      var k = e.population_id + "\u0000" + e.outcome_id;
+      var i = bundle[k] = (bundle[k] == null ? 0 : bundle[k] + 1);
+      e._off = (i - (bundleN[k] - 1) / 2) * 0.46;
+    });
+    order.forEach(function (e) {
+      var p0 = popCentre(e.population_id), plate = plateOf[e.outcome_id];
+      if (!p0 || !plate) return;
+      var bd = dirBreakdown(e);
+      // A contested edge is drawn as two strands carrying the two directions
+      // the records actually report, with their pulses running opposite ways.
+      // It is never averaged into one arrow.
+      var legs = e.contested && bd.length > 1
+        ? [{ dir: bd[0][0], n: bd[0][1], side: 0.14, rev: false }, { dir: bd[1][0], n: bd[1][1], side: -0.14, rev: true }]
+        : [{ dir: e.consensus || bd[0][0], n: e.n_records, side: 0, rev: false }];
+      legs.forEach(function (leg) {
+        var pts = sampleStrand(p0, plate.pos, e._off + leg.side);
+        var hollow = unpolarised(e.axis), c = dirColour(leg.dir);
+        var v0 = vi / 3;
+        for (var i = 0; i < SEGS; i++) {
+          if (hollow && i % 2) continue;              // dashed = unpolarised axis
+          for (var k = 0; k < 2; k++) {
+            var j = (i + k) * 3;
+            pos[vi] = pts[j]; pos[vi + 1] = pts[j + 1]; pos[vi + 2] = pts[j + 2];
+            col[vi] = c.r; col[vi + 1] = c.g; col[vi + 2] = c.b;
+            vi += 3;
+          }
+        }
+        var s = { pts: pts, edge: e, dir: leg.dir, v0: v0, vn: vi / 3 - v0, hollow: hollow, col: c };
+        strands.push(s);
+        var want = Math.min(budget, pulsesFor(leg.n));
+        budget -= want;
+        for (var q = 0; q < want; q++) {
+          pulses.push({ s: strands.length - 1, phase: (q + 0.5) / want,
+                        speed: 0.17 + 0.03 * (strands.length % 3), rev: leg.rev,
+                        size: pulseSize(leg.n), shape: dirShape(leg.dir) + (hollow ? 10 : 0), col: c });
+        }
+      });
+    });
+    chGeo.setDrawRange(0, vi / 3);
+    chGeo.attributes.position.needsUpdate = true;
+    chGeo.attributes.color.needsUpdate = true;
+    var ac = puGeo.attributes.aColor.array, as = puGeo.attributes.aSize.array, ash = puGeo.attributes.aShape.array;
+    pulses.forEach(function (p, i) {
+      ac[i * 3] = p.col.r; ac[i * 3 + 1] = p.col.g; ac[i * 3 + 2] = p.col.b;
+      as[i] = p.size; ash[i] = p.shape;
+    });
+    puGeo.attributes.aColor.needsUpdate = true;
+    puGeo.attributes.aSize.needsUpdate = true;
+    puGeo.attributes.aShape.needsUpdate = true;
+    puGeo.setDrawRange(0, pulses.length);
+    livePulses = pulses.length;
+    paintChannels();
+    updatePulses(true);
+  }
+
+  // Selection is a separate channel from data here too: a selected edge keeps
+  // its direction colour and is brightened, the rest are held back.
+  function paintChannels() {
+    var col = chGeo.attributes.color.array;
+    strands.forEach(function (s) {
+      var k = !selEdge ? 1.0 : (s.edge._i === selEdge._i ? 1.0 : 0.3);
+      for (var i = 0; i < s.vn; i++) {
+        var v = (s.v0 + i) * 3;
+        col[v] = s.col.r * k; col[v + 1] = s.col.g * k; col[v + 2] = s.col.b * k;
+      }
+    });
+    chGeo.attributes.color.needsUpdate = true;
+    var ac = puGeo.attributes.aColor.array, as = puGeo.attributes.aSize.array;
+    pulses.forEach(function (p, i) {
+      var s = strands[p.s], hot = !selEdge || s.edge._i === selEdge._i;
+      var k = hot ? 1.0 : 0.28;
+      ac[i * 3] = p.col.r * k; ac[i * 3 + 1] = p.col.g * k; ac[i * 3 + 2] = p.col.b * k;
+      as[i] = p.size * (hot ? 1 : 0.7) * (selEdge && hot ? 1.25 : 1);
+    });
+    puGeo.attributes.aColor.needsUpdate = true;
+    puGeo.attributes.aSize.needsUpdate = true;
+  }
+
+  function updatePulses(force) {
+    if (!pulses.length) return;
+    var arr = puGeo.attributes.position.array;
+    for (var i = 0; i < pulses.length; i++) {
+      var p = pulses[i], s = strands[p.s];
+      var t = (p.phase + sigClock * p.speed) % 1;
+      if (p.rev) t = 1 - t;
+      var f = t * SEGS, i0 = Math.min(SEGS - 1, Math.floor(f)), fr = f - i0, a = i0 * 3, b = a + 3;
+      arr[i * 3] = s.pts[a] + (s.pts[b] - s.pts[a]) * fr;
+      arr[i * 3 + 1] = s.pts[a + 1] + (s.pts[b + 1] - s.pts[a + 1]) * fr;
+      arr[i * 3 + 2] = s.pts[a + 2] + (s.pts[b + 2] - s.pts[a + 2]) * fr;
+    }
+    puGeo.attributes.position.needsUpdate = true;
+    if (force) puGeo.computeBoundingSphere();
+  }
+
+  var colPlateOff = new THREE.Color(tok("--panel-2")), colPlateOn = new THREE.Color(tok("--ink"));
+  function paintBus() {
+    var hit = {};
+    activeEdges.forEach(function (e) { hit[e.outcome_id] = 1; });
+    SIG.outcomes.forEach(function (o) {
+      var pl = plateOf[o.id]; if (!pl) return;
+      var on = !!hit[o.id];
+      pl.mesh.material.color.copy(on ? colPlateOn : colPlateOff);
+      pl.mesh.material.opacity = on ? 0.92 : 0.55;
+      pl.mesh.scale.setScalar(on ? 1.18 : 1);
+      pl.label.on = on;
+      pl.label.el.classList.toggle("on", on);
+      busDirty = true;
+    });
+  }
+
+  function fire(pids) {
+    firedPops = pids.slice();
+    activeEdges = [];
+    pids.forEach(function (pid) {
+      (sigEdgesByPop[pid] || []).forEach(function (e) { activeEdges.push(e); });
+    });
+    activeEdges.sort(function (a, b) { return b.n_records - a.n_records; });
+    if (selEdge && activeEdges.indexOf(selEdge) < 0) selEdge = null;
+    buildActive(); paintBus(); renderSigFocus(); renderSigEdge(); renderSigState();
+  }
+  function clearFire() {
+    firedPops = []; activeEdges = []; selEdge = null;
+    buildActive(); paintBus(); renderSigFocus(); renderSigEdge(); renderSigState();
+  }
+  function fireAll() {
+    fire(SIG.populations.filter(function (p) { return p.n_records; }).map(function (p) { return p.id; }));
+  }
+  function selectEdge(e) {
+    selEdge = e; paintChannels(); renderSigEdge(); markSigRows(); renderSigState();
+  }
+  function selectOutcome(oid) {
+    var hits = activeEdges.filter(function (e) { return e.outcome_id === oid; });
+    if (hits.length) { selectEdge(hits[0]); return; }
+    // nothing fired into this readout: say what the readout does carry
+    var o = sigOutById[oid] || { id: oid }, all = sigEdgesByOut[oid] || [];
+    selEdge = null; markSigRows();
+    $("sig-edge-h").textContent = o.label || oid;
+    $("sig-edge-p").textContent = all.length
+      ? "Nothing firing reaches this readout. " + all.length + " curated edge(s) reach it in all, from " +
+        Object.keys(all.reduce(function (a, e) { a[e.population_id] = 1; return a; }, {})).length + " population(s)."
+      : "No population-level curated record reaches this readout." +
+        (o.n_records_excluded ? " " + o.n_records_excluded + " record(s) measured it, but all of them are region-level and are excluded from this view." : "");
+    $("sig-edge").innerHTML = all.length
+      ? '<div class="sig-rows">' + all.map(edgeRow).join("") + "</div>"
+      : '<p class="note">Nothing is drawn into it, and that is the honest state of the curation.</p>';
+  }
+  function setPlaying(v) {
+    playing = v;
+    if (playing) sigLast = null;
+    renderSigState();
+  }
+  function setSigOn(v) {
+    sigOn = v; busGroup.visible = v;
+    homeFrame();
+    busLabels.forEach(function (l) { l.el.style.display = v ? "" : "none"; });
+    renderSigState();
+  }
+  sigReady = true;
+
   // Initial camera: anterior-left-dorsal oblique, framing the whole brain.
+  // With the bus on, the frame has to hold the ring as well, and the ring is
+  // wider than the brain, so the distance is solved from the viewport shape
+  // rather than fixed -- otherwise a phone cuts half the readouts off.
   var home = { target: new THREE.Vector3(0, 0.6, 1.2), pos: new THREE.Vector3(-11.5, 6.5, 15.5) };
-  camera.position.copy(home.pos); controls.target.copy(home.target); controls.update();
+  var homeBusTarget = new THREE.Vector3(0, 0.0, 0.4);
+  var homeBusDir = new THREE.Vector3(-0.52, 0.56, 0.68).normalize();
+  function busDist() {
+    var aspect = Math.max(0.35, view.clientWidth / Math.max(view.clientHeight, 1));
+    var tan = Math.tan(camera.fov * Math.PI / 360);
+    // half-extents, not spans: the ring's radius across, and the brain's
+    // crown down to just under the ring vertically
+    var halfV = Math.max(5.9, Math.abs(BUS_Y) + 1.4);
+    return Math.min(44, Math.max((BUS_R + BUS_PAD) / (tan * aspect), halfV / tan));
+  }
+  function homeFrame() {
+    if (sigOn) flyTo(homeBusTarget, busDist());
+    else flyTo(home.target, home.pos.distanceTo(home.target));
+  }
+  if (sigOn) {
+    controls.target.copy(homeBusTarget);
+    camera.position.copy(homeBusTarget.clone().add(homeBusDir.clone().multiplyScalar(busDist())));
+  } else {
+    camera.position.copy(home.pos); controls.target.copy(home.target);
+  }
+  controls.update();
 
   function resize() {
     var w = view.clientWidth, h = view.clientHeight;
@@ -930,26 +1640,41 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     document.querySelectorAll("#lit button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pop === selectedPop)); });
     document.querySelectorAll("#lit-nuc button").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.allen === selected)); });
   }
+  function popsInNucleus(rid) {
+    return SIG.populations.filter(function (p) { return p.region_id === rid; }).map(function (p) { return p.id; });
+  }
   function selectNucleus(allenId, pop) {
     var o = nucleusObjs[allenId]; if (!o) return;
     selected = allenId; selectedPop = pop ? pop.id : null;
     renderNucleus(o.mesh.userData.s, pop || null);
-    flyTo(o.center, Math.max(3.2, o.radius * 6));
+    if (sigOn) {
+      // The subject of this view is what runs between the nucleus and the bus,
+      // so the frame has to hold both ends rather than zooming into one.
+      flyTo(o.center.clone().lerp(busCenter, 0.5), busDist() * 0.92);
+      fire(pop ? [pop.id] : popsInNucleus(o.mesh.userData.s.region_id));
+    } else {
+      flyTo(o.center, Math.max(3.2, o.radius * 6));
+    }
     $("ro-view").textContent = "TRACK " + o.mesh.userData.s.allen_acronym;
     controls.autoRotate = false; paint();
   }
   function selectPop(pid) {
     var p = popById[pid]; if (!p) return;
     if (p.allen_id && nucleusObjs[p.allen_id]) { selectNucleus(p.allen_id, p); }
-    else { selected = null; selectedPop = pid; renderOrphanPop(p); $("ro-view").textContent = "NO VOLUME"; paint(); }
+    else {
+      selected = null; selectedPop = pid; renderOrphanPop(p); $("ro-view").textContent = "NO VOLUME";
+      if (sigOn) fire([pid]);
+      paint();
+    }
   }
   function clearSel() {
     selected = null; selectedPop = null; renderOverview(); $("ro-view").textContent = "ORBIT";
-    flyTo(home.target, home.pos.distanceTo(home.target)); paint();
+    if (sigReady) { clearFire(); homeFrame(); } else { flyTo(home.target, home.pos.distanceTo(home.target)); }
+    paint();
   }
 
   /* picking */
-  var ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), downAt = null, lastMove = null;
+  var ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), downAt = null, lastMove = null, hoveredPlate = null;
   function setNdc(e) { var r = renderer.domElement.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); }
   function probe() {
     ray.setFromCamera(ndc, camera);
@@ -961,8 +1686,17 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
       $("ro-x").textContent = fmt(c[0]); $("ro-y").textContent = fmt(c[1]); $("ro-z").textContent = fmt(c[2]);
       $("ro-hit").textContent = hit ? hit.object.userData.s.allen_acronym + " · " + hit.object.userData.s.allen_id : "root · 997 (outline)";
     } else { ["ro-x", "ro-y", "ro-z", "ro-hit"].forEach(function (id) { $(id).textContent = "—"; }); }
+    var ph = (sigOn && !hit) ? ray.intersectObjects(busPick, false)[0] : null;
+    if (ph) {
+      // A readout is not in the brain, so it is given no CCF coordinate here.
+      var o = sigOutById[ph.object.userData.outcome] || {};
+      $("ro-hit").textContent = (o.label || ph.object.userData.outcome) + " \u00b7 readout, no CCF position";
+    }
+    var pid = ph ? ph.object.userData.outcome : null;
     var nh = hit ? hit.object.userData.s.allen_id : null;
     if (nh !== hovered) { hovered = nh; renderer.domElement.style.cursor = nh ? "pointer" : "grab"; paint(); }
+    if (!nh && pid !== hoveredPlate) { renderer.domElement.style.cursor = pid ? "pointer" : "grab"; }
+    hoveredPlate = pid;
   }
   renderer.domElement.addEventListener("pointermove", function (e) { setNdc(e); lastMove = true; });
   renderer.domElement.addEventListener("pointerdown", function (e) { downAt = [e.clientX, e.clientY]; });
@@ -970,7 +1704,11 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
     setNdc(e); ray.setFromCamera(ndc, camera);
     var hit = ray.intersectObjects(pickables, false)[0];
-    if (hit) selectNucleus(hit.object.userData.s.allen_id);
+    if (hit) { selectNucleus(hit.object.userData.s.allen_id); return; }
+    if (sigOn) {
+      var ph = ray.intersectObjects(busPick, false)[0];
+      if (ph) selectOutcome(ph.object.userData.outcome);
+    }
   });
   renderer.domElement.addEventListener("pointerleave", function () { hovered = null; paint(); ["ro-x", "ro-y", "ro-z", "ro-hit"].forEach(function (id) { $(id).textContent = "—"; }); });
   var idleTimer = null;
@@ -993,6 +1731,30 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
       sweepU.value = contourObj.userData.zmax - ph * span;
       $("ro-sweep").textContent = "AP " + fmt(C[0] - sweepU.value * 1000) + " µm";
     } else if (contourObj) { sweepU.value = -999; $("ro-sweep").textContent = "AP static"; }
+    if (sigOn) {
+      // Paused means paused: no buffer is touched and no curve is sampled, so
+      // an idle tab is not spending anything on this layer.
+      if (playing && pulses.length) {
+        if (sigLast == null) sigLast = now;
+        sigClock += Math.min(0.05, (now - sigLast) / 1000);
+        sigLast = now;
+        updatePulses(false);
+      }
+      // Labels only need re-placing when the camera has actually moved, so a
+      // paused view with a still camera does no per-frame DOM work at all.
+      var moved = !camWas || camera.position.distanceToSquared(camWas[0]) > 1e-8 ||
+        controls.target.distanceToSquared(camWas[1]) > 1e-8;
+      if (moved || busDirty) {
+        busDirty = false;
+        if (!camWas) camWas = [camera.position.clone(), controls.target.clone()];
+        else { camWas[0].copy(camera.position); camWas[1].copy(controls.target); }
+        busLabels.forEach(function (l) {
+          var q = project(l.p);
+          l.el.style.left = q[0] + "px"; l.el.style.top = q[1] + "px";
+          l.el.style.opacity = q[2] < 1 ? (l.on ? "1" : "0.7") : "0";
+        });
+      }
+    }
     if (lastMove) { lastMove = false; probe(); }
     renderer.render(scene, camera);
 
@@ -1008,24 +1770,34 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 
     if (selected) {
       var o = nucleusObjs[selected], p = project(o.center), W = view.clientWidth;
-      var dx = p[0] > W * 0.6 ? -1 : 1, ex = p[0] + dx * 46, ey = p[1] - 46, fx = ex + dx * 34;
-      $("lead-line").setAttribute("points", p[0] + "," + p[1] + " " + ex + "," + ey + " " + fx + "," + ey);
-      $("lead-dot").setAttribute("cx", p[0]); $("lead-dot").setAttribute("cy", p[1]);
       var tg = $("tag"); tg.hidden = false;
       $("tag-a").textContent = o.mesh.userData.s.allen_acronym;
       $("tag-b").textContent = "ALLEN " + o.mesh.userData.s.allen_id + " · " + (popsByNucleus[o.mesh.userData.s.region_id] || []).length + " POP · NUCLEUS-LEVEL";
+      // Flip the leader to whichever side the tag actually fits on, measured,
+      // so a narrow viewport cannot push it off the edge.
       var tw = tg.offsetWidth;
-      tg.style.left = (dx > 0 ? fx + 4 : fx - tw - 4) + "px"; tg.style.top = (ey - tg.offsetHeight / 2) + "px";
+      var dx = (p[0] + 84 + tw > W && p[0] - 84 - tw > 0) ? -1 : 1;
+      var ex = p[0] + dx * 46, ey = p[1] - 46, fx = ex + dx * 34;
+      $("lead-line").setAttribute("points", p[0] + "," + p[1] + " " + ex + "," + ey + " " + fx + "," + ey);
+      $("lead-dot").setAttribute("cx", p[0]); $("lead-dot").setAttribute("cy", p[1]);
+      tg.style.left = Math.max(4, Math.min(W - tw - 4, dx > 0 ? fx + 4 : fx - tw - 4)) + "px";
+      tg.style.top = (ey - tg.offsetHeight / 2) + "px";
     } else { $("lead-line").setAttribute("points", ""); $("lead-dot").setAttribute("cx", -10); $("tag").hidden = true; }
   }
   $("loading").remove();
-  renderOverview(); wire(); setEncoding(encMode);
+  renderOverview(); renderSigStatic(); paintBus(); renderSigFocus(); renderSigEdge(); renderSigState();
+  wire(); setEncoding(encMode);
   requestAnimationFrame(frame);
 
   function wire() {
     document.addEventListener("click", function (e) {
       var b = e.target.closest("button"); if (!b) return;
       if (b.id === "by-pop" || b.id === "by-nuc") { if (!b.disabled) setMode(b.id === "by-pop" ? "pop" : "nuc"); return; }
+      if (b.id === "sig-play") { if (sigReady) setPlaying(!playing); return; }
+      if (b.id === "sig-show") { if (sigReady) setSigOn(!sigOn); return; }
+      if (b.id === "sig-all") { if (sigReady) fireAll(); return; }
+      if (b.id === "sig-clear") { if (sigReady) clearFire(); return; }
+      if (b.dataset.sigedge) { if (sigReady) selectEdge(SIG.edges[+b.dataset.sigedge]); return; }
       if (b.dataset.enc) setEncoding(b.dataset.enc);
       else if (b.dataset.allen) selectNucleus(+b.dataset.allen);
       else if (b.dataset.pop) selectPop(b.dataset.pop);

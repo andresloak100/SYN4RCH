@@ -1,7 +1,29 @@
 """Conflict detection between studies.
 
-A conflict is two or more *different studies* making the same claim --
-same (population, valence, outcome_id) -- with incompatible ``direction``.
+A conflict is two or more *different studies* making the same claim -- same
+:func:`syn4rch.qc.keys.claim_key` -- with incompatible ``direction``.
+
+What schema v0.2.0 changed here
+-------------------------------
+The claim key used to be ``(population, valence, outcome_id)``. It now carries
+the perturbation's class, polarity and molecular target, and the condition the
+experiment ran under. Measured on the first 362 curated records, that takes the
+number of directly opposed cells from 18 to 2. Sixteen of the eighteen
+"laboratories disagree" findings this module used to emit were a male cohort
+compared against a female one, a chow-fed cohort against a high-fat-fed one, or
+a gene knockout against a gene overexpression -- comparisons that were never
+valid. They were not conflicts, and reporting them as conflicts was the single
+largest distortion in the dataset.
+
+:func:`key_comparison` keeps the old count computable, because the difference
+between the two numbers is the only evidence that the change did anything.
+
+A conflict is also now **qualified by how much of the condition is known**. Two
+records that each fail to state sex, diet, age and challenge match each other on
+"both unknown", not on "both the same", and a disagreement between them may
+still be condition heterogeneity that neither paper reported. Every finding
+carries ``condition_specificity`` (0..4) so that a report cannot print those two
+situations as one number. See docs/DECISIONS.md (D-023, D-027).
 
 **Conflicts are data.** The literature disagrees about hypothalamic
 perturbation outcomes, and that disagreement is one of the most informative
@@ -26,13 +48,21 @@ from typing import Dict, List, Optional, Tuple
 
 from ..schema.enums import Direction
 from .findings import QCFinding, QCSeverity
-from .keys import claim_key, study_key
+from .keys import (
+    CLAIM_KEY_FIELDS,
+    claim_key,
+    claim_key_pooled,
+    condition_specificity,
+    study_key,
+)
 
 __all__ = [
     "OPPOSED_PAIRS",
     "directions_conflict",
+    "describe_claim",
     "find_conflicts",
     "annotate_conflicts",
+    "key_comparison",
 ]
 
 #: Directly opposed directions.
@@ -73,6 +103,43 @@ def directions_conflict(a, b) -> Optional[str]:
     return None
 
 
+def describe_claim(claim) -> str:
+    """Render a claim key as ``field=value`` pairs, labelled by name.
+
+    The key has nine components since v0.2.0. Printing it as a bare tuple in a
+    finding would leave a reader guessing which slot was the diet, so the names
+    travel with the values.
+    """
+    return ", ".join(
+        "%s=%s" % (name, value)
+        for name, value in zip(CLAIM_KEY_FIELDS, claim)
+    )
+
+
+def _condition_caveat(a, b) -> str:
+    """One sentence on what the condition match actually established.
+
+    When neither record states any condition, the two were matched on "both
+    unknown". That is a weaker basis for calling something a contradiction than
+    a matched sex and diet, and the finding says so rather than leaving the
+    reader to assume the stronger reading.
+    """
+    spec = min(condition_specificity(a), condition_specificity(b))
+    if spec == 0:
+        return (
+            "Neither record states sex, diet, age group or challenge, so the "
+            "two were matched on 'condition unknown' rather than on matching "
+            "conditions; this disagreement may still be condition "
+            "heterogeneity that neither paper reported."
+        )
+    if spec < len(CLAIM_KEY_FIELDS) - 5:
+        return (
+            "Conditions match on %d of 4 slots; the rest are unknown in at "
+            "least one of the two records." % spec
+        )
+    return "Conditions match on all four slots."
+
+
 def _pairs_in_claim(group):
     """Yield ``(code, record_a, record_b)`` for conflicting cross-study pairs."""
     for i in range(len(group)):
@@ -87,7 +154,7 @@ def _pairs_in_claim(group):
 
 def find_conflicts(records) -> List[QCFinding]:
     """Report every cross-study direction conflict. Records are not modified."""
-    by_claim: Dict[Tuple[str, str, str], List] = {}
+    by_claim: Dict[Tuple[str, ...], List] = {}
     for record in records:
         if not record.outcome_id:
             continue  # missing outcome_id is a HARD schema finding
@@ -101,26 +168,28 @@ def find_conflicts(records) -> List[QCFinding]:
                     code=code,
                     severity=QCSeverity.INFO,
                     message=(
-                        "Claim (population=%s, valence=%s, outcome=%s) is "
-                        "reported as %s by study %s (%s) and as %s by study %s "
-                        "(%s). Recorded on both sides; not resolved. Conflicts "
-                        "are data."
+                        "Claim (%s) is reported as %s by study %s (%s) and as "
+                        "%s by study %s (%s). %s Recorded on both sides; not "
+                        "resolved. Conflicts are data."
                         % (
-                            claim[0],
-                            claim[1],
-                            claim[2],
+                            describe_claim(claim),
                             a.direction.value if a.direction else "null",
                             a.study_id,
                             a.record_id,
                             b.direction.value if b.direction else "null",
                             b.study_id,
                             b.record_id,
+                            _condition_caveat(a, b),
                         )
                     ),
                     record_ids=sorted([a.record_id, b.record_id]),
                     field_name="direction",
                     details={
                         "claim": list(claim),
+                        "claim_fields": list(CLAIM_KEY_FIELDS),
+                        "condition_specificity": min(
+                            condition_specificity(a), condition_specificity(b)
+                        ),
                         "sides": [
                             {
                                 "record_id": a.record_id,
@@ -168,3 +237,48 @@ def annotate_conflicts(records) -> List[QCFinding]:
                         set(record.conflicts_with) | {other_id}
                     )
     return findings
+
+
+def key_comparison(records) -> dict:
+    """Conflict counts under the v0.2.0 claim key and under the v0.1.0 one.
+
+    The v0.1.0 key (:func:`syn4rch.qc.keys.claim_key_pooled`) pools experiments
+    that were never comparable. It is computed here for exactly one reason: the
+    gap between the two counts is the measurement of how much of this corpus's
+    apparent disagreement was condition and perturbation heterogeneity rather
+    than laboratories contradicting each other. Without the comparison the
+    v0.2.0 change would be an assertion instead of a result.
+
+    The ``pooled`` numbers must never be used to decide that two records
+    conflict. They are a baseline to be reported against, nothing more.
+    """
+    out = {}
+    for label, keyfn in (("strict", claim_key), ("pooled", claim_key_pooled)):
+        groups: Dict[Tuple[str, ...], List] = {}
+        for record in records:
+            if not record.outcome_id:
+                continue
+            groups.setdefault(tuple(keyfn(record)), []).append(record)
+        codes: Dict[str, int] = {}
+        cells_with_conflict = 0
+        for group in groups.values():
+            found = {code for code, _, _ in _pairs_in_claim(group)}
+            for code in found:
+                codes[code] = codes.get(code, 0) + 1
+            if found:
+                cells_with_conflict += 1
+        out[label] = {
+            "n_cells": len(groups),
+            "n_cells_with_conflict": cells_with_conflict,
+            "cells_by_code": dict(sorted(codes.items())),
+        }
+    out["key_fields"] = {
+        "strict": list(CLAIM_KEY_FIELDS),
+        "pooled": ["population", "valence", "outcome_id"],
+    }
+    out["note"] = (
+        "A cell counted under 'pooled' but not under 'strict' is not a "
+        "resolved disagreement. It is a comparison that should never have "
+        "been made."
+    )
+    return out

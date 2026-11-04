@@ -40,6 +40,7 @@ __all__ = [
     "roc_auc_ovr_macro",
     "scores_are_constant",
     "bootstrap_group_ci",
+    "mcnemar_exact_p",
     "percentile",
 ]
 
@@ -457,7 +458,43 @@ def bootstrap_group_ci(
     result["ci_low"] = percentile(values, alpha / 2.0)
     result["ci_high"] = percentile(values, 1.0 - alpha / 2.0)
     result["bootstrap_median"] = percentile(values, 0.5)
+    # Meaningful only when the metric is a *difference*: the share of
+    # replicates in which the candidate did not gain. Reported for every
+    # metric because computing it is free and because for a difference it is
+    # the number a reader wants beside the interval; for a plain accuracy it is
+    # the share of replicates at or below zero, which is ordinarily 0 and
+    # harmless.
+    result["fraction_at_or_below_zero"] = (
+        sum(1 for v in values if v <= 0.0) / len(values)
+    )
     return result
+
+
+def mcnemar_exact_p(b: int, c: int) -> Optional[float]:
+    """Two-sided exact McNemar p-value from the two discordant counts.
+
+    ``b`` and ``c`` are the rows where exactly one of the two predictors was
+    right. Under the null that neither is better, each discordant row is a fair
+    coin, so the p-value is the two-sided binomial tail of ``min(b, c)``
+    successes in ``b + c`` trials. Exact rather than the chi-square
+    approximation because the counts here are tens, not thousands.
+
+    ``None`` when there are no discordant rows: two predictors that agree
+    everywhere give no evidence either way, which is not the same as a
+    p-value of 1 for a test that was actually run.
+
+    This is a **row-level** test and it treats rows as independent, which in
+    this corpus they are not (SCHEMA.md 5). It is reported *beside* the
+    group-clustered bootstrap, never instead of it: when the two disagree, the
+    honest reading is that the effect is suggestive and not established, and
+    the disagreement is itself the finding.
+    """
+    n = b + c
+    if n <= 0:
+        return None
+    k = min(b, c)
+    tail = sum(math.comb(n, i) for i in range(0, k + 1)) / (2.0 ** n)
+    return min(1.0, 2.0 * tail)
 
 
 def index_groups(group_values: Sequence[Optional[str]]) -> List[List[int]]:

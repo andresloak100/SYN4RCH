@@ -1,4 +1,9 @@
-"""Promotion gates: feasible / marginal / insufficient, and why."""
+"""Promotion gates: feasible / marginal / insufficient, and why.
+
+Schema v0.2.0: the gates are unchanged, the unit they apply to is the
+nine-component claim key, and no verdict is printed without the minimum
+condition specificity of the cell behind it.
+"""
 
 import _path  # noqa: F401
 import unittest
@@ -6,6 +11,7 @@ import unittest
 import synthetic
 from syn4rch.feasibility.gates import (
     CHANCE_DIRECTION_RATE,
+    MIN_CONDITION_SPECIFICITY_GATE,
     MIN_DIRECTION_AGREEMENT_FEASIBLE,
     MIN_LABS_FEASIBLE,
     MIN_STUDIES_FEASIBLE,
@@ -16,6 +22,7 @@ from syn4rch.feasibility.gates import (
     pair_verdicts,
     summarize_verdicts,
 )
+from syn4rch.feasibility.replication import KEY_POOLED, N_CONDITION_SLOTS
 
 
 def verdict_of(records):
@@ -114,11 +121,20 @@ class TestThreeStudiesAcrossThreeLabsCanBeFeasible(unittest.TestCase):
             numbers["agreement_studies_ci"][0], CHANCE_DIRECTION_RATE
         )
 
-    def test_the_rollup_names_the_valence(self):
+    def test_the_rollup_names_the_perturbation_and_the_condition(self):
         pairs = pair_verdicts([self.verdict])
         self.assertEqual(len(pairs), 1)
         self.assertEqual(pairs[0].verdict, "feasible")
-        self.assertEqual(pairs[0].best_valence, "activation")
+        # Not a valence: valence has left the claim key. The rollup names the
+        # perturbation axis and the condition that earned the verdict.
+        self.assertEqual(
+            pairs[0].best_perturbation, "circuit_activity / increase / <null>"
+        )
+        self.assertIn("sex=male", pairs[0].best_condition)
+        self.assertEqual(
+            pairs[0].best_min_condition_specificity, N_CONDITION_SLOTS
+        )
+        self.assertEqual(pairs[0].n_claims, 1)
         self.assertEqual(pairs[0].n_labs_max, 3)
 
     def test_the_summary_lists_the_outcome(self):
@@ -207,6 +223,132 @@ class TestSameLabReplicationIsDiscounted(unittest.TestCase):
         self.assertEqual(verdict.numbers["agreement_studies"], 1.0)
         self.assertEqual(verdict.verdict, "marginal")
         self.assertIn("LABS_BELOW_FEASIBLE", verdict.reasons)
+
+
+class TestConditionSpecificityQualifiesEveryVerdict(unittest.TestCase):
+    """SCHEMA.md 5b's sibling rule: the number never travels without it."""
+
+    def _unspecified(self, builder, **overrides):
+        data = dict(sex=None, diet=None, age_group=None, challenge=None)
+        data.update(overrides)
+        return builder(**data)
+
+    def test_a_feasible_verdict_on_unknown_conditions_says_so(self):
+        verdict = verdict_of(
+            [
+                self._unspecified(synthetic.good_record),
+                self._unspecified(synthetic.other_lab_record),
+                self._unspecified(third_lab_record),
+            ]
+        )
+        self.assertEqual(verdict.verdict, "feasible")
+        self.assertEqual(verdict.min_condition_specificity, 0)
+        self.assertTrue(verdict.matched_on_unknown_conditions)
+        self.assertIn("CONDITIONS_ALL_UNKNOWN", verdict.notes)
+
+    def test_it_is_a_note_and_not_a_gate(self):
+        # Refusing it would mean inventing a specificity threshold, and this
+        # module's discipline is that a threshold needs a stated reason.
+        self.assertIsNone(MIN_CONDITION_SPECIFICITY_GATE)
+        self.assertIsNone(THRESHOLDS["MIN_CONDITION_SPECIFICITY_GATE"])
+        verdict = verdict_of(
+            [
+                self._unspecified(synthetic.good_record),
+                self._unspecified(synthetic.other_lab_record),
+                self._unspecified(third_lab_record),
+            ]
+        )
+        self.assertNotIn("CONDITIONS_ALL_UNKNOWN", verdict.reasons)
+
+    def test_a_partially_specified_cell_is_marked_too(self):
+        verdict = verdict_of([synthetic.good_record(challenge=None)])
+        self.assertEqual(verdict.min_condition_specificity, 3)
+        self.assertFalse(verdict.matched_on_unknown_conditions)
+        self.assertIn("CONDITIONS_PARTIALLY_UNKNOWN", verdict.notes)
+        self.assertNotIn("CONDITIONS_ALL_UNKNOWN", verdict.notes)
+
+    def test_the_specificity_rides_in_the_numbers_dict_next_to_the_fraction(self):
+        verdict = verdict_of(
+            [synthetic.good_record(), synthetic.other_lab_record()]
+        )
+        numbers = verdict.numbers
+        self.assertEqual(numbers["agreement_studies"], 1.0)
+        self.assertEqual(
+            numbers["min_condition_specificity"], N_CONDITION_SLOTS
+        )
+        self.assertEqual(numbers["n_condition_slots"], N_CONDITION_SLOTS)
+        self.assertFalse(numbers["matched_on_unknown_conditions"])
+        # The stated form carries both, so a report cannot print one alone.
+        self.assertIn("min condition specificity", numbers["agreement_studies_stated"])
+
+    def test_the_summary_splits_the_verdict_counts_by_specificity(self):
+        specified = [
+            synthetic.good_record(),
+            synthetic.other_lab_record(),
+            third_lab_record(),
+        ]
+        unspecified = [
+            self._unspecified(synthetic.good_record, population_id="syn:pop_beta"),
+            self._unspecified(
+                synthetic.other_lab_record, population_id="syn:pop_beta"
+            ),
+            self._unspecified(third_lab_record, population_id="syn:pop_beta"),
+        ]
+        summary = summarize_verdicts(evaluate_records(specified + unspecified))
+        histogram = summary["by_verdict_and_min_condition_specificity"]["feasible"]
+        self.assertEqual(histogram["0"], 1)
+        self.assertEqual(histogram[str(N_CONDITION_SLOTS)], 1)
+        self.assertEqual(summary["n_feasible_matched_on_unknown_conditions"], 1)
+
+
+class TestTheKeyChangeCostsCellsAndSaysSo(unittest.TestCase):
+    """A finer key means fewer cells clear a gate. Reported, not softened."""
+
+    def _two_sexes(self):
+        return [
+            synthetic.good_record(sex="male"),
+            synthetic.other_lab_record(sex="female"),
+            third_lab_record(sex="male"),
+        ]
+
+    def test_the_pooled_key_promotes_a_cell_the_strict_key_splits(self):
+        pooled = evaluate_records(self._two_sexes(), KEY_POOLED)
+        strict = evaluate_records(self._two_sexes())
+        self.assertEqual(len(pooled), 1)
+        self.assertEqual(pooled[0].verdict, "feasible")
+        # Three papers, two cohorts: two claims, neither with three studies.
+        self.assertEqual(len(strict), 2)
+        self.assertEqual(
+            sorted(v.verdict for v in strict), ["insufficient", "marginal"]
+        )
+        self.assertFalse(any(v.is_feasible for v in strict))
+
+    def test_no_threshold_moved_to_make_that_look_better(self):
+        self.assertEqual(THRESHOLDS["MIN_STUDIES_MARGINAL"], 2)
+        self.assertEqual(THRESHOLDS["MIN_STUDIES_FEASIBLE"], 3)
+        self.assertEqual(THRESHOLDS["MIN_LABS_FEASIBLE"], 2)
+        self.assertEqual(THRESHOLDS["MIN_RECORDS_FEASIBLE"], 3)
+        self.assertEqual(THRESHOLDS["MIN_DIRECTION_AGREEMENT_MARGINAL"], 0.60)
+        self.assertEqual(THRESHOLDS["MIN_DIRECTION_AGREEMENT_FEASIBLE"], 0.70)
+        self.assertTrue(THRESHOLDS["REQUIRE_AGREEMENT_CI_ABOVE_CHANCE"])
+        self.assertTrue(THRESHOLDS["EXCLUDE_TIER_B_AS_TARGET"])
+
+    def test_a_pooled_verdict_knows_it_is_pooled(self):
+        pooled = evaluate_records([synthetic.good_record()], KEY_POOLED)[0]
+        self.assertEqual(pooled.valence, "activation")
+        self.assertEqual(pooled.perturbation_label, "activation")
+        self.assertIn("not keyed", pooled.condition_label)
+
+    def test_a_molecular_claim_with_an_unresolved_target_is_noted(self):
+        verdict = verdict_of(
+            [synthetic.molecular_record(target_raw=None, target_id=None)]
+        )
+        self.assertIn("TARGET_UNRESOLVED", verdict.notes)
+
+    def test_a_circuit_claim_with_no_target_is_not_noted(self):
+        # A null target on a chemogenetic record is correct, not missing.
+        verdict = verdict_of([synthetic.good_record()])
+        self.assertNotIn("TARGET_UNRESOLVED", verdict.notes)
 
 
 class TestOtherRefusals(unittest.TestCase):

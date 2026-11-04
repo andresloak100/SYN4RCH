@@ -95,8 +95,14 @@ class TestVersionRefusal(TempDirCase):
         data["schema_version"] = version
         return json.dumps(data)
 
+    #: A version that is deliberately not the current one. Spelled against
+    #: SCHEMA_VERSION rather than as a literal: the literal that used to sit
+    #: here became the *correct* version at the v0.2.0 bump, and the test
+    #: silently stopped checking anything.
+    FOREIGN = SCHEMA_VERSION + "-not-this"
+
     def test_foreign_version_is_refused(self):
-        for version in ("0.2.0", "1.0.0", "0.1", None, ""):
+        for version in (self.FOREIGN, "1.0.0", "0.1", None, ""):
             with self.assertRaises(SchemaVersionError) as ctx:
                 loads_record(self._line_with_version(version))
             self.assertIn("refusing to load", str(ctx.exception))
@@ -104,7 +110,7 @@ class TestVersionRefusal(TempDirCase):
     def test_refusal_names_the_line_number(self):
         with open(self.path, "w", encoding="utf-8") as handle:
             handle.write(dumps_record(synthetic.good_record()) + "\n")
-            handle.write(self._line_with_version("0.2.0") + "\n")
+            handle.write(self._line_with_version(self.FOREIGN) + "\n")
         with self.assertRaises(SchemaVersionError) as ctx:
             read_jsonl(self.path)
         self.assertIn(":2", str(ctx.exception))
@@ -114,8 +120,10 @@ class TestVersionRefusal(TempDirCase):
         self.assertEqual(record.schema_version, SCHEMA_VERSION)
 
     def test_version_check_can_be_disabled_explicitly(self):
-        record = loads_record(self._line_with_version("0.2.0"), expect_version=None)
-        self.assertEqual(record.schema_version, "0.2.0")
+        record = loads_record(
+            self._line_with_version(self.FOREIGN), expect_version=None
+        )
+        self.assertEqual(record.schema_version, self.FOREIGN)
 
 
 class TestMalformedInput(TempDirCase):

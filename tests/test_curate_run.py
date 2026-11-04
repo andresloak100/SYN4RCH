@@ -81,5 +81,78 @@ class TestCli(unittest.TestCase):
         self.assertEqual(code, 2)
 
 
+
+class FillDerivedTest(unittest.TestCase):
+    """The derived perturbation fields are filled at admission, not judged."""
+
+    def rec(self, **kw):
+        from syn4rch.schema import TierARecord
+
+        base = dict(
+            study_id="synthetic:fd-1",
+            population_raw="synthetic population",
+            outcome_raw="synthetic readout",
+            method="conditional_knockout",
+            valence="unclear",
+        )
+        base.update(kw)
+        return TierARecord(**base)
+
+    def test_molecular_knockout_gets_a_signed_axis(self):
+        from syn4rch.curate.run import fill_derived
+
+        record = fill_derived(self.rec())
+        self.assertEqual(record.perturbation_class.value, "molecular")
+        self.assertEqual(record.perturbation_polarity.value, "decrease")
+        # valence is untouched: a knockout's effect on firing stays unknown.
+        self.assertEqual(record.valence.value, "unclear")
+
+    def test_overexpression_is_the_opposite_sign(self):
+        from syn4rch.curate.run import fill_derived
+
+        record = fill_derived(self.rec(method="conditional_overexpression"))
+        self.assertEqual(record.perturbation_polarity.value, "increase")
+
+    def test_an_explicit_value_is_never_overwritten(self):
+        from syn4rch.curate.run import fill_derived
+
+        record = fill_derived(
+            self.rec(method="local_pharmacology", valence=None,
+                     perturbation_polarity="decrease")
+        )
+        self.assertEqual(record.perturbation_polarity.value, "decrease")
+
+    def test_filling_does_not_change_record_id(self):
+        """The admission path must never silently re-identify a record."""
+        from syn4rch.curate.run import fill_derived
+
+        record = self.rec()
+        before = record.record_id
+        fill_derived(record)
+        self.assertEqual(record.record_id, before)
+        self.assertTrue(record.id_is_consistent())
+
+    def test_no_method_means_no_derivation(self):
+        from syn4rch.curate.run import fill_derived
+
+        record = fill_derived(self.rec(method=None, valence=None))
+        self.assertIsNone(record.perturbation_class)
+        self.assertIsNone(record.perturbation_polarity)
+
+    def test_a_filled_record_passes_the_class_check(self):
+        from syn4rch.curate.run import fill_derived
+        from syn4rch.schema.validate import validate
+
+        from syn4rch.schema.enums import PerturbationMethod
+
+        for method in PerturbationMethod:
+            record = fill_derived(self.rec(method=method.value))
+            codes = [f.code for f in validate(record)]
+            self.assertNotIn("S007_PERTURBATION_CLASS_MISMATCH", codes, method)
+            self.assertNotIn(
+                "W013_PERTURBATION_POLARITY_RULE_MISMATCH", codes, method
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

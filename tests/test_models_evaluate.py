@@ -43,6 +43,235 @@ def corpus(n=40, n_studies=10, n_labs=7):
     ]
 
 
+def axis_corpus(n=48, n_studies=12):
+    """FABRICATED records in which the signed axis carries the direction.
+
+    Two populations, two polarities, and a direction that depends on the
+    polarity: a cell keyed without the axis cannot separate the halves, so a
+    comparison on this corpus has a right answer to find.
+    """
+    records = []
+    for i in range(n):
+        polarity = ("increase", "decrease")[i % 2]
+        records.append(
+            synthetic.good_record(
+                study_id="synthetic:a%d" % (i % n_studies),
+                doi="synthetic:a%d" % (i % n_studies),
+                last_author="Lab%d" % (i % n_studies),
+                last_author_affiliation="Inst%d" % (i % n_studies),
+                population_id=["arc_agrp", "arc_pomc"][i % 2],
+                outcome_id="food_intake",
+                valence="activation" if polarity == "increase" else "inhibition",
+                perturbation_class="circuit_activity",
+                perturbation_polarity=polarity,
+                direction="increase" if polarity == "increase" else "decrease",
+                source_locator="Fig %d" % i,
+            )
+        )
+    return records
+
+
+class TestPairedComparison(unittest.TestCase):
+    def comparison(self, candidate, reference, records=None, grouping="study_id"):
+        from syn4rch.models.baselines import all_baseline_factories
+        from syn4rch.models.evaluate import compare_under_grouping
+
+        factories = all_baseline_factories()
+        return compare_under_grouping(
+            factories[candidate],
+            factories[reference],
+            build_dataset(records if records is not None else axis_corpus()),
+            grouping,
+            n_bootstrap=50,
+        )
+
+    def test_a_comparison_cannot_exist_without_a_grouping(self):
+        from syn4rch.models.evaluate import Comparison, ComparisonSlice
+
+        with self.assertRaises(UnlabelledMetricError):
+            Comparison(grouping=None, baseline="a", reference="b")
+        with self.assertRaises(UnlabelledMetricError):
+            ComparisonSlice(
+                name="all_rows", description="", grouping="by_vibes",
+                n_rows=1, n_groups=1,
+            )
+
+    def test_the_axis_cell_beats_the_floor_where_the_axis_carries_the_sign(self):
+        comparison = self.comparison(
+            "perturbation_axis_cell_majority", "global_majority"
+        )
+        overall = comparison.overall
+        self.assertEqual(comparison.status, "ok")
+        self.assertGreater(overall.delta, 0.0)
+        self.assertGreater(overall.accuracy, overall.reference_accuracy)
+        self.assertEqual(overall.grouping, "study_id")
+
+    def test_the_difference_is_paired_and_reports_the_discordant_rows(self):
+        comparison = self.comparison(
+            "perturbation_axis_cell_majority", "global_majority"
+        )
+        overall = comparison.overall
+        total = (
+            overall.n_both_right
+            + overall.n_both_wrong
+            + overall.n_only_baseline_right
+            + overall.n_only_reference_right
+        )
+        self.assertEqual(total, overall.n_rows)
+        # b and c are the whole evidence for the difference.
+        self.assertAlmostEqual(
+            overall.delta,
+            (overall.n_only_baseline_right - overall.n_only_reference_right)
+            / overall.n_rows,
+        )
+
+    def test_both_tests_are_reported_and_the_verdict_needs_both(self):
+        comparison = self.comparison(
+            "perturbation_axis_cell_majority", "global_majority"
+        )
+        overall = comparison.overall
+        self.assertIsNotNone(overall.mcnemar_p)
+        self.assertIsNotNone(overall.ci)
+        self.assertIn(
+            overall.verdict,
+            ("no_difference", "suggestive", "established", "undefined"),
+        )
+        if overall.verdict == "established":
+            self.assertTrue(overall.interval_excludes_zero)
+            self.assertTrue(overall.row_test_significant)
+
+    def test_identical_predictors_give_no_difference_and_no_mcnemar_p(self):
+        comparison = self.comparison("global_majority", "global_majority")
+        overall = comparison.overall
+        self.assertEqual(overall.delta, 0.0)
+        self.assertIsNone(overall.mcnemar_p)
+        self.assertEqual(overall.verdict, "no_difference")
+
+    def test_the_seen_cell_slice_excludes_rows_that_cannot_differ(self):
+        comparison = self.comparison(
+            "perturbation_axis_cell_majority", "global_majority"
+        )
+        seen = comparison.slice_named("primary_cell_seen")
+        overall = comparison.overall
+        self.assertIsNotNone(seen)
+        self.assertLessEqual(seen.n_rows, overall.n_rows)
+        # Every discordant row has a seen cell, because an unseen cell makes
+        # the two predictors identical.
+        self.assertEqual(seen.n_only_baseline_right, overall.n_only_baseline_right)
+        self.assertEqual(seen.n_only_reference_right, overall.n_only_reference_right)
+        self.assertGreaterEqual(abs(seen.delta), abs(overall.delta))
+
+    def test_a_slice_with_no_rows_is_reported_as_such_not_omitted(self):
+        records = axis_corpus() + [
+            synthetic.molecular_record(
+                study_id="synthetic:mol-1", doi="synthetic:mol-1",
+                population_id="arc_pomc", outcome_id="body_weight",
+                direction="no_change", source_locator="Fig M",
+            )
+        ]
+        comparison = self.comparison(
+            "perturbation_axis_cell_majority", "global_majority", records=records
+        )
+        molecular = comparison.slice_named("molecular__primary_cell_seen")
+        self.assertIsNotNone(molecular)
+        self.assertEqual(molecular.n_rows, 0)
+        self.assertIsNone(molecular.delta)
+        self.assertTrue(molecular.caveats)
+
+    def test_strata_are_computed_per_perturbation_class(self):
+        records = axis_corpus() + [
+            synthetic.molecular_record(
+                study_id="synthetic:mol-%d" % i, doi="synthetic:mol-%d" % i,
+                population_id="arc_pomc", outcome_id="body_weight",
+                direction="no_change", source_locator="Fig M%d" % i,
+            )
+            for i in range(4)
+        ]
+        comparison = self.comparison(
+            "perturbation_axis_cell_majority", "global_majority", records=records
+        )
+        names = [item.name for item in comparison.slices]
+        self.assertIn("circuit_activity", names)
+        self.assertIn("molecular", names)
+        circuit = comparison.slice_named("circuit_activity")
+        molecular = comparison.slice_named("molecular")
+        self.assertEqual(
+            circuit.n_rows + molecular.n_rows, comparison.overall.n_rows
+        )
+
+    def test_an_abstaining_baseline_is_compared_only_where_both_answered(self):
+        comparison = self.comparison("neurotransmitter_sign", "global_majority")
+        overall = comparison.overall
+        self.assertLess(overall.n_rows, 48)
+        self.assertTrue(comparison.caveats)
+        self.assertIn("abstained", " ".join(comparison.caveats))
+
+    def test_an_unavailable_baseline_yields_a_statement_not_a_number(self):
+        comparison = self.comparison("kg_path_sign", "global_majority")
+        self.assertEqual(comparison.status, "baseline_unavailable")
+        self.assertEqual(comparison.slices, ())
+
+    def test_comparisons_are_deterministic(self):
+        a = self.comparison("perturbation_axis_majority", "global_majority")
+        b = self.comparison("perturbation_axis_majority", "global_majority")
+        self.assertEqual(a.to_dict(), b.to_dict())
+
+
+class TestUnseenPerturbationIdentity(unittest.TestCase):
+    """SCHEMA.md 5b: every cross-validated number carries this beside it."""
+
+    def test_a_perturbation_seen_in_one_study_only_is_reported_as_unseen(self):
+        records = [
+            synthetic.molecular_record(
+                study_id="synthetic:g%d" % i,
+                doi="synthetic:g%d" % i,
+                last_author="Lab%d" % i,
+                last_author_affiliation="Inst%d" % i,
+                target_raw="Gene%d" % i,
+                target_id="syn:gene%d" % i,
+                direction=["increase", "decrease", "no_change"][i % 3],
+                source_locator="Fig %d" % i,
+            )
+            for i in range(9)
+        ]
+        bundle = cross_validate(
+            GlobalMajority, build_dataset(records), "study_id", n_bootstrap=10
+        )
+        novelty = bundle.unseen_perturbation_identity
+        self.assertEqual(novelty["fraction_unseen"], 1.0)
+        self.assertEqual(novelty["n_test_rows_with_unseen_identity"], 9)
+        self.assertFalse(novelty["identity_is_coarse"])
+        self.assertIn("5b", " ".join(bundle.notes) + novelty["note"])
+
+    def test_a_shared_perturbation_is_reported_as_seen(self):
+        records = [
+            synthetic.molecular_record(
+                study_id="synthetic:s%d" % i,
+                doi="synthetic:s%d" % i,
+                target_raw="SharedGene",
+                target_id="syn:shared",
+                direction=["increase", "decrease"][i % 2],
+                source_locator="Fig %d" % i,
+            )
+            for i in range(6)
+        ]
+        bundle = cross_validate(
+            GlobalMajority, build_dataset(records), "study_id", n_bootstrap=10
+        )
+        self.assertEqual(bundle.unseen_perturbation_identity["fraction_unseen"], 0.0)
+
+    def test_the_number_appears_beside_every_number_in_the_report(self):
+        result = run_benchmark(
+            build_dataset(corpus()), groupings=("study_id",), n_bootstrap=10
+        )
+        text = render_markdown(result)
+        self.assertIn("unseen perturbation identity", text)
+        self.assertIn("5b", text)
+        for bundle in result.bundles:
+            if bundle.status == "ok":
+                self.assertIn("fraction_unseen", bundle.unseen_perturbation_identity)
+
+
 class TestUnlabelledMetricGuard(unittest.TestCase):
     def test_an_estimate_without_a_grouping_cannot_be_constructed(self):
         for bad in (None, "", "by_vibes", 3):
@@ -366,6 +595,28 @@ class TestCli(unittest.TestCase):
         self.assertEqual(data["dataset"]["exclusions"]["n_excluded"], 1)
         for result in data["results"]:
             self.assertIn("grouping", result)
+
+    def test_the_report_is_written_atomically_and_leaves_no_debris(self):
+        import os as _os
+
+        from syn4rch.models.run import main
+
+        directory = tempfile.mkdtemp()
+        out = os.path.join(directory, "bench.md")
+        with open(out, "w", encoding="utf-8") as handle:
+            handle.write("OLD CONTENT")
+        rc = main(["--records", "/nonexistent/records.jsonl", "--out", out,
+                   "--bootstrap", "10", "--quiet"])
+        self.assertEqual(rc, 0)
+        text = open(out, encoding="utf-8").read()
+        self.assertNotIn("OLD CONTENT", text)
+        self.assertIn("Baseline benchmark", text)
+        # The temporary file is moved into place, never left beside the report:
+        # a stray .tmp is indistinguishable from a write still in progress.
+        self.assertEqual(
+            [name for name in _os.listdir(directory) if name.endswith(".tmp")], []
+        )
+        self.assertEqual(sorted(_os.listdir(directory)), ["bench.md"])
 
     def test_undeclared_grouping_is_a_usage_error(self):
         from syn4rch.models.run import main

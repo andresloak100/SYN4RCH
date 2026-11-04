@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "syn4rch"
-version = "0.1.0"
+version = "0.2.0"
 description = "Curated hypothalamic neuronal perturbation -> systemic physiology dataset, with its schema and QC core"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -30,9 +30,12 @@ syn4rch-qc = "syn4rch.qc.run:main"
 syn4rch-harvest = "syn4rch.harvest.run:main"
 syn4rch-curate = "syn4rch.curate.run:main"
 syn4rch-pilot = "syn4rch.curate.pilot:main"
+syn4rch-migrate = "syn4rch.curate.migrate:main"
 syn4rch-yield = "syn4rch.curate.yield_report:main"
 syn4rch-feasibility = "syn4rch.feasibility.run:main"
+syn4rch-identity = "syn4rch.feasibility.identity_run:main"
 syn4rch-models = "syn4rch.models.run:main"
+syn4rch-signaling = "syn4rch.atlas.signaling:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

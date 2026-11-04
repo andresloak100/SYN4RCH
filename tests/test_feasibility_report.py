@@ -159,6 +159,97 @@ class TestAFeasibleCorpusIsReportedAsSuch(unittest.TestCase):
         self.assertIn("syn:outcome_1", text)
 
 
+class TestTheReportShowsBeforeAndAfter(unittest.TestCase):
+    """The v0.2.0 change has to be visible in the written report, both ways.
+
+    A reader must be able to see what the stricter key bought (apparent
+    contradictions that were heterogeneity) and what it cost (replication
+    evidence given up). A report that printed only the new numbers would make
+    the change unfalsifiable, which is the reason ``claim_key_pooled`` exists
+    at all.
+    """
+
+    def _heterogeneous(self):
+        # One pooled claim, two strict claims: a male cohort reporting an
+        # increase against a female cohort reporting a decrease.
+        return [
+            synthetic.good_record(sex="male", direction="increase"),
+            synthetic.other_lab_record(sex="female", direction="decrease"),
+        ]
+
+    def setUp(self):
+        self.report = build_report(self._heterogeneous(), source_path="x.jsonl")
+        self.text = render_markdown(self.report)
+
+    def test_both_key_censuses_are_computed(self):
+        comparison = self.report.key_comparison
+        self.assertIsNotNone(comparison)
+        self.assertEqual(comparison.pooled.n_cells, 1)
+        self.assertEqual(comparison.strict.n_cells, 2)
+        self.assertEqual(comparison.pooled.n_cells_directly_opposed, 1)
+        self.assertEqual(comparison.strict.n_cells_directly_opposed, 0)
+
+    def test_the_markdown_prints_both_columns(self):
+        self.assertIn("pooled key (v0.1.0)", self.text)
+        self.assertIn("strict key (v0.2.0)", self.text)
+        self.assertIn("What it bought", self.text)
+        self.assertIn("What it cost", self.text)
+
+    def test_the_cost_is_stated_and_not_netted_out(self):
+        self.assertEqual(self.report.key_comparison.n_multi_study_cells_lost, 1)
+        self.assertIn("multi-study", self.text)
+
+    def test_the_usability_change_is_attributed_to_its_class(self):
+        report = build_report(
+            [synthetic.good_record(), synthetic.molecular_record()]
+        )
+        comparison = report.usability_comparison
+        self.assertEqual(comparison.n_usable_v1, 1)
+        self.assertEqual(comparison.n_usable_v2, 2)
+        self.assertEqual(
+            comparison.admitted_by_v2_only_by_class, {"molecular": 1}
+        )
+        text = render_markdown(report)
+        self.assertIn("The usability predicate also changed", text)
+        self.assertIn("corrected predicate", text)
+
+    def test_the_pooled_verdicts_are_labelled_as_not_a_result(self):
+        self.assertIn("not a result", self.text)
+
+    def test_every_agreement_table_carries_the_condition_specificity(self):
+        report = build_report(
+            [synthetic.good_record(), synthetic.other_lab_record()]
+        )
+        text = render_markdown(report)
+        self.assertIn("min cond", text)
+        self.assertIn("minimum condition specificity", text)
+        self.assertIn("both unknown", text)
+
+    def test_the_report_says_no_claim_specifies_all_four_conditions(self):
+        report = build_report(
+            [
+                synthetic.good_record(challenge=None),
+                synthetic.other_lab_record(challenge=None),
+            ]
+        )
+        text = render_markdown(report)
+        self.assertIn("No claim in this corpus reaches specificity 4 of 4", text)
+
+    def test_the_splits_section_says_the_key_change_does_not_reach_it(self):
+        self.assertIn("claim key change does not reach this table", self.text)
+
+    def test_the_report_points_at_the_identity_analysis(self):
+        self.assertIn("perturbation_identity.md", self.text)
+
+    def test_it_serialises_with_both_comparisons(self):
+        data = self.report.to_dict()
+        self.assertIsNotNone(data["key_comparison"])
+        self.assertIsNotNone(data["usability_comparison"])
+        self.assertIn("pooled", data["key_comparison"])
+        self.assertIn("strict", data["key_comparison"])
+        json.dumps(data)
+
+
 class TestCli(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="syn4rch-feasibility-")

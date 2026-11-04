@@ -6,8 +6,9 @@
 2. Resolve every region vocabulary entry to an Allen id (exact matches only).
 3. Download Allen CCF 2017 meshes for the whole brain (997) and every
    resolved region; simplify by vertex clustering.
-4. Write viewer/data/{allen_mapping,scene,geometry}.json and inline the scene
-   and geometry into viewer/index.html.
+4. Derive the measured-signalling graph from data/curated/records.jsonl.
+5. Write viewer/data/{allen_mapping,scene,geometry,signaling}.json and inline
+   the scene, the geometry and the signalling graph into viewer/index.html.
 
 If the mesh host cannot be reached the build stops. No geometry is ever
 substituted.
@@ -24,7 +25,7 @@ import urllib.error
 import urllib.request
 from typing import Dict, List
 
-from . import evidence, mesh, ontology
+from . import evidence, mesh, ontology, signaling
 
 ONTOLOGY_URL = "https://api.brain-map.org/api/v2/structure_graph_download/1.json"
 MESH_URL = ("https://download.alleninstitute.org/informatics-archive/current-release/"
@@ -179,14 +180,25 @@ def build(offline: bool = False, root: str = None) -> Dict:
     with open(os.path.join(out_dir, "geometry.json"), "w", encoding="utf-8") as fh:
         fh.write(_dump(geometry))
 
+    # Measured signalling: curated population -> systemic readout counts. Every
+    # number in it is recomputed from records.jsonl on each build.
+    sig = signaling.build_graph(
+        os.path.join(root, "data", "curated", "records.jsonl"),
+        os.path.join(root, "data", "vocab", "populations.json"),
+        os.path.join(root, "data", "vocab", "outcomes.json"))
+    signaling.write_graph(sig, os.path.join(out_dir, "signaling.json"))
+
     tpl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "viewer_template.html")
     with open(tpl_path, encoding="utf-8") as fh:
         tpl = fh.read()
-    html = tpl.replace("__SCENE_JSON__", inline_json(scene)).replace("__GEOMETRY_JSON__", inline_json(geometry))
+    html = (tpl.replace("__SCENE_JSON__", inline_json(scene))
+               .replace("__GEOMETRY_JSON__", inline_json(geometry))
+               .replace("__SIGNALING_JSON__", inline_json(sig)))
     page = os.path.join(root, "viewer", "index.html")
     with open(page, "w", encoding="utf-8") as fh:
         fh.write(html)
-    return {"page": page, "page_bytes": os.path.getsize(page), "mapping": mapping, "literature": lit}
+    return {"page": page, "page_bytes": os.path.getsize(page), "mapping": mapping,
+            "literature": lit, "signaling": sig}
 
 
 def main(argv=None) -> int:
@@ -202,6 +214,12 @@ def main(argv=None) -> int:
         print("  %-7s %-10s %s" % (m["region_id"], m["status"],
               "%s %s (%s)" % (m["allen_id"], m["allen_acronym"], m["allen_name"]) if m["allen_id"] else m["reason"]))
     print("literature source: %s (%s)" % (res["literature"]["source"], res["literature"]["run_timestamp"]))
+    sig = res["signaling"]
+    print("signalling: %d of %d records used, %d edges (%d contested, %d unclear axis), "
+          "%d populations with records, %d readouts"
+          % (sig["n_records_used"], sig["n_records_in"], sig["n_edges"],
+             sig["n_edges_contested"], sig["n_edges_unclear_axis"],
+             sig["n_populations_with_records"], len(sig["outcomes"])))
     print("wrote %s (%.2f MB)" % (res["page"], res["page_bytes"] / 1e6))
     return 0
 

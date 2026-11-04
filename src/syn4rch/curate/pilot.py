@@ -229,10 +229,10 @@ def main(argv=None) -> int:
         if not os.path.exists(path):
             sys.stderr.write("missing %s\n" % path)
             return 1
-    try:
-        from ..schema.record import SCHEMA_VERSION
-    except Exception:
-        SCHEMA_VERSION = "0.1.0"
+    # No try/except fallback here. A hardcoded version that silently stands in
+    # for the real one is how the stub writer came to label records with a
+    # version the schema package had already moved past.
+    from ..schema.record import SCHEMA_VERSION
 
     populations = [p.strip() for p in args.populations.split(",") if p.strip()]
     units = load_units(args.units)

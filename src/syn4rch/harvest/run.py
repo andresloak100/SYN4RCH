@@ -29,6 +29,7 @@ import sys
 import time
 from typing import Dict, List, Optional, Tuple
 
+from ..schema.record import SCHEMA_VERSION
 from . import crossref, europepmc, pubmed, queries as qmod
 from .cache import Cache, FetchError, RawLog, data_path, repo_root
 from .screen import screen_record
@@ -359,7 +360,7 @@ def write_candidates(store: Store) -> int:
         for rec in rows:
             out = dict(rec)
             out["full_text_available"] = bool(out.get("full_text_retrieved"))
-            out["schema_version"] = "0.1.0"
+            out["schema_version"] = SCHEMA_VERSION
             fh.write(json.dumps(out, sort_keys=True) + "\n")
     return len(rows)
 

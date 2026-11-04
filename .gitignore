@@ -20,6 +20,13 @@ data/predictions/*
 !data/vocab/
 !data/vocab/**
 
+# ...with one exception: a pre-migration copy of the dataset, kept by
+# `syn4rch.curate.migrate` so that a schema migration is reversible on the
+# machine that ran it (e.g. data/curated/records.0.1.0.jsonl.bak). It is a
+# duplicate of a state that is already in the history, so committing it would
+# only put two versions of the dataset in the tree at once.
+data/curated/*.bak
+
 # Generated reports. The markdown reports ARE tracked: they are the project's
 # deliverables and the only durable record of a run, because data/raw/ and
 # data/interim/ are not version controlled (see DECISIONS.md D-016). Anything

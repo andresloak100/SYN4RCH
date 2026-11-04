@@ -12,6 +12,10 @@ These helpers must never be imported by anything under ``src/``.
 import _path  # noqa: F401  (sys.path bootstrap)
 
 from syn4rch.schema import TierARecord
+from syn4rch.schema.rules import (
+    perturbation_class_from_method,
+    perturbation_polarity_from,
+)
 
 #: Prefix every fabricated study identifier carries.
 SYNTHETIC_PREFIX = "synthetic:"
@@ -55,9 +59,23 @@ def good_record(**overrides) -> TierARecord:
         age_group="young_adult",
         diet="chow",
         n_animals=16,
+        # condition dimension, schema v0.2.0. Fully specified on purpose, so
+        # that condition_specificity(good_record()) == 4 and a test that cares
+        # about a *missing* condition has to say so explicitly.
+        challenge="ad_libitum",
+        challenge_detail="fed ad libitum (fabricated)",
+        condition_source="passage",
+        condition_locator=None,
         method="chemogenetic",
         actuator="synthetic-actuator",
         valence="activation",
+        # circuit_activity + increase, which is what the rule derives from
+        # (chemogenetic, activation). A chemogenetic record has no molecular
+        # target, so target_raw/target_id stay null.
+        perturbation_class="circuit_activity",
+        perturbation_polarity="increase",
+        target_raw=None,
+        target_id=None,
         targeting_strategy="synthetic Cre line + synthetic vector",
         acuity="acute",
         ligand="synthetic ligand",
@@ -98,7 +116,53 @@ def good_record(**overrides) -> TierARecord:
     )
     data.update(overrides)
     data.pop("record_id", None)
+    # ``perturbation_class`` and ``perturbation_polarity`` are derived fields
+    # (schema v0.2.0). Re-derive them from whatever method and valence the
+    # caller ended up with, unless the caller set them deliberately. Without
+    # this, ``good_record(valence="inhibition")`` would carry a stale
+    # ``perturbation_polarity`` of "increase": the record would trip W013, and
+    # every test that changes a valence to make a *different claim* would
+    # silently keep the original claim key.
+    if "perturbation_class" not in overrides:
+        derived = perturbation_class_from_method(data.get("method"))
+        data["perturbation_class"] = derived
+    if "perturbation_polarity" not in overrides:
+        data["perturbation_polarity"] = perturbation_polarity_from(
+            data.get("method"), data.get("valence")
+        )
     return TierARecord(**data)
+
+
+def molecular_record(**overrides) -> TierARecord:
+    """A fabricated *molecular* perturbation: loss of function on a target gene.
+
+    Exists because schema v0.2.0 made molecular and circuit perturbations two
+    different things, and a fixture that is only ever chemogenetic cannot
+    exercise the difference. ``valence`` stays ``unclear`` here and that is
+    correct, not an omission: a gene knockout's net effect on firing is
+    genuinely unknown, and SCHEMA.md 3.4 forbids coercing it.
+    """
+    data = dict(
+        study_id="synthetic:test-mol-001",
+        doi="synthetic:test-mol-001",
+        title="Synthetic molecular perturbation record",
+        method="conditional_knockout",
+        valence="unclear",
+        perturbation_class="molecular",
+        perturbation_polarity="decrease",
+        target_raw="Synthgene1",
+        target_id="syn:synthgene1",
+        actuator=None,
+        ligand=None,
+        ligand_dose_value=None,
+        ligand_dose_unit=None,
+        ligand_route=None,
+        control_types=["cre_negative", "wildtype"],
+        targeting_strategy="floxed Synthgene1 crossed to a synthetic Cre line",
+        source_locator="Fig S4D (synthetic)",
+    )
+    data.update(overrides)
+    return good_record(**data)
 
 
 def other_lab_record(**overrides) -> TierARecord:

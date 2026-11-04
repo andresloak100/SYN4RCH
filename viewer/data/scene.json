@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-04T01:07:42Z",
+ "built_at": "2026-11-04T04:19:48Z",
  "ccf": {
   "version": "CCFv3 2017",
   "units": "micrometres",
@@ -1706,17 +1706,17 @@
    "run_timestamp_kind": "file modified (UTC)",
    "total_papers": 9653,
    "counts": {
-    "pvh": {
-     "naming": 1348,
-     "no_population": 1026,
-     "include": 998,
-     "full_text": 183
-    },
     "hy": {
      "naming": 6922,
      "no_population": 5587,
      "include": 4913,
      "full_text": 875
+    },
+    "pvh": {
+     "naming": 1348,
+     "no_population": 1026,
+     "include": 998,
+     "full_text": 183
     },
     "lha": {
      "naming": 910,
@@ -1730,6 +1730,12 @@
      "include": 568,
      "full_text": 146
     },
+    "pefa": {
+     "naming": 98,
+     "no_population": 70,
+     "include": 81,
+     "full_text": 12
+    },
     "tmn": {
      "naming": 67,
      "no_population": 18,
@@ -1742,29 +1748,23 @@
      "include": 616,
      "full_text": 72
     },
-    "pefa": {
-     "naming": 98,
-     "no_population": 70,
-     "include": 81,
-     "full_text": 12
-    },
     "scn": {
      "naming": 268,
      "no_population": 201,
      "include": 150,
      "full_text": 37
     },
-    "mbh": {
-     "naming": 200,
-     "no_population": 161,
-     "include": 155,
-     "full_text": 22
-    },
     "me": {
      "naming": 234,
      "no_population": 195,
      "include": 176,
      "full_text": 16
+    },
+    "mbh": {
+     "naming": 200,
+     "no_population": 161,
+     "include": 155,
+     "full_text": 22
     },
     "ph": {
      "naming": 211,
@@ -1796,12 +1796,6 @@
      "include": 422,
      "full_text": 66
     },
-    "lpo": {
-     "naming": 59,
-     "no_population": 57,
-     "include": 42,
-     "full_text": 6
-    },
     "mpo": {
      "naming": 327,
      "no_population": 304,
@@ -1813,6 +1807,12 @@
      "no_population": 62,
      "include": 57,
      "full_text": 7
+    },
+    "lpo": {
+     "naming": 59,
+     "no_population": 57,
+     "include": 42,
+     "full_text": 6
     },
     "ah": {
      "naming": 296,
@@ -1893,7 +1893,7 @@
     "pvh_sim1": 11,
     "vmh_sf1": 9
    },
-   "built_from_mtime": "2026-11-04T00:53:30Z",
+   "built_from_mtime": "2026-11-04T04:14:22Z",
    "status": "362 curated record(s)"
   },
   "kg": {

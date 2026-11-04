@@ -6,9 +6,9 @@ import unittest
 import synthetic
 from syn4rch.qc import (
     QCSeverity,
-    condition_coverage,
-    find_missing_conditions,
-    missing_conditions,
+    comparability_coverage,
+    find_missing_comparability_fields,
+    missing_comparability_fields,
     render_text,
     run_qc,
 )
@@ -16,8 +16,8 @@ from syn4rch.qc import (
 
 class TestMissingConditions(unittest.TestCase):
     def test_a_fully_reported_record_is_missing_nothing(self):
-        self.assertEqual(missing_conditions(synthetic.good_record()), [])
-        self.assertEqual(find_missing_conditions([synthetic.good_record()]), [])
+        self.assertEqual(missing_comparability_fields(synthetic.good_record()), [])
+        self.assertEqual(find_missing_comparability_fields([synthetic.good_record()]), [])
 
     def test_each_condition_is_detected(self):
         cases = (
@@ -29,16 +29,16 @@ class TestMissingConditions(unittest.TestCase):
         )
         for override, expected in cases:
             self.assertIn(
-                expected, missing_conditions(synthetic.good_record(**override)), override
+                expected, missing_comparability_fields(synthetic.good_record(**override)), override
             )
 
     def test_partial_n_counts_as_reported(self):
         record = synthetic.good_record(n_treatment=8, n_control=None, n_animals=None)
-        self.assertNotIn("n", missing_conditions(record))
+        self.assertNotIn("n", missing_comparability_fields(record))
 
     def test_unclear_valence_is_not_missing(self):
         record = synthetic.good_record(valence="unclear")
-        self.assertNotIn("valence", missing_conditions(record))
+        self.assertNotIn("valence", missing_comparability_fields(record))
 
     def test_finding_lists_everything_absent(self):
         record = synthetic.good_record(
@@ -49,7 +49,7 @@ class TestMissingConditions(unittest.TestCase):
             n_treatment=None,
             n_control=None,
         )
-        findings = find_missing_conditions([record])
+        findings = find_missing_comparability_fields([record])
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0].severity, QCSeverity.WARNING)
         self.assertEqual(
@@ -63,7 +63,7 @@ class TestMissingConditions(unittest.TestCase):
             synthetic.good_record(),
             synthetic.good_record(species=None, source_locator="Fig S1B (synthetic)"),
         ]
-        coverage = condition_coverage(records)
+        coverage = comparability_coverage(records)
         self.assertEqual(coverage["_total_records"], 2)
         self.assertEqual(coverage["species"], 1)
         self.assertEqual(coverage["valence"], 2)
@@ -180,6 +180,72 @@ class TestRunQc(unittest.TestCase):
         report = run_qc(records, vocab_loader=self.loader)
         self.assertEqual(report.n_records, 3)
         self.assertEqual(len(records), 3)
+
+
+
+class KeyComparisonSectionTest(unittest.TestCase):
+    """The report must make the v0.2.0 claim-key change visible and honest."""
+
+    def corpus(self):
+        return [
+            synthetic.good_record(sex="male"),
+            synthetic.other_lab_record(
+                sex="female",
+                direction="decrease",
+                effect_size_value=-30.0,
+                support_quote="Synthetic quote: the readout decreased by 30%.",
+            ),
+        ]
+
+    def test_differing_sex_is_not_a_conflict_under_v0_2_0(self):
+        """The whole point: a male cohort and a female cohort are not a claim."""
+        report = run_qc(self.corpus())
+        comparison = report.stats["claim_key_comparison"]
+        self.assertEqual(comparison["strict"]["n_cells_with_conflict"], 0)
+        self.assertEqual(comparison["pooled"]["n_cells_with_conflict"], 1)
+
+    def test_both_counts_are_rendered(self):
+        text = render_text(run_qc(self.corpus()))
+        self.assertIn("What counts as the same claim", text)
+        self.assertIn("v0.1.0", text)
+        self.assertIn("v0.2.0", text)
+
+    def test_the_rendered_text_refuses_to_call_it_a_resolution(self):
+        """A dropped comparison must not read as a disagreement we settled."""
+        text = render_text(run_qc(self.corpus()))
+        self.assertIn("should never have been made", text)
+
+    def test_matching_conditions_still_conflict(self):
+        both_male = [
+            synthetic.good_record(sex="male"),
+            synthetic.other_lab_record(
+                sex="male",
+                direction="decrease",
+                effect_size_value=-30.0,
+                support_quote="Synthetic quote: the readout decreased by 30%.",
+            ),
+        ]
+        comparison = run_qc(both_male).stats["claim_key_comparison"]
+        self.assertEqual(comparison["strict"]["n_cells_with_conflict"], 1)
+
+    def test_specificity_distribution_is_reported(self):
+        blind = synthetic.good_record(
+            sex=None, diet=None, age_group=None, challenge=None,
+            age_value=None, age_unit=None,
+        )
+        report = run_qc([synthetic.good_record(), blind])
+        self.assertEqual(report.stats["condition_specificity"]["4"], 1)
+        self.assertEqual(report.stats["condition_specificity"]["0"], 1)
+        text = render_text(report)
+        self.assertIn("Condition specificity", text)
+        self.assertIn("condition heterogeneity", text)
+
+    def test_specificity_buckets_sum_to_the_record_count(self):
+        records = self.corpus()
+        report = run_qc(records)
+        self.assertEqual(
+            sum(report.stats["condition_specificity"].values()), len(records)
+        )
 
 
 if __name__ == "__main__":  # pragma: no cover

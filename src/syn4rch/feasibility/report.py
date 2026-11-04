@@ -6,6 +6,22 @@ only. Three rules govern it:
 1. **It opens with the verdict.** :func:`top_line` is one sentence and it is
    the first thing in the file. A reader who stops there must not be left with
    a more optimistic impression than a reader who finishes.
+1b. **It shows the before and the after of the schema v0.2.0 key change, not
+   only the after.** Two sections exist for nothing else: the claim-key
+   comparison (:func:`syn4rch.feasibility.replication.compare_claim_keys`) and
+   the usability-predicate comparison
+   (:func:`syn4rch.feasibility.coverage.compare_usability`). A reader has to be
+   able to see what the change bought -- apparent contradictions that were
+   condition or perturbation heterogeneity -- and what it cost -- replication
+   evidence given up by a stricter key. Printing only the new numbers would
+   make the change unfalsifiable.
+1c. **No replication or agreement figure appears without the minimum condition
+   specificity of its cell.** The condition key pools "not stated" with "not
+   asked", so a cell can match on *both unknown* rather than on *both the
+   same*; a claim replicated across three fully specified studies and one
+   replicated across three studies that specify nothing are different evidence,
+   and one number for both overclaims. Every table below carries the
+   specificity column and every count is also broken down by it.
 2. **A small corpus is described as small, in that sentence.** Below the floors
    below, the top line says the dataset is too small and the tables are
    labelled a census of what exists rather than statistics about a field.
@@ -27,15 +43,22 @@ from . import gates as gates_mod
 from .coverage import (
     EXCLUSION_CODES,
     CoverageMatrix,
+    UsabilityComparison,
     build_matrix,
+    compare_usability,
     exclusion_note,
     exclusion_reasons,
 )
 from .gates import PairVerdict, TaskVerdict, pair_verdicts, summarize_verdicts
 from .replication import (
     CONFIDENCE_LEVEL,
+    KEY_POOLED,
+    KEY_STRICT,
+    N_CONDITION_SLOTS,
+    KeyComparison,
     ReplicationCell,
     build_replication_cells,
+    compare_claim_keys,
     summarize_replication,
 )
 from .splits import FoldSet, all_fold_sets
@@ -90,6 +113,16 @@ class FeasibilityReport:
     fold_sets: Dict[str, FoldSet] = field(default_factory=dict)
     replication_summary: Dict[str, Any] = field(default_factory=dict)
     verdict_summary: Dict[str, Any] = field(default_factory=dict)
+    #: The v0.1.0 and v0.2.0 claim keys measured on the same records. The
+    #: before/after of the schema change, and the reason
+    #: :func:`syn4rch.qc.keys.claim_key_pooled` is kept.
+    key_comparison: Optional[KeyComparison] = None
+    #: The v0.1.0 and v0.2.0 usability predicates on the same records.
+    usability_comparison: Optional[UsabilityComparison] = None
+    #: Verdicts under the pooled key, for the gate-arithmetic comparison only.
+    #: Never reported as the current verdict set.
+    pooled_verdict_summary: Dict[str, Any] = field(default_factory=dict)
+    pooled_pairs: List[PairVerdict] = field(default_factory=list)
     source_path: Optional[str] = None
     source_exists: bool = True
     load_errors: List[str] = field(default_factory=list)
@@ -145,6 +178,15 @@ class FeasibilityReport:
             "is_empty": self.is_empty,
             "is_small_corpus": self.is_small_corpus,
             "coverage": self.coverage.to_dict(),
+            "key_comparison": (
+                self.key_comparison.to_dict() if self.key_comparison else None
+            ),
+            "usability_comparison": (
+                self.usability_comparison.to_dict()
+                if self.usability_comparison
+                else None
+            ),
+            "pooled_verdict_summary": dict(self.pooled_verdict_summary),
             "replication_summary": dict(self.replication_summary),
             "verdict_summary": dict(self.verdict_summary),
             "replication_cells": [c.to_dict() for c in self.cells],
@@ -183,8 +225,15 @@ def build_report(
     # agree or disagree with anything. The held-out records stay counted in
     # coverage.excluded_counts.
     usable = [r for r in records if not _is_excluded(r)]
-    cells = build_replication_cells(usable)
+    cells = build_replication_cells(usable, KEY_STRICT)
     verdicts = gates_mod.evaluate_cells(cells)
+
+    # The before/after. Both comparisons run over the *same* usable set as the
+    # headline numbers so that the only thing varying between the two columns
+    # is the key, and over all records for the usability predicate, where the
+    # record set is itself what differs.
+    pooled_verdicts = gates_mod.evaluate_records(usable, KEY_POOLED)
+
     return FeasibilityReport(
         coverage=coverage,
         cells=cells,
@@ -193,6 +242,10 @@ def build_report(
         fold_sets=all_fold_sets(usable),
         replication_summary=summarize_replication(cells),
         verdict_summary=summarize_verdicts(verdicts),
+        key_comparison=compare_claim_keys(usable),
+        usability_comparison=compare_usability(records),
+        pooled_verdict_summary=summarize_verdicts(pooled_verdicts),
+        pooled_pairs=pair_verdicts(pooled_verdicts),
         source_path=source_path,
         source_exists=source_exists,
         load_errors=list(load_errors or []),
@@ -362,9 +415,22 @@ def _section_run(report: "FeasibilityReport") -> List[str]:
         ["records read", str(coverage.n_records_read)],
         ["records usable as observations", str(coverage.n_records_usable)],
         ["records held out of the matrix", str(coverage.n_records_excluded)],
+        ["usability predicate", "schema v%s" % coverage.key_version],
+        [
+            "claim key",
+            "`%s` (schema v0.2.0, %d components)"
+            % (
+                " + ".join(report.replication_summary.get("claim_fields", ())),
+                len(report.replication_summary.get("claim_fields", ())),
+            ),
+        ],
         ["distinct studies", str(coverage.n_studies)],
         ["distinct labs (last author + affiliation)", str(coverage.n_labs)],
         ["usable records with no lab identity", str(coverage.n_records_without_lab)],
+        [
+            "usable records stating none of the %d conditions" % N_CONDITION_SLOTS,
+            str(coverage.n_records_condition_unspecified),
+        ],
         ["load errors", str(len(report.load_errors))],
     ]
     lines = ["## Run", "", *_table(["field", "value"], rows), ""]
@@ -404,11 +470,14 @@ def _section_populations(report: "FeasibilityReport") -> List[str]:
         "## 1. How many neuronal populations have usable intervention data?",
         "",
         "**%d.** A population counts when at least one record names it, names a "
-        "perturbation `method`, and carries a `valence` that is neither absent "
-        "nor `unclear` — a perturbation of unstated direction states nothing "
-        "an input could encode. Of these, %d are unresolved populations "
-        "grouped by their raw name under a `raw:` prefix (no vocabulary match; "
-        "SCHEMA.md 3.2 forbids force-mapping them)."
+        "perturbation `method`, and carries a `perturbation_polarity` that is "
+        "neither absent nor `unclear` — a perturbation of unstated sign states "
+        "nothing an input could encode. Under schema v0.1.0 this predicate "
+        "read `valence` instead, which held out every molecular record; the "
+        "difference is measured in the section on the key change. Of these "
+        "populations, %d are unresolved and grouped by their raw name under a "
+        "`raw:` prefix (no vocabulary match; SCHEMA.md 3.2 forbids "
+        "force-mapping them)."
         % (coverage.n_populations, coverage.n_populations_unresolved),
         "",
     ]
@@ -564,14 +633,18 @@ def _section_matrix(report: "FeasibilityReport") -> List[str]:
 
 def _section_replication(report: "FeasibilityReport") -> List[str]:
     summary = report.replication_summary
+    fields = summary.get("claim_fields", ())
     lines = [
         "## 3. How many neuron-outcome relationships have independent "
         "replication?",
         "",
-        "The unit is the claim `(population, valence, outcome)`: SCHEMA.md 1 "
-        "forbids aggregating across valences, so an activation result and an "
-        "inhibition result on the same pair are two claims, not two "
-        "observations of one.",
+        "The unit is the claim `syn4rch.qc.keys.claim_key`, which under schema "
+        "v0.2.0 is `(%s)`. SCHEMA.md 1 forbids aggregating across "
+        "perturbations, so a circuit activation and a gene knockout on the "
+        "same pair are two claims, not two observations of one; and the "
+        "condition is in the key for the same reason one step further out, "
+        "because a fasted male cohort and a fed female one were never "
+        "comparable." % ", ".join(fields),
         "",
         "**%d of %d claim(s) are replicated across two or more labs**; a "
         "further %d are replicated across studies within a single lab and are "
@@ -587,7 +660,7 @@ def _section_replication(report: "FeasibilityReport") -> List[str]:
         "",
     ]
     rows = [
-        ["claims (population x valence x outcome)", summary.get("n_cells", 0)],
+        ["claims (strict v0.2.0 claim key)", summary.get("n_cells", 0)],
         ["single observation", summary.get("n_cells_single_observation", 0)],
         [
             "replicated across >= 2 studies",
@@ -602,9 +675,93 @@ def _section_replication(report: "FeasibilityReport") -> List[str]:
             "claims containing records with no lab identity",
             summary.get("n_cells_with_unknown_lab_records", 0),
         ],
+        [
+            "claims matched on 'both unknown' conditions",
+            summary.get("n_cells_matched_on_unknown_conditions", 0),
+        ],
     ]
     lines.extend(_table(["field", "count"], [[r[0], str(r[1])] for r in rows]))
     lines.append("")
+    lines.extend(_specificity_block(report))
+    return lines
+
+
+def _specificity_block(report: "FeasibilityReport") -> List[str]:
+    """Replication counts broken down by minimum condition specificity.
+
+    The breakdown, not a footnote under a pooled number. A replication across
+    three studies that each state sex, diet and age is different evidence from
+    one across three studies that state nothing, and the second matched on
+    "both unknown" rather than on "both the same".
+    """
+    summary = report.replication_summary
+    all_cells = summary.get("cells_by_min_condition_specificity", {})
+    studies = summary.get(
+        "replicated_across_studies_by_min_condition_specificity", {}
+    )
+    labs = summary.get("replicated_across_labs_by_min_condition_specificity", {})
+    defined = summary.get("agreement_defined_by_min_condition_specificity", {})
+    means = summary.get("mean_agreement_by_min_condition_specificity", {})
+
+    lines = [
+        "### Every replication figure, by minimum condition specificity",
+        "",
+        "`condition_specificity` counts how many of the %d condition slots "
+        "(`sex`, `diet`, `age_group`, `challenge`) a record actually states. "
+        "The **minimum** over a cell's records is what qualifies the cell, "
+        "because one record stating nothing is enough to make the whole match "
+        "a match on `unknown`. A row at specificity 0 says the claim's records "
+        "were grouped together partly because their conditions were not known, "
+        "not because they were the same." % N_CONDITION_SLOTS,
+        "",
+    ]
+    rows = []
+    for level in range(N_CONDITION_SLOTS + 1):
+        key = str(level)
+        mean = means.get(key)
+        rows.append(
+            [
+                "%d of %d" % (level, N_CONDITION_SLOTS),
+                str(all_cells.get(key, 0)),
+                str(studies.get(key, 0)),
+                str(labs.get(key, 0)),
+                str(defined.get(key, 0)),
+                "undefined" if mean is None else "%.2f" % mean,
+            ]
+        )
+    lines.extend(
+        _table(
+            [
+                "min condition specificity",
+                "claims",
+                "replicated >= 2 studies",
+                "replicated >= 2 labs",
+                "agreement defined",
+                "mean agreement",
+            ],
+            rows,
+            cap=N_CONDITION_SLOTS + 1,
+        )
+    )
+    lines.append("")
+    pooled_mean = summary.get("mean_agreement_where_defined")
+    lines.append(
+        "The pooled mean agreement across all specificities is %s. It is "
+        "printed last and deliberately: a mean taken across cells that matched "
+        "on nothing and cells that matched on three stated conditions "
+        "describes neither, and the row-by-row breakdown above is the figure "
+        "to read." % _fmt_ratio(pooled_mean)
+    )
+    lines.append("")
+    if all_cells.get(str(N_CONDITION_SLOTS), 0) == 0:
+        lines.append(
+            "No claim in this corpus reaches specificity %d of %d: not one "
+            "record states all four conditions. Every replication figure above "
+            "is therefore qualified, and none of them describes two "
+            "experiments known to have run under the same conditions."
+            % (N_CONDITION_SLOTS, N_CONDITION_SLOTS)
+        )
+        lines.append("")
     return lines
 
 
@@ -636,23 +793,34 @@ def _section_agreement(report: "FeasibilityReport") -> List[str]:
             "Of the %d claim(s) with a defined agreement, %d are unanimous and "
             "%d are contested (independent studies state incompatible "
             "directions, by the QC definition in docs/DECISIONS.md D-011). "
-            "Mean agreement where defined: %s. Nothing was resolved, averaged "
-            "or dropped."
+            "%d of them matched on conditions that were unknown rather than "
+            "known to be the same; the mean agreement is broken down by "
+            "specificity in section 3 rather than pooled here. Nothing was "
+            "resolved, averaged or dropped."
             % (
                 defined,
                 summary.get("n_cells_unanimous_where_defined", 0),
                 summary.get("n_cells_contested", 0),
-                _fmt_ratio(summary.get("mean_agreement_where_defined")),
+                summary.get("n_cells_matched_on_unknown_conditions", 0),
             )
         )
         lines.append("")
         replicated = [c for c in report.cells if c.agreement_is_defined]
+        lines.append(
+            "The `min cond` column is the minimum condition specificity of the "
+            "cell, out of %d. It is not a footnote: an agreement at `0/%d` was "
+            "computed over studies that matched on their conditions being "
+            "unknown." % (N_CONDITION_SLOTS, N_CONDITION_SLOTS)
+        )
+        lines.append("")
         lines.extend(
             _table(
                 [
                     "population",
-                    "valence",
+                    "perturbation (class / polarity / target)",
                     "outcome",
+                    "condition",
+                    "min cond",
                     "studies",
                     "labs",
                     "modal direction",
@@ -663,19 +831,27 @@ def _section_agreement(report: "FeasibilityReport") -> List[str]:
                 [
                     [
                         "`%s`" % c.population,
-                        c.valence,
+                        c.perturbation_label,
                         "`%s`" % c.outcome,
+                        c.condition_label,
+                        "%d/%d" % (c.min_condition_specificity, N_CONDITION_SLOTS),
                         str(c.n_studies),
                         str(c.n_labs),
                         (c.modal_direction or "-")
                         + (" (tied)" if c.modal_direction_is_tied else ""),
-                        _fmt_ratio(c.agreement_studies),
+                        _fmt_ratio(c.agreement_studies_value),
                         _fmt_ci(c.agreement_studies_ci),
                         ", ".join(c.conflict_codes) or "-",
                     ]
                     for c in sorted(
                         replicated,
-                        key=lambda c: (-c.n_labs, -c.n_studies, c.population, c.outcome),
+                        key=lambda c: (
+                            -c.n_labs,
+                            -c.n_studies,
+                            -c.min_condition_specificity,
+                            c.population,
+                            c.outcome,
+                        ),
                     )
                 ],
             )
@@ -719,10 +895,14 @@ def _section_gates(report: "FeasibilityReport") -> List[str]:
             + "."
         ),
         "",
-        "Verdicts are per task `(population, valence, outcome)` and then rolled "
-        "up to the `(population, outcome)` pairs the Phase 2 question is "
-        "phrased in; a pair is as feasible as its best valence and the rollup "
-        "names which one.",
+        "Verdicts are per claim-keyed task (the nine-component schema v0.2.0 "
+        "key) and then rolled up to the `(population, outcome)` pairs the "
+        "Phase 2 question is phrased in; a pair is as feasible as its best "
+        "claim and the rollup names which perturbation and which condition "
+        "that was. No threshold in `gates.py` changed at v0.2.0 — only the "
+        "unit they apply to, which is finer, so fewer cells can clear a gate "
+        "that counts studies and labs. The section on the key change measures "
+        "that cost.",
         "",
     ]
     lines.extend(
@@ -761,32 +941,39 @@ def _section_gates(report: "FeasibilityReport") -> List[str]:
             _table(
                 [
                     "population",
-                    "valence",
+                    "perturbation",
                     "outcome",
+                    "condition",
+                    "min cond",
                     "verdict",
                     "records",
                     "studies",
                     "labs",
                     "agreement",
                     "reasons",
+                    "notes",
                 ],
                 [
                     [
                         "`%s`" % v.population,
-                        v.valence,
+                        v.perturbation_label,
                         "`%s`" % v.outcome,
+                        v.condition_label,
+                        "%d/%d" % (v.min_condition_specificity, N_CONDITION_SLOTS),
                         v.verdict,
                         str(v.numbers.get("n_records", 0)),
                         str(v.numbers.get("n_studies", 0)),
                         str(v.numbers.get("n_labs", 0)),
                         _fmt_ratio(v.numbers.get("agreement_studies")),
                         ", ".join("`%s`" % r for r in v.reasons),
+                        ", ".join("`%s`" % n for n in v.notes) or "-",
                     ]
                     for v in sorted(
                         promoted,
                         key=lambda v: (
                             -v.rank,
                             -v.numbers.get("n_labs", 0),
+                            -v.min_condition_specificity,
                             v.population,
                             v.outcome,
                         ),
@@ -795,6 +982,40 @@ def _section_gates(report: "FeasibilityReport") -> List[str]:
             )
         )
         lines.append("")
+        summary_spec = report.verdict_summary.get(
+            "by_verdict_and_min_condition_specificity", {}
+        )
+        if summary_spec:
+            lines.append("### Verdicts by minimum condition specificity")
+            lines.append("")
+            lines.append(
+                "A `feasible` verdict whose cell matched on unknown conditions "
+                "is still a `feasible` verdict — there is no specificity gate, "
+                "because inventing a threshold here would be inventing a knob "
+                "(`MIN_CONDITION_SPECIFICITY_GATE` is `None` on purpose). It "
+                "is counted separately instead, so the qualification cannot be "
+                "lost between this table and the headline count."
+            )
+            lines.append("")
+            lines.extend(
+                _table(
+                    ["verdict"]
+                    + [
+                        "%d/%d" % (k, N_CONDITION_SLOTS)
+                        for k in range(N_CONDITION_SLOTS + 1)
+                    ],
+                    [
+                        [name]
+                        + [
+                            str(summary_spec.get(name, {}).get(str(k), 0))
+                            for k in range(N_CONDITION_SLOTS + 1)
+                        ]
+                        for name in reversed(gates_mod.VERDICTS)
+                    ],
+                    cap=len(gates_mod.VERDICTS),
+                )
+            )
+            lines.append("")
     else:
         lines.append(
             "No task reaches `marginal`. Every task in this corpus is "
@@ -851,6 +1072,275 @@ def _section_gates(report: "FeasibilityReport") -> List[str]:
     return lines
 
 
+def _section_key_change(report: "FeasibilityReport") -> List[str]:
+    """The before and after of the schema v0.2.0 claim key change.
+
+    Kept as its own section, and never reduced to the "after" column, because
+    the difference between the two keys *is* the measurement of how much
+    apparent disagreement in this corpus was condition and perturbation
+    heterogeneity. That is why ``syn4rch.qc.keys.claim_key_pooled`` still
+    exists.
+    """
+    comparison = report.key_comparison
+    usability = report.usability_comparison
+    lines = [
+        "## What schema v0.2.0 changed, measured both ways",
+        "",
+        "`claim_key` was `(population, valence, outcome_id)`. It is now "
+        "`(population, perturbation_class, perturbation_polarity, "
+        "perturbation_target, outcome_id, sex, diet, age_group, challenge)`. "
+        "`syn4rch.qc.keys.claim_key_pooled` preserves the old key exactly, for "
+        "one purpose: without it this change would be unfalsifiable. Both "
+        "columns below are computed over the same usable records, so the only "
+        "thing varying between them is the key.",
+        "",
+    ]
+    if comparison is None:
+        lines.append("_No records, so there is nothing to compare._")
+        lines.append("")
+        return lines
+
+    pooled = comparison.pooled
+    strict = comparison.strict
+    rows = [
+        ["records keyed", str(pooled.n_records), str(strict.n_records)],
+        ["cells", str(pooled.n_cells), str(strict.n_cells)],
+        [
+            "directly opposed cells (increase and decrease in one cell)",
+            str(pooled.n_cells_directly_opposed),
+            str(strict.n_cells_directly_opposed),
+        ],
+        [
+            "cells carrying a QC conflict code across studies",
+            str(pooled.n_cells_with_conflict_codes),
+            str(strict.n_cells_with_conflict_codes),
+        ],
+        [
+            "multi-study cells",
+            str(pooled.n_cells_multi_study),
+            str(strict.n_cells_multi_study),
+        ],
+        [
+            "multi-lab cells",
+            str(pooled.n_cells_multi_lab),
+            str(strict.n_cells_multi_lab),
+        ],
+        [
+            "cells with a defined agreement",
+            str(pooled.n_cells_agreement_defined),
+            str(strict.n_cells_agreement_defined),
+        ],
+        [
+            "single-observation cells",
+            str(pooled.n_cells_single_observation),
+            str(strict.n_cells_single_observation),
+        ],
+    ]
+    lines.extend(
+        _table(
+            ["quantity", "pooled key (v0.1.0)", "strict key (v0.2.0)"],
+            rows,
+            cap=len(rows),
+        )
+    )
+    lines.append("")
+    lines.append("### What the split did, cell by cell")
+    lines.append("")
+    rows = [
+        [
+            "pooled cells the strict key splits in two or more",
+            str(comparison.n_pooled_cells_split),
+        ],
+        [
+            "largest number of strict cells out of one pooled cell",
+            str(comparison.max_strict_cells_per_pooled_cell),
+        ],
+        [
+            "opposed pooled cells whose refinements are all internally "
+            "consistent (the contradiction was heterogeneity)",
+            str(comparison.n_opposed_cells_resolved_by_split),
+        ],
+        [
+            "opposed pooled cells still opposed after the split (a real "
+            "head-to-head disagreement)",
+            str(comparison.n_opposed_cells_surviving),
+        ],
+        [
+            "multi-study pooled cells whose every refinement has one study "
+            "(replication evidence given up)",
+            str(comparison.n_multi_study_cells_lost),
+        ],
+        [
+            "— of those, lost because the refinements are different "
+            "perturbations",
+            str(comparison.n_lost_to_perturbation_split),
+        ],
+        [
+            "— of those, lost because two refinements state *different* "
+            "conditions",
+            str(comparison.n_lost_to_stated_condition_difference),
+        ],
+        [
+            "— of those, lost **only** because one paper states a condition "
+            "the other leaves unknown",
+            str(comparison.n_lost_to_unknown_against_stated),
+        ],
+    ]
+    lines.extend(_table(["quantity", "count"], rows, cap=len(rows)))
+    lines.append("")
+    bought = comparison.n_opposed_cells_resolved_by_split
+    cost = comparison.n_multi_study_cells_lost
+    lines.append(
+        "**What it bought:** %d of the %d head-to-head `increase` vs "
+        "`decrease` cells under the old key were not contradictions. A finer "
+        "key separated them, which means they had been a male cohort against a "
+        "female one, a chow-fed cohort against a high-fat one, or a gene "
+        "knockout against a gene overexpression — experiments that were never "
+        "comparable, recorded as laboratories disagreeing. %d remain, and "
+        "those are the real disagreements."
+        % (bought, pooled.n_cells_directly_opposed, comparison.n_opposed_cells_surviving)
+    )
+    lines.append("")
+    lines.append(
+        "**What it cost:** %d of the %d multi-study cells stopped being "
+        "multi-study — %s of the replication evidence the old key appeared to "
+        "have. Most of it was never evidence: %d of the %d were records "
+        "describing different *perturbations* (a knockout of one gene against "
+        "a knockout of another), and %d were two different stated conditions. "
+        "Pooling those and counting the papers is the defect v0.2.0 exists to "
+        "fix. The loss is still real in the sense that matters for modelling: "
+        "there are now fewer cells that can clear a gate counting studies and "
+        "labs."
+        % (
+            cost,
+            pooled.n_cells_multi_study,
+            _fmt_pct(
+                None
+                if not pooled.n_cells_multi_study
+                else cost / pooled.n_cells_multi_study
+            ),
+            comparison.n_lost_to_perturbation_split,
+            cost,
+            comparison.n_lost_to_stated_condition_difference,
+        )
+    )
+    lines.append("")
+    if comparison.cost_that_cannot_be_adjudicated:
+        lines.append(
+            "**What cannot be adjudicated:** the remaining %d lost cell(s) "
+            "were split *only* because one paper states a condition the other "
+            "leaves unknown. `unknown` pools \"the curator did not ask\" with "
+            "\"the paper does not say\", and neither can match a stated value: "
+            "a paper reporting male mice and a paper reporting no sex at all "
+            "are two keys, so they stop replicating each other even if both "
+            "ran males. **Nothing in this corpus can say whether they did.** "
+            "The alternative — assuming the unstated condition matched — is "
+            "the inference SCHEMA.md 2 rule 4 forbids, so this cost is paid "
+            "and reported rather than argued away. It is counted on its own "
+            "line and never as heterogeneity resolved."
+            % comparison.cost_that_cannot_be_adjudicated
+        )
+        lines.append("")
+
+    pooled_summary = report.pooled_verdict_summary
+    if pooled_summary:
+        lines.append("### Gate arithmetic under both keys")
+        lines.append("")
+        lines.append(
+            "The same gates, the same records, two keys. The pooled column is "
+            "**not a result** — a pooled cell may mix two perturbations or two "
+            "cohorts, so a verdict over it describes no single experiment. It "
+            "is here so the cost of the correct key is visible rather than "
+            "absorbed."
+        )
+        lines.append("")
+        pooled_by = pooled_summary.get("by_verdict", {})
+        strict_by = report.verdict_summary.get("by_verdict", {})
+        pooled_pair_counts = _pair_verdict_counts(report.pooled_pairs)
+        strict_pair_counts = _pair_verdict_counts(report.pairs)
+        lines.extend(
+            _table(
+                [
+                    "verdict",
+                    "tasks (pooled v0.1.0)",
+                    "tasks (strict v0.2.0)",
+                    "pairs (pooled)",
+                    "pairs (strict)",
+                ],
+                [
+                    [
+                        name,
+                        str(pooled_by.get(name, 0)),
+                        str(strict_by.get(name, 0)),
+                        str(pooled_pair_counts.get(name, 0)),
+                        str(strict_pair_counts.get(name, 0)),
+                    ]
+                    for name in reversed(gates_mod.VERDICTS)
+                ],
+                cap=len(gates_mod.VERDICTS),
+            )
+        )
+        lines.append("")
+
+    if usability is not None:
+        lines.append("### The usability predicate also changed")
+        lines.append("")
+        lines.append(
+            "Usability used to require a `valence` that was neither absent nor "
+            "`unclear`. Under v0.2.0 it requires a `perturbation_polarity` that "
+            "is neither absent nor `unclear`. This is a corrected predicate, "
+            "not a loosened threshold: a conditional knockout's `valence` is "
+            "honestly `unclear` (SCHEMA.md 3.4 and 6 forbid coercing it) while "
+            "its *manipulation* has a perfectly well defined sign, which is "
+            "`decrease` on the amount of the target gene product. The old "
+            "predicate tested a field that had stopped carrying the "
+            "information. Every number in `gates.py` is unchanged."
+        )
+        lines.append("")
+        rows = [
+            ["records read", str(usability.n_records)],
+            ["usable under the v0.1.0 predicate", str(usability.n_usable_v1)],
+            ["usable under the v0.2.0 predicate", str(usability.n_usable_v2)],
+            [
+                "admitted by v0.2.0 only",
+                str(usability.n_admitted_by_v2_only),
+            ],
+            [
+                "admitted by v0.1.0 only",
+                str(usability.n_admitted_by_v1_only),
+            ],
+        ]
+        lines.extend(_table(["quantity", "count"], rows, cap=len(rows)))
+        lines.append("")
+        if usability.admitted_by_v2_only_by_class:
+            lines.append(
+                "The records the change admits, by perturbation class — a "
+                "predicate change that *admits* records is the kind that most "
+                "needs showing, so it is broken down rather than stated as one "
+                "number:"
+            )
+            lines.append("")
+            lines.extend(
+                _table(
+                    ["perturbation class", "records admitted by v0.2.0 only"],
+                    [
+                        ["`%s`" % cls, str(count)]
+                        for cls, count in usability.admitted_by_v2_only_by_class.items()
+                    ],
+                    cap=len(usability.admitted_by_v2_only_by_class) + 1,
+                )
+            )
+            lines.append("")
+    return lines
+
+
+def _pair_verdict_counts(pairs: Sequence[PairVerdict]) -> Dict[str, int]:
+    counts: Dict[str, int] = {name: 0 for name in gates_mod.VERDICTS}
+    for pair in pairs:
+        counts[pair.verdict] = counts.get(pair.verdict, 0) + 1
+    return counts
+
+
 def _section_splits(report: "FeasibilityReport") -> List[str]:
     lines = [
         "## Leakage-aware splits available on this corpus",
@@ -862,6 +1352,22 @@ def _section_splits(report: "FeasibilityReport") -> List[str]:
         "bind a number to folds without the label. Shared animal cohorts "
         "(SCHEMA.md 5 item 3) are not controlled by any grouping here: the "
         "schema records no cohort identity.",
+        "",
+        "**The claim key change does not reach this table.** All three fold "
+        "generators key on `study_key`, `lab_key` and `population_key`; none "
+        "of them reads `claim_key`, a perturbation field or a condition field, "
+        "so fold membership is identical before and after schema v0.2.0. That "
+        "is checked rather than assumed: "
+        "`tests/test_feasibility_splits.py` holds records that differ only in "
+        "`perturbation_class`, `perturbation_polarity`, `target_id` and the "
+        "four conditions, and asserts the folds come out unchanged.",
+        "",
+        "Grouping is also not the whole of leakage control. SCHEMA.md 5b: a "
+        "split can keep a lab off both sides and still hand the model a test "
+        "row whose perturbation identity never appeared in training, which is "
+        "unlearnable rather than merely hard. That fraction is measured in "
+        "`reports/perturbation_identity.md` and is required next to any "
+        "cross-validated number from this corpus.",
         "",
     ]
     rows = []
@@ -914,7 +1420,17 @@ def _section_limits(report: "FeasibilityReport") -> List[str]:
         "- It cannot rule out two studies sharing one animal cohort "
         "(SCHEMA.md 5 item 3): the schema records no cohort identity.",
         "- A `feasible` verdict says a prediction task can be posed and "
-        "cross-validated with the grouping named, not that a model will work.",
+        "cross-validated with the grouping named, not that a model will work. "
+        "It does not say the held-out rows were learnable: see "
+        "`reports/perturbation_identity.md` (SCHEMA.md 5b).",
+        "- It does not claim that two records in one cell ran under the same "
+        "conditions. Where the minimum condition specificity is below %d, they "
+        "were grouped partly because the conditions were unknown. No claim in "
+        "this corpus states all %d."
+        % (N_CONDITION_SLOTS, N_CONDITION_SLOTS),
+        "- The pooled (v0.1.0) key appears only in the section on the key "
+        "change. It is never a verdict: it pools experiments that were never "
+        "comparable, which is the defect v0.2.0 exists to fix.",
         "- Tier B outcomes are excluded as prediction targets by "
         "`EXCLUDE_TIER_B_AS_TARGET` (SCHEMA.md 6: Tier B is an annotation "
         "layer, not a training target).",
@@ -1002,6 +1518,7 @@ def render_markdown(report: "FeasibilityReport") -> str:
         lines.extend(_section_replication(report))
         lines.extend(_section_agreement(report))
         lines.extend(_section_gates(report))
+        lines.extend(_section_key_change(report))
         lines.extend(_section_matrix(report))
         lines.extend(_section_splits(report))
     else:

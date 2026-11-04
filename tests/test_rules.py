@@ -152,5 +152,115 @@ class TestActuatorControlHelper(unittest.TestCase):
         self.assertFalse(helper(["not_a_control_type"]))
 
 
+
+class PerturbationClassTest(unittest.TestCase):
+    """``perturbation_class`` is a total function of ``method`` (v0.2.0)."""
+
+    def test_table_is_total_over_the_method_vocabulary(self):
+        from syn4rch.schema.enums import PerturbationMethod
+        from syn4rch.schema.rules import METHOD_CLASS
+
+        self.assertEqual(set(METHOD_CLASS), set(PerturbationMethod))
+
+    def test_every_method_yields_a_class(self):
+        from syn4rch.schema.enums import PerturbationMethod
+        from syn4rch.schema.rules import perturbation_class_from_method
+
+        for method in PerturbationMethod:
+            self.assertIsNotNone(perturbation_class_from_method(method))
+
+    def test_the_split_that_matters(self):
+        from syn4rch.schema.enums import PerturbationClass
+        from syn4rch.schema.rules import perturbation_class_from_method
+
+        self.assertIs(
+            perturbation_class_from_method("chemogenetic"),
+            PerturbationClass.circuit_activity,
+        )
+        self.assertIs(
+            perturbation_class_from_method("conditional_knockout"),
+            PerturbationClass.molecular,
+        )
+
+    def test_absent_or_unknown_method_gives_none_not_other(self):
+        from syn4rch.schema.rules import perturbation_class_from_method
+
+        self.assertIsNone(perturbation_class_from_method(None))
+        # 'other' is a curator's explicit declaration, never a fallback for an
+        # unrecognised string: writing it would hide a vocabulary gap.
+        self.assertIsNone(perturbation_class_from_method("not_a_method"))
+
+    def test_string_and_enum_inputs_agree(self):
+        from syn4rch.schema.enums import PerturbationMethod
+        from syn4rch.schema.rules import perturbation_class_from_method
+
+        self.assertIs(
+            perturbation_class_from_method("optogenetic"),
+            perturbation_class_from_method(PerturbationMethod.optogenetic),
+        )
+
+
+class PerturbationPolarityTest(unittest.TestCase):
+    """``perturbation_polarity`` is the sign along the class's own axis."""
+
+    def polarity(self, method, valence):
+        from syn4rch.schema.rules import perturbation_polarity_from
+
+        value = perturbation_polarity_from(method, valence)
+        return None if value is None else value.value
+
+    def test_circuit_manipulation_restates_valence(self):
+        self.assertEqual(self.polarity("chemogenetic", "activation"), "increase")
+        self.assertEqual(self.polarity("chemogenetic", "inhibition"), "decrease")
+        self.assertEqual(self.polarity("optogenetic", "ablation"), "remove")
+        self.assertEqual(self.polarity("chemogenetic", "unclear"), "unclear")
+
+    def test_a_circuit_manipulation_without_valence_stays_unclear(self):
+        # The same virus can excite or silence; the method does not say which.
+        self.assertEqual(self.polarity("chemogenetic", None), "unclear")
+
+    def test_molecular_polarity_comes_from_the_method_and_ignores_valence(self):
+        """The whole point of the v0.2.0 split.
+
+        A knockout's ``valence`` is honestly ``unclear`` and must stay so, but
+        the *manipulation* has a perfectly well defined sign.
+        """
+        for valence in (None, "unclear", "activation", "inhibition"):
+            self.assertEqual(
+                self.polarity("conditional_knockout", valence), "decrease"
+            )
+            self.assertEqual(
+                self.polarity("conditional_overexpression", valence), "increase"
+            )
+
+    def test_structural_removal_is_remove_whatever_the_valence(self):
+        for valence in (None, "unclear", "activation"):
+            self.assertEqual(self.polarity("genetic_ablation", valence), "remove")
+            self.assertEqual(self.polarity("lesion", valence), "remove")
+
+    def test_pharmacology_reads_the_valence(self):
+        self.assertEqual(
+            self.polarity("local_pharmacology", "inhibition"), "decrease"
+        )
+        self.assertEqual(self.polarity("local_pharmacology", None), "unclear")
+
+    def test_other_is_unclear_not_a_guess(self):
+        self.assertEqual(self.polarity("other", "activation"), "unclear")
+
+    def test_absent_method_gives_none(self):
+        self.assertIsNone(self.polarity(None, "activation"))
+        self.assertIsNone(self.polarity("not_a_method", "activation"))
+
+    def test_unrecognised_valence_does_not_crash_or_guess(self):
+        self.assertEqual(self.polarity("chemogenetic", "sideways"), "unclear")
+
+    def test_every_method_and_valence_pair_is_defined(self):
+        from syn4rch.schema.enums import PerturbationMethod, Valence
+
+        for method in PerturbationMethod:
+            for valence in list(Valence) + [None]:
+                self.assertIsNotNone(self.polarity(method, valence))
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

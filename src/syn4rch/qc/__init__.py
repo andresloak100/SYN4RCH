@@ -9,11 +9,11 @@ Principles enforced by this package:
 * Nothing here writes to ``data/``; the CLI writes only its own report.
 """
 
-from .conditions import (  # noqa: F401
-    REQUIRED_CONDITIONS,
-    condition_coverage,
-    find_missing_conditions,
-    missing_conditions,
+from .comparability import (  # noqa: F401
+    REQUIRED_COMPARABILITY_FIELDS,
+    comparability_coverage,
+    find_missing_comparability_fields,
+    missing_comparability_fields,
 )
 from .conflicts import (  # noqa: F401
     annotate_conflicts,

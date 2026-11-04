@@ -19,6 +19,11 @@ MUST_BE_INVERTED = {
     "insulin_sensitivity": {"insulin resistance", "HOMA-IR"},
     "glucose_tolerance": {"glucose excursion"},
     "sleep": {"sleep latency"},
+    # Renamed from `cognitive_decline` at v0.2.0 (D-029). Its two synonyms were
+    # classified as *signed* while the id named a quantity and its negation at
+    # once; once the id names performance only, they are plainly inverted.
+    "cognitive_performance": {"cognitive decline", "memory impairment",
+                              "escape latency"},
 }
 MUST_BE_SIGNED = {
     "blood_glucose": {"hyperglycemia", "hypoglycemia"},
@@ -27,7 +32,6 @@ MUST_BE_SIGNED = {
     "blood_pressure": {"hypertension", "hypotension"},
     "locomotor_activity": {"hyperactivity", "hypoactivity"},
     "glucose_tolerance": {"impaired glucose tolerance"},
-    "cognitive_decline": {"cognitive decline", "memory impairment"},
 }
 
 
@@ -75,10 +79,33 @@ class PolarityAnnotationTest(unittest.TestCase):
             self.assertIn("blood_glucose", notes, oid)
             self.assertIn("d-019", notes, oid)
 
-    def test_cognitive_decline_ambiguity_is_recorded(self):
-        notes = (self.entries["cognitive_decline"].get("notes") or "").lower()
-        self.assertIn("polarity defect", notes)
-        self.assertIn("performance", notes)
+    def test_the_ambiguous_outcome_id_was_renamed(self):
+        """D-029. The old id named a quantity and its negation at once."""
+        self.assertNotIn("cognitive_decline", self.entries)
+        self.assertIn("cognitive_performance", self.entries)
+        entry = self.entries["cognitive_performance"]
+        self.assertEqual(entry["label"], "Cognitive performance")
+        notes = (entry.get("notes") or "").lower()
+        self.assertIn("d-029", notes)
+        self.assertIn("increase = better", notes)
+        # The wording that used to be filed as merely "signed" is inverted:
+        # a paper reporting less decline is reporting more performance.
+        self.assertNotIn("signed_synonyms", entry)
+
+    def test_a_renamed_id_still_resolves_the_old_wording(self):
+        """The rename must not lose a paper's own words."""
+        for wording in ("cognitive decline", "memory impairment",
+                        "cognitive performance", "Morris water maze"):
+            self.assertEqual(
+                vocab.resolve("outcomes", wording), "cognitive_performance",
+                wording,
+            )
+
+    def test_the_rename_is_recorded_in_the_changelog(self):
+        changelog = " ".join(self.doc["_meta"].get("changelog") or []).lower()
+        self.assertIn("cognitive_decline", changelog)
+        self.assertIn("cognitive_performance", changelog)
+        self.assertEqual(self.doc["_meta"]["version"], "0.2.0")
 
     def test_annotations_do_not_disturb_synonym_resolution(self):
         # The new fields are metadata; matching still works off `synonyms`.

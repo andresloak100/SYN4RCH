@@ -47,6 +47,10 @@ from typing import Dict, List, Optional, Tuple
 
 from ..schema.io import JsonlError, loads_record, write_jsonl
 from ..schema.record import SCHEMA_VERSION, TierARecord
+from ..schema.rules import (
+    perturbation_class_from_method,
+    perturbation_polarity_from,
+)
 from ..schema.validate import Severity, validate
 from .jats import ParsedPaper, parse_jats_file
 from .passages import split_passages
@@ -319,7 +323,38 @@ def read_proposals(
                 errors.append((number, str(exc)))
             except Exception as exc:  # pragma: no cover - defensive
                 errors.append((number, "%s: %s" % (type(exc).__name__, exc)))
+    for record in records:
+        fill_derived(record)
     return records, errors
+
+
+def fill_derived(record: TierARecord) -> TierARecord:
+    """Fill the derived perturbation fields, in place. Never overwrites.
+
+    ``perturbation_class`` and ``perturbation_polarity`` are derived, never
+    judged (SCHEMA.md 3.4b). Filling them here rather than asking a reader to
+    state them removes the only way a reader can get them wrong: a stored class
+    that disagrees with ``method`` is a HARD finding, so a hand-written value
+    can only ever match the rule or be refused.
+
+    A value the proposal already carries is left alone. That is not laxity: for
+    a locally infused drug a curator who has read the pharmacology may know the
+    sign when ``valence`` does not, which is why a polarity disagreeing with the
+    rule is a warning (``W013``) and not a refusal. The warning still fires, so
+    an override is visible rather than silent.
+
+    ``record_id`` is deliberately not recomputed. Neither derived field is a
+    hash component (DECISIONS.md D-026), so filling them cannot change an
+    identity -- and a function that silently re-identified records would be a
+    far worse thing to have in the admission path.
+    """
+    if record.perturbation_class is None:
+        record.perturbation_class = perturbation_class_from_method(record.method)
+    if record.perturbation_polarity is None:
+        record.perturbation_polarity = perturbation_polarity_from(
+            record.method, record.valence
+        )
+    return record
 
 
 def load_papers(directory: str) -> Tuple[List[ParsedPaper], Dict[str, int]]:

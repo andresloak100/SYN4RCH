@@ -1,4 +1,4 @@
-"""SYN4RCH Tier A schema (v0.1.0): enums, record, derived rules, validation, IO.
+"""SYN4RCH Tier A schema (v0.2.0): enums, record, derived rules, validation, IO.
 
 ``docs/SCHEMA.md`` is the binding contract; this package implements it.
 """
@@ -9,6 +9,8 @@ from .enums import (  # noqa: F401
     Acuity,
     AgeGroup,
     AgeUnit,
+    Challenge,
+    ConditionSource,
     Confidence,
     ControlType,
     Diet,
@@ -20,7 +22,9 @@ from .enums import (  # noqa: F401
     Laterality,
     Neurotransmitter,
     OutcomeTier,
+    PerturbationClass,
     PerturbationMethod,
+    PerturbationPolarity,
     RetrievedFrom,
     ReviewStatus,
     Sex,
@@ -47,11 +51,14 @@ from .record import (  # noqa: F401
     normalize_for_hash,
 )
 from .rules import (  # noqa: F401
+    METHOD_CLASS,
     age_in_weeks,
     assign_age_group,
     assign_confidence,
     confidence_inputs_met,
     has_actuator_control_from_controls,
+    perturbation_class_from_method,
+    perturbation_polarity_from,
 )
 from .validate import (  # noqa: F401
     RULES,

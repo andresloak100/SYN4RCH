@@ -1,6 +1,6 @@
 """The Tier A record: one (population x perturbation x readout x study) observation.
 
-Field-for-field implementation of SCHEMA.md 3.1-3.6 (v0.1.0).
+Field-for-field implementation of SCHEMA.md 3.1-3.6 (v0.2.0).
 
 Design note -- why almost every field has a default of ``None``:
 ``TierARecord`` is a *container*, not a gate. Rule 4 of SCHEMA.md ("if a field
@@ -22,6 +22,8 @@ from .enums import (
     Acuity,
     AgeGroup,
     AgeUnit,
+    Challenge,
+    ConditionSource,
     Confidence,
     ControlType,
     Diet,
@@ -33,7 +35,9 @@ from .enums import (
     Laterality,
     Neurotransmitter,
     OutcomeTier,
+    PerturbationClass,
     PerturbationMethod,
+    PerturbationPolarity,
     RetrievedFrom,
     ReviewStatus,
     Sex,
@@ -53,7 +57,11 @@ __all__ = [
 ]
 
 #: The only schema version this module reads or writes.
-SCHEMA_VERSION = "0.1.0"
+#:
+#: 0.2.0 added the condition dimension and split the perturbation axis. Every
+#: ``record_id`` in the corpus changed, because the hash input set changed.
+#: See docs/DECISIONS.md (D-023 .. D-026).
+SCHEMA_VERSION = "0.2.0"
 
 #: Length (hex characters) of ``record_id``. 16 hex chars = 64 bits; with a
 #: corpus of ~10^5 records the collision probability is ~3e-10.
@@ -67,17 +75,42 @@ _HASH_SEP = "\x1f"
 #:
 #: SCHEMA.md 3.1 specifies the hash over
 #: ``(study_id, population_raw, perturbation, outcome_raw, source_locator)``.
-#: ``perturbation`` is a *section* of the schema (3.4), not a field, so the
-#: identifying subset below was chosen: ``method``, ``valence`` and
-#: ``actuator``. These three are categorical and stable; free-text fields such
-#: as ``targeting_strategy`` are excluded because a wording change during
-#: curation would silently re-id the record. See docs/DECISIONS.md (D-002).
+#: ``perturbation`` is a *section* of the schema (3.4), not a field, so an
+#: identifying subset is named here instead. See docs/DECISIONS.md (D-002) for
+#: the original choice and (D-026) for the v0.2.0 extension.
+#:
+#: v0.2.0 adds five components, for one reason: two records that differ in any
+#: of them are two different observations, and under v0.1.0 they collided.
+#: Three id collisions in curation batch 04 were caused exactly this way.
+#:
+#: * ``target_raw`` -- a knockout of *Raptor* and a knockout of *p53* in the
+#:   same neurons are not one perturbation. Free text is admitted here, against
+#:   the general rule stated below, because the alternative is a certain
+#:   collision rather than a hypothetical re-identification, and a gene symbol
+#:   is about as stable as free text gets.
+#: * ``sex``, ``diet``, ``age_group``, ``challenge`` -- the condition the
+#:   experiment ran under. A male chow-fed cohort and a female high-fat cohort
+#:   are two observations and must not share an identity.
+#:
+#: Still excluded: ``targeting_strategy`` and every other prose field, because
+#: re-wording one during curation would silently re-identify the record and
+#: orphan every ``conflicts_with`` reference to it. Also excluded:
+#: ``perturbation_class`` and ``perturbation_polarity``, which are functions of
+#: ``method`` and ``valence`` and so add no discriminating power; and
+#: ``time_to_readout_value``, because a float in a hash is a portability
+#: hazard and the condition-qualifier convention (D-022) already distinguishes
+#: timepoints through ``outcome_raw``.
 RECORD_ID_FIELDS = (
     "study_id",
     "population_raw",
     "method",
     "valence",
     "actuator",
+    "target_raw",
+    "sex",
+    "diet",
+    "age_group",
+    "challenge",
     "outcome_raw",
     "source_locator",
 )
@@ -113,15 +146,24 @@ def compute_record_id(
     method: Any,
     valence: Any,
     actuator: Any,
+    target_raw: Any,
+    sex: Any,
+    diet: Any,
+    age_group: Any,
+    challenge: Any,
     outcome_raw: Any,
     source_locator: Any,
 ) -> str:
-    """Deterministic ``record_id`` (SCHEMA.md 3.1).
+    """Deterministic ``record_id`` (SCHEMA.md 3.1, v0.2.0).
 
     ``sha256`` over the NFKC-normalised components joined by U+001F, truncated
     to :data:`RECORD_ID_LENGTH` hex characters. Pure function of its arguments:
     no clock, no randomness, no dict ordering, no locale. ``PYTHONHASHSEED``
     does not affect it (``hash()`` is not used).
+
+    The parameters are positional and their order is the contract. It matches
+    :data:`RECORD_ID_FIELDS` exactly, and a mismatch between the two is caught
+    by ``tests/test_record_id.py`` rather than left to be noticed later.
     """
     payload = _HASH_SEP.join(
         normalize_for_hash(v)
@@ -131,6 +173,11 @@ def compute_record_id(
             method,
             valence,
             actuator,
+            target_raw,
+            sex,
+            diet,
+            age_group,
+            challenge,
             outcome_raw,
             source_locator,
         )
@@ -190,8 +237,12 @@ _ENUM_FIELDS = {
     "age_unit": AgeUnit,
     "age_group": AgeGroup,
     "diet": Diet,
+    "challenge": Challenge,
+    "condition_source": ConditionSource,
     "method": PerturbationMethod,
     "valence": Valence,
+    "perturbation_class": PerturbationClass,
+    "perturbation_polarity": PerturbationPolarity,
     "acuity": Acuity,
     "duration_unit": TimeUnit,
     "time_to_readout_unit": TimeUnit,
@@ -259,11 +310,21 @@ class TierARecord:
     age_group: Optional[AgeGroup] = None
     diet: Optional[Diet] = None
     n_animals: Optional[int] = None
+    # condition dimension, v0.2.0 (SCHEMA.md 3.3b, DECISIONS.md D-023/D-024)
+    challenge: Optional[Challenge] = None
+    challenge_detail: Optional[str] = None
+    condition_source: Optional[ConditionSource] = None
+    condition_locator: Optional[str] = None
 
     # --- 3.4 perturbation --------------------------------------------------
     method: Optional[PerturbationMethod] = None
     actuator: Optional[str] = None
     valence: Optional[Valence] = None
+    # perturbation axis, v0.2.0 (SCHEMA.md 3.4b, DECISIONS.md D-025)
+    perturbation_class: Optional[PerturbationClass] = None
+    perturbation_polarity: Optional[PerturbationPolarity] = None
+    target_raw: Optional[str] = None
+    target_id: Optional[str] = None
     targeting_strategy: Optional[str] = None
     acuity: Optional[Acuity] = None
     duration_value: Optional[float] = None

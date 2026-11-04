@@ -19,8 +19,9 @@ from typing import Any, Callable, Dict, List, Optional
 
 from ..schema.validate import Severity as SchemaSeverity
 from ..schema.validate import validate
-from .conditions import condition_coverage, find_missing_conditions, unclear_valence_count
-from .conflicts import annotate_conflicts, find_conflicts
+from .comparability import comparability_coverage, find_missing_comparability_fields, unclear_valence_count
+from .conflicts import annotate_conflicts, find_conflicts, key_comparison
+from .keys import condition_specificity
 from .duplicates import run_duplicate_checks
 from .findings import QCFinding, QCSeverity
 from .units import check_units
@@ -124,11 +125,11 @@ def run_qc(
     report.findings.extend(_schema_findings(records))
     report.findings.extend(run_duplicate_checks(records))
     report.findings.extend(check_units(records, loader=vocab_loader))
-    report.findings.extend(find_missing_conditions(records))
+    report.findings.extend(find_missing_comparability_fields(records))
     conflicts = annotate_conflicts(records) if annotate else find_conflicts(records)
     report.findings.extend(conflicts)
 
-    coverage = condition_coverage(records)
+    coverage = comparability_coverage(records)
     report.stats = {
         "n_studies": len({r.study_id for r in records if r.study_id}),
         "n_labs": len(
@@ -144,10 +145,25 @@ def run_qc(
         "n_conflicting_records": len(
             {rid for f in conflicts for rid in f.record_ids}
         ),
-        "condition_coverage": coverage,
+        "comparability_coverage": coverage,
         "direction_counts": _direction_counts(records),
+        "claim_key_comparison": key_comparison(records),
+        "condition_specificity": _specificity_counts(records),
     }
     return report
+
+
+def _specificity_counts(records) -> Dict[str, int]:
+    """How many records know 0, 1, 2, 3 or 4 of their condition slots.
+
+    Reported because a conflict or a replication found between two records of
+    specificity 0 matched on "both unknown", not on "both the same", and a
+    report that prints one number for both is overclaiming (DECISIONS D-023).
+    """
+    counts = {str(n): 0 for n in range(5)}
+    for record in records:
+        counts[str(condition_specificity(record))] += 1
+    return counts
 
 
 def _direction_counts(records) -> Dict[str, int]:
@@ -197,10 +213,10 @@ def render_text(report: QCReport, path=None, limit=None) -> str:
             lines.append("  %s" % err)
         lines.append("")
 
-    coverage = report.stats.get("condition_coverage", {})
+    coverage = report.stats.get("comparability_coverage", {})
     if coverage:
         total = coverage.get("_total_records", report.n_records) or 1
-        lines.append("Experimental condition coverage")
+        lines.append("Comparability fields reported (not the condition dimension)")
         lines.append("-" * 72)
         for name in ("control_types", "n", "species", "valence"):
             if name in coverage:
@@ -219,6 +235,68 @@ def render_text(report: QCReport, path=None, limit=None) -> str:
             "  (no_change is kept deliberately; dropping null results biases "
             "direction -- SCHEMA.md 3.5)"
         )
+        lines.append("")
+
+    comparison = report.stats.get("claim_key_comparison") or {}
+    if comparison.get("strict") and comparison.get("pooled"):
+        strict, pooled = comparison["strict"], comparison["pooled"]
+        lines.append("What counts as the same claim (schema v0.2.0 vs v0.1.0)")
+        lines.append("-" * 72)
+        lines.append("  %-34s %8s %8s" % ("", "v0.2.0", "v0.1.0"))
+        lines.append(
+            "  %-34s %8d %8d" % ("distinct claims", strict["n_cells"], pooled["n_cells"])
+        )
+        lines.append(
+            "  %-34s %8d %8d"
+            % (
+                "claims with a cross-study conflict",
+                strict["n_cells_with_conflict"],
+                pooled["n_cells_with_conflict"],
+            )
+        )
+        for code in sorted(
+            set(strict["cells_by_code"]) | set(pooled["cells_by_code"])
+        ):
+            lines.append(
+                "    %-32s %8d %8d"
+                % (
+                    code.replace("QC_CONFLICT_", "").lower(),
+                    strict["cells_by_code"].get(code, 0),
+                    pooled["cells_by_code"].get(code, 0),
+                )
+            )
+        lines.append(
+            "  v0.1.0 keyed on (population, valence, outcome) and so pooled a male"
+        )
+        lines.append(
+            "  cohort with a female one, and a gene knockout with an overexpression."
+        )
+        lines.append(
+            "  A claim counted under v0.1.0 but not under v0.2.0 is not a resolved"
+        )
+        lines.append(
+            "  disagreement; it is a comparison that should never have been made."
+        )
+        lines.append("")
+
+    specificity = report.stats.get("condition_specificity") or {}
+    if specificity:
+        lines.append("Condition specificity (slots known of sex/diet/age/challenge)")
+        lines.append("-" * 72)
+        for slots in sorted(specificity):
+            lines.append("  %s of 4 known   %4d records" % (slots, specificity[slots]))
+        blind = specificity.get("0", 0)
+        if blind:
+            lines.append(
+                "  %d record(s) know none, so they can only ever be compared with"
+                % blind
+            )
+            lines.append(
+                "  other condition-blind records, and any agreement or disagreement"
+            )
+            lines.append(
+                "  found that way may be condition heterogeneity instead."
+            )
         lines.append("")
 
     lines.extend(

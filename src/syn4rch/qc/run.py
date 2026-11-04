@@ -20,6 +20,7 @@ import os
 import sys
 
 from ..schema.io import JsonlError, iter_jsonl
+from ..schema.record import SCHEMA_VERSION
 from .report import render_text, run_qc
 
 __all__ = ["main", "build_parser"]
@@ -75,7 +76,8 @@ def main(argv=None) -> int:
     load_errors = []
     try:
         for record in iter_jsonl(
-            args.path, expect_version=None if args.any_version else "0.1.0"
+            args.path,
+            expect_version=None if args.any_version else SCHEMA_VERSION,
         ):
             records.append(record)
     except JsonlError as exc:

@@ -6,6 +6,12 @@ import unittest
 
 import synthetic
 from syn4rch.models.baselines import (
+    FEATURE_GENERATION_V1,
+    FEATURE_GENERATION_V2,
+    PERTURBATION_AXIS_BACKOFF,
+    PERTURBATION_AXIS_CELL_BACKOFF,
+    POPULATION_OUTCOME_BACKOFF,
+    BackoffMajority,
     BaselineUnavailable,
     EdgeTable,
     GlobalMajority,
@@ -13,12 +19,36 @@ from syn4rch.models.baselines import (
     NEUROTRANSMITTER_VALENCE_RULES,
     NeurotransmitterSign,
     OutcomeMajority,
+    PerturbationAxisCellMajority,
+    PerturbationAxisConditionMajority,
+    PerturbationAxisMajority,
     PopulationOutcomeMajority,
+    all_baseline_factories,
+    baselines_by_feature_generation,
 )
-from syn4rch.models.task import Features, build_dataset
+from syn4rch.models.task import (
+    FEATURE_FIELDS_V1,
+    PERTURBATION_AXIS,
+    PERTURBATION_AXIS_FIELDS,
+    Features,
+    PolarityWithoutClassError,
+    build_dataset,
+    expand_cell_fields,
+)
 
 
-def F(pop="syn:p1", outcome="syn:o1", valence="activation", pop_id="__same__"):
+def F(
+    pop="syn:p1",
+    outcome="syn:o1",
+    valence="activation",
+    pop_id="__same__",
+    cls="circuit_activity",
+    polarity="increase",
+    target=None,
+    sex="unknown",
+    diet="unknown",
+    challenge="unknown",
+):
     return Features(
         population_id=pop if pop_id == "__same__" else pop_id,
         population_key=pop or "raw:x",
@@ -26,6 +56,12 @@ def F(pop="syn:p1", outcome="syn:o1", valence="activation", pop_id="__same__"):
         outcome_id=outcome,
         species="mus_musculus",
         acuity="acute",
+        perturbation_class=cls,
+        perturbation_polarity=polarity,
+        perturbation_target=target,
+        sex=sex,
+        diet=diet,
+        challenge=challenge,
     )
 
 
@@ -36,6 +72,23 @@ def examples(spec):
             population_id=p, outcome_id=o, direction=d, source_locator="Fig %d" % i
         )
         for i, (p, o, d) in enumerate(spec)
+    ]
+    return build_dataset(records).examples
+
+
+def axis_examples(spec):
+    """spec: list of (population_id, outcome_id, polarity, direction)."""
+    records = [
+        synthetic.good_record(
+            population_id=p,
+            outcome_id=o,
+            valence="activation" if pol == "increase" else "inhibition",
+            perturbation_class="circuit_activity",
+            perturbation_polarity=pol,
+            direction=d,
+            source_locator="Fig %d" % i,
+        )
+        for i, (p, o, pol, d) in enumerate(spec)
     ]
     return build_dataset(records).examples
 
@@ -121,6 +174,196 @@ class TestPopulationOutcomeMajority(unittest.TestCase):
         chain = self.model.describe()["backoff_chain"]
         self.assertEqual(chain[-2:], ["global", "abstain"])
         self.assertEqual(chain[0], "(population_key, outcome_id)")
+
+
+class TestTheOldBaselinesAreUnchanged(unittest.TestCase):
+    """The before/after table is only like-for-like if the v0.1.0 baselines
+    compute what they computed before. Their chain, order and tie rule are
+    pinned here, and their declared feature generation is checked against the
+    features they actually read."""
+
+    def test_the_population_outcome_chain_is_exactly_what_it_was(self):
+        self.assertEqual(
+            POPULATION_OUTCOME_BACKOFF,
+            (
+                ("population_outcome", ("population_key", "outcome_id")),
+                ("outcome", ("outcome_id",)),
+                ("population", ("population_key",)),
+            ),
+        )
+        self.assertEqual(PopulationOutcomeMajority.chain, POPULATION_OUTCOME_BACKOFF)
+
+    def test_every_v1_baseline_reads_only_v1_features(self):
+        allowed = set(FEATURE_FIELDS_V1) | {"population_key"}
+        for name, factory in all_baseline_factories().items():
+            baseline = factory()
+            if baseline.feature_generation != FEATURE_GENERATION_V1:
+                continue
+            self.assertTrue(
+                set(baseline.features_used) <= allowed,
+                "%s declares %r" % (name, baseline.features_used),
+            )
+
+    def test_every_v2_baseline_declares_at_least_one_v2_feature(self):
+        for name, factory in all_baseline_factories().items():
+            baseline = factory()
+            if baseline.feature_generation != FEATURE_GENERATION_V2:
+                continue
+            self.assertTrue(
+                set(baseline.features_used) - set(FEATURE_FIELDS_V1) - {"population_key"},
+                name,
+            )
+
+    def test_a_cell_baselines_declaration_matches_the_cells_it_keys(self):
+        for name, factory in all_baseline_factories().items():
+            baseline = factory()
+            if not isinstance(baseline, BackoffMajority):
+                continue
+            keyed = set()
+            for _, fields_ in baseline.chain:
+                keyed.update(expand_cell_fields(*fields_))
+            self.assertEqual(
+                keyed, set(baseline.features_used),
+                "%s keys %r but declares %r" % (name, keyed, baseline.features_used),
+            )
+
+    def test_the_roster_is_split_by_declared_generation(self):
+        split = baselines_by_feature_generation()
+        self.assertIn("population_outcome_majority", split[FEATURE_GENERATION_V1])
+        self.assertIn("perturbation_axis_majority", split[FEATURE_GENERATION_V2])
+        self.assertIn(
+            "perturbation_axis_cell_majority", split[FEATURE_GENERATION_V2]
+        )
+
+
+class TestPerturbationAxisMajority(unittest.TestCase):
+    def setUp(self):
+        # Same population and outcome, opposite signed manipulations, opposite
+        # results: a cell keyed without the axis cannot separate these.
+        self.train = axis_examples(
+            [("syn:p1", "syn:oA", "increase", "increase")] * 3
+            + [("syn:p1", "syn:oA", "decrease", "decrease")] * 3
+        )
+
+    def test_the_axis_separates_what_the_population_outcome_cell_cannot(self):
+        old = PopulationOutcomeMajority().fit(self.train)
+        new = PerturbationAxisMajority().fit(self.train)
+        up = F(pop="syn:p1", outcome="syn:oA", polarity="increase")
+        down = F(pop="syn:p1", outcome="syn:oA", polarity="decrease")
+        self.assertEqual(old.predict([up, down]), ["increase", "increase"])
+        self.assertEqual(new.predict([up, down]), ["increase", "decrease"])
+
+    def test_the_cell_key_carries_class_polarity_and_target_together(self):
+        chain = PerturbationAxisMajority().describe()["backoff_chain"]
+        self.assertEqual(
+            chain[0],
+            "(population_key, perturbation_class, perturbation_polarity, "
+            "perturbation_target, outcome_id)",
+        )
+        for rung in chain:
+            if "perturbation_polarity" in rung:
+                self.assertIn("perturbation_class", rung)
+
+    def test_no_rung_of_any_chain_keys_the_polarity_alone(self):
+        for chain in (
+            PERTURBATION_AXIS_BACKOFF,
+            PERTURBATION_AXIS_CELL_BACKOFF,
+            PerturbationAxisConditionMajority.chain,
+        ):
+            for _, fields_ in chain:
+                names = expand_cell_fields(*fields_)
+                if "perturbation_polarity" in names:
+                    self.assertIn("perturbation_class", names)
+
+    def test_a_chain_that_keyed_the_polarity_alone_would_raise(self):
+        class Rogue(BackoffMajority):
+            name = "rogue"
+            chain = (("polarity_only", ("perturbation_polarity",)),)
+
+        with self.assertRaises(PolarityWithoutClassError):
+            Rogue().fit(self.train)
+
+    def test_it_refines_the_old_chain_rather_than_replacing_it(self):
+        # The last three rungs are the v0.1.0 chain, unchanged, so where the
+        # axis cell is empty this baseline answers exactly as the old one did.
+        self.assertEqual(
+            PerturbationAxisMajority.chain[-len(POPULATION_OUTCOME_BACKOFF):],
+            POPULATION_OUTCOME_BACKOFF,
+        )
+        old = PopulationOutcomeMajority().fit(self.train)
+        new = PerturbationAxisMajority().fit(self.train)
+        unseen = F(pop="syn:p1", outcome="syn:oA", polarity="remove")
+        self.assertEqual(new.resolve(unseen)[1], "population_outcome")
+        self.assertEqual(new.predict([unseen]), old.predict([unseen]))
+
+    def test_the_cell_variant_falls_straight_back_to_the_global_mode(self):
+        cell = PerturbationAxisCellMajority().fit(self.train)
+        floor = GlobalMajority().fit(self.train)
+        unseen = F(pop="syn:p9", outcome="syn:oZ", polarity="increase")
+        self.assertEqual(cell.resolve(unseen)[1], "global")
+        self.assertEqual(cell.predict([unseen]), floor.predict([unseen]))
+        self.assertEqual(cell.primary_level, "population_axis_outcome")
+
+    def test_prediction_level_reports_which_rung_answered(self):
+        model = PerturbationAxisMajority().fit(self.train)
+        seen = F(pop="syn:p1", outcome="syn:oA", polarity="increase")
+        self.assertEqual(model.prediction_level(seen), "population_axis_outcome")
+        self.assertEqual(model.prediction_level(seen), model.primary_level)
+        self.assertIsNone(GlobalMajority().fit(self.train).primary_level)
+
+
+class TestPerturbationAxisConditionMajority(unittest.TestCase):
+    def train(self):
+        return [
+            e
+            for e in build_dataset(
+                [
+                    synthetic.good_record(
+                        population_id="syn:p1", outcome_id="syn:oA",
+                        sex="male", direction="increase", source_locator="a",
+                    ),
+                    synthetic.good_record(
+                        population_id="syn:p1", outcome_id="syn:oA",
+                        sex="female", direction="decrease", source_locator="b",
+                    ),
+                    synthetic.good_record(
+                        population_id="syn:p1", outcome_id="syn:oA",
+                        sex=None, direction="no_change", source_locator="c",
+                    ),
+                ]
+            ).examples
+        ]
+
+    def test_conditioning_separates_two_cohorts_the_axis_cell_pools(self):
+        model = PerturbationAxisConditionMajority().fit(self.train())
+        male = F(pop="syn:p1", outcome="syn:oA", sex="male", diet="chow",
+                 challenge="ad_libitum")
+        female = F(pop="syn:p1", outcome="syn:oA", sex="female", diet="chow",
+                   challenge="ad_libitum")
+        self.assertEqual(model.predict([male, female]), ["increase", "decrease"])
+        self.assertEqual(
+            model.resolve(male)[1], "population_axis_outcome_condition"
+        )
+
+    def test_an_unknown_condition_does_not_borrow_a_stated_one(self):
+        model = PerturbationAxisConditionMajority().fit(self.train())
+        unknown = F(pop="syn:p1", outcome="syn:oA", sex="unknown",
+                    diet="chow", challenge="ad_libitum")
+        # The unknown-sex row has its own cell (the record with sex=None), and
+        # must not be answered from the male or the female cell.
+        self.assertEqual(model.predict([unknown]), ["no_change"])
+
+    def test_each_conditioned_rung_falls_through_to_its_unconditioned_twin(self):
+        chain = [name for name, _ in PerturbationAxisConditionMajority.chain]
+        self.assertEqual(
+            chain[:4],
+            [
+                "population_axis_outcome_condition",
+                "population_axis_outcome",
+                "axis_outcome_condition",
+                "axis_outcome",
+            ],
+        )
 
 
 class TestNeurotransmitterSign(unittest.TestCase):

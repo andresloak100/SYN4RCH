@@ -5,9 +5,13 @@ import unittest
 
 import synthetic
 from syn4rch.feasibility.coverage import (
+    KEY_VERSION_CURRENT,
+    KEY_VERSION_POOLED,
     build_matrix,
+    compare_usability,
     exclusion_reasons,
     has_measured_outcome,
+    has_signed_perturbation,
     has_usable_intervention,
     is_usable,
     partition_records,
@@ -58,8 +62,10 @@ class TestUsability(unittest.TestCase):
             ),
             ({"outcome_id": None}, "NO_OUTCOME_ID"),
             ({"method": None}, "NO_PERTURBATION_METHOD"),
-            ({"valence": None}, "VALENCE_MISSING"),
-            ({"valence": "unclear"}, "VALENCE_UNCLEAR"),
+            # A chemogenetic record reads its polarity off its valence, so
+            # both of these leave the manipulation unsigned under v0.2.0.
+            ({"valence": None}, "PERTURBATION_POLARITY_UNCLEAR"),
+            ({"valence": "unclear"}, "PERTURBATION_POLARITY_UNCLEAR"),
             ({"direction": None}, "DIRECTION_MISSING"),
             ({"direction": "not_reported"}, "DIRECTION_NOT_REPORTED"),
         )
@@ -68,21 +74,124 @@ class TestUsability(unittest.TestCase):
                 expected, exclusion_reasons(synthetic.good_record(**override)), override
             )
 
-    def test_unclear_valence_is_counted_not_silently_dropped(self):
+    def test_the_v0_1_0_predicate_is_still_reachable_and_names_valence(self):
+        # Kept so the change is falsifiable, not because it is current.
+        for override, expected in (
+            ({"valence": None}, "VALENCE_MISSING"),
+            ({"valence": "unclear"}, "VALENCE_UNCLEAR"),
+        ):
+            reasons = exclusion_reasons(
+                synthetic.good_record(**override), key_version=KEY_VERSION_POOLED
+            )
+            self.assertIn(expected, reasons, override)
+
+    def test_an_unknown_key_version_is_refused_rather_than_defaulted(self):
+        with self.assertRaises(KeyError):
+            exclusion_reasons(synthetic.good_record(), key_version="0.3.0")
+
+    def test_an_unsigned_perturbation_is_counted_not_silently_dropped(self):
         records = [synthetic.good_record(), synthetic.good_record(valence="unclear")]
         matrix = build_matrix(records)
         self.assertEqual(matrix.n_records_read, 2)
         self.assertEqual(matrix.n_records_usable, 1)
         self.assertEqual(matrix.n_records_excluded, 1)
-        self.assertEqual(matrix.excluded_counts["VALENCE_UNCLEAR"], 1)
+        self.assertEqual(matrix.excluded_counts["PERTURBATION_POLARITY_UNCLEAR"], 1)
+        self.assertEqual(matrix.key_version, KEY_VERSION_CURRENT)
 
     def test_partition_counts_reasons_and_records_separately(self):
         record = synthetic.good_record(valence=None, direction=None)
         usable, counts, excluded = partition_records([record])
         self.assertEqual(usable, [])
         self.assertEqual(len(excluded), 1)
-        self.assertEqual(counts["VALENCE_MISSING"], 1)
+        self.assertEqual(counts["PERTURBATION_POLARITY_UNCLEAR"], 1)
         self.assertEqual(counts["DIRECTION_MISSING"], 1)
+
+
+class TestMolecularRecordsAreUsableUnderV020(unittest.TestCase):
+    """The predicate change that admits records, pinned in both directions.
+
+    A conditional knockout's ``valence`` is honestly ``unclear`` -- SCHEMA.md
+    3.4 and 6 forbid coercing it -- while its *manipulation* is signed:
+    ``decrease`` on the amount of the target gene product. The v0.1.0
+    predicate tested ``valence`` and therefore held every such record out.
+    """
+
+    def setUp(self):
+        self.record = synthetic.molecular_record()
+
+    def test_the_fixture_is_the_case_under_test(self):
+        self.assertEqual(str(self.record.valence), "unclear")
+        self.assertEqual(str(self.record.perturbation_polarity), "decrease")
+
+    def test_it_is_usable_under_v0_2_0_and_not_under_v0_1_0(self):
+        self.assertTrue(has_signed_perturbation(self.record))
+        self.assertTrue(is_usable(self.record))
+        self.assertTrue(
+            has_usable_intervention(self.record, key_version=KEY_VERSION_CURRENT)
+        )
+        self.assertFalse(
+            has_usable_intervention(self.record, key_version=KEY_VERSION_POOLED)
+        )
+        self.assertIn(
+            "VALENCE_UNCLEAR",
+            exclusion_reasons(self.record, key_version=KEY_VERSION_POOLED),
+        )
+
+    def test_the_comparison_attributes_the_admission_to_its_class(self):
+        comparison = compare_usability([synthetic.good_record(), self.record])
+        self.assertEqual(comparison.n_usable_v1, 1)
+        self.assertEqual(comparison.n_usable_v2, 2)
+        self.assertEqual(comparison.n_admitted_by_v2_only, 1)
+        # Nothing is admitted by the old predicate and refused by the new one:
+        # the change is strictly an admission, which is why it is reported.
+        self.assertEqual(comparison.n_admitted_by_v1_only, 0)
+        self.assertEqual(
+            comparison.admitted_by_v2_only_by_class, {"molecular": 1}
+        )
+
+    def test_a_molecular_record_with_no_derivable_sign_is_still_excluded(self):
+        # Not a loosening: an unsigned manipulation is refused under both.
+        record = synthetic.molecular_record(perturbation_polarity="unclear")
+        self.assertIn(
+            "PERTURBATION_POLARITY_UNCLEAR", exclusion_reasons(record)
+        )
+        self.assertFalse(is_usable(record))
+
+
+class TestConditionSpecificityIsCarried(unittest.TestCase):
+    def test_the_matrix_counts_records_by_specificity(self):
+        matrix = build_matrix(
+            [
+                synthetic.good_record(),
+                synthetic.other_lab_record(
+                    sex=None, diet=None, age_group=None, challenge=None
+                ),
+            ]
+        )
+        self.assertEqual(matrix.condition_specificity_counts[4], 1)
+        self.assertEqual(matrix.condition_specificity_counts[0], 1)
+        self.assertEqual(matrix.n_records_condition_unspecified, 1)
+
+    def test_a_cell_carries_the_minimum_not_the_mean(self):
+        matrix = build_matrix(
+            [
+                synthetic.good_record(),
+                synthetic.other_lab_record(
+                    sex=None, diet=None, age_group=None, challenge=None
+                ),
+            ]
+        )
+        cell = matrix.cell("syn:pop_alpha", "syn:outcome_1")
+        self.assertEqual(cell.n_records, 2)
+        # One record stating nothing is enough to make the match a match on
+        # "unknown", so the weakest link qualifies the cell.
+        self.assertEqual(cell.min_condition_specificity, 0)
+
+    def test_an_empty_cell_has_no_specificity_rather_than_zero(self):
+        # 0 would read as "its records state no condition"; there are none.
+        self.assertIsNone(
+            build_matrix([]).cell("a", "b").min_condition_specificity
+        )
 
 
 class TestMatrixKeepsExplicitZeros(unittest.TestCase):

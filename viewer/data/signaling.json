@@ -1,0 +1,3228 @@
+{
+ "generated_at": "2026-11-04T04:19:49Z",
+ "generated_from": "data/curated/records.jsonl",
+ "mode_label": "Measured signalling - evidence playback",
+ "mode_note": "Recorded observations animated. Nothing is simulated: no equation is integrated and no unmeasured response is inferred.",
+ "n_records_in": 362,
+ "n_records_used": 295,
+ "n_records_with_projection_target": 3,
+ "excluded": {
+  "no resolved population_id (region-level record, not cell-type-specific)": 67
+ },
+ "axis_source": "perturbation_polarity when the record carries it, otherwise valence",
+ "axis_class_source": "perturbation_class when the record carries it, otherwise mapped from method",
+ "edge_identity": "population_id x outcome_id x axis x axis_class",
+ "axis_trap_note": "The axis describes the manipulation in the brain. The direction describes the bodily readout. From schema v0.2.0 both vocabularies use the words 'increase' and 'decrease', so the axis is always shown as a phrase (axis_phrase) and never as the bare value.",
+ "directions_seen": {
+  "decrease": 77,
+  "increase": 79,
+  "no_change": 138,
+  "non_monotonic": 1
+ },
+ "consensus_rule": "the modal direction; null when two or more directions tie for the most records",
+ "agreement_rule": "max(directions) / sum(directions)",
+ "contested_rule": "contested = agreement < 0.7 and n_records >= 3",
+ "minority_replicated_rule": "minority_replicated = two or more directions, each reported by two or more distinct studies",
+ "record_ids_cap": 25,
+ "system_order": [
+  "feeding",
+  "body_composition",
+  "energy_expenditure",
+  "glucose_metabolism",
+  "thermoregulation",
+  "autonomic",
+  "endocrine",
+  "reproduction",
+  "behaviour"
+ ],
+ "system_labels": {
+  "feeding": "Feeding",
+  "body_composition": "Body composition",
+  "energy_expenditure": "Energy expenditure",
+  "glucose_metabolism": "Glucose and lipid metabolism",
+  "thermoregulation": "Thermoregulation",
+  "autonomic": "Autonomic outflow",
+  "endocrine": "Endocrine axes",
+  "reproduction": "Reproduction",
+  "behaviour": "Behaviour"
+ },
+ "system_note": "Systems group the readouts for layout only. They are not part of the outcome vocabulary and nothing is written back to data/vocab/outcomes.json.",
+ "populations": [
+  {
+   "id": "arc_agrp",
+   "label": "ARC AgRP/NPY neurons",
+   "region_id": "arc",
+   "neurotransmitter": [
+    "GABA"
+   ],
+   "marker_genes": [
+    "Agrp",
+    "Npy"
+   ],
+   "n_records": 168,
+   "n_studies": 20,
+   "in_vocabulary": true
+  },
+  {
+   "id": "arc_pomc",
+   "label": "ARC POMC neurons",
+   "region_id": "arc",
+   "neurotransmitter": [
+    "mixed"
+   ],
+   "marker_genes": [
+    "Pomc",
+    "Cartpt"
+   ],
+   "n_records": 105,
+   "n_studies": 20,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_sim1",
+   "label": "PVH Sim1 neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Sim1"
+   ],
+   "n_records": 11,
+   "n_studies": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "vmh_sf1",
+   "label": "VMH SF1 (Nr5a1) neurons",
+   "region_id": "vmh",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Nr5a1"
+   ],
+   "n_records": 9,
+   "n_studies": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "arc_kisspeptin",
+   "label": "ARC kisspeptin (KNDy) neurons",
+   "region_id": "arc",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Kiss1",
+    "Tac2",
+    "Pdyn"
+   ],
+   "n_records": 2,
+   "n_studies": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "arc_ghrh",
+   "label": "ARC GHRH neurons",
+   "region_id": "arc",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Ghrh"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "arc_sst",
+   "label": "ARC somatostatin neurons",
+   "region_id": "arc",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Sst"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "arc_tbx3",
+   "label": "ARC Tbx3 neurons",
+   "region_id": "arc",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Tbx3"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "arc_th",
+   "label": "ARC tyrosine-hydroxylase (dopaminergic/TIDA) neurons",
+   "region_id": "arc",
+   "neurotransmitter": [
+    "dopamine"
+   ],
+   "marker_genes": [
+    "Th"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "avpv_kisspeptin",
+   "label": "AVPV/RP3V kisspeptin neurons",
+   "region_id": "avpv",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Kiss1"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "dmh_bdnf",
+   "label": "DMH BDNF neurons",
+   "region_id": "dmh",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Bdnf"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "dmh_lepr",
+   "label": "DMH leptin receptor (LepR) neurons",
+   "region_id": "dmh",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Lepr"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lha_mch",
+   "label": "LHA MCH neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Pmch"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lha_orexin",
+   "label": "LHA orexin/hypocretin neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Hcrt"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lha_vgat",
+   "label": "LHA GABAergic (Vgat) neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "GABA"
+   ],
+   "marker_genes": [
+    "Slc32a1"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lha_vglut2",
+   "label": "LHA glutamatergic (Vglut2) neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Slc17a6"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "mbh_ikkb",
+   "label": "Mediobasal hypothalamic IKKbeta/NF-kB signalling",
+   "region_id": "mbh",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Ikbkb",
+    "Nfkb1",
+    "Rela"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "poa_galanin",
+   "label": "Preoptic galanin neurons",
+   "region_id": "mpo",
+   "neurotransmitter": [
+    "GABA"
+   ],
+   "marker_genes": [
+    "Gal"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "poa_warm_sensitive",
+   "label": "Preoptic warm-sensitive neurons (VMPO/MPA)",
+   "region_id": "vmpo",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Qrfp",
+    "Adcyap1",
+    "Bdnf"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_avp",
+   "label": "PVH vasopressin neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Avp"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_crh",
+   "label": "PVH CRH neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Crh"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_mc4r",
+   "label": "PVH MC4R neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Mc4r"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_nos1",
+   "label": "PVH Nos1 neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Nos1"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_oxt",
+   "label": "PVH oxytocin neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Oxt"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_trh",
+   "label": "PVH TRH neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Trh"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "scn_avp",
+   "label": "SCN AVP neurons",
+   "region_id": "scn",
+   "neurotransmitter": [
+    "GABA",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Avp"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "scn_vip",
+   "label": "SCN VIP neurons",
+   "region_id": "scn",
+   "neurotransmitter": [
+    "GABA",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Vip"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "tmn_histamine",
+   "label": "TMN histaminergic neurons",
+   "region_id": "tmn",
+   "neurotransmitter": [
+    "histamine"
+   ],
+   "marker_genes": [
+    "Hdc"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "vmh_bdnf",
+   "label": "VMH BDNF neurons",
+   "region_id": "vmh",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Bdnf"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "zi_gaba",
+   "label": "Zona incerta GABAergic neurons",
+   "region_id": "zi",
+   "neurotransmitter": [
+    "GABA"
+   ],
+   "marker_genes": [
+    "Slc32a1"
+   ],
+   "n_records": 0,
+   "n_studies": 0,
+   "in_vocabulary": true
+  }
+ ],
+ "outcomes": [
+  {
+   "id": "food_intake",
+   "label": "Food intake",
+   "tier": "A",
+   "modality": "behaviour",
+   "system": "feeding",
+   "n_records": 92,
+   "n_studies": 28,
+   "n_records_excluded": 13,
+   "in_vocabulary": true
+  },
+  {
+   "id": "body_weight",
+   "label": "Body weight",
+   "tier": "A",
+   "modality": "anthropometry",
+   "system": "body_composition",
+   "n_records": 35,
+   "n_studies": 20,
+   "n_records_excluded": 7,
+   "in_vocabulary": true
+  },
+  {
+   "id": "fat_mass",
+   "label": "Fat mass",
+   "tier": "A",
+   "modality": "body composition",
+   "system": "body_composition",
+   "n_records": 18,
+   "n_studies": 10,
+   "n_records_excluded": 4,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lean_mass",
+   "label": "Lean mass",
+   "tier": "A",
+   "modality": "body composition",
+   "system": "body_composition",
+   "n_records": 3,
+   "n_studies": 3,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "energy_expenditure",
+   "label": "Energy expenditure",
+   "tier": "A",
+   "modality": "calorimetry",
+   "system": "energy_expenditure",
+   "n_records": 21,
+   "n_studies": 11,
+   "n_records_excluded": 7,
+   "in_vocabulary": true
+  },
+  {
+   "id": "rer",
+   "label": "Respiratory exchange ratio",
+   "tier": "A",
+   "modality": "calorimetry",
+   "system": "energy_expenditure",
+   "n_records": 14,
+   "n_studies": 7,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "wat_lipolysis",
+   "label": "White adipose tissue lipolysis",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "energy_expenditure",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_records_excluded": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "glucose_tolerance",
+   "label": "Glucose tolerance (GTT)",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "glucose_metabolism",
+   "n_records": 19,
+   "n_studies": 11,
+   "n_records_excluded": 3,
+   "in_vocabulary": true
+  },
+  {
+   "id": "blood_glucose",
+   "label": "Blood glucose concentration",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "glucose_metabolism",
+   "n_records": 18,
+   "n_studies": 7,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "insulin_sensitivity",
+   "label": "Insulin sensitivity / insulin tolerance",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "glucose_metabolism",
+   "n_records": 18,
+   "n_studies": 10,
+   "n_records_excluded": 3,
+   "in_vocabulary": true
+  },
+  {
+   "id": "plasma_insulin",
+   "label": "Plasma insulin",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "glucose_metabolism",
+   "n_records": 8,
+   "n_studies": 7,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "hepatic_lipid",
+   "label": "Hepatic lipid content",
+   "tier": "A",
+   "modality": "tissue assay",
+   "system": "glucose_metabolism",
+   "n_records": 6,
+   "n_studies": 4,
+   "n_records_excluded": 2,
+   "in_vocabulary": true
+  },
+  {
+   "id": "plasma_glucagon",
+   "label": "Plasma glucagon",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "glucose_metabolism",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_records_excluded": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "hepatic_glucose_production",
+   "label": "Hepatic glucose production",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "glucose_metabolism",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_records_excluded": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "bat_thermogenesis",
+   "label": "BAT thermogenesis / UCP1",
+   "tier": "A",
+   "modality": "telemetry",
+   "system": "thermoregulation",
+   "n_records": 7,
+   "n_studies": 4,
+   "n_records_excluded": 9,
+   "in_vocabulary": true
+  },
+  {
+   "id": "core_temperature",
+   "label": "Core body temperature",
+   "tier": "A",
+   "modality": "telemetry",
+   "system": "thermoregulation",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_records_excluded": 5,
+   "in_vocabulary": true
+  },
+  {
+   "id": "sympathetic_nerve_activity",
+   "label": "Sympathetic nerve activity",
+   "tier": "A",
+   "modality": "nerve recording",
+   "system": "autonomic",
+   "n_records": 4,
+   "n_studies": 2,
+   "n_records_excluded": 2,
+   "in_vocabulary": true
+  },
+  {
+   "id": "blood_pressure",
+   "label": "Blood pressure",
+   "tier": "A",
+   "modality": "telemetry",
+   "system": "autonomic",
+   "n_records": 3,
+   "n_studies": 1,
+   "n_records_excluded": 2,
+   "in_vocabulary": true
+  },
+  {
+   "id": "heart_rate",
+   "label": "Heart rate",
+   "tier": "A",
+   "modality": "telemetry",
+   "system": "autonomic",
+   "n_records": 0,
+   "n_studies": 0,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "corticosterone",
+   "label": "Plasma corticosterone / HPA axis output",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "endocrine",
+   "n_records": 6,
+   "n_studies": 3,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "thyroid_hormone",
+   "label": "Thyroid hormones / HPT axis",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "endocrine",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_records_excluded": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "osmolality_avp",
+   "label": "Plasma osmolality / vasopressin",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "endocrine",
+   "n_records": 0,
+   "n_studies": 0,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "gonadotropins",
+   "label": "LH/FSH and reproductive hormones",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "reproduction",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "estrous_cyclicity",
+   "label": "Estrous cyclicity",
+   "tier": "A",
+   "modality": "cytology",
+   "system": "reproduction",
+   "n_records": 0,
+   "n_studies": 0,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "locomotor_activity",
+   "label": "Locomotor activity",
+   "tier": "A",
+   "modality": "behaviour",
+   "system": "behaviour",
+   "n_records": 12,
+   "n_studies": 5,
+   "n_records_excluded": 1,
+   "in_vocabulary": true
+  }
+ ],
+ "edges": [
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 24,
+   "n_studies": 9,
+   "n_labs": 9,
+   "directions": {
+    "increase": 21,
+    "no_change": 3
+   },
+   "consensus": "increase",
+   "agreement": 0.875,
+   "contested": false,
+   "minority_replicated": true,
+   "record_ids": [
+    "cca9f558e44a754e",
+    "a946a1ec308f4269",
+    "12743eca830aee32",
+    "1068b48a9cf28019",
+    "392e32b261d13228",
+    "4dcc241fab270e2a",
+    "675141e3a5a5284d",
+    "1033677e0784de06",
+    "ec5cf5a07c752ecb",
+    "496c5af2ed07ee26",
+    "cef8f6489b604599",
+    "db047cad11a7a0b8",
+    "d550543a96e58c4b",
+    "096aad1e3bd742ad",
+    "a8a2b85e662a73a7",
+    "7c2e79b43da32d34",
+    "e742e06d2f25bed4",
+    "46dc800dc1105574",
+    "92a47a1c1fcbcbe9",
+    "a1d2e4637d358db3",
+    "1453188cc3214353",
+    "85c47097041ef5f4",
+    "c8c738bcfccd2f20",
+    "21fda6da950cfc2d"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 23,
+   "n_studies": 7,
+   "n_labs": 7,
+   "directions": {
+    "decrease": 14,
+    "no_change": 9
+   },
+   "consensus": "decrease",
+   "agreement": 0.609,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "170cf6c43ae5a552",
+    "cfceac0b2843da1d",
+    "3daf6977e3dab057",
+    "17bbf29a4aea979d",
+    "24fce43f701f207b",
+    "8d3d7d6aacd8ff12",
+    "65ad18209fdc84c1",
+    "686dccb1a495e322",
+    "4f80cf43db6dc27a",
+    "2ff0b230a9f46d9d",
+    "ff1c2b3c5af70928",
+    "eedd7d9885c9dd45",
+    "fca278a9bc063a1b",
+    "f5df3251e0ab5025",
+    "f37b35a034f7f0b4",
+    "67a5dabaecc95034",
+    "067262d9eb8cb3d9",
+    "424bd165e3ffa286",
+    "8175f42194d54d3b",
+    "b4d8bee00b134769",
+    "411af94306d18af4",
+    "c493ab6137ec6166",
+    "b5889c9fdd39d34f"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 12,
+   "n_studies": 5,
+   "n_labs": 5,
+   "directions": {
+    "decrease": 5,
+    "increase": 1,
+    "no_change": 6
+   },
+   "consensus": "no_change",
+   "agreement": 0.5,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "bdf987c6c4e47162",
+    "012b6ec29671aa1e",
+    "895fedefc465356d",
+    "cd974b418e5cd149",
+    "4fb05e8d53b8c8a0",
+    "e4bc6674aa52924e",
+    "4c0c4ed3c7c70b22",
+    "2467d9f6e9e42a95",
+    "e5e6aa7d5258e5ce",
+    "f3c04149e459f0b0",
+    "5ba16ca8649c75ba",
+    "5eeddc062688927f"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 8,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "increase": 3,
+    "no_change": 5
+   },
+   "consensus": "no_change",
+   "agreement": 0.625,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "e57a376cbcdc29f6",
+    "439d77d04a1f92b1",
+    "0559bb1fec8be3ac",
+    "9538edcf16a00765",
+    "83fd37a819909288",
+    "3f1cf5b8ffff9fe7",
+    "844bdf779ddbfc41",
+    "d5426c8c38c68f4a"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "glucose_tolerance",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 7,
+   "n_studies": 4,
+   "n_labs": 4,
+   "directions": {
+    "increase": 3,
+    "no_change": 4
+   },
+   "consensus": "no_change",
+   "agreement": 0.571,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "162fea2c71e58bf0",
+    "dd201b2f14a7e288",
+    "98c8dd70b2a8bb91",
+    "eee273038051ef8c",
+    "813356fce56d6a6c",
+    "653616bf179be777",
+    "118557fe6006a457"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "body_weight",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 7,
+   "n_studies": 6,
+   "n_labs": 6,
+   "directions": {
+    "decrease": 1,
+    "increase": 2,
+    "no_change": 4
+   },
+   "consensus": "no_change",
+   "agreement": 0.571,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "3b88335eb733a89c",
+    "d825999130f030ce",
+    "081421068d21bdd9",
+    "6194709191b82ca3",
+    "94c082038a4f0bbf",
+    "ad33fa6476e31b0c",
+    "5aa1d2406c8ac667"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 7,
+   "n_studies": 4,
+   "n_labs": 4,
+   "directions": {
+    "increase": 4,
+    "no_change": 3
+   },
+   "consensus": "increase",
+   "agreement": 0.571,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "07c241bfdc5e5f5c",
+    "e09c7f54dc811a92",
+    "dbb0dbdae34d7422",
+    "f3e2439da0330ab4",
+    "1c22a225d5a37a23",
+    "fde1ccdef9562215",
+    "238c9d3dbb815d3e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "blood_glucose",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 6,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 1,
+    "increase": 1,
+    "no_change": 4
+   },
+   "consensus": "no_change",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "82ac4703f2697492",
+    "8ee5409aabad10e4",
+    "1866ad62480a5b0a",
+    "18f31465c1535b9a",
+    "ea01162b412dfa11",
+    "733a86d9b35ab3e6"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "body_weight",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 6,
+   "n_studies": 4,
+   "n_labs": 4,
+   "directions": {
+    "decrease": 1,
+    "increase": 1,
+    "no_change": 4
+   },
+   "consensus": "no_change",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "2de120e5d52a7252",
+    "f8a48cf98756f725",
+    "40d1c50e031ff0e4",
+    "92bb4137ed45947b",
+    "a0751fc4583adf1d",
+    "af29a79ed07f3df5"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 6,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "decrease": 4,
+    "no_change": 2
+   },
+   "consensus": "decrease",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "53cab467a30996d4",
+    "f53a933deaf6857c",
+    "c1f79a7f8757d99d",
+    "76da1447a1cc367a",
+    "5089d34b5309e9a4",
+    "ffa8a89f79d14dea"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "fat_mass",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 6,
+   "n_studies": 4,
+   "n_labs": 4,
+   "directions": {
+    "decrease": 2,
+    "increase": 1,
+    "no_change": 3
+   },
+   "consensus": "no_change",
+   "agreement": 0.5,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "68c50534d04b4154",
+    "4d768761064c1efa",
+    "22987b18bf08d2e8",
+    "e2e93c48dfba6f82",
+    "a0bef5d655ce402f",
+    "d2376427c0ad4cab"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "body_weight",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 5,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "no_change": 5
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "3741f268ef64671b",
+    "aa28ce5989a270dd",
+    "c0a4a6bfa6349697",
+    "d452f39f89baf7dc",
+    "17d44463a353b7a5"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "glucose_tolerance",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 5,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 3,
+    "no_change": 2
+   },
+   "consensus": "increase",
+   "agreement": 0.6,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "322055e3f56f53ea",
+    "7559ce3356179862",
+    "b93d719a40aebb74",
+    "974157ce997421ea",
+    "4a3cf73a75babf7c"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 5,
+   "n_studies": 5,
+   "n_labs": 5,
+   "directions": {
+    "increase": 2,
+    "no_change": 3
+   },
+   "consensus": "no_change",
+   "agreement": 0.6,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "5315b16c4af5fe8a",
+    "6326b7fcf00e327c",
+    "ad1c73cbcf528f50",
+    "1669f22136825ec9",
+    "0be11f3915150ec0"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "bat_thermogenesis",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 4,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 3,
+    "no_change": 1
+   },
+   "consensus": "decrease",
+   "agreement": 0.75,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "09f570f86c6ed0ae",
+    "525aeef32fc1d733",
+    "03b69990a7f6878c",
+    "9c754cfab12e8832"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "fat_mass",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 4,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "decrease": 1,
+    "increase": 1,
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 0.5,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "20dd53216e779345",
+    "914865ef08b6b204",
+    "901c7a3288734e10",
+    "91e7ed764e9efbb7"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "locomotor_activity",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 4,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "decrease": 2,
+    "no_change": 2
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "cc54119130d68974",
+    "4e9bcb7fd4da10e1",
+    "eff88b430c271f3d",
+    "5ab28ec86562f4d8"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "blood_glucose",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 4,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "increase": 2,
+    "no_change": 2
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "c58a3ae30e1bc0c1",
+    "f2105dd119938aab",
+    "9264fc1ed8ac4856",
+    "58067ce7d66f9132"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "body_weight",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 4,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "no_change": 4
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "3ec44b2351111eaf",
+    "adbf0c09b44832f8",
+    "efb1c11e392be23b",
+    "5be4cdae68338e6d"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "body_weight",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 4,
+   "n_studies": 4,
+   "n_labs": 4,
+   "directions": {
+    "decrease": 1,
+    "increase": 1,
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 0.5,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "42e995ee183bbe5b",
+    "cdb01f8415cbf7f3",
+    "d6ed08c222db3e03",
+    "2354fb0b79038da7"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "fat_mass",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 4,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 1,
+    "no_change": 3
+   },
+   "consensus": "no_change",
+   "agreement": 0.75,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "624176305716a2ef",
+    "571dd95f50bd2830",
+    "a5f76ec203761192",
+    "549e3ffb896a056e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "energy_expenditure",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 4,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 2,
+    "increase": 2
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "109f16ac16997d17",
+    "7328872935330300",
+    "b3e779f123779951",
+    "03d91cb4c81339d2"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "body_weight",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 1,
+    "increase": 2
+   },
+   "consensus": "increase",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "2df1fee7fd87178a",
+    "1f2c0189ace296a2",
+    "8215b0f7babff7ed"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "energy_expenditure",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 3,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "decrease": 2,
+    "no_change": 1
+   },
+   "consensus": "decrease",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "2992057ee199ba83",
+    "28b00e87fbd518ce",
+    "b15035ec21dc4be8"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "energy_expenditure",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 1,
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "b7bf5817c9d45820",
+    "50346f38bf08a2d0",
+    "95cc05ff83cd3c6e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "energy_expenditure",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "no_change": 3
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "fb098e47a9945beb",
+    "f9d2df73f54aff86",
+    "eeb4788632fab195"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "fat_mass",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 1,
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "f91902e5fb544751",
+    "094b0f81b04bf1cd",
+    "3b4ff3abaab3e79d"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 1,
+    "increase": 2
+   },
+   "consensus": "increase",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "f12cdc2916b65836",
+    "6153f87b799a9b76",
+    "02b7eece14ee775e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "plasma_glucagon",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 2,
+    "no_change": 1
+   },
+   "consensus": "increase",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "b031ff6802c10536",
+    "4bcc3ab3686ce5be",
+    "c2d1bbf02f5debda"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "plasma_insulin",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 2,
+    "no_change": 1
+   },
+   "consensus": "increase",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "b4b06ac7970b6598",
+    "7f47688beab13c8c",
+    "f8bcca451767012b"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "rer",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 3,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "increase": 1,
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "8863fdaf60a7bb6e",
+    "ce4752d8ef564010",
+    "a4c1e085f2c31caf"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "rer",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 2,
+    "no_change": 1
+   },
+   "consensus": "increase",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "53d7d920c935654b",
+    "6a09ec7ea9871cc0",
+    "de57cd674c22338b"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "sympathetic_nerve_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 2,
+    "no_change": 1
+   },
+   "consensus": "decrease",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "5ed6d5ddea922ec0",
+    "d52f7dbaed405a58",
+    "5cf17a45405ecaf9"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "corticosterone",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 2,
+    "no_change": 1
+   },
+   "consensus": "increase",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "5e469343bf8e150d",
+    "d67ec53432c9a9f5",
+    "943bcd8dfdb36692"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 3,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "decrease": 2,
+    "no_change": 1
+   },
+   "consensus": "decrease",
+   "agreement": 0.667,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "ca0a7f8b8bb43dcf",
+    "82c3350698dd415b",
+    "4d70968c061a756e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 3
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "ad6611a292421be2",
+    "26524d9d6e45a5f0",
+    "a15230e6b931033e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 3,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 3
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "7b7faf8d03bbe017",
+    "c41da60c11a8773b",
+    "343db3be8bb1596f"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "rer",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 3,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1,
+    "increase": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.333,
+   "contested": true,
+   "minority_replicated": false,
+   "record_ids": [
+    "b4b65c85166bd0b4",
+    "eebc6174c38d5fd3",
+    "e087cabeadcd4264"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "corticosterone",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1,
+    "non_monotonic": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "a25c065cea883a98",
+    "d611c749c22d35d4"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "energy_expenditure",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "23bdd80ca4592d90",
+    "bceb4a7959966fb8"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "4aaf5a421a04480f",
+    "0c463fd5c7c4f883"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "ef36adeb91b70bb9",
+    "e41caa44391e6a75"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "locomotor_activity",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "10137df3af2daf4f",
+    "5c850a4154ffaa2f"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "43db6565053e145d",
+    "40555b61b292d72c"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "0c27e14215860fb0",
+    "f2ba156b1cecda69"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "rer",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 2
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "4f9a0ba89629a3dc",
+    "eda368dd769aab96"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_kisspeptin",
+   "outcome_id": "gonadotropins",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "f3fc80b4fb364dd7",
+    "6ae099935c202026"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "blood_glucose",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 2
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "0a9e2b33ea2ec5ac",
+    "5f3e5058eceda5b3"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "blood_glucose",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "f8c3758b57144664",
+    "4cc48074fd55ce6a"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "blood_pressure",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "e42ec4e50d4b1e46",
+    "2e3d88792ed771b9"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "energy_expenditure",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 2
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "2ca0deb2d7a41243",
+    "a40cffa6a572c397"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "energy_expenditure",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d5e9059338deabec",
+    "7dadc4fd8f0e891a"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "food_intake",
+   "axis": "unclear",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "sign of the manipulation not established",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "23fe1e3dc459a0e4",
+    "1b30e4473d0d7202"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "glucose_tolerance",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 2
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "b3572306da643fbb",
+    "b6fa7717c3afd667"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "hepatic_lipid",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 1,
+    "increase": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "2e35c75ee77996bf",
+    "f0ac9eeb5117d92e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "hepatic_lipid",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 1,
+    "increase": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "a0e69e38644a8eb7",
+    "a9c5fd13434c5e06"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "1df209c7c7c341ce",
+    "f98e80095ff78278"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "body_weight",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "762b788dcfa5378c",
+    "2fe112311df2767f"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 2
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "83917428c35a1087",
+    "08f52418cff354b8"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "bat_thermogenesis",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "e4ea9e454ca44758"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "blood_glucose",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "c3ec045f87c78d5a"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "blood_glucose",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "1a15eb700dc9975c"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "blood_glucose",
+   "axis": "unclear",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "sign of the manipulation not established",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "36d34543d991b8a7"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "body_weight",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "7845701687bb2340"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "body_weight",
+   "axis": "unclear",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "sign of the manipulation not established",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "e0cf13d18f5922e1"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "core_temperature",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "4aeb05ebfac66e2b"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "glucose_tolerance",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "ca0c2ef9b98b7e4e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "hepatic_lipid",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "efb0f2c532152e5d"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "hepatic_lipid",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "214dfb1d2490d581"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "lean_mass",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "f1b8d1745ec57660"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "plasma_insulin",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "183c7cb741413d2b"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "plasma_insulin",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "9e2da24bddb8b7eb"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "plasma_insulin",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "daa7ed8d5f5e41f1"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "rer",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d4bdefbf0158610f"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "thyroid_hormone",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "a7736c4330a6d406"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "wat_lipolysis",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "293b5445cf98671e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "bat_thermogenesis",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "3669646060db33c3"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "bat_thermogenesis",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d70ca088d3c1be22"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "blood_glucose",
+   "axis": "unclear",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "sign of the manipulation not established",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "f83bc46df17e1ae1"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "blood_pressure",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "f373695951753be6"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "body_weight",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "71d1f5cfd52ef25d"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "body_weight",
+   "axis": "unclear",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "sign of the manipulation not established",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d113f0f9d665c1b4"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "core_temperature",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "1a6af2b0fda48f25"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "corticosterone",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "15d74cef84178246"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "energy_expenditure",
+   "axis": "unclear",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "sign of the manipulation not established",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "80874b755076808a"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "glucose_tolerance",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "13bdebfbf24e4680"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "glucose_tolerance",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "e949b575106d9ccd"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "glucose_tolerance",
+   "axis": "unclear",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "sign of the manipulation not established",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "71eb042f9f9f2cb7"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "hepatic_glucose_production",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "03b03fd951905e1f"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "hepatic_glucose_production",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "0f75565903ac5976"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "e3e3348d2c468c4c"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "51da55ac86db9aaf"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "lean_mass",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "2c59d96f59c401e6"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "b3138b7d62b93f41"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "plasma_insulin",
+   "axis": "increase",
+   "axis_class": "molecular",
+   "axis_phrase": "more of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "2347fe7b39e6f8bf"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "plasma_insulin",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "5c489aedb4885383"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "rer",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "f186db531f10aff5"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "rer",
+   "axis": "unclear",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "sign of the manipulation not established",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "9a678ea47cbabe39"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "sympathetic_nerve_activity",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "fa6ea36c576f7a59"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "energy_expenditure",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "be53036003ecf0dd"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "fat_mass",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "1bd37829cf966170"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "glucose_tolerance",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "446bd06293e2e6c7"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "16af64c8921c6a11"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "lean_mass",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "21ec5a524f1b07b0"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "locomotor_activity",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "f466295a775794c9"
+   ],
+   "record_ids_truncated": false
+  }
+ ],
+ "n_edges": 105,
+ "n_edges_contested": 30,
+ "n_edges_minority_replicated": 1,
+ "n_edges_unclear_axis": 8,
+ "n_populations_with_records": 5,
+ "_honesty": [
+  "Nothing on this page is predicted. Every arrow, pulse and number is a count of curated observations already published in 42 papers.",
+  "An arrow is a count of published observations, not a measurement of signal flow. It says that perturbing this population was followed by a measured change in this readout in N records; it does not say that a signal travels this way, and the animation's speed and timing carry no physiological units.",
+  "No neural projection is drawn. Only 3 of 362 curated records name a projection target, so this dataset cannot support a wiring diagram and none is shown: the right-hand nodes are bodily readouts, not brain regions.",
+  "67 of 362 records are region-level (no cell-type-specific population) and are excluded from this view entirely. They are real evidence about a nucleus; they just cannot be attached to a population.",
+  "8 of the 105 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
+  "The axis and the direction can read as the same two words and are not the same statement. The axis is what the experiment did inside the brain -- more firing, less of a gene product, the population removed. The direction is what the body did. Every axis on this page is therefore written out in words rather than left as its bare value.",
+  "30 of the 105 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 1 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
+  "25 of the 30 vocabulary populations carry no curated record at all. That is a statement about how far curation has got, not about what the literature contains."
+ ]
+}

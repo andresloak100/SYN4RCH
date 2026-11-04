@@ -1,1134 +1,1139 @@
 {
- "_meta": {
-  "vocab": "outcomes",
-  "version": "0.1.1",
-  "description": "Tier A physiological and Tier B aging/healthspan outcomes.",
-  "higher_is_policy": [
-   "higher_is encodes ONLY whether a higher measured value is unambiguously better or worse for the organism, independent of context, genotype, diet, ambient temperature and time of day.",
-   "For almost every Tier A physiological variable this is NOT the case: higher food intake, energy expenditure, sympathetic activity, core temperature, heart rate or corticosterone is adaptive in some contexts and pathological in others. Those entries are null.",
-   "null is the expected value. It is set deliberately, not because the field was unfilled.",
-   "This field must never be aggregated into a composite score. SCHEMA.md section 6 forbids a rejuvenation score, and summing higher_is across outcomes would be exactly that."
-  ],
-  "polarity_policy": [
-   "Two hazards, both the subject of DECISIONS.md D-019, which this vocabulary cannot resolve on its own because the fix is a reading judgement.",
-   "inverted_synonyms: the quantity these words name moves OPPOSITE to the quantity this entry is named for. Insulin resistance rising is insulin sensitivity falling. Longer sleep latency is less sleep. A record whose outcome_raw matches one of these must have had its direction inverted to describe THIS entry's quantity, and extraction_notes must say so.",
-   "signed_synonyms: these words already carry a direction or name a clinical state. direction must describe the CHANGE in this entry's quantity, never the presence of the state. 'Reduced hyperglycemia' is blood_glucose decrease, not increase.",
-   "A synonym matching the words in a paper does not make this the right outcome_id. Where the vocabulary holds the literally measured quantity, that entry wins (D-019 step 1).",
-   "These lists are not exhaustive and are not a substitute for reading. They record the traps found so far, and must never be used to rewrite a direction automatically."
-  ]
- },
- "entries": {
-  "blood_glucose": {
-   "id": "blood_glucose",
-   "label": "Blood glucose concentration",
-   "tier": "A",
-   "units": [
-    "mg/dL",
-    "mmol/L"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "blood glucose",
-    "blood glucose levels",
-    "glycemia",
-    "glycaemia",
-    "plasma glucose",
-    "fasting glucose",
-    "fasting blood glucose",
-    "blood sugar",
-    "circulating glucose",
-    "euglycemia",
-    "hyperglycemia",
-    "hypoglycemia"
-   ],
-   "higher_is": null,
-   "notes": "Direction of benefit depends entirely on the baseline state (hypoglycemia vs diabetic hyperglycemia).",
-   "signed_synonyms": [
-    "hyperglycemia",
-    "hypoglycemia"
-   ]
+  "_meta": {
+    "vocab": "outcomes",
+    "version": "0.2.0",
+    "description": "Tier A physiological and Tier B aging/healthspan outcomes.",
+    "higher_is_policy": [
+      "higher_is encodes ONLY whether a higher measured value is unambiguously better or worse for the organism, independent of context, genotype, diet, ambient temperature and time of day.",
+      "For almost every Tier A physiological variable this is NOT the case: higher food intake, energy expenditure, sympathetic activity, core temperature, heart rate or corticosterone is adaptive in some contexts and pathological in others. Those entries are null.",
+      "null is the expected value. It is set deliberately, not because the field was unfilled.",
+      "This field must never be aggregated into a composite score. SCHEMA.md section 6 forbids a rejuvenation score, and summing higher_is across outcomes would be exactly that."
+    ],
+    "polarity_policy": [
+      "Two hazards, both the subject of DECISIONS.md D-019, which this vocabulary cannot resolve on its own because the fix is a reading judgement.",
+      "inverted_synonyms: the quantity these words name moves OPPOSITE to the quantity this entry is named for. Insulin resistance rising is insulin sensitivity falling. Longer sleep latency is less sleep. A record whose outcome_raw matches one of these must have had its direction inverted to describe THIS entry's quantity, and extraction_notes must say so.",
+      "signed_synonyms: these words already carry a direction or name a clinical state. direction must describe the CHANGE in this entry's quantity, never the presence of the state. 'Reduced hyperglycemia' is blood_glucose decrease, not increase.",
+      "A synonym matching the words in a paper does not make this the right outcome_id. Where the vocabulary holds the literally measured quantity, that entry wins (D-019 step 1).",
+      "These lists are not exhaustive and are not a substitute for reading. They record the traps found so far, and must never be used to rewrite a direction automatically."
+    ],
+    "changelog": [
+      "0.2.0: renamed `cognitive_decline` to `cognitive_performance` and moved its two signed synonyms to inverted_synonyms, adding `escape latency`. The old id named a quantity and its negation at once, which made `direction` ambiguous before a curator even read the paper. No curated record used the id, so the rename costs nothing. See docs/DECISIONS.md D-029."
+    ]
   },
-  "glucose_tolerance": {
-   "id": "glucose_tolerance",
-   "label": "Glucose tolerance (GTT)",
-   "tier": "A",
-   "units": [
-    "mg/dL",
-    "AUC mg/dL*min",
-    "mmol/L"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "glucose tolerance",
-    "glucose tolerance test",
-    "GTT",
-    "IPGTT",
-    "OGTT",
-    "intraperitoneal glucose tolerance test",
-    "oral glucose tolerance test",
-    "glucose excursion",
-    "glucose clearance",
-    "impaired glucose tolerance"
-   ],
-   "higher_is": null,
-   "notes": "Reported either as glucose AUC (higher = worse tolerance) or as 'tolerance' (higher = better). The sign of the reported quantity is assay-dependent, so no global valence. POLARITY: raw glucose values from a GTT belong under blood_glucose, not here (DECISIONS.md D-019 step 1).",
-   "inverted_synonyms": [
-    "glucose excursion"
-   ],
-   "signed_synonyms": [
-    "impaired glucose tolerance"
-   ]
-  },
-  "insulin_sensitivity": {
-   "id": "insulin_sensitivity",
-   "label": "Insulin sensitivity / insulin tolerance",
-   "tier": "A",
-   "units": [
-    "mg/dL",
-    "% of baseline glucose",
-    "glucose infusion rate mg/kg/min",
-    "HOMA-IR (a.u.)"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "insulin sensitivity",
-    "insulin tolerance test",
-    "ITT",
-    "insulin resistance",
-    "HOMA-IR",
-    "hyperinsulinemic-euglycemic clamp",
-    "euglycemic clamp",
-    "glucose infusion rate",
-    "insulin action",
-    "whole-body insulin sensitivity"
-   ],
-   "higher_is": null,
-   "notes": "As above the reported quantity may be sensitivity or resistance. Also note extreme insulin sensitivity is not simply 'good'. POLARITY: raw glucose values from an ITT belong under blood_glucose, not here (DECISIONS.md D-019 step 1). Only an interpreted sensitivity or resistance result is recorded against this id.",
-   "inverted_synonyms": [
-    "HOMA-IR",
-    "insulin resistance"
-   ]
-  },
-  "plasma_insulin": {
-   "id": "plasma_insulin",
-   "label": "Plasma insulin",
-   "tier": "A",
-   "units": [
-    "ng/mL",
-    "pM",
-    "uIU/mL"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "plasma insulin",
-    "serum insulin",
-    "circulating insulin",
-    "insulin levels",
-    "insulinemia",
-    "hyperinsulinemia",
-    "insulin secretion"
-   ],
-   "higher_is": null,
-   "signed_synonyms": [
-    "hyperinsulinemia"
-   ]
-  },
-  "plasma_glucagon": {
-   "id": "plasma_glucagon",
-   "label": "Plasma glucagon",
-   "tier": "A",
-   "units": [
-    "pg/mL",
-    "pM"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "plasma glucagon",
-    "serum glucagon",
-    "circulating glucagon",
-    "glucagon levels",
-    "glucagon secretion",
-    "glucagon response"
-   ],
-   "higher_is": null
-  },
-  "hepatic_glucose_production": {
-   "id": "hepatic_glucose_production",
-   "label": "Hepatic glucose production",
-   "tier": "A",
-   "units": [
-    "mg/kg/min",
-    "umol/kg/min"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "hepatic glucose production",
-    "HGP",
-    "endogenous glucose production",
-    "EGP",
-    "gluconeogenesis",
-    "hepatic gluconeogenesis",
-    "glucose output",
-    "glycogenolysis",
-    "liver glucose production"
-   ],
-   "higher_is": null
-  },
-  "corticosterone": {
-   "id": "corticosterone",
-   "label": "Plasma corticosterone / HPA axis output",
-   "tier": "A",
-   "units": [
-    "ng/mL",
-    "ug/dL",
-    "nM"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "corticosterone",
-    "plasma corticosterone",
-    "serum corticosterone",
-    "CORT",
-    "cortisol",
-    "HPA axis activity",
-    "glucocorticoid levels",
-    "ACTH",
-    "adrenocorticotropic hormone",
-    "stress hormone levels",
-    "HPA axis"
-   ],
-   "higher_is": null,
-   "notes": "Includes ACTH as an HPA-axis readout; separate them at extraction if the paper reports both."
-  },
-  "gh_secretion": {
-   "id": "gh_secretion",
-   "label": "Growth hormone secretion",
-   "tier": "A",
-   "units": [
-    "ng/mL",
-    "AUC ng/mL*min",
-    "pulses/h"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "growth hormone",
-    "GH secretion",
-    "plasma GH",
-    "serum growth hormone",
-    "GH pulsatility",
-    "GH pulse amplitude",
-    "somatotropin",
-    "GH release",
-    "growth hormone levels"
-   ],
-   "higher_is": null,
-   "notes": "Lower GH/IGF-1 tone extends lifespan in mice while higher supports growth and lean mass; valence is genuinely contested."
-  },
-  "igf1": {
-   "id": "igf1",
-   "label": "Circulating IGF-1",
-   "tier": "A",
-   "units": [
-    "ng/mL",
-    "nM"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "IGF-1",
-    "IGF1",
-    "insulin-like growth factor 1",
-    "insulin-like growth factor-I",
-    "plasma IGF-1",
-    "serum IGF-1",
-    "circulating IGF-1",
-    "IGF-I levels"
-   ],
-   "higher_is": null
-  },
-  "thyroid_hormone": {
-   "id": "thyroid_hormone",
-   "label": "Thyroid hormones / HPT axis",
-   "tier": "A",
-   "units": [
-    "ng/dL",
-    "ug/dL",
-    "pM",
-    "mIU/L"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "thyroid hormone",
-    "T3",
-    "T4",
-    "triiodothyronine",
-    "thyroxine",
-    "free T4",
-    "free T3",
-    "TSH",
-    "thyroid stimulating hormone",
-    "thyrotropin",
-    "HPT axis",
-    "plasma T4",
-    "serum T3"
-   ],
-   "higher_is": null
-  },
-  "gonadotropins": {
-   "id": "gonadotropins",
-   "label": "LH/FSH and reproductive hormones",
-   "tier": "A",
-   "units": [
-    "ng/mL",
-    "mIU/mL",
-    "pg/mL"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "luteinizing hormone",
-    "LH pulse",
-    "LH secretion",
-    "LH surge",
-    "plasma LH",
-    "serum LH",
-    "FSH",
-    "follicle-stimulating hormone",
-    "gonadotropin secretion",
-    "gonadotropin release",
-    "GnRH pulse generator",
-    "testosterone",
-    "estradiol",
-    "oestradiol",
-    "progesterone",
-    "prolactin",
-    "reproductive hormones"
-   ],
-   "higher_is": null,
-   "notes": "Deliberately broad; split LH pulse frequency, LH surge, prolactin and gonadal steroids at extraction time if the project later needs them separately. Bare 'LH' must never be matched without context because it collides with lateral hypothalamus."
-  },
-  "food_intake": {
-   "id": "food_intake",
-   "label": "Food intake",
-   "tier": "A",
-   "units": [
-    "g",
-    "g/24h",
-    "kcal/24h",
-    "g/kg body weight"
-   ],
-   "modality": "behaviour",
-   "synonyms": [
-    "food intake",
-    "feeding",
-    "feeding behavior",
-    "feeding behaviour",
-    "food consumption",
-    "caloric intake",
-    "energy intake",
-    "chow intake",
-    "hyperphagia",
-    "hypophagia",
-    "anorexia",
-    "refeeding",
-    "cumulative food intake",
-    "meal size",
-    "meal frequency",
-    "appetite"
-   ],
-   "higher_is": null,
-   "notes": "Canonical example of a context-dependent variable: hyperphagia is pathological on a high-fat diet and protective in cachexia.",
-   "signed_synonyms": [
-    "hyperphagia",
-    "hypophagia"
-   ]
-  },
-  "energy_expenditure": {
-   "id": "energy_expenditure",
-   "label": "Energy expenditure",
-   "tier": "A",
-   "units": [
-    "kcal/h",
-    "kcal/h/kg",
-    "mL O2/h",
-    "kJ/h"
-   ],
-   "modality": "calorimetry",
-   "synonyms": [
-    "energy expenditure",
-    "EE",
-    "metabolic rate",
-    "resting metabolic rate",
-    "VO2",
-    "oxygen consumption",
-    "indirect calorimetry",
-    "total energy expenditure",
-    "heat production",
-    "whole-body energy expenditure"
-   ],
-   "higher_is": null,
-   "notes": "Must be reported with its body-mass normalisation; the normalisation choice changes the sign of many published effects."
-  },
-  "rer": {
-   "id": "rer",
-   "label": "Respiratory exchange ratio",
-   "tier": "A",
-   "units": [
-    "ratio (VCO2/VO2)"
-   ],
-   "modality": "calorimetry",
-   "synonyms": [
-    "respiratory exchange ratio",
-    "RER",
-    "respiratory quotient",
-    "RQ",
-    "VCO2/VO2",
-    "substrate utilization",
-    "fuel preference",
-    "fat oxidation",
-    "lipid oxidation"
-   ],
-   "higher_is": null
-  },
-  "body_weight": {
-   "id": "body_weight",
-   "label": "Body weight",
-   "tier": "A",
-   "units": [
-    "g",
-    "% change",
-    "kg"
-   ],
-   "modality": "anthropometry",
-   "synonyms": [
-    "body weight",
-    "bodyweight",
-    "body mass",
-    "weight gain",
-    "weight loss",
-    "obesity",
-    "adiposity gain",
-    "weight trajectory"
-   ],
-   "higher_is": null,
-   "signed_synonyms": [
-    "weight loss"
-   ]
-  },
-  "fat_mass": {
-   "id": "fat_mass",
-   "label": "Fat mass",
-   "tier": "A",
-   "units": [
-    "g",
-    "% of body weight"
-   ],
-   "modality": "body composition",
-   "synonyms": [
-    "fat mass",
-    "adiposity",
-    "body fat",
-    "fat pad weight",
-    "white adipose tissue mass",
-    "WAT mass",
-    "epididymal fat",
-    "inguinal fat",
-    "visceral fat",
-    "percent fat mass",
-    "EchoMRI fat"
-   ],
-   "higher_is": null
-  },
-  "lean_mass": {
-   "id": "lean_mass",
-   "label": "Lean mass",
-   "tier": "A",
-   "units": [
-    "g",
-    "% of body weight"
-   ],
-   "modality": "body composition",
-   "synonyms": [
-    "lean mass",
-    "lean body mass",
-    "fat-free mass",
-    "muscle mass",
-    "EchoMRI lean mass",
-    "lean tissue mass"
-   ],
-   "higher_is": null
-  },
-  "bat_thermogenesis": {
-   "id": "bat_thermogenesis",
-   "label": "BAT thermogenesis / UCP1",
-   "tier": "A",
-   "units": [
-    "degC (BAT temperature)",
-    "Ucp1 mRNA fold change",
-    "UCP1 protein a.u."
-   ],
-   "modality": "telemetry",
-   "synonyms": [
-    "brown adipose tissue thermogenesis",
-    "BAT thermogenesis",
-    "UCP1",
-    "Ucp1 expression",
-    "uncoupling protein 1",
-    "BAT temperature",
-    "brown fat activity",
-    "non-shivering thermogenesis",
-    "BAT activation",
-    "thermogenic gene expression",
-    "browning",
-    "beiging"
-   ],
-   "higher_is": null
-  },
-  "core_temperature": {
-   "id": "core_temperature",
-   "label": "Core body temperature",
-   "tier": "A",
-   "units": [
-    "degC"
-   ],
-   "modality": "telemetry",
-   "synonyms": [
-    "core body temperature",
-    "core temperature",
-    "body temperature",
-    "rectal temperature",
-    "Tcore",
-    "hypothermia",
-    "hyperthermia",
-    "thermoregulation",
-    "torpor",
-    "fever"
-   ],
-   "higher_is": null,
-   "notes": "Torpor/hypothermia is protective in some contexts and lethal in others.",
-   "signed_synonyms": [
-    "hyperthermia",
-    "hypothermia"
-   ]
-  },
-  "heart_rate": {
-   "id": "heart_rate",
-   "label": "Heart rate",
-   "tier": "A",
-   "units": [
-    "bpm"
-   ],
-   "modality": "telemetry",
-   "synonyms": [
-    "heart rate",
-    "HR",
-    "bradycardia",
-    "tachycardia",
-    "pulse rate",
-    "heart rate variability",
-    "HRV",
-    "cardiac chronotropy"
-   ],
-   "higher_is": null
-  },
-  "blood_pressure": {
-   "id": "blood_pressure",
-   "label": "Blood pressure",
-   "tier": "A",
-   "units": [
-    "mmHg"
-   ],
-   "modality": "telemetry",
-   "synonyms": [
-    "blood pressure",
-    "arterial pressure",
-    "mean arterial pressure",
-    "MAP",
-    "systolic blood pressure",
-    "diastolic blood pressure",
-    "hypertension",
-    "hypotension",
-    "pressor response",
-    "depressor response"
-   ],
-   "higher_is": null,
-   "signed_synonyms": [
-    "hypertension",
-    "hypotension"
-   ]
-  },
-  "sympathetic_nerve_activity": {
-   "id": "sympathetic_nerve_activity",
-   "label": "Sympathetic nerve activity",
-   "tier": "A",
-   "units": [
-    "% of baseline",
-    "spikes/s",
-    "a.u."
-   ],
-   "modality": "nerve recording",
-   "synonyms": [
-    "sympathetic nerve activity",
-    "SNA",
-    "sympathetic outflow",
-    "sympathetic tone",
-    "renal sympathetic nerve activity",
-    "RSNA",
-    "splanchnic sympathetic nerve activity",
-    "BAT sympathetic nerve activity",
-    "sympathoexcitation",
-    "sympathetic drive",
-    "norepinephrine turnover",
-    "muscle sympathetic nerve activity",
-    "MSNA"
-   ],
-   "higher_is": null
-  },
-  "parasympathetic_tone": {
-   "id": "parasympathetic_tone",
-   "label": "Vagal / parasympathetic tone",
-   "tier": "A",
-   "units": [
-    "spikes/s",
-    "% of baseline",
-    "a.u."
-   ],
-   "modality": "nerve recording",
-   "synonyms": [
-    "vagal tone",
-    "parasympathetic tone",
-    "vagal nerve activity",
-    "vagal efferent activity",
-    "parasympathetic activity",
-    "vagal outflow",
-    "cardiac vagal tone",
-    "hepatic vagal nerve activity",
-    "parasympathetic nerve activity"
-   ],
-   "higher_is": null
-  },
-  "wat_lipolysis": {
-   "id": "wat_lipolysis",
-   "label": "White adipose tissue lipolysis",
-   "tier": "A",
-   "units": [
-    "mM glycerol",
-    "mM NEFA",
-    "umol/g/h"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "lipolysis",
-    "WAT lipolysis",
-    "adipose lipolysis",
-    "glycerol release",
-    "free fatty acid release",
-    "NEFA",
-    "non-esterified fatty acids",
-    "plasma free fatty acids",
-    "FFA",
-    "HSL phosphorylation",
-    "triglyceride mobilisation"
-   ],
-   "higher_is": null
-  },
-  "hepatic_lipid": {
-   "id": "hepatic_lipid",
-   "label": "Hepatic lipid content",
-   "tier": "A",
-   "units": [
-    "mg triglyceride/g liver",
-    "% area steatosis"
-   ],
-   "modality": "tissue assay",
-   "synonyms": [
-    "hepatic lipid content",
-    "liver triglyceride",
-    "hepatic triglyceride",
-    "hepatic steatosis",
-    "liver fat",
-    "fatty liver",
-    "NAFLD",
-    "MASLD",
-    "liver lipid accumulation",
-    "de novo lipogenesis"
-   ],
-   "higher_is": null
-  },
-  "bone_density": {
-   "id": "bone_density",
-   "label": "Bone mineral density / bone mass",
-   "tier": "A",
-   "units": [
-    "mg/cm2",
-    "mg/cm3",
-    "BV/TV %"
-   ],
-   "modality": "imaging",
-   "synonyms": [
-    "bone mineral density",
-    "BMD",
-    "bone mass",
-    "bone volume fraction",
-    "trabecular bone",
-    "cortical thickness",
-    "microCT bone",
-    "osteoporosis",
-    "bone formation rate",
-    "bone resorption"
-   ],
-   "higher_is": null,
-   "notes": "Generally higher BMD is favourable, but osteopetrotic/sclerotic increases are not, and the measurement compartment matters; left null rather than asserting a valence."
-  },
-  "il6": {
-   "id": "il6",
-   "label": "Circulating IL-6",
-   "tier": "A",
-   "units": [
-    "pg/mL"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "IL-6",
-    "interleukin-6",
-    "interleukin 6",
-    "plasma IL-6",
-    "serum IL-6",
-    "circulating IL-6",
-    "Il6 expression"
-   ],
-   "higher_is": null,
-   "notes": "IL-6 is both a pro-inflammatory cytokine and an exercise-induced myokine with metabolic benefit; no global valence."
-  },
-  "tnf": {
-   "id": "tnf",
-   "label": "Circulating TNF",
-   "tier": "A",
-   "units": [
-    "pg/mL"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "TNF",
-    "TNF-alpha",
-    "TNFalpha",
-    "tumor necrosis factor",
-    "tumour necrosis factor alpha",
-    "plasma TNF",
-    "serum TNF-alpha",
-    "Tnf expression"
-   ],
-   "higher_is": null
-  },
-  "inflammatory_markers_other": {
-   "id": "inflammatory_markers_other",
-   "label": "Other inflammatory markers",
-   "tier": "A",
-   "units": [
-    "pg/mL",
-    "fold change mRNA"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "IL-1beta",
-    "interleukin-1beta",
-    "CRP",
-    "C-reactive protein",
-    "MCP-1",
-    "Ccl2",
-    "CXCL1",
-    "IL-10",
-    "inflammatory cytokines",
-    "systemic inflammation",
-    "inflammatory markers",
-    "chronic low-grade inflammation",
-    "inflammaging",
-    "microglial activation",
-    "Iba1",
-    "GFAP",
-    "gliosis",
-    "neuroinflammation"
-   ],
-   "higher_is": null,
-   "notes": "Catch-all bucket. Records landing here should keep outcome_raw verbatim because the bucket is heterogeneous. Includes central glial markers because the hypothalamic-inflammation literature reports them as the systemic-inflammation readout."
-  },
-  "immune_cell_composition": {
-   "id": "immune_cell_composition",
-   "label": "Immune cell composition",
-   "tier": "A",
-   "units": [
-    "% of CD45+ cells",
-    "cells/mL",
-    "cells/g tissue"
-   ],
-   "modality": "flow cytometry",
-   "synonyms": [
-    "immune cell composition",
-    "immune cell infiltration",
-    "macrophage infiltration",
-    "adipose tissue macrophages",
-    "T cell subsets",
-    "regulatory T cells",
-    "Treg",
-    "neutrophil count",
-    "lymphocyte count",
-    "leukocyte count",
-    "white blood cell count",
-    "myeloid cells",
-    "splenocytes",
-    "thymic involution",
-    "immunosenescence"
-   ],
-   "higher_is": null
-  },
-  "gut_motility": {
-   "id": "gut_motility",
-   "label": "Gut motility",
-   "tier": "A",
-   "units": [
-    "min (transit time)",
-    "cm/h",
-    "pellets/h"
-   ],
-   "modality": "behaviour",
-   "synonyms": [
-    "gut motility",
-    "gastrointestinal motility",
-    "gastric emptying",
-    "intestinal transit",
-    "colonic transit",
-    "whole-gut transit time",
-    "defecation rate",
-    "fecal output",
-    "colonic motility",
-    "gastric accommodation"
-   ],
-   "higher_is": null
-  },
-  "sleep": {
-   "id": "sleep",
-   "label": "Sleep amount and architecture",
-   "tier": "A",
-   "units": [
-    "min/h",
-    "% of time",
-    "bouts/h"
-   ],
-   "modality": "EEG/EMG",
-   "synonyms": [
-    "sleep",
-    "NREM sleep",
-    "REM sleep",
-    "slow wave sleep",
-    "sleep architecture",
-    "wakefulness",
-    "sleep latency",
-    "sleep fragmentation",
-    "EEG delta power",
-    "arousal",
-    "sleep-wake cycle",
-    "total sleep time",
-    "insomnia",
-    "cataplexy",
-    "narcolepsy"
-   ],
-   "higher_is": null,
-   "inverted_synonyms": [
-    "sleep latency"
-   ]
-  },
-  "locomotor_activity": {
-   "id": "locomotor_activity",
-   "label": "Locomotor activity",
-   "tier": "A",
-   "units": [
-    "beam breaks/h",
-    "m/h",
-    "counts/h",
-    "wheel revolutions/day"
-   ],
-   "modality": "behaviour",
-   "synonyms": [
-    "locomotor activity",
-    "physical activity",
-    "ambulatory activity",
-    "spontaneous activity",
-    "home cage activity",
-    "wheel running",
-    "voluntary wheel running",
-    "open field activity",
-    "distance travelled",
-    "hypoactivity",
-    "hyperactivity",
-    "activity counts"
-   ],
-   "higher_is": null,
-   "signed_synonyms": [
-    "hyperactivity",
-    "hypoactivity"
-   ]
-  },
-  "water_intake": {
-   "id": "water_intake",
-   "label": "Water intake / thirst",
-   "tier": "A",
-   "units": [
-    "mL/24h",
-    "mL/g body weight"
-   ],
-   "modality": "behaviour",
-   "synonyms": [
-    "water intake",
-    "drinking",
-    "drinking behavior",
-    "drinking behaviour",
-    "thirst",
-    "fluid intake",
-    "water consumption",
-    "polydipsia",
-    "adipsia",
-    "licking behaviour",
-    "sodium appetite",
-    "salt appetite"
-   ],
-   "higher_is": null
-  },
-  "osmolality_avp": {
-   "id": "osmolality_avp",
-   "label": "Plasma osmolality / vasopressin",
-   "tier": "A",
-   "units": [
-    "mOsm/kg",
-    "pg/mL AVP",
-    "mEq/L Na+"
-   ],
-   "modality": "blood assay",
-   "synonyms": [
-    "plasma osmolality",
-    "serum osmolality",
-    "osmolarity",
-    "plasma sodium",
-    "hypernatremia",
-    "hyponatremia",
-    "plasma vasopressin",
-    "circulating AVP",
-    "copeptin",
-    "antidiuretic hormone levels",
-    "urine osmolality",
-    "urine output",
-    "diuresis",
-    "antidiuresis",
-    "fluid balance"
-   ],
-   "higher_is": null,
-   "signed_synonyms": [
-    "hypernatremia",
-    "hyponatremia"
-   ]
-  },
-  "estrous_cyclicity": {
-   "id": "estrous_cyclicity",
-   "label": "Estrous cyclicity",
-   "tier": "A",
-   "units": [
-    "days per cycle",
-    "% days in estrus",
-    "cycles per 3 weeks"
-   ],
-   "modality": "cytology",
-   "synonyms": [
-    "estrous cycle",
-    "oestrous cycle",
-    "estrous cyclicity",
-    "estrous cycle length",
-    "vaginal cytology",
-    "acyclicity",
-    "persistent estrus",
-    "diestrus",
-    "puberty onset",
-    "vaginal opening",
-    "first estrus",
-    "fertility",
-    "litter size",
-    "reproductive senescence"
-   ],
-   "higher_is": null,
-   "notes": "Includes pubertal timing and reproductive senescence markers because the kisspeptin literature reports them as the same readout family."
-  },
-  "median_lifespan": {
-   "id": "median_lifespan",
-   "label": "Median lifespan",
-   "tier": "B",
-   "units": [
-    "days",
-    "weeks",
-    "months",
-    "% change"
-   ],
-   "modality": "survival",
-   "synonyms": [
-    "median lifespan",
-    "median survival",
-    "median life span",
-    "lifespan extension",
-    "survival curve",
-    "mean lifespan",
-    "longevity",
-    "Kaplan-Meier survival",
-    "mortality rate"
-   ],
-   "higher_is": "better",
-   "notes": "One of the few cases where a direction is defensible: longer median survival under otherwise equal conditions is the field's accepted benefit. Even so this must not be combined with Tier A outcomes into a score."
-  },
-  "maximum_lifespan": {
-   "id": "maximum_lifespan",
-   "label": "Maximum lifespan",
-   "tier": "B",
-   "units": [
-    "days",
-    "weeks",
-    "months"
-   ],
-   "modality": "survival",
-   "synonyms": [
-    "maximum lifespan",
-    "maximal lifespan",
-    "max lifespan",
-    "90th percentile survival",
-    "last survivor",
-    "maximum life span",
-    "oldest 10 percent survival"
-   ],
-   "higher_is": "better"
-  },
-  "frailty_index": {
-   "id": "frailty_index",
-   "label": "Frailty index",
-   "tier": "B",
-   "units": [
-    "index 0-1",
-    "score"
-   ],
-   "modality": "clinical scoring",
-   "synonyms": [
-    "frailty index",
-    "frailty score",
-    "clinical frailty",
-    "mouse frailty index",
-    "FI",
-    "frailty assessment",
-    "healthspan score"
-   ],
-   "higher_is": "worse",
-   "notes": "Defensible because the index is constructed so that accumulated deficits raise the score."
-  },
-  "grip_strength": {
-   "id": "grip_strength",
-   "label": "Grip strength",
-   "tier": "B",
-   "units": [
-    "N",
-    "g force",
-    "g/g body weight"
-   ],
-   "modality": "behaviour",
-   "synonyms": [
-    "grip strength",
-    "forelimb grip strength",
-    "grip force",
-    "muscle strength",
-    "neuromuscular strength",
-    "hanging wire test",
-    "rotarod performance",
-    "sarcopenia"
-   ],
-   "higher_is": "better",
-   "notes": "Rotarod and hanging-wire are included as functional-strength proxies; they are not the same assay and should be kept apart in outcome_raw."
-  },
-  "cognitive_decline": {
-   "id": "cognitive_decline",
-   "label": "Cognitive performance / decline",
-   "tier": "B",
-   "units": [
-    "s (latency)",
-    "% correct",
-    "discrimination index"
-   ],
-   "modality": "behaviour",
-   "synonyms": [
-    "cognitive decline",
-    "cognitive performance",
-    "memory impairment",
-    "spatial memory",
-    "Morris water maze",
-    "Barnes maze",
-    "novel object recognition",
-    "Y-maze",
-    "fear conditioning",
-    "learning and memory",
-    "working memory",
-    "cognitive aging",
-    "cognitive ageing"
-   ],
-   "higher_is": null,
-   "notes": "The sign of the reported measure flips between assays (escape latency vs percent correct), so no global valence is possible. POLARITY DEFECT: this id and its label name both a performance and a decline, so `direction` is ambiguous on its face. Record direction as the change in cognitive PERFORMANCE (increase = better) and say so in extraction_notes. The id should be renamed at the next version bump.",
-   "signed_synonyms": [
-    "cognitive decline",
-    "memory impairment"
-   ]
-  },
-  "tissue_aging_markers": {
-   "id": "tissue_aging_markers",
-   "label": "Tissue-specific aging markers",
-   "tier": "B",
-   "units": [
-    "fold change",
-    "% positive area",
-    "years (clock age)"
-   ],
-   "modality": "tissue assay",
-   "synonyms": [
-    "aging markers",
-    "ageing markers",
-    "biological age",
-    "epigenetic clock",
-    "DNA methylation age",
-    "transcriptomic age",
-    "telomere length",
-    "collagen crosslinking",
-    "skin thickness",
-    "muscle fiber cross-sectional area",
-    "bone aging",
-    "tissue atrophy",
-    "age-related pathology",
-    "histopathology score"
-   ],
-   "higher_is": null
-  },
-  "senescence_markers": {
-   "id": "senescence_markers",
-   "label": "Cellular senescence markers",
-   "tier": "B",
-   "units": [
-    "% positive cells",
-    "fold change mRNA"
-   ],
-   "modality": "tissue assay",
-   "synonyms": [
-    "senescence",
-    "cellular senescence",
-    "senescent cells",
-    "p16",
-    "Cdkn2a",
-    "p21",
-    "Cdkn1a",
-    "SA-beta-gal",
-    "senescence-associated beta-galactosidase",
-    "SASP",
-    "senescence-associated secretory phenotype",
-    "senolytic",
-    "gamma-H2AX"
-   ],
-   "higher_is": null,
-   "notes": "Higher senescent burden is usually described as deleterious, but these markers are also induced by transient stress and by beneficial remodelling (e.g. wound healing), and the panels are not interchangeable. Left null deliberately."
+  "entries": {
+    "blood_glucose": {
+      "id": "blood_glucose",
+      "label": "Blood glucose concentration",
+      "tier": "A",
+      "units": [
+        "mg/dL",
+        "mmol/L"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "blood glucose",
+        "blood glucose levels",
+        "glycemia",
+        "glycaemia",
+        "plasma glucose",
+        "fasting glucose",
+        "fasting blood glucose",
+        "blood sugar",
+        "circulating glucose",
+        "euglycemia",
+        "hyperglycemia",
+        "hypoglycemia"
+      ],
+      "higher_is": null,
+      "notes": "Direction of benefit depends entirely on the baseline state (hypoglycemia vs diabetic hyperglycemia).",
+      "signed_synonyms": [
+        "hyperglycemia",
+        "hypoglycemia"
+      ]
+    },
+    "glucose_tolerance": {
+      "id": "glucose_tolerance",
+      "label": "Glucose tolerance (GTT)",
+      "tier": "A",
+      "units": [
+        "mg/dL",
+        "AUC mg/dL*min",
+        "mmol/L"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "glucose tolerance",
+        "glucose tolerance test",
+        "GTT",
+        "IPGTT",
+        "OGTT",
+        "intraperitoneal glucose tolerance test",
+        "oral glucose tolerance test",
+        "glucose excursion",
+        "glucose clearance",
+        "impaired glucose tolerance"
+      ],
+      "higher_is": null,
+      "notes": "Reported either as glucose AUC (higher = worse tolerance) or as 'tolerance' (higher = better). The sign of the reported quantity is assay-dependent, so no global valence. POLARITY: raw glucose values from a GTT belong under blood_glucose, not here (DECISIONS.md D-019 step 1).",
+      "inverted_synonyms": [
+        "glucose excursion"
+      ],
+      "signed_synonyms": [
+        "impaired glucose tolerance"
+      ]
+    },
+    "insulin_sensitivity": {
+      "id": "insulin_sensitivity",
+      "label": "Insulin sensitivity / insulin tolerance",
+      "tier": "A",
+      "units": [
+        "mg/dL",
+        "% of baseline glucose",
+        "glucose infusion rate mg/kg/min",
+        "HOMA-IR (a.u.)"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "insulin sensitivity",
+        "insulin tolerance test",
+        "ITT",
+        "insulin resistance",
+        "HOMA-IR",
+        "hyperinsulinemic-euglycemic clamp",
+        "euglycemic clamp",
+        "glucose infusion rate",
+        "insulin action",
+        "whole-body insulin sensitivity"
+      ],
+      "higher_is": null,
+      "notes": "As above the reported quantity may be sensitivity or resistance. Also note extreme insulin sensitivity is not simply 'good'. POLARITY: raw glucose values from an ITT belong under blood_glucose, not here (DECISIONS.md D-019 step 1). Only an interpreted sensitivity or resistance result is recorded against this id.",
+      "inverted_synonyms": [
+        "HOMA-IR",
+        "insulin resistance"
+      ]
+    },
+    "plasma_insulin": {
+      "id": "plasma_insulin",
+      "label": "Plasma insulin",
+      "tier": "A",
+      "units": [
+        "ng/mL",
+        "pM",
+        "uIU/mL"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "plasma insulin",
+        "serum insulin",
+        "circulating insulin",
+        "insulin levels",
+        "insulinemia",
+        "hyperinsulinemia",
+        "insulin secretion"
+      ],
+      "higher_is": null,
+      "signed_synonyms": [
+        "hyperinsulinemia"
+      ]
+    },
+    "plasma_glucagon": {
+      "id": "plasma_glucagon",
+      "label": "Plasma glucagon",
+      "tier": "A",
+      "units": [
+        "pg/mL",
+        "pM"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "plasma glucagon",
+        "serum glucagon",
+        "circulating glucagon",
+        "glucagon levels",
+        "glucagon secretion",
+        "glucagon response"
+      ],
+      "higher_is": null
+    },
+    "hepatic_glucose_production": {
+      "id": "hepatic_glucose_production",
+      "label": "Hepatic glucose production",
+      "tier": "A",
+      "units": [
+        "mg/kg/min",
+        "umol/kg/min"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "hepatic glucose production",
+        "HGP",
+        "endogenous glucose production",
+        "EGP",
+        "gluconeogenesis",
+        "hepatic gluconeogenesis",
+        "glucose output",
+        "glycogenolysis",
+        "liver glucose production"
+      ],
+      "higher_is": null
+    },
+    "corticosterone": {
+      "id": "corticosterone",
+      "label": "Plasma corticosterone / HPA axis output",
+      "tier": "A",
+      "units": [
+        "ng/mL",
+        "ug/dL",
+        "nM"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "corticosterone",
+        "plasma corticosterone",
+        "serum corticosterone",
+        "CORT",
+        "cortisol",
+        "HPA axis activity",
+        "glucocorticoid levels",
+        "ACTH",
+        "adrenocorticotropic hormone",
+        "stress hormone levels",
+        "HPA axis"
+      ],
+      "higher_is": null,
+      "notes": "Includes ACTH as an HPA-axis readout; separate them at extraction if the paper reports both."
+    },
+    "gh_secretion": {
+      "id": "gh_secretion",
+      "label": "Growth hormone secretion",
+      "tier": "A",
+      "units": [
+        "ng/mL",
+        "AUC ng/mL*min",
+        "pulses/h"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "growth hormone",
+        "GH secretion",
+        "plasma GH",
+        "serum growth hormone",
+        "GH pulsatility",
+        "GH pulse amplitude",
+        "somatotropin",
+        "GH release",
+        "growth hormone levels"
+      ],
+      "higher_is": null,
+      "notes": "Lower GH/IGF-1 tone extends lifespan in mice while higher supports growth and lean mass; valence is genuinely contested."
+    },
+    "igf1": {
+      "id": "igf1",
+      "label": "Circulating IGF-1",
+      "tier": "A",
+      "units": [
+        "ng/mL",
+        "nM"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "IGF-1",
+        "IGF1",
+        "insulin-like growth factor 1",
+        "insulin-like growth factor-I",
+        "plasma IGF-1",
+        "serum IGF-1",
+        "circulating IGF-1",
+        "IGF-I levels"
+      ],
+      "higher_is": null
+    },
+    "thyroid_hormone": {
+      "id": "thyroid_hormone",
+      "label": "Thyroid hormones / HPT axis",
+      "tier": "A",
+      "units": [
+        "ng/dL",
+        "ug/dL",
+        "pM",
+        "mIU/L"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "thyroid hormone",
+        "T3",
+        "T4",
+        "triiodothyronine",
+        "thyroxine",
+        "free T4",
+        "free T3",
+        "TSH",
+        "thyroid stimulating hormone",
+        "thyrotropin",
+        "HPT axis",
+        "plasma T4",
+        "serum T3"
+      ],
+      "higher_is": null
+    },
+    "gonadotropins": {
+      "id": "gonadotropins",
+      "label": "LH/FSH and reproductive hormones",
+      "tier": "A",
+      "units": [
+        "ng/mL",
+        "mIU/mL",
+        "pg/mL"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "luteinizing hormone",
+        "LH pulse",
+        "LH secretion",
+        "LH surge",
+        "plasma LH",
+        "serum LH",
+        "FSH",
+        "follicle-stimulating hormone",
+        "gonadotropin secretion",
+        "gonadotropin release",
+        "GnRH pulse generator",
+        "testosterone",
+        "estradiol",
+        "oestradiol",
+        "progesterone",
+        "prolactin",
+        "reproductive hormones"
+      ],
+      "higher_is": null,
+      "notes": "Deliberately broad; split LH pulse frequency, LH surge, prolactin and gonadal steroids at extraction time if the project later needs them separately. Bare 'LH' must never be matched without context because it collides with lateral hypothalamus."
+    },
+    "food_intake": {
+      "id": "food_intake",
+      "label": "Food intake",
+      "tier": "A",
+      "units": [
+        "g",
+        "g/24h",
+        "kcal/24h",
+        "g/kg body weight"
+      ],
+      "modality": "behaviour",
+      "synonyms": [
+        "food intake",
+        "feeding",
+        "feeding behavior",
+        "feeding behaviour",
+        "food consumption",
+        "caloric intake",
+        "energy intake",
+        "chow intake",
+        "hyperphagia",
+        "hypophagia",
+        "anorexia",
+        "refeeding",
+        "cumulative food intake",
+        "meal size",
+        "meal frequency",
+        "appetite"
+      ],
+      "higher_is": null,
+      "notes": "Canonical example of a context-dependent variable: hyperphagia is pathological on a high-fat diet and protective in cachexia.",
+      "signed_synonyms": [
+        "hyperphagia",
+        "hypophagia"
+      ]
+    },
+    "energy_expenditure": {
+      "id": "energy_expenditure",
+      "label": "Energy expenditure",
+      "tier": "A",
+      "units": [
+        "kcal/h",
+        "kcal/h/kg",
+        "mL O2/h",
+        "kJ/h"
+      ],
+      "modality": "calorimetry",
+      "synonyms": [
+        "energy expenditure",
+        "EE",
+        "metabolic rate",
+        "resting metabolic rate",
+        "VO2",
+        "oxygen consumption",
+        "indirect calorimetry",
+        "total energy expenditure",
+        "heat production",
+        "whole-body energy expenditure"
+      ],
+      "higher_is": null,
+      "notes": "Must be reported with its body-mass normalisation; the normalisation choice changes the sign of many published effects."
+    },
+    "rer": {
+      "id": "rer",
+      "label": "Respiratory exchange ratio",
+      "tier": "A",
+      "units": [
+        "ratio (VCO2/VO2)"
+      ],
+      "modality": "calorimetry",
+      "synonyms": [
+        "respiratory exchange ratio",
+        "RER",
+        "respiratory quotient",
+        "RQ",
+        "VCO2/VO2",
+        "substrate utilization",
+        "fuel preference",
+        "fat oxidation",
+        "lipid oxidation"
+      ],
+      "higher_is": null
+    },
+    "body_weight": {
+      "id": "body_weight",
+      "label": "Body weight",
+      "tier": "A",
+      "units": [
+        "g",
+        "% change",
+        "kg"
+      ],
+      "modality": "anthropometry",
+      "synonyms": [
+        "body weight",
+        "bodyweight",
+        "body mass",
+        "weight gain",
+        "weight loss",
+        "obesity",
+        "adiposity gain",
+        "weight trajectory"
+      ],
+      "higher_is": null,
+      "signed_synonyms": [
+        "weight loss"
+      ]
+    },
+    "fat_mass": {
+      "id": "fat_mass",
+      "label": "Fat mass",
+      "tier": "A",
+      "units": [
+        "g",
+        "% of body weight"
+      ],
+      "modality": "body composition",
+      "synonyms": [
+        "fat mass",
+        "adiposity",
+        "body fat",
+        "fat pad weight",
+        "white adipose tissue mass",
+        "WAT mass",
+        "epididymal fat",
+        "inguinal fat",
+        "visceral fat",
+        "percent fat mass",
+        "EchoMRI fat"
+      ],
+      "higher_is": null
+    },
+    "lean_mass": {
+      "id": "lean_mass",
+      "label": "Lean mass",
+      "tier": "A",
+      "units": [
+        "g",
+        "% of body weight"
+      ],
+      "modality": "body composition",
+      "synonyms": [
+        "lean mass",
+        "lean body mass",
+        "fat-free mass",
+        "muscle mass",
+        "EchoMRI lean mass",
+        "lean tissue mass"
+      ],
+      "higher_is": null
+    },
+    "bat_thermogenesis": {
+      "id": "bat_thermogenesis",
+      "label": "BAT thermogenesis / UCP1",
+      "tier": "A",
+      "units": [
+        "degC (BAT temperature)",
+        "Ucp1 mRNA fold change",
+        "UCP1 protein a.u."
+      ],
+      "modality": "telemetry",
+      "synonyms": [
+        "brown adipose tissue thermogenesis",
+        "BAT thermogenesis",
+        "UCP1",
+        "Ucp1 expression",
+        "uncoupling protein 1",
+        "BAT temperature",
+        "brown fat activity",
+        "non-shivering thermogenesis",
+        "BAT activation",
+        "thermogenic gene expression",
+        "browning",
+        "beiging"
+      ],
+      "higher_is": null
+    },
+    "core_temperature": {
+      "id": "core_temperature",
+      "label": "Core body temperature",
+      "tier": "A",
+      "units": [
+        "degC"
+      ],
+      "modality": "telemetry",
+      "synonyms": [
+        "core body temperature",
+        "core temperature",
+        "body temperature",
+        "rectal temperature",
+        "Tcore",
+        "hypothermia",
+        "hyperthermia",
+        "thermoregulation",
+        "torpor",
+        "fever"
+      ],
+      "higher_is": null,
+      "notes": "Torpor/hypothermia is protective in some contexts and lethal in others.",
+      "signed_synonyms": [
+        "hyperthermia",
+        "hypothermia"
+      ]
+    },
+    "heart_rate": {
+      "id": "heart_rate",
+      "label": "Heart rate",
+      "tier": "A",
+      "units": [
+        "bpm"
+      ],
+      "modality": "telemetry",
+      "synonyms": [
+        "heart rate",
+        "HR",
+        "bradycardia",
+        "tachycardia",
+        "pulse rate",
+        "heart rate variability",
+        "HRV",
+        "cardiac chronotropy"
+      ],
+      "higher_is": null
+    },
+    "blood_pressure": {
+      "id": "blood_pressure",
+      "label": "Blood pressure",
+      "tier": "A",
+      "units": [
+        "mmHg"
+      ],
+      "modality": "telemetry",
+      "synonyms": [
+        "blood pressure",
+        "arterial pressure",
+        "mean arterial pressure",
+        "MAP",
+        "systolic blood pressure",
+        "diastolic blood pressure",
+        "hypertension",
+        "hypotension",
+        "pressor response",
+        "depressor response"
+      ],
+      "higher_is": null,
+      "signed_synonyms": [
+        "hypertension",
+        "hypotension"
+      ]
+    },
+    "sympathetic_nerve_activity": {
+      "id": "sympathetic_nerve_activity",
+      "label": "Sympathetic nerve activity",
+      "tier": "A",
+      "units": [
+        "% of baseline",
+        "spikes/s",
+        "a.u."
+      ],
+      "modality": "nerve recording",
+      "synonyms": [
+        "sympathetic nerve activity",
+        "SNA",
+        "sympathetic outflow",
+        "sympathetic tone",
+        "renal sympathetic nerve activity",
+        "RSNA",
+        "splanchnic sympathetic nerve activity",
+        "BAT sympathetic nerve activity",
+        "sympathoexcitation",
+        "sympathetic drive",
+        "norepinephrine turnover",
+        "muscle sympathetic nerve activity",
+        "MSNA"
+      ],
+      "higher_is": null
+    },
+    "parasympathetic_tone": {
+      "id": "parasympathetic_tone",
+      "label": "Vagal / parasympathetic tone",
+      "tier": "A",
+      "units": [
+        "spikes/s",
+        "% of baseline",
+        "a.u."
+      ],
+      "modality": "nerve recording",
+      "synonyms": [
+        "vagal tone",
+        "parasympathetic tone",
+        "vagal nerve activity",
+        "vagal efferent activity",
+        "parasympathetic activity",
+        "vagal outflow",
+        "cardiac vagal tone",
+        "hepatic vagal nerve activity",
+        "parasympathetic nerve activity"
+      ],
+      "higher_is": null
+    },
+    "wat_lipolysis": {
+      "id": "wat_lipolysis",
+      "label": "White adipose tissue lipolysis",
+      "tier": "A",
+      "units": [
+        "mM glycerol",
+        "mM NEFA",
+        "umol/g/h"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "lipolysis",
+        "WAT lipolysis",
+        "adipose lipolysis",
+        "glycerol release",
+        "free fatty acid release",
+        "NEFA",
+        "non-esterified fatty acids",
+        "plasma free fatty acids",
+        "FFA",
+        "HSL phosphorylation",
+        "triglyceride mobilisation"
+      ],
+      "higher_is": null
+    },
+    "hepatic_lipid": {
+      "id": "hepatic_lipid",
+      "label": "Hepatic lipid content",
+      "tier": "A",
+      "units": [
+        "mg triglyceride/g liver",
+        "% area steatosis"
+      ],
+      "modality": "tissue assay",
+      "synonyms": [
+        "hepatic lipid content",
+        "liver triglyceride",
+        "hepatic triglyceride",
+        "hepatic steatosis",
+        "liver fat",
+        "fatty liver",
+        "NAFLD",
+        "MASLD",
+        "liver lipid accumulation",
+        "de novo lipogenesis"
+      ],
+      "higher_is": null
+    },
+    "bone_density": {
+      "id": "bone_density",
+      "label": "Bone mineral density / bone mass",
+      "tier": "A",
+      "units": [
+        "mg/cm2",
+        "mg/cm3",
+        "BV/TV %"
+      ],
+      "modality": "imaging",
+      "synonyms": [
+        "bone mineral density",
+        "BMD",
+        "bone mass",
+        "bone volume fraction",
+        "trabecular bone",
+        "cortical thickness",
+        "microCT bone",
+        "osteoporosis",
+        "bone formation rate",
+        "bone resorption"
+      ],
+      "higher_is": null,
+      "notes": "Generally higher BMD is favourable, but osteopetrotic/sclerotic increases are not, and the measurement compartment matters; left null rather than asserting a valence."
+    },
+    "il6": {
+      "id": "il6",
+      "label": "Circulating IL-6",
+      "tier": "A",
+      "units": [
+        "pg/mL"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "IL-6",
+        "interleukin-6",
+        "interleukin 6",
+        "plasma IL-6",
+        "serum IL-6",
+        "circulating IL-6",
+        "Il6 expression"
+      ],
+      "higher_is": null,
+      "notes": "IL-6 is both a pro-inflammatory cytokine and an exercise-induced myokine with metabolic benefit; no global valence."
+    },
+    "tnf": {
+      "id": "tnf",
+      "label": "Circulating TNF",
+      "tier": "A",
+      "units": [
+        "pg/mL"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "TNF",
+        "TNF-alpha",
+        "TNFalpha",
+        "tumor necrosis factor",
+        "tumour necrosis factor alpha",
+        "plasma TNF",
+        "serum TNF-alpha",
+        "Tnf expression"
+      ],
+      "higher_is": null
+    },
+    "inflammatory_markers_other": {
+      "id": "inflammatory_markers_other",
+      "label": "Other inflammatory markers",
+      "tier": "A",
+      "units": [
+        "pg/mL",
+        "fold change mRNA"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "IL-1beta",
+        "interleukin-1beta",
+        "CRP",
+        "C-reactive protein",
+        "MCP-1",
+        "Ccl2",
+        "CXCL1",
+        "IL-10",
+        "inflammatory cytokines",
+        "systemic inflammation",
+        "inflammatory markers",
+        "chronic low-grade inflammation",
+        "inflammaging",
+        "microglial activation",
+        "Iba1",
+        "GFAP",
+        "gliosis",
+        "neuroinflammation"
+      ],
+      "higher_is": null,
+      "notes": "Catch-all bucket. Records landing here should keep outcome_raw verbatim because the bucket is heterogeneous. Includes central glial markers because the hypothalamic-inflammation literature reports them as the systemic-inflammation readout."
+    },
+    "immune_cell_composition": {
+      "id": "immune_cell_composition",
+      "label": "Immune cell composition",
+      "tier": "A",
+      "units": [
+        "% of CD45+ cells",
+        "cells/mL",
+        "cells/g tissue"
+      ],
+      "modality": "flow cytometry",
+      "synonyms": [
+        "immune cell composition",
+        "immune cell infiltration",
+        "macrophage infiltration",
+        "adipose tissue macrophages",
+        "T cell subsets",
+        "regulatory T cells",
+        "Treg",
+        "neutrophil count",
+        "lymphocyte count",
+        "leukocyte count",
+        "white blood cell count",
+        "myeloid cells",
+        "splenocytes",
+        "thymic involution",
+        "immunosenescence"
+      ],
+      "higher_is": null
+    },
+    "gut_motility": {
+      "id": "gut_motility",
+      "label": "Gut motility",
+      "tier": "A",
+      "units": [
+        "min (transit time)",
+        "cm/h",
+        "pellets/h"
+      ],
+      "modality": "behaviour",
+      "synonyms": [
+        "gut motility",
+        "gastrointestinal motility",
+        "gastric emptying",
+        "intestinal transit",
+        "colonic transit",
+        "whole-gut transit time",
+        "defecation rate",
+        "fecal output",
+        "colonic motility",
+        "gastric accommodation"
+      ],
+      "higher_is": null
+    },
+    "sleep": {
+      "id": "sleep",
+      "label": "Sleep amount and architecture",
+      "tier": "A",
+      "units": [
+        "min/h",
+        "% of time",
+        "bouts/h"
+      ],
+      "modality": "EEG/EMG",
+      "synonyms": [
+        "sleep",
+        "NREM sleep",
+        "REM sleep",
+        "slow wave sleep",
+        "sleep architecture",
+        "wakefulness",
+        "sleep latency",
+        "sleep fragmentation",
+        "EEG delta power",
+        "arousal",
+        "sleep-wake cycle",
+        "total sleep time",
+        "insomnia",
+        "cataplexy",
+        "narcolepsy"
+      ],
+      "higher_is": null,
+      "inverted_synonyms": [
+        "sleep latency"
+      ]
+    },
+    "locomotor_activity": {
+      "id": "locomotor_activity",
+      "label": "Locomotor activity",
+      "tier": "A",
+      "units": [
+        "beam breaks/h",
+        "m/h",
+        "counts/h",
+        "wheel revolutions/day"
+      ],
+      "modality": "behaviour",
+      "synonyms": [
+        "locomotor activity",
+        "physical activity",
+        "ambulatory activity",
+        "spontaneous activity",
+        "home cage activity",
+        "wheel running",
+        "voluntary wheel running",
+        "open field activity",
+        "distance travelled",
+        "hypoactivity",
+        "hyperactivity",
+        "activity counts"
+      ],
+      "higher_is": null,
+      "signed_synonyms": [
+        "hyperactivity",
+        "hypoactivity"
+      ]
+    },
+    "water_intake": {
+      "id": "water_intake",
+      "label": "Water intake / thirst",
+      "tier": "A",
+      "units": [
+        "mL/24h",
+        "mL/g body weight"
+      ],
+      "modality": "behaviour",
+      "synonyms": [
+        "water intake",
+        "drinking",
+        "drinking behavior",
+        "drinking behaviour",
+        "thirst",
+        "fluid intake",
+        "water consumption",
+        "polydipsia",
+        "adipsia",
+        "licking behaviour",
+        "sodium appetite",
+        "salt appetite"
+      ],
+      "higher_is": null
+    },
+    "osmolality_avp": {
+      "id": "osmolality_avp",
+      "label": "Plasma osmolality / vasopressin",
+      "tier": "A",
+      "units": [
+        "mOsm/kg",
+        "pg/mL AVP",
+        "mEq/L Na+"
+      ],
+      "modality": "blood assay",
+      "synonyms": [
+        "plasma osmolality",
+        "serum osmolality",
+        "osmolarity",
+        "plasma sodium",
+        "hypernatremia",
+        "hyponatremia",
+        "plasma vasopressin",
+        "circulating AVP",
+        "copeptin",
+        "antidiuretic hormone levels",
+        "urine osmolality",
+        "urine output",
+        "diuresis",
+        "antidiuresis",
+        "fluid balance"
+      ],
+      "higher_is": null,
+      "signed_synonyms": [
+        "hypernatremia",
+        "hyponatremia"
+      ]
+    },
+    "estrous_cyclicity": {
+      "id": "estrous_cyclicity",
+      "label": "Estrous cyclicity",
+      "tier": "A",
+      "units": [
+        "days per cycle",
+        "% days in estrus",
+        "cycles per 3 weeks"
+      ],
+      "modality": "cytology",
+      "synonyms": [
+        "estrous cycle",
+        "oestrous cycle",
+        "estrous cyclicity",
+        "estrous cycle length",
+        "vaginal cytology",
+        "acyclicity",
+        "persistent estrus",
+        "diestrus",
+        "puberty onset",
+        "vaginal opening",
+        "first estrus",
+        "fertility",
+        "litter size",
+        "reproductive senescence"
+      ],
+      "higher_is": null,
+      "notes": "Includes pubertal timing and reproductive senescence markers because the kisspeptin literature reports them as the same readout family."
+    },
+    "median_lifespan": {
+      "id": "median_lifespan",
+      "label": "Median lifespan",
+      "tier": "B",
+      "units": [
+        "days",
+        "weeks",
+        "months",
+        "% change"
+      ],
+      "modality": "survival",
+      "synonyms": [
+        "median lifespan",
+        "median survival",
+        "median life span",
+        "lifespan extension",
+        "survival curve",
+        "mean lifespan",
+        "longevity",
+        "Kaplan-Meier survival",
+        "mortality rate"
+      ],
+      "higher_is": "better",
+      "notes": "One of the few cases where a direction is defensible: longer median survival under otherwise equal conditions is the field's accepted benefit. Even so this must not be combined with Tier A outcomes into a score."
+    },
+    "maximum_lifespan": {
+      "id": "maximum_lifespan",
+      "label": "Maximum lifespan",
+      "tier": "B",
+      "units": [
+        "days",
+        "weeks",
+        "months"
+      ],
+      "modality": "survival",
+      "synonyms": [
+        "maximum lifespan",
+        "maximal lifespan",
+        "max lifespan",
+        "90th percentile survival",
+        "last survivor",
+        "maximum life span",
+        "oldest 10 percent survival"
+      ],
+      "higher_is": "better"
+    },
+    "frailty_index": {
+      "id": "frailty_index",
+      "label": "Frailty index",
+      "tier": "B",
+      "units": [
+        "index 0-1",
+        "score"
+      ],
+      "modality": "clinical scoring",
+      "synonyms": [
+        "frailty index",
+        "frailty score",
+        "clinical frailty",
+        "mouse frailty index",
+        "FI",
+        "frailty assessment",
+        "healthspan score"
+      ],
+      "higher_is": "worse",
+      "notes": "Defensible because the index is constructed so that accumulated deficits raise the score."
+    },
+    "grip_strength": {
+      "id": "grip_strength",
+      "label": "Grip strength",
+      "tier": "B",
+      "units": [
+        "N",
+        "g force",
+        "g/g body weight"
+      ],
+      "modality": "behaviour",
+      "synonyms": [
+        "grip strength",
+        "forelimb grip strength",
+        "grip force",
+        "muscle strength",
+        "neuromuscular strength",
+        "hanging wire test",
+        "rotarod performance",
+        "sarcopenia"
+      ],
+      "higher_is": "better",
+      "notes": "Rotarod and hanging-wire are included as functional-strength proxies; they are not the same assay and should be kept apart in outcome_raw."
+    },
+    "cognitive_performance": {
+      "id": "cognitive_performance",
+      "label": "Cognitive performance",
+      "tier": "B",
+      "units": [
+        "s (latency)",
+        "% correct",
+        "discrimination index"
+      ],
+      "modality": "behaviour",
+      "synonyms": [
+        "cognitive decline",
+        "cognitive performance",
+        "memory impairment",
+        "spatial memory",
+        "Morris water maze",
+        "Barnes maze",
+        "novel object recognition",
+        "Y-maze",
+        "fear conditioning",
+        "learning and memory",
+        "working memory",
+        "cognitive aging",
+        "cognitive ageing",
+        "escape latency"
+      ],
+      "higher_is": null,
+      "notes": "Renamed from `cognitive_decline` at schema v0.2.0 (docs/DECISIONS.md D-029). The old id named both a performance and a decline, so `direction` was ambiguous on its face. `direction` now describes the change in cognitive PERFORMANCE: increase = better. The assay number often runs the other way (escape latency, time to criterion), so per D-019 prefer the literally measured quantity where the vocabulary has one, and otherwise invert the direction to match performance and say so in extraction_notes. higher_is stays null: the measures are not comparable across assays, and this is a Tier B outcome, which SCHEMA.md 6 forbids as a training target.",
+      "inverted_synonyms": [
+        "cognitive decline",
+        "memory impairment",
+        "escape latency"
+      ]
+    },
+    "tissue_aging_markers": {
+      "id": "tissue_aging_markers",
+      "label": "Tissue-specific aging markers",
+      "tier": "B",
+      "units": [
+        "fold change",
+        "% positive area",
+        "years (clock age)"
+      ],
+      "modality": "tissue assay",
+      "synonyms": [
+        "aging markers",
+        "ageing markers",
+        "biological age",
+        "epigenetic clock",
+        "DNA methylation age",
+        "transcriptomic age",
+        "telomere length",
+        "collagen crosslinking",
+        "skin thickness",
+        "muscle fiber cross-sectional area",
+        "bone aging",
+        "tissue atrophy",
+        "age-related pathology",
+        "histopathology score"
+      ],
+      "higher_is": null
+    },
+    "senescence_markers": {
+      "id": "senescence_markers",
+      "label": "Cellular senescence markers",
+      "tier": "B",
+      "units": [
+        "% positive cells",
+        "fold change mRNA"
+      ],
+      "modality": "tissue assay",
+      "synonyms": [
+        "senescence",
+        "cellular senescence",
+        "senescent cells",
+        "p16",
+        "Cdkn2a",
+        "p21",
+        "Cdkn1a",
+        "SA-beta-gal",
+        "senescence-associated beta-galactosidase",
+        "SASP",
+        "senescence-associated secretory phenotype",
+        "senolytic",
+        "gamma-H2AX"
+      ],
+      "higher_is": null,
+      "notes": "Higher senescent burden is usually described as deleterious, but these markers are also induced by transient stress and by beneficial remodelling (e.g. wound healing), and the panels are not interchangeable. Left null deliberately."
+    }
   }
- }
 }

@@ -52,6 +52,71 @@ an append-only log of every judgement call made while implementing it,
 including the places where SCHEMA.md was underspecified and how that was
 resolved.
 
+## Where this stands
+
+The first milestone has a partial answer, and it is not the one this project
+started with.
+
+The dataset holds **362 Tier A records from 42 studies**, curated from a corpus
+of 9,653 screened papers of which 974 full texts were retrievable. Every record
+carries a verbatim quote that was mechanically verified against the retrieved
+source; 100% of them are still `review_status: unreviewed`, which the reports
+state rather than hide.
+
+**Direction of effect is predictable in one half of the corpus and not in the
+other.** Leave-one-study-out, frequency majority, two independent
+implementations agreeing:
+
+| subset | rows with evidence in their cell | studies | guess the mode | cell's modal direction |
+|---|---|---|---|---|
+| circuit manipulation (opto-/chemogenetic) | 116 | 20 | 0.397 | **0.517** |
+| molecular manipulation (knockout / overexpression) | **0 of 170** | — | — | nothing to predict from |
+
+Pooled, nothing beats guessing, which is what every earlier benchmark here
+reported. Split, the circuit half gains 12 points (study-clustered bootstrap:
+95% interval [+0.008, +0.271]; row-level McNemar p=0.156, so suggestive rather
+than established).
+
+The molecular half is not *bad* at prediction, it has nothing to predict from:
+with the manipulated gene in the cell key, not one of its 170 rows has its cell
+populated in training, because each gene appears in exactly one study.
+
+The same schema change also cut the number of claims reported by more than one
+study from 39 to 11. That is not a loss of data; it is the discovery that most
+of the apparent replication here came from pooling a male cohort with a female
+one and one gene with another. This corpus holds eleven independently
+replicated claims.
+
+Two things explain the predictability split, and both are now schema-level facts
+rather than suspicions:
+
+* **The molecular records are 17 genes across 16 studies and 16 laboratories,
+  and no gene is manipulated by more than one laboratory.** So under study- or
+  lab-grouped validation a held-out molecular record's perturbation was never
+  seen in training, and there is nothing to have learned. The axis itself works:
+  where the *same* gene was both knocked out and overexpressed, 6 of 9 cells
+  mirror cleanly and none contradicts. Internal consistency is excellent and
+  transferability is zero. `syn4rch.feasibility.identity` measures this;
+  `docs/DECISIONS.md` D-027 records it.
+* **Until schema v0.2.0 there was no field that could tell the two halves
+  apart.** All 170 molecular records carried `valence: unclear`, which was
+  indistinguishable from a circuit manipulation whose net effect the paper did
+  not resolve. v0.2.0 did not create the circuit signal — on that subset the old
+  and new keys score identically — it made the signal *findable* (D-025, D-028).
+
+So "the evidence is insufficient" was an artifact of a missing field for half
+the corpus, and remains the right answer for the other half. What to curate next
+changed accordingly: more optogenetic and chemogenetic papers, whose
+perturbation identity recurs across laboratories by construction, rather than
+more single-gene papers.
+
+**What is not claimed.** 0.52 on a three-way problem, over 116 rows and 20
+studies, with a row-level paired test that does not reach significance
+(McNemar p=0.156) while the study-level bootstrap excludes zero. That is a first
+signal above baseline, useful for ranking hypotheses. It is not a predictor of
+what a perturbation would do in an animal nobody has measured, and a third of
+circuit rows still have no evidence in their cell at all.
+
 ## The four data layers never mix
 
     data/
@@ -143,7 +208,7 @@ example would have been clearer, a synthetic one is used instead.
 
 ## Layout
 
-    docs/SCHEMA.md         binding data contract (v0.1.0)
+    docs/SCHEMA.md         binding data contract (v0.2.0)
     docs/DECISIONS.md      append-only decision log
     src/syn4rch/schema/    enums, TierARecord, derived rules, validation, JSONL IO
     src/syn4rch/qc/        duplicates, conflicts, units, conditions, report, CLI

@@ -34,6 +34,7 @@ import sys
 from typing import List, Optional
 
 from ..schema.io import JsonlError, iter_jsonl
+from ..schema.record import SCHEMA_VERSION
 from .report import build_report, render_markdown, top_line
 
 __all__ = ["main", "build_parser", "DEFAULT_RECORDS", "DEFAULT_REPORT"]
@@ -119,7 +120,7 @@ def _load(path: str, any_version: bool):
     errors: List[str] = []
     try:
         for record in iter_jsonl(
-            path, expect_version=None if any_version else "0.1.0"
+            path, expect_version=None if any_version else SCHEMA_VERSION
         ):
             records.append(record)
     except JsonlError as exc:

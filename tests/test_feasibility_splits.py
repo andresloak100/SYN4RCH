@@ -254,5 +254,116 @@ class TestFoldShape(unittest.TestCase):
         self.assertIn("note", data)
 
 
+class TestTheClaimKeyChangeDoesNotReachTheFolds(unittest.TestCase):
+    """Verified rather than assumed.
+
+    The three fold generators key on ``study_key``, ``lab_key`` and
+    ``population_key``. None of them reads ``claim_key``, a perturbation field
+    or a condition field, so schema v0.2.0 must leave fold membership exactly
+    as it was. The belief is cheap; the check is cheaper than the bug.
+    """
+
+    #: Everything schema v0.2.0 added or changed about a record's claim.
+    V2_FIELDS = (
+        {"perturbation_class": "molecular", "perturbation_polarity": "decrease"},
+        {"target_raw": "Synthgene9", "target_id": "syn:synthgene9"},
+        {"sex": "female"},
+        {"diet": "high_fat"},
+        {"age_group": "aged", "age_value": 80.0, "age_unit": "weeks"},
+        {"challenge": "fasted"},
+        {"sex": None, "diet": None, "age_group": None, "challenge": None},
+        {"condition_source": "methods", "condition_locator": "Methods para 2"},
+    )
+
+    def _baseline(self):
+        return [
+            synthetic.good_record(),
+            synthetic.other_lab_record(),
+            synthetic.same_lab_other_study_record(),
+            synthetic.good_record(
+                population_id="syn:pop_beta",
+                study_id="synthetic:test-010",
+                doi="synthetic:test-010",
+                source_locator="Fig 9A (synthetic)",
+            ),
+        ]
+
+    def _shape(self, records):
+        """Fold membership, grouping by grouping, with record ids dropped.
+
+        ``record_id`` is a hash over a named subset of fields (D-002) and some
+        of the v0.2.0 fields are in it, so the ids legitimately change. What
+        must not change is the *partition*: which group each record lands in
+        and how many folds there are.
+        """
+        out = {}
+        for name, fold_set in all_fold_sets(records).items():
+            out[name] = (
+                fold_set.groups,
+                fold_set.n_folds,
+                fold_set.n_usable_folds,
+                fold_set.n_ungroupable,
+                tuple((f.held_out, f.n_train, f.n_test) for f in fold_set.folds),
+            )
+        return out
+
+    def test_every_v0_2_0_field_leaves_the_folds_unchanged(self):
+        expected = self._shape(self._baseline())
+        for override in self.V2_FIELDS:
+            # The override is applied to every record, rebuilt from the
+            # fixture so that the derived fields are recomputed consistently.
+            records = [
+                synthetic.good_record(**override),
+                synthetic.other_lab_record(**override),
+                synthetic.same_lab_other_study_record(**override),
+                synthetic.good_record(
+                    population_id="syn:pop_beta",
+                    study_id="synthetic:test-010",
+                    doi="synthetic:test-010",
+                    source_locator="Fig 9A (synthetic)",
+                    **override
+                ),
+            ]
+            self.assertEqual(self._shape(records), expected, override)
+
+    def test_the_generators_do_not_import_the_claim_key(self):
+        # Structural, not stylistic: a generator that reached for claim_key
+        # would start splitting on the perturbation and the condition, which
+        # is not what any item of SCHEMA.md 5 asks for.
+        import syn4rch.feasibility.splits as splits_mod
+
+        source = open(splits_mod.__file__.replace(".pyc", ".py")).read()
+        for forbidden in (
+            "claim_key",
+            "condition_key",
+            "perturbation_key",
+            "condition_specificity",
+        ):
+            self.assertNotIn(
+                "%s(" % forbidden,
+                source,
+                "splits.py must not key folds on %s" % forbidden,
+            )
+
+    def test_a_molecular_record_folds_exactly_like_a_circuit_one(self):
+        circuit = by_lab([synthetic.good_record(), synthetic.other_lab_record()])
+        molecular = by_lab(
+            [
+                synthetic.molecular_record(),
+                synthetic.molecular_record(
+                    study_id="synthetic:test-mol-011",
+                    doi="synthetic:test-mol-011",
+                    last_author="Other, C.",
+                    last_author_affiliation=(
+                        "Second Institute of Synthetic Data, Elsewhere"
+                    ),
+                ),
+            ]
+        )
+        self.assertEqual(circuit.n_groups, molecular.n_groups)
+        self.assertEqual(circuit.n_folds, molecular.n_folds)
+        self.assertEqual(circuit.n_usable_folds, molecular.n_usable_folds)
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

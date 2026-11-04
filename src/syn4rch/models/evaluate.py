@@ -35,6 +35,17 @@ Five things, never blended into one headline number:
 * **uncertainty** -- a percentile bootstrap confidence interval resampled over
   **groups**, never rows (see :func:`syn4rch.models.metrics.bootstrap_group_ci`).
 
+And beside all five, one number that is not a metric at all: the fraction of
+test rows whose **perturbation identity** never appeared in training
+(``docs/SCHEMA.md`` 5b, via
+:func:`syn4rch.models.diagnostics.perturbation_identity_novelty`). Grouping
+guarantees that no study crosses a split; it guarantees nothing about whether
+the held-out perturbation was learnable from the training side. Where that
+fraction is high, the accuracy beside it is substantially a measurement of the
+label prior, and SCHEMA.md 5b is explicit that this is a statement about how
+the field publishes -- one lab, one gene, one paper -- and not a modelling
+failure to be tuned away.
+
 Fold generation
 ---------------
 Fold generators are imported from ``syn4rch.feasibility.splits`` when that
@@ -54,10 +65,12 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tupl
 from . import metrics as M
 from ._compat import optional_dependency_report
 from .baselines import Baseline, all_baseline_factories
+from .diagnostics import dataset_diagnostics, perturbation_identity_novelty
 from .task import (
     GROUPINGS,
     LABELS,
     DEFAULT_GROUPINGS,
+    NULL_FEATURE,
     Example,
     Grouping,
     TaskDataset,
@@ -65,6 +78,12 @@ from .task import (
 
 __all__ = [
     "UnlabelledMetricError",
+    "ComparisonSlice",
+    "Comparison",
+    "compare_under_grouping",
+    "COMPARISON_SLICES",
+    "COMPARISON_REFERENCES",
+    "HEADLINE_COMPARISON",
     "MIN_ROWS_FOR_METRIC",
     "MIN_GROUPS_FOR_CI",
     "MIN_GROUPS_FOR_CV",
@@ -276,6 +295,12 @@ class MetricBundle:
     #: describes, and a candidate compared against it as though it were would
     #: be compared against the wrong bar.
     backoff_usage: Dict[str, int] = field(default_factory=dict)
+    #: SCHEMA.md 5b: the fraction of test rows whose perturbation identity
+    #: never appeared in training, under *these* folds. Required beside every
+    #: cross-validated number in this project, because grouping stops a study
+    #: crossing a split but does not establish that the held-out perturbation
+    #: was learnable from the training side at all.
+    unseen_perturbation_identity: Dict[str, Any] = field(default_factory=dict)
     baseline_detail: Dict[str, Any] = field(default_factory=dict)
     notes: List[str] = field(default_factory=list)
 
@@ -332,6 +357,7 @@ class MetricBundle:
             "per_fold_accuracy": list(self.per_fold_accuracy),
             "abstention_reasons": dict(sorted(self.abstention_reasons.items())),
             "backoff_usage": dict(sorted(self.backoff_usage.items())),
+            "unseen_perturbation_identity": dict(self.unseen_perturbation_identity),
             "baseline_detail": dict(self.baseline_detail),
             "notes": list(self.notes),
         }
@@ -847,6 +873,20 @@ def cross_validate(
         return bundle
     bundle.n_folds = len(folds)
 
+    bundle.unseen_perturbation_identity = perturbation_identity_novelty(
+        dataset, folds
+    )
+    unseen_fraction = bundle.unseen_perturbation_identity.get("fraction_unseen")
+    if unseen_fraction is not None and unseen_fraction > 0.5:
+        bundle.notes.append(
+            "%.1f%% of the test rows under this grouping carry a perturbation "
+            "identity that never appears in their fold's training set "
+            "(SCHEMA.md 5b). For those rows there was nothing specific to have "
+            "learned, so the accuracy beside them is substantially a "
+            "measurement of the label prior."
+            % (100.0 * unseen_fraction)
+        )
+
     pooled_true: List[str] = []
     pooled_pred: List[Optional[str]] = []
     pooled_proba: List[Optional[Dict[str, float]]] = []
@@ -1138,6 +1178,475 @@ def cross_validate(
 
 
 # --------------------------------------------------------------------------- #
+# paired comparison against a reference baseline
+# --------------------------------------------------------------------------- #
+
+@dataclass(frozen=True)
+class ComparisonSlice:
+    """A paired accuracy difference on one subset of the pooled test rows.
+
+    Four things are reported together, and the reason they are together is
+    that on this corpus they can disagree:
+
+    * ``delta`` -- the paired difference in accuracy on this subset;
+    * ``ci`` -- a percentile bootstrap of that difference resampling
+      **groups**, which respects SCHEMA.md 5's non-independence;
+    * ``mcnemar_p`` -- the exact two-sided row-level test on the discordant
+      rows, which does **not** respect it, and is reported anyway because it is
+      the test a reader will otherwise run in their head;
+    * ``n_rows`` / ``n_groups`` -- the size, printed so that a difference
+      measured on a hundred rows in twenty studies cannot be read as though it
+      were measured on thousands.
+
+    When the clustered interval excludes zero and the row-level test does not,
+    the honest conclusion is *suggestive, not established*. The renderer says
+    so in those words rather than quoting whichever of the two is more
+    flattering.
+    """
+
+    name: str
+    description: str
+    grouping: str
+    n_rows: int
+    n_groups: int
+    accuracy: Optional[float] = None
+    reference_accuracy: Optional[float] = None
+    delta: Optional[float] = None
+    ci: Optional[Dict[str, Any]] = None
+    n_only_baseline_right: int = 0
+    n_only_reference_right: int = 0
+    n_both_right: int = 0
+    n_both_wrong: int = 0
+    mcnemar_p: Optional[float] = None
+    caveats: Tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        _require_grouping(self.grouping)
+
+    @property
+    def interval_excludes_zero(self) -> Optional[bool]:
+        """``True`` only if the **group-clustered** interval excludes 0."""
+        if self.ci is None or self.ci.get("ci_low") is None:
+            return None
+        return self.ci["ci_low"] > 0.0 or self.ci["ci_high"] < 0.0
+
+    @property
+    def row_test_significant(self) -> Optional[bool]:
+        """``True`` if the row-level exact McNemar test reaches p < 0.05."""
+        if self.mcnemar_p is None:
+            return None
+        return self.mcnemar_p < 0.05
+
+    @property
+    def verdict(self) -> str:
+        """One of ``no_difference``, ``suggestive``, ``established``, ``undefined``.
+
+        ``established`` requires **both** tests to agree, and is deliberately
+        hard to reach: on 116 rows in 20 studies, a clustered interval that
+        excludes zero while the row-level test gives p = 0.16 is one piece of
+        evidence, not two.
+        """
+        if self.delta is None:
+            return "undefined"
+        interval = self.interval_excludes_zero
+        row = self.row_test_significant
+        if interval is None and row is None:
+            return "undefined"
+        if interval and row:
+            return "established"
+        if interval or row:
+            return "suggestive"
+        return "no_difference"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "slice": self.name,
+            "slice_description": self.description,
+            "grouping": _require_grouping(self.grouping),
+            "n_rows": self.n_rows,
+            "n_groups": self.n_groups,
+            "accuracy": self.accuracy,
+            "reference_accuracy": self.reference_accuracy,
+            "delta": self.delta,
+            "ci": self.ci,
+            "discordant_rows": {
+                "only_baseline_right": self.n_only_baseline_right,
+                "only_reference_right": self.n_only_reference_right,
+                "both_right": self.n_both_right,
+                "both_wrong": self.n_both_wrong,
+            },
+            "mcnemar_p_two_sided_exact": self.mcnemar_p,
+            "clustered_interval_excludes_zero": self.interval_excludes_zero,
+            "row_level_test_significant": self.row_test_significant,
+            "verdict": self.verdict,
+            "caveats": list(self.caveats),
+        }
+
+    def render(self) -> str:
+        if self.delta is None:
+            return "n/a (%d rows)" % self.n_rows
+        text = "%+.3f" % self.delta
+        if self.ci and self.ci.get("ci_low") is not None:
+            text += " [%+.3f, %+.3f]" % (self.ci["ci_low"], self.ci["ci_high"])
+        text += " (%.3f vs %.3f, n=%d/%dg)" % (
+            self.accuracy,
+            self.reference_accuracy,
+            self.n_rows,
+            self.n_groups,
+        )
+        return text
+
+
+#: The subsets every comparison is computed on, as data.
+#:
+#: ``primary_cell_seen`` is the one that matters for attribution. Where the
+#: candidate's primary cell was never populated in training, the candidate and
+#: the floor fall back to the same global mode and predict identically **by
+#: construction**; such rows can contribute nothing to a difference, and
+#: including them both dilutes the effect and imports whatever the label prior
+#: happens to be on that subset. Both figures are reported, each labelled, so
+#: neither can be quoted as the other.
+COMPARISON_SLICES: Tuple[Tuple[str, str], ...] = (
+    (
+        "all_rows",
+        "every pooled out-of-fold row the two baselines both answered",
+    ),
+    (
+        "primary_cell_seen",
+        "rows whose primary cell was populated in training -- the only rows "
+        "on which the two baselines can differ",
+    ),
+)
+
+
+@dataclass(frozen=True)
+class Comparison:
+    """A **paired** accuracy difference between two baselines, with its grouping.
+
+    Two accuracies printed side by side in a table invite the reader to
+    subtract them, and the difference of two independent intervals is not an
+    interval for the difference. This is the comparison done properly: both
+    baselines are run over the *same* folds, the difference is computed on the
+    rows **both** of them answered, and the bootstrap resamples groups of that
+    paired set, so the correlation between the two baselines (which is high --
+    they share a training set and a backoff tail) is kept rather than thrown
+    away.
+
+    ``n_only_baseline_right`` and ``n_only_reference_right`` are the discordant
+    counts: the rows where exactly one of the two was right. They are the whole
+    evidence for a difference, they need no distributional assumption, and on
+    this corpus they are usually small enough to be read directly.
+
+    The same difference is computed on several :class:`ComparisonSlice` s: the
+    whole pooled test set, the rows whose primary cell was populated in
+    training, and -- because a corpus can hide a real effect inside an average
+    -- each of those split by ``perturbation_class``. Two halves of a corpus
+    that move in opposite directions cancel in the pooled number, and a
+    benchmark that reported only the pooled number would record "no effect"
+    where the truth is "an effect in one half and the opposite in the other".
+    That is exactly what happens here, which is why the stratification is part
+    of the measurement rather than a follow-up.
+
+    Like :class:`Estimate`, it cannot be constructed without a declared
+    grouping (SCHEMA.md 5).
+    """
+
+    grouping: str
+    baseline: str
+    reference: str
+    status: str = "ok"
+    status_detail: Optional[str] = None
+    n_rows_unpaired: int = 0
+    slices: Tuple[ComparisonSlice, ...] = ()
+    caveats: Tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        _require_grouping(self.grouping)
+
+    def slice_named(self, name: str) -> Optional[ComparisonSlice]:
+        for item in self.slices:
+            if item.name == name:
+                return item
+        return None
+
+    @property
+    def overall(self) -> Optional[ComparisonSlice]:
+        return self.slice_named("all_rows")
+
+    def to_dict(self) -> Dict[str, Any]:
+        grouping = _require_grouping(self.grouping)
+        return {
+            "grouping": grouping,
+            "grouping_description": GROUPINGS[grouping].description,
+            "baseline": self.baseline,
+            "reference": self.reference,
+            "status": self.status,
+            "status_detail": self.status_detail,
+            "n_rows_unpaired": self.n_rows_unpaired,
+            "slices": [item.to_dict() for item in self.slices],
+            "caveats": list(self.caveats),
+        }
+
+
+def compare_under_grouping(
+    factory: Callable[[], Baseline],
+    reference_factory: Callable[[], Baseline],
+    dataset: TaskDataset,
+    grouping: str,
+    *,
+    n_folds: int = 5,
+    n_bootstrap: int = 1000,
+    seed: int = 20240101,
+    fold_provider: Optional[FoldProvider] = None,
+) -> Comparison:
+    """Paired out-of-fold accuracy difference, ``factory`` minus ``reference``."""
+    grouping = _require_grouping(grouping)
+    probe = factory()
+    reference_probe = reference_factory()
+    base = dict(grouping=grouping, baseline=probe.name, reference=reference_probe.name)
+
+    for model in (probe, reference_probe):
+        if not model.available:
+            return Comparison(
+                status="baseline_unavailable",
+                status_detail="%s cannot run: %s"
+                % (model.name, model.availability.reason),
+                **base,
+            )
+    if dataset.is_empty:
+        return Comparison(
+            status="empty_dataset",
+            status_detail="no labellable examples, so nothing to compare",
+            **base,
+        )
+
+    group_values = dataset.group_values(grouping)
+    distinct = {v for v in group_values if v is not None}
+    if len(distinct) < MIN_GROUPS_FOR_CV:
+        return Comparison(
+            status="insufficient_groups",
+            status_detail="%d distinct %s group(s)" % (len(distinct), grouping),
+            **base,
+        )
+
+    provider = fold_provider or resolve_fold_provider()
+    folds = provider.folds_for(dataset, grouping, n_folds).folds
+    if not folds:
+        return Comparison(
+            status="insufficient_groups",
+            status_detail="the fold generator produced no usable folds",
+            **base,
+        )
+
+    truth: List[str] = []
+    mine: List[Optional[str]] = []
+    theirs: List[Optional[str]] = []
+    pooled_group: List[Optional[str]] = []
+    pooled_class: List[str] = []
+    primary_seen: List[Optional[bool]] = []
+    primary_level = probe.primary_level
+    for train_idx, test_idx in folds:
+        train = dataset.subset(train_idx)
+        test = dataset.subset(test_idx)
+        features = [e.features for e in test]
+        truth.extend(e.label for e in test)
+        model = factory().fit(train)
+        mine.extend(model.predict(features))
+        theirs.extend(reference_factory().fit(train).predict(features))
+        pooled_group.extend(group_values[i] for i in test_idx)
+        pooled_class.extend(
+            (e.features.perturbation_class or NULL_FEATURE) for e in test
+        )
+        for item in features:
+            level = model.prediction_level(item)
+            primary_seen.append(
+                None if primary_level is None else (level == primary_level)
+            )
+
+    paired = [
+        i for i in range(len(truth)) if mine[i] is not None and theirs[i] is not None
+    ]
+    caveats: List[str] = []
+    unpaired = len(truth) - len(paired)
+    if unpaired:
+        caveats.append(
+            "%d of %d test rows are excluded because at least one of the two "
+            "baselines abstained there; the difference is computed only where "
+            "both answered" % (unpaired, len(truth))
+        )
+    if not paired:
+        return Comparison(
+            status="no_paired_rows",
+            status_detail=(
+                "the two baselines never both answered on the same row, so no "
+                "paired difference exists"
+            ),
+            n_rows_unpaired=unpaired,
+            caveats=tuple(caveats),
+            **base,
+        )
+    if primary_level is None:
+        caveats.append(
+            "%s has no primary cell, so the 'primary_cell_seen' slices are not "
+            "computed for this comparison" % probe.name
+        )
+
+    correct_mine = {i: 1 if mine[i] == truth[i] else 0 for i in paired}
+    correct_theirs = {i: 1 if theirs[i] == truth[i] else 0 for i in paired}
+
+    def _slice(name: str, description: str, rows: Sequence[int]):
+        if not rows:
+            # A requested slice with no rows is reported as a slice with no
+            # rows, not omitted. "No row of this half had its cell populated in
+            # training" is a finding -- it is what SCHEMA.md 5b predicts for a
+            # perturbation that exists in one study -- and an absent table row
+            # would read as an oversight.
+            return ComparisonSlice(
+                name=name,
+                description=description,
+                grouping=grouping,
+                n_rows=0,
+                n_groups=0,
+                caveats=(
+                    "no paired test row falls in this slice, so the two "
+                    "baselines cannot differ here and no difference exists to "
+                    "report",
+                ),
+            )
+        groups = M.index_groups([pooled_group[i] for i in rows])
+        row_list = list(rows)
+
+        def _delta(positions: Sequence[int]) -> Optional[float]:
+            if not positions:
+                return None
+            n_ = len(positions)
+            return (
+                sum(correct_mine[row_list[p]] for p in positions) / n_
+                - sum(correct_theirs[row_list[p]] for p in positions) / n_
+            )
+
+        # index_groups indexes into the slice's own row list, so the bootstrap
+        # resamples whole groups *of this slice*.
+        n_rows = len(row_list)
+        accuracy = sum(correct_mine[i] for i in row_list) / n_rows
+        reference_accuracy = sum(correct_theirs[i] for i in row_list) / n_rows
+        only_mine = sum(
+            1 for i in row_list if correct_mine[i] and not correct_theirs[i]
+        )
+        only_theirs = sum(
+            1 for i in row_list if correct_theirs[i] and not correct_mine[i]
+        )
+        # Every slice uses the same seed on purpose. Two slices that happen to
+        # hold the same rows -- which is what happens when one half of the
+        # corpus contributes every row of a subset -- then report the same
+        # interval, rather than two Monte Carlo draws of it that a reader would
+        # have to reconcile.
+        ci = M.bootstrap_group_ci(_delta, groups, n_boot=n_bootstrap, seed=seed)
+        slice_caveats: List[str] = []
+        if n_rows < MIN_ROWS_FOR_METRIC:
+            slice_caveats.append(
+                "n=%d paired rows is below %d: this difference does not carry "
+                "meaning" % (n_rows, MIN_ROWS_FOR_METRIC)
+            )
+        if len(groups) < MIN_GROUPS_FOR_CI:
+            slice_caveats.append(
+                "only %d independent %s group(s): treat the interval as "
+                "indicative" % (len(groups), grouping)
+            )
+        if ci is not None and ci.get("ci_low") is None and ci.get("note"):
+            slice_caveats.append(str(ci["note"]))
+        return ComparisonSlice(
+            name=name,
+            description=description,
+            grouping=grouping,
+            n_rows=n_rows,
+            n_groups=len(groups),
+            accuracy=accuracy,
+            reference_accuracy=reference_accuracy,
+            delta=accuracy - reference_accuracy,
+            ci=ci,
+            n_only_baseline_right=only_mine,
+            n_only_reference_right=only_theirs,
+            n_both_right=sum(
+                1 for i in row_list if correct_mine[i] and correct_theirs[i]
+            ),
+            n_both_wrong=sum(
+                1 for i in row_list if not correct_mine[i] and not correct_theirs[i]
+            ),
+            mcnemar_p=M.mcnemar_exact_p(only_mine, only_theirs),
+            caveats=tuple(slice_caveats),
+        )
+
+    seen_rows = [i for i in paired if primary_seen[i]]
+    classes = sorted({pooled_class[i] for i in paired})
+    requests: List[Tuple[str, str, List[int]]] = [
+        ("all_rows", COMPARISON_SLICES[0][1], list(paired)),
+    ]
+    if primary_level is not None:
+        requests.append(("primary_cell_seen", COMPARISON_SLICES[1][1], seen_rows))
+    for cls in classes:
+        rows = [i for i in paired if pooled_class[i] == cls]
+        requests.append(
+            (
+                cls,
+                "perturbation_class = %s, every paired row" % cls,
+                rows,
+            )
+        )
+        if primary_level is not None:
+            requests.append(
+                (
+                    "%s__primary_cell_seen" % cls,
+                    "perturbation_class = %s, rows whose primary cell was "
+                    "populated in training" % cls,
+                    [i for i in rows if primary_seen[i]],
+                )
+            )
+
+    slices = []
+    for name, description, rows in requests:
+        item = _slice(name, description, rows)
+        if item is not None:
+            slices.append(item)
+
+    return Comparison(
+        status="ok",
+        n_rows_unpaired=unpaired,
+        slices=tuple(slices),
+        caveats=tuple(caveats),
+        **base,
+    )
+
+
+#: Which reference each baseline is compared against, as data.
+#:
+#: Every baseline is compared against ``global_majority`` -- the floor, and the
+#: only comparison that answers "is direction predictable at all". The two
+#: schema v0.2.0 baselines are *additionally* compared against
+#: ``population_outcome_majority``, which is the same cell without the signed
+#: axis and is therefore the comparison that isolates what the axis bought.
+COMPARISON_REFERENCES: Tuple[Tuple[str, str], ...] = (
+    ("outcome_majority", "global_majority"),
+    ("population_outcome_majority", "global_majority"),
+    ("perturbation_axis_cell_majority", "global_majority"),
+    ("perturbation_axis_cell_majority", "population_outcome_majority"),
+    ("perturbation_axis_majority", "global_majority"),
+    ("perturbation_axis_majority", "population_outcome_majority"),
+    ("perturbation_axis_condition_majority", "global_majority"),
+    ("perturbation_axis_condition_majority", "perturbation_axis_majority"),
+    ("neurotransmitter_sign", "global_majority"),
+)
+
+#: The comparison the report's headline is computed from: the axis cell against
+#: the floor. Named here so that the headline cannot quietly be recomputed from
+#: a different pair than the one the tables show.
+HEADLINE_COMPARISON: Tuple[str, str] = (
+    "perturbation_axis_cell_majority",
+    "global_majority",
+)
+
+
+# --------------------------------------------------------------------------- #
 # the whole benchmark
 # --------------------------------------------------------------------------- #
 
@@ -1147,7 +1656,15 @@ class BenchmarkResult:
 
     dataset_description: Dict[str, Any] = field(default_factory=dict)
     bundles: List[MetricBundle] = field(default_factory=list)
+    #: Paired comparisons, one per (candidate, reference, grouping). The
+    #: before/after statement in the report is read from these and not from
+    #: subtracting two cells of the results table.
+    comparisons: List[Comparison] = field(default_factory=list)
     baselines: List[Dict[str, Any]] = field(default_factory=list)
+    #: Dataset-level diagnostics from :mod:`syn4rch.models.diagnostics`,
+    #: computed before any model is fitted. They answer "was there anything
+    #: there to learn", which no row of the results table answers.
+    diagnostics: Dict[str, Any] = field(default_factory=dict)
     groupings: List[str] = field(default_factory=list)
     fold_source: str = "unset"
     fold_source_note: str = ""
@@ -1161,6 +1678,18 @@ class BenchmarkResult:
                 return item
         return None
 
+    def comparison(
+        self, baseline: str, reference: str, grouping: str
+    ) -> Optional[Comparison]:
+        for item in self.comparisons:
+            if (
+                item.baseline == baseline
+                and item.reference == reference
+                and item.grouping == grouping
+            ):
+                return item
+        return None
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "generated_at": self.generated_at,
@@ -1171,7 +1700,9 @@ class BenchmarkResult:
             "fold_source_note": self.fold_source_note,
             "groupings_reported": list(self.groupings),
             "baselines": list(self.baselines),
+            "diagnostics": dict(self.diagnostics),
             "results": [b.to_dict() for b in self.bundles],
+            "comparisons": [c.to_dict() for c in self.comparisons],
         }
 
 
@@ -1196,6 +1727,7 @@ def run_benchmark(
 
     result = BenchmarkResult(
         dataset_description=dataset.describe(),
+        diagnostics=dataset_diagnostics(dataset),
         groupings=list(groupings),
         fold_source=provider.source,
         fold_source_note=provider.note,
@@ -1227,6 +1759,22 @@ def run_benchmark(
                     n_bootstrap=n_bootstrap,
                     seed=seed,
                     n_reliability_bins=n_reliability_bins,
+                    fold_provider=provider,
+                )
+            )
+    for candidate, reference in COMPARISON_REFERENCES:
+        if candidate not in factories or reference not in factories:
+            continue
+        for grouping in groupings:
+            result.comparisons.append(
+                compare_under_grouping(
+                    factories[candidate],
+                    factories[reference],
+                    dataset,
+                    grouping,
+                    n_folds=n_folds,
+                    n_bootstrap=n_bootstrap,
+                    seed=seed,
                     fold_provider=provider,
                 )
             )

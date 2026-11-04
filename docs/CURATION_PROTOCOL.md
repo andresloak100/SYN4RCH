@@ -1,4 +1,4 @@
-# SYN4RCH curation protocol (v0.1.0)
+# SYN4RCH curation protocol (v0.2.0)
 
 How a published experiment becomes a Tier A record. `docs/SCHEMA.md` defines
 *what* a record is; this document defines *how* one is allowed to come into
@@ -62,7 +62,21 @@ reporting no result yields none.
    record.
 3. `source_locator` is the unit's locator, unmodified.
 4. Any field the passage does not report is `null`. Not a default, not a
-   typical value, not a value from elsewhere in the paper.
+   typical value, not a value from elsewhere in the paper. The one controlled
+   exception is the condition dimension, covered in 3b below.
+5. `perturbation_class` and `perturbation_polarity` are **derived, never
+   judged**. Take them from `syn4rch.schema.rules`, or leave them null and let
+   the gate fill them. A hand-written `perturbation_class` that disagrees with
+   `method` is refused outright (`S007`); a hand-written
+   `perturbation_polarity` that disagrees with the rule is admitted with a
+   warning (`W013`), because for a locally infused drug a curator who has read
+   the pharmacology may genuinely know the sign when `valence` does not. Where
+   you do override, say why in `extraction_notes`.
+6. For a `molecular` or `pharmacological` perturbation, `target_raw` is the
+   paper's own name for what was manipulated and `target_id` resolves it
+   against `data/vocab/targets.json`. Neither may be guessed from context: an
+   ambiguous match is `null`, and `null` is reported (`W014`) rather than
+   filled in.
 
 **Forbidden.**
 
@@ -81,6 +95,48 @@ reporting no result yields none.
   (SCHEMA.md 3.5).
 - Proposing any record for a paper whose text was not retrieved (SCHEMA.md
   rule 2.5). Abstract-only papers are carried as candidates, never as records.
+- Setting `target_raw` or `target_id` on a circuit or structural perturbation.
+  A chemogenetic actuator is an `actuator`, not a molecular target, and the
+  confusion corrupts `record_id` (SCHEMA.md 3.4b, refused as `S008`).
+- Writing a condition the paper does not state anywhere, including
+  `not_reported` when nothing was checked. `not_reported` is an assertion that
+  the paper was read and is silent; a migration or a reader who did not look
+  writes `null`.
+- Letting the derived polarity stand silently on a **dominant-negative or
+  catalytically dead allele**. Overexpressing one is `increase` by method and a
+  loss of function in fact, so name the allele in `targeting_strategy` and say
+  so in `extraction_notes`. `W016` catches the wordings it knows; it is not a
+  substitute for the reader noticing (`docs/DECISIONS.md` D-032).
+- Reading a `perturbation_polarity` as though it described the readout. The
+  polarity and the `direction` share the words `increase` and `decrease` and
+  mean different things: the polarity is what was done inside the brain, the
+  direction is what the body did (`docs/DECISIONS.md` D-033).
+
+## 3b. Stage 6: the condition dimension
+
+The condition dimension is `(sex, diet, age_group, challenge)` and it is the
+one place where a value may come from outside the record's own passage.
+
+Papers put the result in Results and the sex and diet in Methods. Reading the
+passage alone therefore guaranteed the gap this version exists to close: 197 of
+the first 362 records carried no diet and 224 no sex, and the curators were
+right every single time. So a condition **may** be taken from the paper's
+Methods, on two conditions:
+
+1. `condition_source = methods`, stated, not implied.
+2. `condition_locator` names the Methods passage it came from. Its absence is a
+   HARD finding (`A008`) and the record is refused.
+
+Everything else about rule 4 stands. A condition that no passage of the paper
+states is `null`. `condition_source` widens where a value may be read *from*;
+it does not widen what may be written down. A reader who infers a diet from a
+figure legend's y-axis, from a strain's typical husbandry, or from what the lab
+usually does has fabricated it.
+
+`challenge` is the acute state at the moment of measurement — fasted, refed,
+glucose-loaded, cold-exposed — and is not `diet`, which is the maintenance diet
+over weeks. In this literature the challenge frequently decides the sign of the
+result, which is why it is now a field and not a note.
 
 **Honest labelling.** `extraction_method` records what actually happened:
 `llm` for an unreviewed model proposal, `llm_human_reviewed` only once a human
@@ -120,6 +176,13 @@ Stated plainly, because a reader of the dataset is entitled to know.
   `review_status` are the only honest record of whether a human made it.
 - Effect sizes, dispersions and sample sizes transcribed from text are not
   recomputed from the underlying data. They are as right as the paper is.
+- The verbatim gate does not yet re-check `condition_locator`; it reads
+  `source_locator` only. A condition taken from Methods is therefore checked
+  for *provenance* but not yet for *substance* (`docs/DECISIONS.md` D-024).
+- Nothing detects a polarity inversion mechanically. The outcomes vocabulary
+  annotates the known traps (D-021) and the perturbation key keeps molecular
+  and circuit signs apart (D-025), but a reader who states the wrong direction
+  for an un-annotated assay will pass every check (D-019).
 - Nothing detects two papers reporting one animal cohort
   (`docs/DECISIONS.md` D-013). Lab-level grouping is the available proxy and
   it is weaker than cohort-level grouping.

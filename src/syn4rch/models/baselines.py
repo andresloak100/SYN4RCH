@@ -1,4 +1,4 @@
-"""Five baselines for direction-of-effect prediction.
+"""Eight baselines for direction-of-effect prediction.
 
 These are the **bar to clear**. The point of writing them carefully is that a
 sophisticated model is worth adopting only if it beats them under a named
@@ -6,15 +6,27 @@ grouping (``docs/SCHEMA.md`` 5), and the commonest way a modelling project
 deceives itself is by comparing a learned model against a baseline that was
 not given the same chance.
 
-The five, in increasing order of how much structure they assume:
+The eight, in increasing order of how much structure they assume:
 
-=============================== ==================================================
-``GlobalMajority``              one label for everything; the floor
-``OutcomeMajority``             the modal direction of each readout
-``PopulationOutcomeMajority``   the modal direction of each (population, outcome)
-``NeurotransmitterSign``        a declared sign rule, abstaining when unsure
-``KGPathSign``                  sign propagation over a knowledge-graph edge table
-=============================== ==================================================
+======================================== ==========================================
+``GlobalMajority``                       one label for everything; the floor
+``OutcomeMajority``                      the modal direction of each readout
+``PopulationOutcomeMajority``            the modal direction of each (population, outcome)
+``PerturbationAxisCellMajority``         the axis cell against the floor, nothing between (v0.2.0)
+``PerturbationAxisMajority``             + the signed perturbation axis, with backoff (v0.2.0)
+``PerturbationAxisConditionMajority``    + the condition the work ran under (v0.2.0)
+``NeurotransmitterSign``                 a declared sign rule, abstaining when unsure
+``KGPathSign``                           sign propagation over a knowledge-graph edge table
+======================================== ==========================================
+
+The first three and ``NeurotransmitterSign`` key on the schema v0.1.0 feature
+tuple and are **unchanged**: their cell keys, their backoff order and their tie
+rule are exactly what produced the previous benchmark, so the before/after
+comparison in the report is like-for-like and not a rerun of a different
+measurement. :data:`FEATURE_GENERATION_V1` and
+:data:`FEATURE_GENERATION_V2` tag which generation each baseline belongs to, as
+data, so that table is assembled from a declaration rather than from a memory
+of which row was which.
 
 Two deliberate design choices run through all of them.
 
@@ -41,22 +53,41 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
-from .task import LABELS, Example, Features
+from .task import (
+    CONDITION_FEATURE_FIELDS,
+    FEATURE_FIELDS_V1,
+    LABELS,
+    PERTURBATION_AXIS,
+    Example,
+    Features,
+    expand_cell_fields,
+)
 
 __all__ = [
     "Availability",
     "BaselineUnavailable",
     "Baseline",
+    "FEATURE_GENERATION_V1",
+    "FEATURE_GENERATION_V2",
+    "BackoffMajority",
     "GlobalMajority",
     "OutcomeMajority",
     "PopulationOutcomeMajority",
+    "PerturbationAxisCellMajority",
+    "PerturbationAxisMajority",
+    "PerturbationAxisConditionMajority",
     "NeurotransmitterSign",
     "KGPathSign",
+    "POPULATION_OUTCOME_BACKOFF",
+    "PERTURBATION_AXIS_CELL_BACKOFF",
+    "PERTURBATION_AXIS_BACKOFF",
+    "PERTURBATION_AXIS_CONDITION_BACKOFF",
     "NEUROTRANSMITTER_VALENCE_RULES",
     "UNSIGNED_TRANSMITTERS",
     "EDGE_TABLE_FORMAT",
     "EdgeTable",
     "all_baseline_factories",
+    "baselines_by_feature_generation",
     "build_all",
 ]
 
@@ -94,6 +125,18 @@ class BaselineUnavailable(RuntimeError):
 
 
 # --------------------------------------------------------------------------- #
+# which generation of the feature tuple a baseline uses
+# --------------------------------------------------------------------------- #
+
+#: A baseline that keys only on the schema v0.1.0 features. Its number in this
+#: benchmark is directly comparable with the previous one.
+FEATURE_GENERATION_V1 = "v0.1.0"
+
+#: A baseline that keys on at least one schema v0.2.0 feature.
+FEATURE_GENERATION_V2 = "v0.2.0"
+
+
+# --------------------------------------------------------------------------- #
 # base class
 # --------------------------------------------------------------------------- #
 
@@ -114,6 +157,16 @@ class Baseline:
     description = ""
     #: Whether :meth:`predict_proba` can return anything.
     emits_proba = False
+    #: Which generation of the task's feature tuple this baseline keys on;
+    #: one of :data:`FEATURE_GENERATION_V1` / :data:`FEATURE_GENERATION_V2`.
+    feature_generation = FEATURE_GENERATION_V1
+    #: The features this baseline actually reads, declared rather than
+    #: inferred. The report's before/after table is built from these two
+    #: attributes, so a baseline that gained a feature and did not say so would
+    #: show up in the wrong column -- which is why
+    #: ``tests/test_models_baselines.py`` checks the declaration against the
+    #: cell keys the baseline really uses.
+    features_used: Tuple[str, ...] = ()
 
     def __init__(self) -> None:
         self.availability: Availability = AVAILABLE
@@ -159,6 +212,27 @@ class Baseline:
     def _predict_one(self, features: Features) -> Optional[str]:  # pragma: no cover
         raise NotImplementedError
 
+    def prediction_level(self, features: Features) -> Optional[str]:
+        """Which rung of this baseline's structure answered, or ``None``.
+
+        ``None`` means the question does not apply (the baseline has no
+        structure to back off through). A baseline that does have one returns
+        the level's name, and :attr:`primary_level` names the most specific
+        rung. The evaluation harness uses the pair to report a metric
+        restricted to the rows whose **primary cell was populated in
+        training** -- which is the only subset on which a cell baseline and the
+        global-majority floor can even differ, since on an unpopulated cell
+        both fall back to the same global mode and their predictions are
+        identical by construction. Pooling those rows into the comparison
+        dilutes the difference with rows that carry no information about it.
+        """
+        return None
+
+    @property
+    def primary_level(self) -> Optional[str]:
+        """Name of this baseline's most specific rung, or ``None``."""
+        return None
+
     def predict_proba(
         self, features: Iterable[Features]
     ) -> Optional[List[Optional[Dict[str, float]]]]:
@@ -175,6 +249,8 @@ class Baseline:
             "description": self.description,
             "availability": self.availability.to_dict(),
             "emits_proba": self.emits_proba,
+            "feature_generation": self.feature_generation,
+            "features_used": list(self.features_used),
             "n_train": self.n_train,
         }
 
@@ -230,6 +306,8 @@ class GlobalMajority(Baseline):
     name = "global_majority"
     description = "modal direction over the whole training set"
     emits_proba = True
+    feature_generation = FEATURE_GENERATION_V1
+    features_used = ()
 
     def __init__(self) -> None:
         super().__init__()
@@ -268,6 +346,8 @@ class OutcomeMajority(Baseline):
     name = "outcome_majority"
     description = "modal direction per outcome_id, backing off to global"
     emits_proba = True
+    feature_generation = FEATURE_GENERATION_V1
+    features_used = ("outcome_id",)
 
     def __init__(self) -> None:
         super().__init__()
@@ -316,7 +396,93 @@ POPULATION_OUTCOME_BACKOFF: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
 )
 
 
-class PopulationOutcomeMajority(Baseline):
+class BackoffMajority(Baseline):
+    """Modal label of the first populated cell in a declared backoff chain.
+
+    The shared machinery of every cell-frequency baseline here. A subclass
+    declares :attr:`chain` -- an ordered sequence of ``(level name, cell
+    fields)`` -- and nothing else about prediction. Keeping it in one place
+    means the three cell baselines cannot drift apart in their tie rule, their
+    "is this cell populated" test or their backoff accounting, and that a new
+    cell definition is a line of data rather than a reimplementation whose
+    numbers would not be comparable with the others'.
+
+    Every level is tried in order and the first one seen in training wins,
+    then the global mode, then abstention (reached only when the training set
+    was empty). ``backoff_usage`` counts how often each rung was actually used:
+    a baseline named for its primary cell that in fact spent its predictions
+    two rungs down is not the model its name describes, and a candidate
+    compared against it as though it were would be compared against the wrong
+    bar.
+    """
+
+    #: ``((level name, cell fields), ...)``, most specific first. A field may
+    #: be :data:`~syn4rch.models.task.PERTURBATION_AXIS`, which expands to the
+    #: class, the polarity and the target together -- the only way this package
+    #: permits a polarity into a cell key.
+    chain: Tuple[Tuple[str, Tuple[str, ...]], ...] = ()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.levels: Dict[str, Dict[Tuple[str, ...], Dict[str, int]]] = {}
+        self.global_counts: Dict[str, int] = {}
+        self.backoff_counts: Dict[str, int] = {}
+
+    def _fit(self, examples: List[Example]) -> None:
+        self.levels = {name: {} for name, _ in self.chain}
+        for example in examples:
+            for name, fields_ in self.chain:
+                key = example.features.cell(*fields_)
+                cell = self.levels[name].setdefault(
+                    key, {label: 0 for label in LABELS}
+                )
+                cell[example.label] = cell.get(example.label, 0) + 1
+        self.global_counts = _count_labels(examples)
+        self.backoff_counts = {}
+
+    def resolve(self, features: Features) -> Tuple[Dict[str, int], str]:
+        """The counts this baseline would use, and the backoff level's name."""
+        for name, fields_ in self.chain:
+            cell = self.levels.get(name, {}).get(features.cell(*fields_))
+            if cell and sum(cell.values()) > 0:
+                return cell, name
+        if sum(self.global_counts.values()) > 0:
+            return self.global_counts, "global"
+        return {}, "abstain"
+
+    def _predict_one(self, features: Features) -> Optional[str]:
+        counts, level = self.resolve(features)
+        self.backoff_counts[level] = self.backoff_counts.get(level, 0) + 1
+        return _modal(counts)
+
+    def prediction_level(self, features: Features) -> Optional[str]:
+        if not self.available or not self.fitted:
+            return None
+        return self.resolve(features)[1]
+
+    @property
+    def primary_level(self) -> Optional[str]:
+        return self.chain[0][0] if self.chain else None
+
+    def predict_proba(self, features):
+        if not self.available or not self.fitted:
+            return None
+        return [_proba_from_counts(self.resolve(f)[0]) for f in features]
+
+    def describe(self) -> Dict[str, Any]:
+        out = super().describe()
+        out["backoff_chain"] = [
+            "(%s)" % ", ".join(expand_cell_fields(*fields_))
+            for _, fields_ in self.chain
+        ] + ["global", "abstain"]
+        out["n_cells_per_level"] = {
+            name: len(cells) for name, cells in sorted(self.levels.items())
+        }
+        out["backoff_usage"] = dict(sorted(self.backoff_counts.items()))
+        return out
+
+
+class PopulationOutcomeMajority(BackoffMajority):
     """Modal direction per (population, outcome) cell, with a declared backoff.
 
     Backoff chain, in order, each level used only when the level above it was
@@ -358,55 +524,190 @@ class PopulationOutcomeMajority(Baseline):
         "cell -> outcome -> population -> global -> abstain"
     )
     emits_proba = True
+    feature_generation = FEATURE_GENERATION_V1
+    features_used = ("population_key", "outcome_id")
+    chain = POPULATION_OUTCOME_BACKOFF
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.levels: Dict[str, Dict[Tuple[str, ...], Dict[str, int]]] = {}
-        self.global_counts: Dict[str, int] = {}
-        self.backoff_counts: Dict[str, int] = {}
 
-    def _fit(self, examples: List[Example]) -> None:
-        self.levels = {name: {} for name, _ in POPULATION_OUTCOME_BACKOFF}
-        for example in examples:
-            for name, fields_ in POPULATION_OUTCOME_BACKOFF:
-                key = example.features.cell(*fields_)
-                cell = self.levels[name].setdefault(
-                    key, {label: 0 for label in LABELS}
-                )
-                cell[example.label] = cell.get(example.label, 0) + 1
-        self.global_counts = _count_labels(examples)
-        self.backoff_counts = {}
+# --------------------------------------------------------------------------- #
+# the signed perturbation axis (schema v0.2.0)
+# --------------------------------------------------------------------------- #
 
-    def resolve(self, features: Features) -> Tuple[Dict[str, int], str]:
-        """The counts this baseline would use, and the backoff level's name."""
-        for name, fields_ in POPULATION_OUTCOME_BACKOFF:
-            cell = self.levels.get(name, {}).get(features.cell(*fields_))
-            if cell and sum(cell.values()) > 0:
-                return cell, name
-        if sum(self.global_counts.values()) > 0:
-            return self.global_counts, "global"
-        return {}, "abstain"
+#: The backoff chain of :class:`PerturbationAxisMajority`. The first two rungs
+#: are new in v0.2.0; the last three are :data:`POPULATION_OUTCOME_BACKOFF`
+#: unchanged, so this baseline is a strict refinement of
+#: :class:`PopulationOutcomeMajority` and the two differ only where the axis
+#: cell was populated. ``backoff_usage`` is therefore the measurement of how
+#: often the new axis had anything to say.
+PERTURBATION_AXIS_BACKOFF: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
+    ("population_axis_outcome", ("population_key", PERTURBATION_AXIS, "outcome_id")),
+    ("axis_outcome", (PERTURBATION_AXIS, "outcome_id")),
+) + POPULATION_OUTCOME_BACKOFF
 
-    def _predict_one(self, features: Features) -> Optional[str]:
-        counts, level = self.resolve(features)
-        self.backoff_counts[level] = self.backoff_counts.get(level, 0) + 1
-        return _modal(counts)
+#: The backoff chain of :class:`PerturbationAxisConditionMajority`. Each
+#: conditioned rung is followed immediately by its unconditioned twin, so the
+#: chain never has to choose between "this exact condition" and "some
+#: condition": it prefers the former and falls through to the latter. The pair
+#: structure is what lets ``backoff_usage`` answer whether conditioning helped
+#: or merely fragmented -- a conditioned rung that is almost never used is a
+#: cell definition that split the data without separating anything.
+PERTURBATION_AXIS_CONDITION_BACKOFF: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
+    (
+        "population_axis_outcome_condition",
+        ("population_key", PERTURBATION_AXIS, "outcome_id")
+        + CONDITION_FEATURE_FIELDS,
+    ),
+    ("population_axis_outcome", ("population_key", PERTURBATION_AXIS, "outcome_id")),
+    (
+        "axis_outcome_condition",
+        (PERTURBATION_AXIS, "outcome_id") + CONDITION_FEATURE_FIELDS,
+    ),
+    ("axis_outcome", (PERTURBATION_AXIS, "outcome_id")),
+) + POPULATION_OUTCOME_BACKOFF
 
-    def predict_proba(self, features):
-        if not self.available or not self.fitted:
-            return None
-        return [_proba_from_counts(self.resolve(f)[0]) for f in features]
 
-    def describe(self) -> Dict[str, Any]:
-        out = super().describe()
-        out["backoff_chain"] = [
-            "(%s)" % ", ".join(fields_) for _, fields_ in POPULATION_OUTCOME_BACKOFF
-        ] + ["global", "abstain"]
-        out["n_cells_per_level"] = {
-            name: len(cells) for name, cells in sorted(self.levels.items())
-        }
-        out["backoff_usage"] = dict(sorted(self.backoff_counts.items()))
-        return out
+class PerturbationAxisMajority(BackoffMajority):
+    """Modal direction per (population, perturbation axis, outcome) cell.
+
+    The natural cell under schema v0.2.0, and the baseline the schema change
+    was made for. Before v0.2.0, 185 of 362 records carried
+    ``valence: unclear`` and so had no signed axis at all; a cell keyed on
+    valence put all of them in one undifferentiated bucket. Now every record
+    has ``perturbation_class`` and ``perturbation_polarity``, so a cell can
+    distinguish "activation of this population" from "inhibition of it" and
+    "loss of a gene product in it" from "gain of one".
+
+    **The class travels with the polarity by construction.** The cell field is
+    :data:`~syn4rch.models.task.PERTURBATION_AXIS`, which expands to
+    ``(perturbation_class, perturbation_polarity, perturbation_target)``; the
+    polarity cannot be named on its own, because
+    :meth:`syn4rch.models.task.Features.cell` raises if it is. ``decrease``
+    under ``circuit_activity`` is less firing and under ``molecular`` is less
+    of a gene product; a cell that pooled them would be the sign error
+    DECISIONS.md D-019 was written against, wearing a v0.2.0 badge.
+
+    **The target is part of the cell, and usually absent.** A ``molecular``
+    cell without it pools every gene that happens to share a population and a
+    readout -- in this corpus, different genes from different laboratories. The
+    cell key therefore includes ``perturbation_target`` so that, where the
+    target *is* recorded, two different genes do not occupy one prediction
+    cell; and the dataset summary reports how many examples have one, so that a
+    number computed where none does cannot be read as though the cell were
+    gene-specific.
+    """
+
+    name = "perturbation_axis_majority"
+    description = (
+        "modal direction per (population, perturbation_class, "
+        "perturbation_polarity, perturbation_target, outcome); backoff "
+        "cell -> (axis, outcome) -> (population, outcome) -> outcome -> "
+        "population -> global -> abstain"
+    )
+    emits_proba = True
+    feature_generation = FEATURE_GENERATION_V2
+    features_used = (
+        "population_key",
+        "perturbation_class",
+        "perturbation_polarity",
+        "perturbation_target",
+        "outcome_id",
+    )
+    chain = PERTURBATION_AXIS_BACKOFF
+
+
+#: The chain of :class:`PerturbationAxisCellMajority`: one rung, then the
+#: global mode. Deliberately *not* :data:`PERTURBATION_AXIS_BACKOFF`.
+PERTURBATION_AXIS_CELL_BACKOFF: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
+    ("population_axis_outcome", ("population_key", PERTURBATION_AXIS, "outcome_id")),
+)
+
+
+class PerturbationAxisCellMajority(BackoffMajority):
+    """The axis cell against the floor, with nothing else in between.
+
+    The *measuring instrument*, as opposed to the best predictor. Its only
+    difference from :class:`GlobalMajority` is the cell: where the
+    ``(population, perturbation axis, outcome)`` cell was populated in
+    training it predicts that cell's mode, and where it was not it predicts the
+    global mode, exactly as ``GlobalMajority`` would. A paired comparison
+    between the two therefore attributes every discordant row to the axis cell
+    and to nothing else.
+
+    :class:`PerturbationAxisMajority` is the better predictor, because the
+    outcome and population marginals are real information and it uses them. But
+    that makes its margin over ``GlobalMajority`` a mixture of the axis and
+    those marginals, and the question this benchmark exists to answer is what
+    the *axis* bought. Hence two baselines with the same primary cell: one to
+    predict with, one to measure with.
+
+    **On the cell key and the target.** The cell is
+    :data:`~syn4rch.models.task.PERTURBATION_AXIS`, i.e. ``(class, polarity,
+    target)`` from :func:`syn4rch.qc.keys.perturbation_key`, plus the
+    population and the outcome. Every record in the pre-migration curated file
+    has a null target, so today this key is exactly ``(population, class,
+    polarity, outcome)``. After the v0.2.0 migration stores ``target_raw`` it
+    becomes strictly finer -- a knockout of *Raptor* and a knockout of *p53* in
+    the same population stop sharing a cell. That is intended, and it means the
+    molecular numbers below are expected to move when the migration lands:
+    their cells are currently pooling different genes, which is the finding
+    that the mirroring diagnostic measures directly.
+    """
+
+    name = "perturbation_axis_cell_majority"
+    description = (
+        "modal direction of the (population, perturbation axis, outcome) cell, "
+        "falling straight back to the global mode; the instrument that "
+        "isolates the axis cell against the floor"
+    )
+    emits_proba = True
+    feature_generation = FEATURE_GENERATION_V2
+    features_used = (
+        "population_key",
+        "perturbation_class",
+        "perturbation_polarity",
+        "perturbation_target",
+        "outcome_id",
+    )
+    chain = PERTURBATION_AXIS_CELL_BACKOFF
+
+
+class PerturbationAxisConditionMajority(BackoffMajority):
+    """:class:`PerturbationAxisMajority`, conditioned on sex, diet and challenge.
+
+    Exists to answer one question with a number: does conditioning help, or
+    does it merely fragment? Schema v0.2.0 added the condition fields because
+    fourteen of eighteen apparent contradictions in the corpus turned out to be
+    a male cohort compared against a female one, or chow against high-fat
+    (DECISIONS.md D-023) -- which is a real finding about *comparability*. It
+    does not follow that conditioning improves *prediction*: a finer cell is a
+    smaller cell, and on 361 examples of which 153 state no condition at all,
+    the conditioned cell can only be emptier than the cell it refines.
+
+    The condition features are ``syn4rch.qc.keys.condition_key``'s tokens, in
+    which an unknown slot reads ``unknown`` -- one token for "the curator did
+    not address it" and "the paper does not say", pooled deliberately and
+    documented there. Two records that are both ``unknown`` therefore share a
+    cell by failing to state a condition, not by sharing one, and
+    ``condition_specificity`` in the dataset summary is what stops that from
+    being read as agreement.
+    """
+
+    name = "perturbation_axis_condition_majority"
+    description = (
+        "modal direction per (population, perturbation axis, outcome, sex, "
+        "diet, challenge); each conditioned rung falls through to its "
+        "unconditioned twin"
+    )
+    emits_proba = True
+    feature_generation = FEATURE_GENERATION_V2
+    features_used = (
+        "population_key",
+        "perturbation_class",
+        "perturbation_polarity",
+        "perturbation_target",
+        "outcome_id",
+    ) + CONDITION_FEATURE_FIELDS
+    chain = PERTURBATION_AXIS_CONDITION_BACKOFF
 
 
 # --------------------------------------------------------------------------- #
@@ -545,6 +846,8 @@ class NeurotransmitterSign(Baseline):
         "the vocabulary does not state a transmitter"
     )
     emits_proba = False
+    feature_generation = FEATURE_GENERATION_V1
+    features_used = ("population_id", "valence")
 
     def __init__(self, vocab_loader: Optional[Callable[[str], Mapping[str, Any]]] = None):
         """``vocab_loader`` matches ``syn4rch.vocab.load``: ``load(kind) -> dict``.
@@ -891,6 +1194,8 @@ class KGPathSign(Baseline):
         "such table exists"
     )
     emits_proba = False
+    feature_generation = FEATURE_GENERATION_V1
+    features_used = ("population_id", "outcome_id", "valence")
 
     def __init__(self, edge_table: Optional[EdgeTable] = None, max_depth: int = 4):
         super().__init__()
@@ -1021,9 +1326,29 @@ def all_baseline_factories() -> "Dict[str, Callable[[], Baseline]]":
         GlobalMajority.name: GlobalMajority,
         OutcomeMajority.name: OutcomeMajority,
         PopulationOutcomeMajority.name: PopulationOutcomeMajority,
+        PerturbationAxisCellMajority.name: PerturbationAxisCellMajority,
+        PerturbationAxisMajority.name: PerturbationAxisMajority,
+        PerturbationAxisConditionMajority.name: PerturbationAxisConditionMajority,
         NeurotransmitterSign.name: NeurotransmitterSign,
         KGPathSign.name: KGPathSign,
     }
+
+
+def baselines_by_feature_generation() -> Dict[str, List[str]]:
+    """``feature generation -> baseline names``, in report order.
+
+    Read from each class's declared :attr:`Baseline.feature_generation`, so the
+    before/after table in the report is assembled from the declaration rather
+    than from a hand-written list that could disagree with it.
+    """
+    out: Dict[str, List[str]] = {
+        FEATURE_GENERATION_V1: [],
+        FEATURE_GENERATION_V2: [],
+    }
+    for name, factory in all_baseline_factories().items():
+        generation = getattr(factory, "feature_generation", FEATURE_GENERATION_V1)
+        out.setdefault(generation, []).append(name)
+    return out
 
 
 def build_all() -> "List[Baseline]":

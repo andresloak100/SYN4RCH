@@ -23,7 +23,11 @@ import re
 import unicodedata
 from typing import Dict, Iterable, List, Optional
 
-KINDS = ("populations", "outcomes", "methods", "regions")
+#: Vocabulary files, by kind. ``targets`` was added with schema v0.2.0: the
+#: molecular target of a perturbation became a field of its own
+#: (``target_raw``/``target_id``), and it needs a vocabulary like any other
+#: resolved dimension.
+KINDS = ("populations", "outcomes", "methods", "regions", "targets")
 
 
 class VocabError(Exception):
@@ -272,6 +276,12 @@ def selfcheck(verbose: bool = False) -> Dict[str, dict]:
       * outcomes: tier in {A,B}; higher_is in {better,worse,None}
       * methods: canonical_valence in {activation,inhibition,ablation,unclear}
       * populations: curation_confidence in {high,medium,low}
+      * targets: label, a non-empty synonym list, and notes recording which
+        gene symbol was chosen as the id and why, are all required; and no
+        synonym of one entry may be a substring of a synonym of another,
+        because target synonyms are matched as substrings of curated free
+        text (see syn4rch.curate.migrate) and a containment would make one
+        occurrence resolve to two genes.
     """
     summary: Dict[str, dict] = {}
     regions = load("regions")
@@ -336,6 +346,35 @@ def selfcheck(verbose: bool = False) -> Dict[str, dict]:
             raise VocabError("methods/%s: canonical_valence %r invalid" % (eid, val))
         valences[val] += 1
     summary["methods"]["canonical_valence"] = valences
+
+    targets = load("targets")
+    for eid, entry in targets.items():
+        if not str(entry.get("label") or "").strip():
+            raise VocabError("targets/%s: label is required" % eid)
+        syns = entry.get("synonyms")
+        if not isinstance(syns, list) or not syns:
+            raise VocabError("targets/%s: synonyms must be a non-empty list" % eid)
+        if not all(isinstance(s, str) and s.strip() for s in syns):
+            raise VocabError("targets/%s: every synonym must be a non-empty string" % eid)
+        if not str(entry.get("notes") or "").strip():
+            raise VocabError(
+                "targets/%s: notes is required and must say which gene symbol "
+                "was chosen as the id and why" % eid
+            )
+    lowered = {eid: [s.lower() for s in entry["synonyms"]] for eid, entry in targets.items()}
+    for eid, syns in lowered.items():
+        for other, other_syns in lowered.items():
+            if other == eid:
+                continue
+            for mine in syns:
+                for theirs in other_syns:
+                    if mine in theirs:
+                        raise VocabCollisionError(
+                            "targets: synonym %r of %r is a substring of synonym "
+                            "%r of %r; substring matching could not tell them apart"
+                            % (mine, eid, theirs, other)
+                        )
+    summary["targets"]["synonyms"] = sum(len(v) for v in lowered.values())
 
     allen_known = sum(1 for e in regions.values() if e.get("allen_id") is not None)
     summary["regions"]["allen_id_set"] = allen_known

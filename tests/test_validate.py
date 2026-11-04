@@ -11,6 +11,7 @@ from syn4rch.schema import (
     is_admissible,
     validate,
     warning_findings,
+    SCHEMA_VERSION,
 )
 
 
@@ -146,7 +147,12 @@ class TestStructuralAndValueRules(unittest.TestCase):
             ({"population_raw": None}, "S002_MISSING_POPULATION_RAW"),
             ({"outcome_raw": None}, "S003_MISSING_OUTCOME_RAW"),
             ({"direction": None}, "S004_MISSING_DIRECTION"),
-            ({"schema_version": "0.2.0"}, "S006_SCHEMA_VERSION_MISMATCH"),
+            # A version that is deliberately not the current one. Spelled as
+            # "not SCHEMA_VERSION" rather than as a literal, because the
+            # literal that used to sit here became the *correct* version at the
+            # v0.2.0 bump and the test silently stopped checking anything.
+            ({"schema_version": SCHEMA_VERSION + "-not-this"},
+             "S006_SCHEMA_VERSION_MISMATCH"),
         ):
             findings = hard_findings(validate(synthetic.good_record(**override)))
             self.assertIn(code, codes(findings), override)
@@ -258,6 +264,227 @@ class TestRuleCatalogue(unittest.TestCase):
         for code, (severity, _field, _msg) in RULES.items():
             expected = Severity.WARNING if code.startswith("W") else Severity.HARD
             self.assertIs(severity, expected, code)
+
+
+
+class V020ConditionAndPerturbationTest(unittest.TestCase):
+    """The rules schema v0.2.0 added (A008, S007, S008, W013..W015)."""
+
+    def codes(self, record):
+        return [f.code for f in validate(record)]
+
+    def test_a_clean_fixture_triggers_none_of_them(self):
+        """Guards against the new rules firing on a well-formed record."""
+        new_codes = {
+            "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR",
+            "S007_PERTURBATION_CLASS_MISMATCH",
+            "S008_TARGET_ON_NON_MOLECULAR",
+            "W013_PERTURBATION_POLARITY_RULE_MISMATCH",
+            "W014_MOLECULAR_TARGET_UNIDENTIFIED",
+            "W015_CONDITION_UNSPECIFIED",
+        }
+        self.assertEqual(set(self.codes(synthetic.good_record())) & new_codes, set())
+        self.assertEqual(
+            set(self.codes(synthetic.molecular_record())) & new_codes, set()
+        )
+
+    def test_methods_sourced_condition_needs_a_locator(self):
+        bad = synthetic.good_record(
+            condition_source="methods", condition_locator=None
+        )
+        self.assertIn("A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR", self.codes(bad))
+        self.assertTrue(
+            any(f.is_hard for f in validate(bad)
+                if f.code == "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR")
+        )
+        good = synthetic.good_record(
+            condition_source="methods", condition_locator="Methods para 2"
+        )
+        self.assertNotIn(
+            "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR", self.codes(good)
+        )
+
+    def test_passage_sourced_condition_needs_no_locator(self):
+        r = synthetic.good_record(
+            condition_source="passage", condition_locator=None
+        )
+        self.assertNotIn(
+            "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR", self.codes(r)
+        )
+
+    def test_class_disagreeing_with_method_is_refused_not_warned(self):
+        bad = synthetic.good_record(perturbation_class="molecular")
+        findings = [
+            f for f in validate(bad)
+            if f.code == "S007_PERTURBATION_CLASS_MISMATCH"
+        ]
+        self.assertEqual(len(findings), 1)
+        self.assertTrue(findings[0].is_hard)
+        self.assertFalse(is_admissible(bad))
+
+    def test_target_on_a_circuit_perturbation_is_refused(self):
+        bad = synthetic.good_record(target_raw="Synthgene1")
+        self.assertIn("S008_TARGET_ON_NON_MOLECULAR", self.codes(bad))
+        self.assertFalse(is_admissible(bad))
+
+    def test_target_on_a_molecular_perturbation_is_fine(self):
+        self.assertNotIn(
+            "S008_TARGET_ON_NON_MOLECULAR",
+            self.codes(synthetic.molecular_record()),
+        )
+
+    def test_a_wrong_stored_class_cannot_suppress_the_target_check(self):
+        """Method outranks a derived field that disagrees with it."""
+        bad = synthetic.good_record(
+            perturbation_class="molecular", target_raw="Synthgene1"
+        )
+        codes = self.codes(bad)
+        self.assertIn("S007_PERTURBATION_CLASS_MISMATCH", codes)
+        self.assertIn("S008_TARGET_ON_NON_MOLECULAR", codes)
+
+    def test_polarity_disagreeing_with_the_rule_warns(self):
+        r = synthetic.good_record(perturbation_polarity="decrease")
+        findings = [
+            f for f in validate(r)
+            if f.code == "W013_PERTURBATION_POLARITY_RULE_MISMATCH"
+        ]
+        self.assertEqual(len(findings), 1)
+        # A warning, not a refusal: for a locally infused drug a curator who
+        # has read the pharmacology may know the sign when valence does not.
+        self.assertFalse(findings[0].is_hard)
+        self.assertTrue(is_admissible(r))
+
+    def test_molecular_record_without_an_identified_target_warns(self):
+        r = synthetic.molecular_record(target_id=None, target_raw=None)
+        self.assertIn("W014_MOLECULAR_TARGET_UNIDENTIFIED", self.codes(r))
+        self.assertTrue(is_admissible(r))
+
+    def test_condition_blind_record_warns(self):
+        blind = synthetic.good_record(
+            sex=None, diet=None, age_group=None, challenge=None
+        )
+        self.assertIn("W015_CONDITION_UNSPECIFIED", self.codes(blind))
+
+    def test_not_reported_everywhere_still_counts_as_condition_blind(self):
+        checked = synthetic.good_record(
+            sex="not_reported",
+            diet="not_reported",
+            age_group="not_reported",
+            challenge="not_reported",
+            age_value=None,
+            age_unit=None,
+        )
+        self.assertIn("W015_CONDITION_UNSPECIFIED", self.codes(checked))
+
+    def test_one_known_condition_clears_the_warning(self):
+        r = synthetic.good_record(
+            sex="male", diet=None, age_group=None, challenge=None
+        )
+        self.assertNotIn("W015_CONDITION_UNSPECIFIED", self.codes(r))
+
+    def test_every_new_code_is_declared_in_the_catalogue(self):
+        for code in (
+            "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR",
+            "S007_PERTURBATION_CLASS_MISMATCH",
+            "S008_TARGET_ON_NON_MOLECULAR",
+            "W013_PERTURBATION_POLARITY_RULE_MISMATCH",
+            "W014_MOLECULAR_TARGET_UNIDENTIFIED",
+            "W015_CONDITION_UNSPECIFIED",
+        ):
+            self.assertIn(code, RULES)
+
+
+
+class W016AlleleInversionTest(unittest.TestCase):
+    """D-032: an allele that reduces function, expressed as a gain of function."""
+
+    def codes(self, record):
+        return [f.code for f in validate(record)]
+
+    def mol(self, **kw):
+        return synthetic.molecular_record(
+            method="conditional_overexpression",
+            perturbation_polarity="increase",
+            **kw
+        )
+
+    def test_a_plain_overexpression_is_not_flagged(self):
+        self.assertNotIn(
+            "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE", self.codes(self.mol())
+        )
+
+    def test_a_dominant_negative_allele_is_flagged(self):
+        record = self.mol(
+            targeting_strategy="synthetic dominant-negative Synthgene1 knock-in"
+        )
+        self.assertIn(
+            "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE", self.codes(record)
+        )
+
+    def test_the_real_wordings_are_all_caught(self):
+        for wording in (
+            "dominant negative Synthgene1",
+            "dominant-negative allele",
+            "kinase-dead Synthgene1",
+            "deacetylase dead mutant",
+            "catalytically inactive Synthgene1",
+            "Rosa26 Synthgene1-H355Y",
+            "Synthgene1-K310R knock-in",
+            "Synthgene1-D45A substitution",
+            "an inactive mutant of Synthgene1",
+        ):
+            record = self.mol(targeting_strategy="synthetic %s" % wording)
+            self.assertIn(
+                "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE",
+                self.codes(record),
+                wording,
+            )
+
+    def test_the_marker_is_read_from_actuator_too(self):
+        record = self.mol(
+            targeting_strategy="synthetic knock-in",
+            actuator="Synthgene1-H355Y",
+        )
+        self.assertIn(
+            "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE", self.codes(record)
+        )
+
+    def test_it_is_a_warning_and_never_rewrites_the_polarity(self):
+        record = self.mol(targeting_strategy="synthetic kinase-dead Synthgene1")
+        findings = [
+            f for f in validate(record)
+            if f.code == "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE"
+        ]
+        self.assertEqual(len(findings), 1)
+        self.assertFalse(findings[0].is_hard)
+        self.assertTrue(is_admissible(record))
+        # The stored value is reported, not corrected: a mechanical guess at a
+        # sign is how an inversion gets into the data (D-021, D-032).
+        self.assertEqual(record.perturbation_polarity.value, "increase")
+        self.assertIn("increase", findings[0].message)
+
+    def test_a_circuit_perturbation_is_not_checked(self):
+        """hM3Dq is not a dominant-negative allele; the rule is molecular-only."""
+        record = synthetic.good_record(
+            targeting_strategy="synthetic dominant-negative construct"
+        )
+        self.assertNotIn(
+            "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE", self.codes(record)
+        )
+
+    def test_an_ordinary_mutant_word_alone_does_not_fire(self):
+        """Too broad a pattern would flag most of the corpus and mean nothing."""
+        for innocuous in (
+            "floxed Synthgene1 mutant mice",
+            "Synthgene1 transgenic line",
+            "Synthgene1-GFP fusion",
+            "AgRP-Cre x Synthgene1 flox",
+        ):
+            self.assertNotIn(
+                "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE",
+                self.codes(self.mol(targeting_strategy=innocuous)),
+                innocuous,
+            )
 
 
 if __name__ == "__main__":  # pragma: no cover

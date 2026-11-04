@@ -1,9 +1,11 @@
 """Pure, inspectable assignment rules.
 
-Two fields in the Tier A schema are *derived*, never judged:
+Four fields in the Tier A schema are *derived*, never judged:
 
-* ``age_group``  -- SCHEMA.md 3.3
-* ``confidence`` -- SCHEMA.md 3.6
+* ``age_group``             -- SCHEMA.md 3.3
+* ``confidence``            -- SCHEMA.md 3.6
+* ``perturbation_class``    -- SCHEMA.md 3.4b (v0.2.0)
+* ``perturbation_polarity`` -- SCHEMA.md 3.4b (v0.2.0)
 
 Both are implemented here as side-effect-free functions of their declared
 inputs so that they can be read, tested and audited in isolation. Nothing in
@@ -20,17 +22,47 @@ from .enums import (
     AgeUnit,
     Confidence,
     ControlType,
+    PerturbationClass,
+    PerturbationMethod,
+    PerturbationPolarity,
     Species,
+    Valence,
 )
 
 __all__ = [
     "WEEKS_PER_UNIT",
+    "METHOD_CLASS",
     "age_in_weeks",
     "assign_age_group",
     "confidence_inputs_met",
     "assign_confidence",
     "has_actuator_control_from_controls",
+    "perturbation_class_from_method",
+    "perturbation_polarity_from",
 ]
+
+
+#: ``method`` -> ``perturbation_class``. Total over :class:`PerturbationMethod`:
+#: a method absent from this table is a programming error, not a default, and
+#: :func:`perturbation_class_from_method` raises rather than guessing.
+#:
+#: The split that matters is the first two rows against the next two. A
+#: chemogenetic manipulation changes firing; a conditional knockout changes a
+#: gene product and leaves firing an open question. Before v0.2.0 both were
+#: described by ``valence`` alone, which is why 185 of the first 362 curated
+#: records carried ``valence: unclear`` -- 170 of them molecular -- and why
+#: half the dataset had no usable signed axis. See docs/DECISIONS.md (D-025).
+METHOD_CLASS = {
+    PerturbationMethod.optogenetic: PerturbationClass.circuit_activity,
+    PerturbationMethod.chemogenetic: PerturbationClass.circuit_activity,
+    PerturbationMethod.electrical_stimulation: PerturbationClass.circuit_activity,
+    PerturbationMethod.conditional_knockout: PerturbationClass.molecular,
+    PerturbationMethod.conditional_overexpression: PerturbationClass.molecular,
+    PerturbationMethod.lesion: PerturbationClass.structural,
+    PerturbationMethod.genetic_ablation: PerturbationClass.structural,
+    PerturbationMethod.local_pharmacology: PerturbationClass.pharmacological,
+    PerturbationMethod.other: PerturbationClass.other,
+}
 
 
 #: Conversion factors to weeks. ``months`` and ``years`` use the mean Gregorian
@@ -189,3 +221,90 @@ def assign_confidence(
     if score == 3:
         return Confidence.high
     return Confidence.moderate
+
+
+def perturbation_class_from_method(method) -> Optional[PerturbationClass]:
+    """``perturbation_class`` implied by ``method`` (SCHEMA.md 3.4b).
+
+    ``None`` in, ``None`` out: an unreported method does not get a class.
+    A method that is not a :class:`PerturbationMethod` value also returns
+    ``None`` rather than ``other``, because ``other`` is a curator's explicit
+    declaration that the method did not fit the vocabulary, and silently
+    writing it over an unrecognised string would hide a vocabulary gap.
+    """
+    if method is None:
+        return None
+    try:
+        m = PerturbationMethod(method)
+    except ValueError:
+        return None
+    try:
+        return METHOD_CLASS[m]
+    except KeyError:  # pragma: no cover - guarded by test_rules
+        raise KeyError(
+            "METHOD_CLASS is not total: %r has no perturbation_class. Add it "
+            "deliberately rather than letting a default be inferred." % (m,)
+        )
+
+
+def perturbation_polarity_from(method, valence) -> Optional[PerturbationPolarity]:
+    """``perturbation_polarity`` implied by ``(method, valence)``.
+
+    The polarity is the sign of the manipulation **along its own class's
+    axis**, and the rule therefore branches on the class first. Read
+    :class:`~syn4rch.schema.enums.PerturbationPolarity` before using the
+    result; a polarity without its class is meaningless and
+    :func:`syn4rch.qc.keys.perturbation_key` exists so that the two cannot be
+    separated.
+
+    * ``circuit_activity`` -- the polarity restates ``valence`` on the firing
+      axis: ``activation`` -> ``increase``, ``inhibition`` -> ``decrease``,
+      ``ablation`` -> ``remove``, ``unclear`` -> ``unclear``. A circuit
+      manipulation with no recorded valence stays ``unclear``: the sign is not
+      recoverable from the method, since the same virus can excite or silence.
+    * ``molecular`` -- the axis is the amount of the target gene product, and
+      the method states it outright: ``conditional_knockout`` -> ``decrease``
+      (loss of function), ``conditional_overexpression`` -> ``increase`` (gain
+      of function). ``valence`` is deliberately ignored here, and this is the
+      whole point of the v0.2.0 split: a molecular record's ``valence`` is
+      honestly ``unclear`` and must stay so, while its *manipulation* has a
+      perfectly well defined sign.
+    * ``structural`` -- ``remove``. The population is gone.
+    * ``pharmacological`` -- read from ``valence``; a locally infused drug can
+      do either and the method does not say which.
+    * ``other`` -- ``unclear``.
+
+    ``None`` when ``method`` is missing or unrecognised. ``unclear`` is never
+    used as a convenient filler: every path to it is named above.
+    """
+    cls = perturbation_class_from_method(method)
+    if cls is None:
+        return None
+
+    if cls is PerturbationClass.molecular:
+        m = PerturbationMethod(method)
+        if m is PerturbationMethod.conditional_knockout:
+            return PerturbationPolarity.decrease
+        if m is PerturbationMethod.conditional_overexpression:
+            return PerturbationPolarity.increase
+        return PerturbationPolarity.unclear  # pragma: no cover
+
+    if cls is PerturbationClass.structural:
+        return PerturbationPolarity.remove
+
+    if cls is PerturbationClass.other:
+        return PerturbationPolarity.unclear
+
+    # circuit_activity and pharmacological both read the valence.
+    if valence is None:
+        return PerturbationPolarity.unclear
+    try:
+        v = Valence(valence)
+    except ValueError:
+        return PerturbationPolarity.unclear
+    return {
+        Valence.activation: PerturbationPolarity.increase,
+        Valence.inhibition: PerturbationPolarity.decrease,
+        Valence.ablation: PerturbationPolarity.remove,
+        Valence.unclear: PerturbationPolarity.unclear,
+    }[v]

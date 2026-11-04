@@ -26,13 +26,21 @@ from typing import Any, List, Optional
 
 from .enums import (
     ASSERTIVE_DIRECTIONS,
+    Challenge,
+    ConditionSource,
     ControlType,
     Direction,
     EvidenceClass,
+    PerturbationClass,
     RetrievedFrom,
 )
 from .record import SCHEMA_VERSION, TierARecord
-from .rules import assign_age_group, assign_confidence
+from .rules import (
+    assign_age_group,
+    assign_confidence,
+    perturbation_class_from_method,
+    perturbation_polarity_from,
+)
 
 __all__ = [
     "Severity",
@@ -127,6 +135,14 @@ RULES = {
         "extraction_method",
         "extraction_method must honestly record whether a human reviewed this.",
     ),
+    "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR": (
+        Severity.HARD,
+        "condition_locator",
+        "condition_source=methods permits a condition read from the paper's "
+        "Methods rather than from the record's own passage. That route is only "
+        "admissible if it can be audited, so condition_locator must name the "
+        "passage it came from.",
+    ),
     # --- S: structural (hard) ------------------------------------------
     "S001_MISSING_STUDY_ID": (
         Severity.HARD,
@@ -157,6 +173,21 @@ RULES = {
         Severity.HARD,
         "schema_version",
         "schema_version is not the version this code implements.",
+    ),
+    "S007_PERTURBATION_CLASS_MISMATCH": (
+        Severity.HARD,
+        "perturbation_class",
+        "perturbation_class is a total function of method and admits no "
+        "override. A stored value that disagrees with the rule means the "
+        "record cannot be keyed reliably, so it is refused rather than "
+        "warned about.",
+    ),
+    "S008_TARGET_ON_NON_MOLECULAR": (
+        Severity.HARD,
+        "target_raw",
+        "A molecular target belongs to a molecular or pharmacological "
+        "perturbation. Setting one on a circuit or structural perturbation "
+        "corrupts the perturbation key, which is a component of record_id.",
     ),
     # --- V: value sanity (hard) -----------------------------------------
     "V001_P_VALUE_OUT_OF_RANGE": (
@@ -240,7 +271,76 @@ RULES = {
         "title",
         "title and/or year missing; record is hard to audit by hand.",
     ),
+    "W013_PERTURBATION_POLARITY_RULE_MISMATCH": (
+        Severity.WARNING,
+        "perturbation_polarity",
+        "Stored perturbation_polarity differs from the documented rule's "
+        "output. A warning rather than a refusal: for a locally infused drug "
+        "a curator who has read the pharmacology may legitimately know the "
+        "sign when valence does not.",
+    ),
+    "W014_MOLECULAR_TARGET_UNIDENTIFIED": (
+        Severity.WARNING,
+        "target_id",
+        "A molecular perturbation with no identified target pools with every "
+        "other molecular perturbation of the same population. A knockout of "
+        "Raptor and a knockout of p53 are not one perturbation, and treating "
+        "them as one is how a cell comes to look contested.",
+    ),
+    "W015_CONDITION_UNSPECIFIED": (
+        Severity.WARNING,
+        "challenge",
+        "None of sex, diet, age_group or challenge is known, so this record "
+        "can only ever be compared with other condition-blind records, and "
+        "any agreement or disagreement found that way may be condition "
+        "heterogeneity instead.",
+    ),
+    "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE": (
+        Severity.WARNING,
+        "perturbation_polarity",
+        "The targeting text names a dominant-negative or catalytically dead "
+        "allele. perturbation_polarity is derived from the method, so "
+        "overexpressing such an allele is recorded as a gain of function while "
+        "it acts as a loss of function. Resolve by hand; this rule never "
+        "rewrites the stored value.",
+    ),
 }
+
+#: Wordings that mark an allele whose expression *reduces* the target's
+#: function. Overexpressing one is ``conditional_overexpression`` by method and
+#: therefore ``perturbation_polarity = increase`` by rule, while functionally it
+#: is a loss of function -- the D-019 sign error, one level below the one
+#: :class:`~syn4rch.schema.enums.PerturbationPolarity` was introduced to fix.
+#:
+#: This pattern only ever raises a warning. It never rewrites a polarity, for
+#: the same reason the outcomes vocabulary's polarity annotations never rewrite
+#: a direction (docs/DECISIONS.md D-021): a mechanical guess at a sign is how
+#: the inversion gets into the data in the first place. See D-032.
+_INVERTING_ALLELE = re.compile(
+    r"dominant[-\s]negative"
+    r"|\bdominant[-\s]neg\b"
+    r"|kinase[-\s]dead"
+    r"|deacetylase[-\s]dead"
+    r"|catalytically[-\s](?:in|un)?active"
+    r"|catalytic(?:ally)?[-\s]dead"
+    r"|\bH355Y\b"
+    r"|\bK\d+R\b"
+    r"|\bD\d+[AN]\b"
+    r"|loss[-\s]of[-\s]function\s+mutant"
+    r"|inactive\s+mutant",
+    re.IGNORECASE,
+)
+
+#: Perturbation classes that may carry a molecular target.
+_TARGET_BEARING_CLASSES = frozenset(
+    {PerturbationClass.molecular, PerturbationClass.pharmacological}
+)
+
+#: Condition values that mean "not known", for W015. Kept local rather than
+#: imported from :mod:`syn4rch.qc.keys`: ``qc`` depends on ``schema`` and not
+#: the other way round, and inverting that would make the schema package
+#: unimportable on its own.
+_CONDITION_UNKNOWN = frozenset({None, "not_reported"})
 
 
 def _blank(value: Any) -> bool:
@@ -318,6 +418,10 @@ def validate(record: TierARecord) -> List[ValidationError]:
         )
     if record.extraction_method is None:
         out.append(_err(record, "A007_MISSING_EXTRACTION_METHOD"))
+    if record.condition_source is ConditionSource.methods and _blank(
+        record.condition_locator
+    ):
+        out.append(_err(record, "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR"))
 
     # --- S: structural ----------------------------------------------------
     if _blank(record.study_id):
@@ -344,6 +448,39 @@ def validate(record: TierARecord) -> List[ValidationError]:
                 "S006_SCHEMA_VERSION_MISMATCH",
                 "schema_version=%r, this code implements %r."
                 % (record.schema_version, SCHEMA_VERSION),
+            )
+        )
+    expected_class = perturbation_class_from_method(record.method)
+    if (
+        record.perturbation_class is not None
+        and expected_class is not None
+        and record.perturbation_class is not expected_class
+    ):
+        out.append(
+            _err(
+                record,
+                "S007_PERTURBATION_CLASS_MISMATCH",
+                "perturbation_class=%s but method=%s implies %s."
+                % (
+                    record.perturbation_class.value,
+                    record.method.value if record.method else "null",
+                    expected_class.value,
+                ),
+            )
+        )
+    # ``method`` is what a curator read off the paper; ``perturbation_class``
+    # is derived from it. Where the two disagree the method wins, so that a
+    # wrong stored class cannot also suppress the findings below.
+    effective_class = expected_class or record.perturbation_class
+    if (
+        not _blank(record.target_raw) or not _blank(record.target_id)
+    ) and effective_class is not None and effective_class not in _TARGET_BEARING_CLASSES:
+        out.append(
+            _err(
+                record,
+                "S008_TARGET_ON_NON_MOLECULAR",
+                "target_raw=%r / target_id=%r on a %s perturbation."
+                % (record.target_raw, record.target_id, effective_class.value),
             )
         )
 
@@ -460,6 +597,74 @@ def validate(record: TierARecord) -> List[ValidationError]:
         out.append(_err(record, "W011_NO_OUTCOME_TIER"))
     if _blank(record.title) or record.year is None:
         out.append(_err(record, "W012_MISSING_BIBLIOGRAPHY"))
+    if record.perturbation_polarity is not None:
+        expected_polarity = perturbation_polarity_from(
+            record.method, record.valence
+        )
+        if (
+            expected_polarity is not None
+            and record.perturbation_polarity is not expected_polarity
+        ):
+            out.append(
+                _err(
+                    record,
+                    "W013_PERTURBATION_POLARITY_RULE_MISMATCH",
+                    "perturbation_polarity=%s but (method=%s, valence=%s) "
+                    "yields %s."
+                    % (
+                        record.perturbation_polarity.value,
+                        record.method.value if record.method else "null",
+                        record.valence.value if record.valence else "null",
+                        expected_polarity.value,
+                    ),
+                )
+            )
+    if effective_class is PerturbationClass.molecular and _blank(record.target_id):
+        out.append(
+            _err(
+                record,
+                "W014_MOLECULAR_TARGET_UNIDENTIFIED",
+                "method=%s with no target_id; targeting_strategy=%r."
+                % (
+                    record.method.value if record.method else "null",
+                    (record.targeting_strategy or "")[:80],
+                ),
+            )
+        )
+    condition_values = [
+        record.sex,
+        record.diet,
+        record.age_group,
+        record.challenge,
+    ]
+    if all(
+        (v is None or getattr(v, "value", v) in _CONDITION_UNKNOWN)
+        for v in condition_values
+    ):
+        out.append(_err(record, "W015_CONDITION_UNSPECIFIED"))
+    if effective_class is PerturbationClass.molecular:
+        targeting_text = " ".join(
+            t for t in (record.targeting_strategy, record.actuator, record.target_raw)
+            if t
+        )
+        allele = _INVERTING_ALLELE.search(targeting_text)
+        if allele is not None:
+            out.append(
+                _err(
+                    record,
+                    "W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE",
+                    "targeting text matches %r, which marks an allele that "
+                    "reduces the target's function; stored "
+                    "perturbation_polarity is %s and may describe the "
+                    "direction of expression rather than of function."
+                    % (
+                        allele.group(0),
+                        record.perturbation_polarity.value
+                        if record.perturbation_polarity is not None
+                        else "null",
+                    ),
+                )
+            )
 
     return out
 

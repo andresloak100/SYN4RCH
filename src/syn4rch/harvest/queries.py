@@ -69,7 +69,7 @@ OUTCOME_CLUSTERS: Dict[str, List[str]] = {
     ],
     "aging_tier_b": [
         "median_lifespan", "maximum_lifespan", "frailty_index", "grip_strength",
-        "cognitive_decline", "tissue_aging_markers", "senescence_markers",
+        "cognitive_performance", "tissue_aging_markers", "senescence_markers",
     ],
 }
 

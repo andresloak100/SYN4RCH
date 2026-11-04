@@ -1,7 +1,21 @@
-# SYN4RCH Tier A Record Schema (v0.1.0)
+# SYN4RCH Tier A Record Schema (v0.2.0)
 
 This document is the **binding contract**. Code, extraction prompts and QC checks
 must conform to it. Changes require a version bump and an entry in `docs/DECISIONS.md`.
+
+**v0.2.0 changed two things and every `record_id` in the corpus.** It added the
+condition dimension (3.3b) and split the perturbation axis (3.4b). The reason was
+measured rather than assumed: under v0.1.0 the first 362 curated records produced
+36 cross-study claims holding a conflict, 12 of them in direct `increase` vs
+`decrease` opposition. Under v0.2.0 those become 9 and 1. They had been a male
+cohort compared against a female one, a chow-fed cohort against a high-fat-fed one,
+or a gene knockout against a gene overexpression, pooled into one claim by a key too
+coarse to tell them apart.
+
+The same change cuts claims reported by more than one study from 39 to 11, and that
+cost is the other half of the finding: most of the apparent replication in this
+corpus was an artifact of the same coarseness that manufactured the conflicts.
+See `docs/DECISIONS.md` D-023 to D-028.
 
 ## 1. Unit of record
 
@@ -28,14 +42,14 @@ A record failing any of these is invalid and must not enter `data/curated/`.
 ### 3.1 Identity and provenance
 | field | type | notes |
 |---|---|---|
-| `record_id` | str | deterministic hash of (study_id, population_raw, perturbation, outcome_raw, source_locator) |
+| `record_id` | str | deterministic hash; the twelve components are named in `RECORD_ID_FIELDS` and fixed by D-002 + D-026 |
 | `study_id` | str | canonical: `doi:...`; fallback `pmid:...` |
 | `pmid` / `pmcid` / `doi` | str? | all that are known |
 | `title`, `journal`, `year` | str/int | |
 | `first_author`, `last_author`, `last_author_affiliation` | str? | **required for lab-level leakage control** |
 | `retrieved_from` | enum | `pubmed`, `europepmc_oa`, `europepmc_abstract`, `crossref`, `manual` |
 | `full_text_available` | bool | abstract-only records are marked and down-weighted |
-| `schema_version` | str | `0.1.0` |
+| `schema_version` | str | `0.2.0` |
 | `extraction_method` | enum | `human`, `llm`, `llm_human_reviewed` |
 | `extracted_by`, `extracted_at` | str | |
 | `review_status` | enum | `unreviewed`, `accepted`, `rejected`, `needs_full_text` |
@@ -66,6 +80,41 @@ in a report for vocabulary extension. They are **not** force-mapped to the neare
 never by impression. Mouse: <8 wk juvenile, 8-26 wk young_adult, 27-64 wk middle_aged,
 >=65 wk aged.
 
+### 3.3b Condition (v0.2.0)
+
+| field | type | notes |
+|---|---|---|
+| `challenge` | enum? | `ad_libitum`, `fasted`, `refed`, `cold_exposure`, `thermoneutral`, `glucose_load`, `insulin_load`, `high_fat_challenge`, `restraint_stress`, `exercise`, `other`, `not_reported` |
+| `challenge_detail` | str? | the paper's own wording, e.g. "16 h overnight fast" |
+| `condition_source` | enum? | `passage`, `methods`, `not_reported` |
+| `condition_locator` | str? | **required** when `condition_source = methods` |
+
+`challenge` is the acute physiological state at the moment of measurement, and is
+distinct from `diet`, which is the maintenance diet over weeks. In this literature
+the challenge frequently decides the sign of the result: AgRP activation raises food
+intake in a fed mouse and raises it much further in a fasted one, and a glucose
+reading means opposite things before and after a glucose load.
+
+**The condition dimension is `(sex, diet, age_group, challenge)`.** Two records whose
+condition dimension differs are **not comparable**: they may disagree because the
+biology disagrees, or because the experiments were never the same experiment. The
+dataset cannot distinguish those, so it refuses to.
+
+`condition_source` exists because rule 4 of section 2 and the way papers are written
+are in direct tension. A result lives in Results; the diet and the sex live in
+Methods. Forbidding the Methods route left 197 of the first 362 records with no diet
+and 224 with no sex, which made the condition gap unfixable by curating harder.
+`condition_source = methods` permits the Methods route **and makes it auditable**:
+the record must then carry `condition_locator`, and the verbatim gate applies to
+that locator as it does to any other. `condition_source` is never a licence to
+infer: a condition that no passage of the paper states is still `null`.
+
+`not_reported` and `null` are different statements and both are kept. `null` means
+the curator did not address the question; `not_reported` means the paper was checked
+and does not say. For *grouping* they are pooled, because both mean the condition
+could be anything (`syn4rch.qc.keys.condition_key`), and `condition_specificity`
+reports how often that pooling happened.
+
 ### 3.4 Perturbation
 | field | type | notes |
 |---|---|---|
@@ -82,6 +131,44 @@ never by impression. Mouse: <8 wk juvenile, 8-26 wk young_adult, 27-64 wk middle
 
 `valence = unclear` is a valid and expected answer (e.g. mixed Gq/Gi, lesion with
 unclear net circuit effect). It must not be coerced.
+
+### 3.4b Perturbation class, polarity and target (v0.2.0)
+
+| field | type | notes |
+|---|---|---|
+| `perturbation_class` | enum? | `circuit_activity`, `molecular`, `structural`, `pharmacological`, `other`. Derived from `method`; admits no override |
+| `perturbation_polarity` | enum? | `increase`, `decrease`, `remove`, `bidirectional`, `unclear`. The sign **along the class's own axis** |
+| `target_raw` | str? | the paper's own wording for the molecular target, e.g. `Raptor` |
+| `target_id` | str? | resolved against `data/vocab/targets.json` |
+
+`valence` answers one question: did the manipulation drive this population's firing
+up or down? For a conditional knockout of a receptor gene the honest answer is
+`unclear`, and section 3.4 rightly forbids coercing it. Under v0.1.0 that left 185
+of 362 records with no signed axis at all, 170 of them molecular, and so half the
+dataset could not be a model input.
+
+v0.2.0 stops asking `valence` to carry the molecular manipulations. `valence` keeps
+its meaning exactly; `perturbation_class` and `perturbation_polarity` carry the rest.
+
+**Polarity is meaningless without its class.** `decrease` is less firing under
+`circuit_activity` and less of the target gene product under `molecular`. Those are
+different physical interventions, and pooling them is the same sign error that
+D-019 was written against. The pairing is enforced structurally:
+`syn4rch.qc.keys.perturbation_key` returns the class, the polarity and the target as
+one value, and nothing in this project may key on polarity alone.
+
+`target_raw` / `target_id` follow the raw-then-resolved pattern already used for
+populations and outcomes. They matter more than their size suggests. The 170
+molecular records cover **17 distinct target genes across 16 studies and 16
+laboratories, and no gene is manipulated by more than one laboratory.** Without a
+target field, "molecular perturbation of AgRP neurons" reads as 89 observations of
+one thing when it is seventeen unrelated single-gene experiments. A molecular record with no identified
+target is admitted but warned about (`W014`), because it pools with every other
+molecular perturbation of the same population and that is almost always wrong.
+
+Only `molecular` and `pharmacological` perturbations may carry a target. A target on
+a circuit or structural perturbation is refused (`S008`): it corrupts the
+perturbation key, which is a component of `record_id`.
 
 ### 3.5 Readout and effect
 | field | type | notes |
@@ -140,8 +227,32 @@ Splits must be grouped so that none of the following cross the train/test bounda
 Reporting a single cross-validated number without naming the grouping is
 considered an invalid result in this project.
 
+### 5b. Perturbation identity (v0.2.0)
+
+Grouping prevents the same study or lab appearing on both sides of a split. It does
+not establish that anything on the test side was *learnable* from the train side.
+
+Every one of the 17 molecular target genes in this corpus appears in exactly one
+study and one laboratory. Under `by_study` or `by_lab` grouping, a held-out molecular
+record's perturbation identity therefore never appears in training. There is nothing
+for a model to have learned, and an accuracy figure averaged over such folds measures
+the label prior rather than generalisation.
+
+A cross-validated number must therefore be reported alongside the fraction of test
+rows whose perturbation identity was unseen in training. `syn4rch.feasibility.identity`
+computes it. A high unseen fraction is not a modelling failure to be tuned away; it is
+a statement about how this field publishes — one lab, one gene, one paper — and the
+only remedy is a second laboratory repeating the same manipulation.
+
 ## 6. What this schema deliberately refuses to represent
 
 - Quantitative dose-response curves (insufficient reporting across the corpus).
 - Inferred anatomical wiring presented as measured (belongs to the KG with its own class).
 - Any "rejuvenation score". Tier B is an annotation layer, not a training target.
+- A `direction` for the assay number where that number runs opposite to the quantity
+  `outcome_id` names (D-019). Falling glucose in an insulin tolerance test is
+  *rising* insulin sensitivity.
+- A condition the paper does not state. `condition_source` widens where a condition
+  may be *read from*; it does not permit one to be inferred (3.3b).
+- A net circuit `valence` for a molecular perturbation. `unclear` is the answer, and
+  `perturbation_polarity` carries the sign of what was actually done (3.4b).

@@ -23,7 +23,23 @@ Three properties of this package are deliberate and load-bearing:
 * **A cross-validated number cannot be produced without its grouping.**
   SCHEMA.md 5 declares an unlabelled cross-validated number an invalid
   result, so :mod:`~syn4rch.feasibility.splits` makes one structurally hard to
-  build: metrics attach to a labelled fold set or raise.
+  build: metrics attach to a labelled fold set or raise. The same device
+  qualifies the two figures schema v0.2.0 added:
+  :class:`~syn4rch.feasibility.replication.Agreement` cannot be built without
+  the minimum condition specificity of the cell it came from, and
+  :class:`~syn4rch.feasibility.identity.IdentityCoverage` cannot be built
+  without a grouping declared in :data:`syn4rch.models.task.GROUPINGS`.
+* **The before and after of the schema v0.2.0 claim key are both reported.**
+  :func:`~syn4rch.feasibility.replication.compare_claim_keys` and
+  :func:`~syn4rch.feasibility.coverage.compare_usability` measure both keys on
+  the same records. The difference between them is the measurement of how much
+  apparent disagreement in this corpus was condition and perturbation
+  heterogeneity; printing only the new numbers would make the change
+  unfalsifiable.
+* **Grouping is not the whole of leakage control.** SCHEMA.md 5b:
+  :mod:`~syn4rch.feasibility.identity` measures the fraction of records whose
+  perturbation identity occurs in exactly one group and which are therefore
+  unlearnable by construction, whatever a fold-averaged accuracy says.
 
 Nothing in this package writes to ``data/``. It reads
 ``data/curated/records.jsonl`` and writes only its own report.
@@ -33,17 +49,37 @@ Python 3.10 compatible, standard library only (docs/DECISIONS.md D-001).
 
 from .coverage import (  # noqa: F401
     EXCLUSION_CODES,
+    KEY_VERSION_CURRENT,
+    KEY_VERSION_POOLED,
     Cell,
     CoverageMatrix,
+    UsabilityComparison,
     build_matrix,
+    compare_usability,
     exclusion_note,
     exclusion_reasons,
     has_measured_outcome,
     has_population_identity,
+    has_signed_perturbation,
     has_usable_intervention,
     is_usable,
     outcome_key,
     partition_records,
+)
+from .identity import (  # noqa: F401
+    IDENTITY_FIELDS,
+    STATUSES,
+    TARGET_CONSTITUTIVE_CLASSES,
+    ClassIdentityCoverage,
+    ClassStructure,
+    Identity,
+    IdentityCoverage,
+    IdentityReport,
+    UnlabelledIdentityError,
+    analyse,
+    class_structure,
+    identity_coverage,
+    perturbation_identity,
 )
 from .gates import (  # noqa: F401
     CHANCE_DIRECTION_RATE,
@@ -65,9 +101,17 @@ from .gates import (  # noqa: F401
 )
 from .replication import (  # noqa: F401
     CONFIDENCE_LEVEL,
+    KEY_POOLED,
+    KEY_STRICT,
     MIXED,
+    N_CONDITION_SLOTS,
+    Agreement,
+    KeyCensus,
+    KeyComparison,
     ReplicationCell,
+    SpecificityMissing,
     build_replication_cells,
+    compare_claim_keys,
     summarize_replication,
     wilson_interval,
 )
