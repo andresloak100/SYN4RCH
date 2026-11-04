@@ -323,3 +323,66 @@ supplementary-material locators (e.g. "Fig S1A") can never be admitted,
 because supplements are not in the retrieved XML; and `record_id` (D-002)
 does not include the quote, so two proposals differing only in quote share an
 id in the rejection report.
+
+---
+
+## D-019 - `direction` describes the outcome, not the assay number
+
+**Decision.** `direction` must describe the quantity named by `outcome_id`,
+never the raw assay number, whenever the two have opposite polarity. Two steps,
+in order:
+
+1. Prefer the `outcome_id` the passage literally measured, when the vocabulary
+   has one. "A significant decrease in blood glucose levels in the ITT" is a
+   `blood_glucose` measurement: record `blood_glucose` / `decrease`.
+2. Only when the vocabulary has no entry for the measured quantity, use the
+   interpreted outcome and invert the direction to match it. "Ameliorated
+   insulin resistance" under `insulin_sensitivity` is `increase`. "BAT lipid
+   droplet size decreased" under `bat_thermogenesis` is `increase`. The
+   inversion and the measured quantity go in `extraction_notes`.
+
+If the inversion cannot be read from the `support_quote` alone, there is no
+record. A clean result is not discarded merely because an inversion is involved.
+
+**Why.** Found in the first pilot batch, where "a significant decrease in blood
+glucose levels in the ITT" had been recorded as `insulin_sensitivity` /
+`decrease`. Falling glucose in an insulin tolerance test is *rising* insulin
+sensitivity, so the sign was inverted. Three records in one batch of 41 were
+affected. A second batch met the same situation and discarded the result
+instead, so two curators produced opposite treatments of one case: worse than
+either choice alone, because the inconsistency is invisible once the records
+are pooled.
+
+A sign error of this kind is the most damaging defect this dataset can carry.
+It does not look like missing data or a failed check. It trains a model
+backwards, and every downstream accuracy figure would be computed against
+corrupted labels while looking entirely healthy.
+
+**The vocabulary invites the error.** `insulin_sensitivity` lists `ITT` among
+its synonyms, `glucose_tolerance` lists `GTT`, and `bat_thermogenesis` admits
+lipid-droplet measures. In all three the assay's number moves opposite to the
+named quantity. That a synonym matches the words in the text does not make it
+the correct `outcome_id`.
+
+**Not yet done.** Nothing mechanically detects a polarity inversion; the check
+is a reading judgement, like `direction` itself. Marking the hazardous
+vocabulary entries with an explicit polarity flag, and warning in QC when such
+an entry is used, is the obvious next step and is not implemented.
+
+---
+
+## D-020 - One passage may yield several records
+
+**Decision.** A passage yields every record it supports, not at most one.
+
+**Why.** `docs/CURATION_PROTOCOL.md` 3 originally said the reader "proposes at
+most one record" from a unit, which contradicts SCHEMA.md 1: one record is one
+(population x perturbation x readout x study) observation, and aggregating
+across outcomes is forbidden. A passage reporting food intake, body weight and
+energy expenditure for one manipulation describes three observations. Forcing
+them into one record would either drop two or aggregate across readouts.
+
+**Resolution.** SCHEMA.md wins, per the protocol's own preamble, and the
+protocol's wording has been corrected. What stays forbidden is the reverse:
+splitting one observation into two records that restate it, and merging two
+passages into one record.

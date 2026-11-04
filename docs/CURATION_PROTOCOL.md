@@ -47,8 +47,12 @@ protocol working.
 
 ## 3. Stage 6: proposing a record
 
-The reader — human or model — is given one unit: its passage text and its
-locator. From that unit alone the reader proposes at most one record.
+The reader — human or model — is given one passage: its text and its locator.
+From that passage alone, and nothing else, the reader proposes every record it
+supports. A passage reporting three readouts for one manipulation yields three
+records, because SCHEMA.md 1 makes one observation the unit of record and
+forbids aggregating across outcomes (`docs/DECISIONS.md` D-020). A passage
+reporting no result yields none.
 
 **Required of every proposal.**
 
@@ -68,6 +72,10 @@ locator. From that unit alone the reader proposes at most one record.
 - Resolving `valence` to `activation` or `inhibition` when the passage leaves
   the net circuit effect open. `unclear` is a correct answer and must not be
   coerced (SCHEMA.md 3.4).
+- Recording a `direction` that describes the assay number rather than the
+  quantity `outcome_id` names, where the two have opposite polarity. Falling
+  glucose in an insulin tolerance test is *rising* insulin sensitivity
+  (`docs/DECISIONS.md` D-019).
 - Dropping a null result. `no_change` is recorded explicitly, and omitting it
   is the single most effective way to put a direction bias into this dataset
   (SCHEMA.md 3.5).
