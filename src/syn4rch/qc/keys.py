@@ -43,6 +43,8 @@ from ..schema.rules import (
 )
 
 __all__ = [
+    "PROJECTION_SEP",
+    "PROJECTION_UNKNOWN",
     "UNKNOWN",
     "NULL",
     "CONDITION_FIELDS",
@@ -112,17 +114,51 @@ def study_key(record) -> str:
     return norm(record.study_id)
 
 
+#: Separator between a population and the projection it was manipulated at.
+#: Chosen so the component can never be confused with a population id, which
+#: this vocabulary spells in lower-case words and underscores.
+PROJECTION_SEP = "->"
+
+#: What a projection-specific record uses when it names no target.
+PROJECTION_UNKNOWN = "unknown"
+
+
 def population_key(record) -> str:
-    """Identity of the population for grouping.
+    """Identity of the manipulated population for grouping.
 
     Prefers the resolved ``population_id``. When it is ``None`` (SCHEMA.md 3.2
     keeps such records rather than force-mapping them) the paper's own wording
     is used, prefixed ``raw:`` so an unresolved population can never silently
     group with a resolved one. See docs/DECISIONS.md (D-010).
+
+    **A projection-specific manipulation is a different manipulation** and gets
+    its own key: ``arc_agrp->pvh``. Stimulating AgRP somata, AgRP terminals in
+    the PVH, and AgRP terminals in the BNST are three interventions with three
+    anatomies and, in this literature, three different effects. Collapsing them
+    onto ``arc_agrp`` pools them into one claim, which costs twice: two labs
+    manipulating different projections read as two labs replicating one claim,
+    and a soma result disagreeing with a terminal result reads as a
+    contradiction (D-050).
+
+    ``projection_specific`` is what decides this, not the presence of a target:
+    a record that declares itself projection-specific and names no target keys
+    as ``...->unknown`` rather than silently rejoining the somata, for the same
+    reason an unresolved population carries ``raw:`` instead of pooling with
+    the resolved ones.
     """
     if record.population_id:
-        return norm(record.population_id)
-    return "raw:" + norm(record.population_raw)
+        base = norm(record.population_id)
+    else:
+        base = "raw:" + norm(record.population_raw)
+    if not getattr(record, "projection_specific", None):
+        return base
+    target = getattr(record, "projection_target_id", None)
+    if target:
+        return base + PROJECTION_SEP + norm(target)
+    target_raw = getattr(record, "projection_target_raw", None)
+    if target_raw:
+        return base + PROJECTION_SEP + "raw:" + norm(target_raw)
+    return base + PROJECTION_SEP + PROJECTION_UNKNOWN
 
 
 def _target_component(record) -> str:

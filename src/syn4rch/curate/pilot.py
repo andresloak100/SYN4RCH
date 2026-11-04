@@ -54,22 +54,51 @@ STUB_FROM_HARVEST = ("study_id", "pmid", "pmcid", "doi", "title", "journal", "ye
                      "first_author", "last_author", "last_author_affiliation",
                      "retrieved_from", "full_text_available", "schema_version")
 
-# The curator's job, in the order the protocol asks for them.
-FIELDS_TO_COMPLETE = (
-    "population_raw", "population_id", "marker_genes", "region_raw", "region_id",
-    "neurotransmitter", "projection_specific", "projection_target_raw",
-    "species", "strain", "sex", "age_value", "age_unit", "diet", "n_animals",
-    "method", "actuator", "valence", "targeting_strategy", "acuity",
-    "duration_value", "duration_unit", "ligand", "ligand_dose_value",
-    "ligand_dose_unit", "ligand_route", "laterality",
-    "time_to_readout_value", "time_to_readout_unit",
-    "outcome_raw", "outcome_id", "outcome_tier", "tissue_raw", "assay", "assay_units",
-    "direction", "effect_size_value", "effect_size_type", "effect_size_units",
-    "dispersion_type", "dispersion_value", "n_treatment", "n_control",
-    "statistical_test", "p_value", "significant", "is_primary_outcome",
-    "control_types", "has_actuator_control",
-    "support_quote", "source_locator", "extraction_notes",
+#: Fields the stub fills beyond :data:`STUB_FROM_HARVEST` -- provenance and the
+#: Tier A constant. A curator must not retype these either.
+STUB_CONSTANTS = ("extraction_method", "review_status", "evidence_class")
+
+#: Fields no curator may fill, because something else owns them.
+#:
+#: ``record_id`` is computed from the record (SCHEMA.md 3.1).
+#: ``perturbation_class`` and ``perturbation_polarity`` are derived by rule from
+#: ``method`` and ``valence`` at admission (D-025); a curator writing them by
+#: hand is writing a guess where a total function exists.
+#: ``conflicts_with`` is written by QC, never by a reader.
+#: ``extracted_by`` and ``extracted_at`` identify the run, and the runner sets
+#: them.
+NOT_THE_CURATORS_JOB = (
+    "record_id",
+    "perturbation_class",
+    "perturbation_polarity",
+    "conflicts_with",
+    "extracted_by",
+    "extracted_at",
 )
+
+
+def fields_to_complete() -> Tuple[str, ...]:
+    """Every schema field a curator must supply, derived from the schema.
+
+    This list used to be written out by hand and drifted: it still described
+    schema v0.1.0 after v0.2.0 added the perturbation axis and v0.3.0 added the
+    condition dimension, so ``challenge``, ``challenge_detail``, ``age_group``,
+    ``condition_evidence``, the five ``stim_*`` fields, ``region_id``,
+    ``projection_target_id``, ``tissue_id``, ``ci_low``/``ci_high``,
+    ``genetic_background`` and ``confidence`` were all missing from it. Three
+    separate readers hit that in one pass: each was told to record the condition
+    dimension and handed a field list that did not mention it, and two of them
+    put a stated stimulation frequency and a resolvable projection target into
+    ``extraction_notes`` because the list offered nowhere else to put them.
+
+    Deriving it means the list cannot drift again, and the partition is total:
+    every field of :class:`~syn4rch.schema.record.TierARecord` is in the stub,
+    in :data:`NOT_THE_CURATORS_JOB`, or here. A test asserts that.
+    """
+    from ..schema.record import TierARecord
+
+    taken = set(STUB_FROM_HARVEST) | set(STUB_CONSTANTS) | set(NOT_THE_CURATORS_JOB)
+    return tuple(f for f in TierARecord.field_names() if f not in taken)
 
 
 def _repo_root() -> str:
@@ -267,7 +296,7 @@ def package(chosen: Sequence[str], elig: Dict[str, Dict], papers: Dict[str, Dict
             "record_stub": build_stub(paper, schema_version),
             "n_passages": len(passages),
             "passages": [passages[k] for k in sorted(passages)],
-            "fields_to_complete": list(FIELDS_TO_COMPLETE),
+            "fields_to_complete": list(fields_to_complete()),
             "_reminder": ("A passage is a place worth reading, not a record. Many "
                           "passages yield none. Never propose a record whose "
                           "direction does not follow from its own support_quote."),

@@ -18,7 +18,7 @@
     ],
     "changelog": [
       "0.2.0: renamed `cognitive_decline` to `cognitive_performance` and moved its two signed synonyms to inverted_synonyms, adding `escape latency`. The old id named a quantity and its negation at once, which made `direction` ambiguous before a curator even read the paper. No curated record used the id, so the rename costs nothing. See docs/DECISIONS.md D-029.",
-      "0.3.0: annotated 13 unannotated inverted synonyms across 9 entries, found when a curator reading doi:10.1038/s41467-018-08239-x hit the RER / fat oxidation trap. Annotation only: no code reads inverted_synonyms, no id changed, and no stored direction was rewritten. See docs/DECISIONS.md D-049."
+      "0.3.0: annotated 4 genuinely inverted synonyms -- `fat oxidation` and `lipid oxidation` under `rer`, `wakefulness` and `arousal` under `sleep` -- and moved `insomnia` and `sleep fragmentation` to `signed_synonyms` where they belong. Found when a curator hit the RER / fat oxidation trap in doi:10.1038/s41467-018-08239-x. Annotation only: no code reads these lists, no id changed, and no stored direction was rewritten. See docs/DECISIONS.md D-049."
     ]
   },
   "entries": {
@@ -49,9 +49,6 @@
       "notes": "Direction of benefit depends entirely on the baseline state (hypoglycemia vs diabetic hyperglycemia).",
       "signed_synonyms": [
         "hyperglycemia",
-        "hypoglycemia"
-      ],
-      "inverted_synonyms": [
         "hypoglycemia"
       ]
     },
@@ -346,9 +343,6 @@
       "signed_synonyms": [
         "hyperphagia",
         "hypophagia"
-      ],
-      "inverted_synonyms": [
-        "hypophagia"
       ]
     },
     "energy_expenditure": {
@@ -425,9 +419,6 @@
       ],
       "higher_is": null,
       "signed_synonyms": [
-        "weight loss"
-      ],
-      "inverted_synonyms": [
         "weight loss"
       ]
     },
@@ -525,9 +516,6 @@
       "signed_synonyms": [
         "hyperthermia",
         "hypothermia"
-      ],
-      "inverted_synonyms": [
-        "hypothermia"
       ]
     },
     "heart_rate": {
@@ -573,9 +561,6 @@
       "higher_is": null,
       "signed_synonyms": [
         "hypertension",
-        "hypotension"
-      ],
-      "inverted_synonyms": [
         "hypotension"
       ]
     },
@@ -856,13 +841,15 @@
       ],
       "higher_is": null,
       "inverted_synonyms": [
-        "sleep latency",
-        "wakefulness",
         "arousal",
+        "sleep latency",
+        "wakefulness"
+      ],
+      "notes": "An arousal is a count of awakenings and `wakefulness` is sleep's complement: both name a different quantity that moves opposite to sleep, so both are inverted (D-049). `insomnia` and `sleep fragmentation` name a state and carry their own direction, so they are signed, not inverted. `sleep latency` was already annotated inverted.",
+      "signed_synonyms": [
         "insomnia",
         "sleep fragmentation"
-      ],
-      "notes": "An arousal terminates sleep and `wakefulness` is its complement, so both are inverted along with `insomnia` and `sleep fragmentation` (D-049). `sleep latency` was already annotated."
+      ]
     },
     "locomotor_activity": {
       "id": "locomotor_activity",
@@ -892,9 +879,6 @@
       "higher_is": null,
       "signed_synonyms": [
         "hyperactivity",
-        "hypoactivity"
-      ],
-      "inverted_synonyms": [
         "hypoactivity"
       ]
     },
@@ -955,10 +939,7 @@
         "hypernatremia",
         "hyponatremia"
       ],
-      "inverted_synonyms": [
-        "hyponatremia"
-      ],
-      "notes": "`hyponatremia` is annotated inverted with respect to osmolality, the quantity it names. Note this id bundles osmolality with AVP, which can move in the opposite direction from it (AVP rises in SIADH while osmolality falls), so a record here should say in `extraction_notes` which of the two its quote measures (D-049)."
+      "notes": "This id bundles plasma osmolality with AVP, which can move in the opposite direction from it (AVP rises in SIADH while osmolality falls), so a record here should say in `extraction_notes` which of the two its quote measures (D-049). `hyponatremia` and `hypernatremia` are `signed_synonyms`: they name a state and carry their own direction."
     },
     "estrous_cyclicity": {
       "id": "estrous_cyclicity",

@@ -1,22 +1,22 @@
 {
- "generated_at": "2026-11-04T04:19:49Z",
+ "generated_at": "2026-11-04T21:39:32Z",
  "generated_from": "data/curated/records.jsonl",
  "mode_label": "Measured signalling - evidence playback",
  "mode_note": "Recorded observations animated. Nothing is simulated: no equation is integrated and no unmeasured response is inferred.",
- "n_records_in": 362,
- "n_records_used": 295,
- "n_records_with_projection_target": 3,
+ "n_records_in": 458,
+ "n_records_used": 354,
+ "n_records_with_projection_target": 4,
  "excluded": {
-  "no resolved population_id (region-level record, not cell-type-specific)": 67
+  "no resolved population_id (region-level record, not cell-type-specific)": 104
  },
  "axis_source": "perturbation_polarity when the record carries it, otherwise valence",
  "axis_class_source": "perturbation_class when the record carries it, otherwise mapped from method",
  "edge_identity": "population_id x outcome_id x axis x axis_class",
  "axis_trap_note": "The axis describes the manipulation in the brain. The direction describes the bodily readout. From schema v0.2.0 both vocabularies use the words 'increase' and 'decrease', so the axis is always shown as a phrase (axis_phrase) and never as the bare value.",
  "directions_seen": {
-  "decrease": 77,
-  "increase": 79,
-  "no_change": 138,
+  "decrease": 89,
+  "increase": 106,
+  "no_change": 158,
   "non_monotonic": 1
  },
  "consensus_rule": "the modal direction; null when two or more directions tie for the most records",
@@ -59,8 +59,8 @@
     "Agrp",
     "Npy"
    ],
-   "n_records": 168,
-   "n_studies": 20,
+   "n_records": 187,
+   "n_studies": 26,
    "in_vocabulary": true
   },
   {
@@ -74,22 +74,8 @@
     "Pomc",
     "Cartpt"
    ],
-   "n_records": 105,
-   "n_studies": 20,
-   "in_vocabulary": true
-  },
-  {
-   "id": "pvh_sim1",
-   "label": "PVH Sim1 neurons",
-   "region_id": "pvh",
-   "neurotransmitter": [
-    "glutamate"
-   ],
-   "marker_genes": [
-    "Sim1"
-   ],
-   "n_records": 11,
-   "n_studies": 1,
+   "n_records": 109,
+   "n_studies": 22,
    "in_vocabulary": true
   },
   {
@@ -102,8 +88,67 @@
    "marker_genes": [
     "Nr5a1"
    ],
-   "n_records": 9,
+   "n_records": 22,
+   "n_studies": 2,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_sim1",
+   "label": "PVH Sim1 neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Sim1"
+   ],
+   "n_records": 13,
+   "n_studies": 2,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lha_orexin",
+   "label": "LHA orexin/hypocretin neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Hcrt"
+   ],
+   "n_records": 10,
+   "n_studies": 2,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_crh",
+   "label": "PVH CRH neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "glutamate",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Crh"
+   ],
+   "n_records": 4,
    "n_studies": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "scn_vip",
+   "label": "SCN VIP neurons",
+   "region_id": "scn",
+   "neurotransmitter": [
+    "GABA",
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Vip"
+   ],
+   "n_records": 3,
+   "n_studies": 2,
    "in_vocabulary": true
   },
   {
@@ -123,6 +168,20 @@
    "in_vocabulary": true
   },
   {
+   "id": "lha_mch",
+   "label": "LHA MCH neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Pmch"
+   ],
+   "n_records": 2,
+   "n_studies": 1,
+   "in_vocabulary": true
+  },
+  {
    "id": "arc_ghrh",
    "label": "ARC GHRH neurons",
    "region_id": "arc",
@@ -132,8 +191,22 @@
    "marker_genes": [
     "Ghrh"
    ],
-   "n_records": 0,
-   "n_studies": 0,
+   "n_records": 1,
+   "n_studies": 1,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lha_vglut2",
+   "label": "LHA glutamatergic (Vglut2) neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Slc17a6"
+   ],
+   "n_records": 1,
+   "n_studies": 1,
    "in_vocabulary": true
   },
   {
@@ -221,35 +294,6 @@
    "in_vocabulary": true
   },
   {
-   "id": "lha_mch",
-   "label": "LHA MCH neurons",
-   "region_id": "lha",
-   "neurotransmitter": [
-    "unknown"
-   ],
-   "marker_genes": [
-    "Pmch"
-   ],
-   "n_records": 0,
-   "n_studies": 0,
-   "in_vocabulary": true
-  },
-  {
-   "id": "lha_orexin",
-   "label": "LHA orexin/hypocretin neurons",
-   "region_id": "lha",
-   "neurotransmitter": [
-    "glutamate",
-    "peptidergic"
-   ],
-   "marker_genes": [
-    "Hcrt"
-   ],
-   "n_records": 0,
-   "n_studies": 0,
-   "in_vocabulary": true
-  },
-  {
    "id": "lha_vgat",
    "label": "LHA GABAergic (Vgat) neurons",
    "region_id": "lha",
@@ -258,20 +302,6 @@
    ],
    "marker_genes": [
     "Slc32a1"
-   ],
-   "n_records": 0,
-   "n_studies": 0,
-   "in_vocabulary": true
-  },
-  {
-   "id": "lha_vglut2",
-   "label": "LHA glutamatergic (Vglut2) neurons",
-   "region_id": "lha",
-   "neurotransmitter": [
-    "glutamate"
-   ],
-   "marker_genes": [
-    "Slc17a6"
    ],
    "n_records": 0,
    "n_studies": 0,
@@ -333,21 +363,6 @@
    ],
    "marker_genes": [
     "Avp"
-   ],
-   "n_records": 0,
-   "n_studies": 0,
-   "in_vocabulary": true
-  },
-  {
-   "id": "pvh_crh",
-   "label": "PVH CRH neurons",
-   "region_id": "pvh",
-   "neurotransmitter": [
-    "glutamate",
-    "peptidergic"
-   ],
-   "marker_genes": [
-    "Crh"
    ],
    "n_records": 0,
    "n_studies": 0,
@@ -426,21 +441,6 @@
    "in_vocabulary": true
   },
   {
-   "id": "scn_vip",
-   "label": "SCN VIP neurons",
-   "region_id": "scn",
-   "neurotransmitter": [
-    "GABA",
-    "peptidergic"
-   ],
-   "marker_genes": [
-    "Vip"
-   ],
-   "n_records": 0,
-   "n_studies": 0,
-   "in_vocabulary": true
-  },
-  {
    "id": "tmn_histamine",
    "label": "TMN histaminergic neurons",
    "region_id": "tmn",
@@ -490,9 +490,9 @@
    "tier": "A",
    "modality": "behaviour",
    "system": "feeding",
-   "n_records": 92,
-   "n_studies": 28,
-   "n_records_excluded": 13,
+   "n_records": 116,
+   "n_studies": 36,
+   "n_records_excluded": 17,
    "in_vocabulary": true
   },
   {
@@ -501,9 +501,9 @@
    "tier": "A",
    "modality": "anthropometry",
    "system": "body_composition",
-   "n_records": 35,
-   "n_studies": 20,
-   "n_records_excluded": 7,
+   "n_records": 36,
+   "n_studies": 21,
+   "n_records_excluded": 9,
    "in_vocabulary": true
   },
   {
@@ -514,7 +514,7 @@
    "system": "body_composition",
    "n_records": 18,
    "n_studies": 10,
-   "n_records_excluded": 4,
+   "n_records_excluded": 6,
    "in_vocabulary": true
   },
   {
@@ -525,7 +525,18 @@
    "system": "body_composition",
    "n_records": 3,
    "n_studies": 3,
-   "n_records_excluded": 1,
+   "n_records_excluded": 3,
+   "in_vocabulary": true
+  },
+  {
+   "id": "bone_density",
+   "label": "Bone mineral density / bone mass",
+   "tier": "A",
+   "modality": "imaging",
+   "system": "body_composition",
+   "n_records": 0,
+   "n_studies": 0,
+   "n_records_excluded": 2,
    "in_vocabulary": true
   },
   {
@@ -534,9 +545,9 @@
    "tier": "A",
    "modality": "calorimetry",
    "system": "energy_expenditure",
-   "n_records": 21,
-   "n_studies": 11,
-   "n_records_excluded": 7,
+   "n_records": 25,
+   "n_studies": 13,
+   "n_records_excluded": 11,
    "in_vocabulary": true
   },
   {
@@ -545,9 +556,9 @@
    "tier": "A",
    "modality": "calorimetry",
    "system": "energy_expenditure",
-   "n_records": 14,
-   "n_studies": 7,
-   "n_records_excluded": 1,
+   "n_records": 15,
+   "n_studies": 8,
+   "n_records_excluded": 5,
    "in_vocabulary": true
   },
   {
@@ -567,7 +578,18 @@
    "tier": "A",
    "modality": "blood assay",
    "system": "glucose_metabolism",
-   "n_records": 19,
+   "n_records": 20,
+   "n_studies": 12,
+   "n_records_excluded": 4,
+   "in_vocabulary": true
+  },
+  {
+   "id": "insulin_sensitivity",
+   "label": "Insulin sensitivity / insulin tolerance",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "glucose_metabolism",
+   "n_records": 20,
    "n_studies": 11,
    "n_records_excluded": 3,
    "in_vocabulary": true
@@ -580,18 +602,7 @@
    "system": "glucose_metabolism",
    "n_records": 18,
    "n_studies": 7,
-   "n_records_excluded": 1,
-   "in_vocabulary": true
-  },
-  {
-   "id": "insulin_sensitivity",
-   "label": "Insulin sensitivity / insulin tolerance",
-   "tier": "A",
-   "modality": "blood assay",
-   "system": "glucose_metabolism",
-   "n_records": 18,
-   "n_studies": 10,
-   "n_records_excluded": 3,
+   "n_records_excluded": 5,
    "in_vocabulary": true
   },
   {
@@ -602,7 +613,7 @@
    "system": "glucose_metabolism",
    "n_records": 8,
    "n_studies": 7,
-   "n_records_excluded": 1,
+   "n_records_excluded": 5,
    "in_vocabulary": true
   },
   {
@@ -644,9 +655,9 @@
    "tier": "A",
    "modality": "telemetry",
    "system": "thermoregulation",
-   "n_records": 7,
-   "n_studies": 4,
-   "n_records_excluded": 9,
+   "n_records": 11,
+   "n_studies": 7,
+   "n_records_excluded": 11,
    "in_vocabulary": true
   },
   {
@@ -655,9 +666,9 @@
    "tier": "A",
    "modality": "telemetry",
    "system": "thermoregulation",
-   "n_records": 2,
-   "n_studies": 2,
-   "n_records_excluded": 5,
+   "n_records": 3,
+   "n_studies": 3,
+   "n_records_excluded": 6,
    "in_vocabulary": true
   },
   {
@@ -683,13 +694,24 @@
    "in_vocabulary": true
   },
   {
+   "id": "gut_motility",
+   "label": "Gut motility",
+   "tier": "A",
+   "modality": "behaviour",
+   "system": "autonomic",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_records_excluded": 0,
+   "in_vocabulary": true
+  },
+  {
    "id": "heart_rate",
    "label": "Heart rate",
    "tier": "A",
    "modality": "telemetry",
    "system": "autonomic",
-   "n_records": 0,
-   "n_studies": 0,
+   "n_records": 2,
+   "n_studies": 1,
    "n_records_excluded": 1,
    "in_vocabulary": true
   },
@@ -699,8 +721,8 @@
    "tier": "A",
    "modality": "blood assay",
    "system": "endocrine",
-   "n_records": 6,
-   "n_studies": 3,
+   "n_records": 8,
+   "n_studies": 4,
    "n_records_excluded": 1,
    "in_vocabulary": true
   },
@@ -754,9 +776,20 @@
    "tier": "A",
    "modality": "behaviour",
    "system": "behaviour",
-   "n_records": 12,
-   "n_studies": 5,
-   "n_records_excluded": 1,
+   "n_records": 24,
+   "n_studies": 10,
+   "n_records_excluded": 6,
+   "in_vocabulary": true
+  },
+  {
+   "id": "sleep",
+   "label": "Sleep amount and architecture",
+   "tier": "A",
+   "modality": "EEG/EMG",
+   "system": "behaviour",
+   "n_records": 3,
+   "n_studies": 3,
+   "n_records_excluded": 0,
    "in_vocabulary": true
   }
  ],
@@ -767,44 +800,45 @@
    "axis": "increase",
    "axis_class": "circuit_activity",
    "axis_phrase": "more firing",
-   "n_records": 24,
-   "n_studies": 9,
-   "n_labs": 9,
+   "n_records": 34,
+   "n_studies": 14,
+   "n_labs": 14,
    "directions": {
-    "increase": 21,
-    "no_change": 3
+    "increase": 29,
+    "no_change": 5
    },
    "consensus": "increase",
-   "agreement": 0.875,
+   "agreement": 0.853,
    "contested": false,
    "minority_replicated": true,
    "record_ids": [
-    "cca9f558e44a754e",
-    "a946a1ec308f4269",
-    "12743eca830aee32",
-    "1068b48a9cf28019",
-    "392e32b261d13228",
-    "4dcc241fab270e2a",
-    "675141e3a5a5284d",
-    "1033677e0784de06",
-    "ec5cf5a07c752ecb",
-    "496c5af2ed07ee26",
-    "cef8f6489b604599",
-    "db047cad11a7a0b8",
-    "d550543a96e58c4b",
-    "096aad1e3bd742ad",
-    "a8a2b85e662a73a7",
-    "7c2e79b43da32d34",
-    "e742e06d2f25bed4",
-    "46dc800dc1105574",
-    "92a47a1c1fcbcbe9",
-    "a1d2e4637d358db3",
-    "1453188cc3214353",
-    "85c47097041ef5f4",
+    "d247141bef42765c",
+    "2d45f698f9d5b39b",
+    "e256eb5de8f78800",
+    "c1b98d981dba36bb",
+    "a4a4ea7bdf3524fc",
+    "da287886ff4e4ceb",
+    "ecce10a21025f1c5",
+    "85a3450aab650480",
+    "a60471a98cd8a03a",
+    "f2bd02e56e40f305",
+    "8d45dcff631b207b",
+    "29f8a87d7353a421",
+    "f8655eef11cca11d",
+    "81773b9b3b957b98",
+    "de90ac85a9853ca0",
+    "782bdaaa55fb3e80",
+    "8333498524d9e0b0",
+    "d9c8276246f6f1c2",
+    "971f3290b6955706",
+    "21680f967531dd51",
+    "3c36f0983efa8f10",
+    "d41d7c202b66a88e",
     "c8c738bcfccd2f20",
-    "21fda6da950cfc2d"
+    "fcea91b0669ad33f",
+    "83232f0b54034dfc"
    ],
-   "record_ids_truncated": false
+   "record_ids_truncated": true
   },
   {
    "population_id": "arc_agrp",
@@ -824,27 +858,27 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "170cf6c43ae5a552",
-    "cfceac0b2843da1d",
-    "3daf6977e3dab057",
-    "17bbf29a4aea979d",
-    "24fce43f701f207b",
-    "8d3d7d6aacd8ff12",
-    "65ad18209fdc84c1",
-    "686dccb1a495e322",
-    "4f80cf43db6dc27a",
-    "2ff0b230a9f46d9d",
-    "ff1c2b3c5af70928",
-    "eedd7d9885c9dd45",
-    "fca278a9bc063a1b",
-    "f5df3251e0ab5025",
+    "6ccd49cf7410d443",
+    "d41000994d1fe36d",
+    "11fc1b6f1da98da1",
+    "5a7cd0ddb4bf5899",
+    "024964d7ff8507ce",
+    "087960c4021bf6f2",
+    "d917ef48d5290e83",
+    "db9602cc9ce203fe",
+    "5025c4fb26c47438",
+    "c11e5c8fe5761301",
+    "8be2f3a293004cf4",
+    "08151277c4ce3868",
+    "ac5154daf61f6d15",
+    "1aa250bb56071e7d",
     "f37b35a034f7f0b4",
     "67a5dabaecc95034",
     "067262d9eb8cb3d9",
     "424bd165e3ffa286",
     "8175f42194d54d3b",
     "b4d8bee00b134769",
-    "411af94306d18af4",
+    "d5139224bc8502a3",
     "c493ab6137ec6166",
     "b5889c9fdd39d34f"
    ],
@@ -869,18 +903,48 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "bdf987c6c4e47162",
+    "0397b7caf40ad06b",
     "012b6ec29671aa1e",
     "895fedefc465356d",
     "cd974b418e5cd149",
-    "4fb05e8d53b8c8a0",
-    "e4bc6674aa52924e",
-    "4c0c4ed3c7c70b22",
-    "2467d9f6e9e42a95",
-    "e5e6aa7d5258e5ce",
-    "f3c04149e459f0b0",
-    "5ba16ca8649c75ba",
-    "5eeddc062688927f"
+    "d5004ee6813d194b",
+    "e37a46f7a261514b",
+    "61fb1f474c5eec81",
+    "34c85892d8e73414",
+    "d26edd3dcf5c8ea5",
+    "ff00b546b186306b",
+    "cf8e12bb06461db9",
+    "75004103258623b3"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 9,
+   "n_studies": 5,
+   "n_labs": 5,
+   "directions": {
+    "increase": 5,
+    "no_change": 4
+   },
+   "consensus": "increase",
+   "agreement": 0.556,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "b0042f09e9c1cb86",
+    "547430f38dd971f9",
+    "0aad227e1f10a1a1",
+    "7d3ae136c84721c7",
+    "480ae588e2618415",
+    "dd6a0640a162de0a",
+    "4a06832fcf0867a9",
+    "0e89ebf91fde8961",
+    "1ff89b16c99cf3d3"
    ],
    "record_ids_truncated": false
   },
@@ -902,14 +966,43 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "e57a376cbcdc29f6",
-    "439d77d04a1f92b1",
+    "f2baa98d1ba167ab",
+    "8acc76b67ead9113",
     "0559bb1fec8be3ac",
-    "9538edcf16a00765",
-    "83fd37a819909288",
+    "41fca07890c238c8",
+    "69254ebf1627707c",
     "3f1cf5b8ffff9fe7",
     "844bdf779ddbfc41",
     "d5426c8c38c68f4a"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "insulin_sensitivity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 8,
+   "n_studies": 4,
+   "n_labs": 4,
+   "directions": {
+    "decrease": 6,
+    "no_change": 2
+   },
+   "consensus": "decrease",
+   "agreement": 0.75,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d255954c15990b02",
+    "d427db2d93c11b97",
+    "b42212bc92a1f9a7",
+    "53c2504388fd8567",
+    "a1fbc3fddf1bd19d",
+    "5bae2ed9ad7052ae",
+    "6f92544f4b8590f3",
+    "fe1f69dac58fffb2"
    ],
    "record_ids_truncated": false
   },
@@ -931,13 +1024,13 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "162fea2c71e58bf0",
-    "dd201b2f14a7e288",
+    "6a3b2eb194570940",
+    "d9041405eb7404ae",
     "98c8dd70b2a8bb91",
     "eee273038051ef8c",
-    "813356fce56d6a6c",
-    "653616bf179be777",
-    "118557fe6006a457"
+    "37bad1d310a82578",
+    "920d0a7f105d4178",
+    "a7779ed84acf0d00"
    ],
    "record_ids_truncated": false
   },
@@ -960,41 +1053,13 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "3b88335eb733a89c",
-    "d825999130f030ce",
+    "5ae957cceb49c472",
+    "9cdf92ad39b59091",
     "081421068d21bdd9",
-    "6194709191b82ca3",
-    "94c082038a4f0bbf",
-    "ad33fa6476e31b0c",
+    "8518574090f1cc79",
+    "6337b46b4046c060",
+    "cc0375883b50d448",
     "5aa1d2406c8ac667"
-   ],
-   "record_ids_truncated": false
-  },
-  {
-   "population_id": "arc_pomc",
-   "outcome_id": "food_intake",
-   "axis": "decrease",
-   "axis_class": "circuit_activity",
-   "axis_phrase": "less firing",
-   "n_records": 7,
-   "n_studies": 4,
-   "n_labs": 4,
-   "directions": {
-    "increase": 4,
-    "no_change": 3
-   },
-   "consensus": "increase",
-   "agreement": 0.571,
-   "contested": true,
-   "minority_replicated": true,
-   "record_ids": [
-    "07c241bfdc5e5f5c",
-    "e09c7f54dc811a92",
-    "dbb0dbdae34d7422",
-    "f3e2439da0330ab4",
-    "1c22a225d5a37a23",
-    "fde1ccdef9562215",
-    "238c9d3dbb815d3e"
    ],
    "record_ids_truncated": false
   },
@@ -1017,12 +1082,12 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "82ac4703f2697492",
-    "8ee5409aabad10e4",
-    "1866ad62480a5b0a",
-    "18f31465c1535b9a",
-    "ea01162b412dfa11",
-    "733a86d9b35ab3e6"
+    "e17d05d7d557ca5d",
+    "bbdfc6990941e272",
+    "c3dc855ab1017089",
+    "6d04ede889c11a77",
+    "85a6ff237b26429d",
+    "c2f76f972e60c94c"
    ],
    "record_ids_truncated": false
   },
@@ -1045,39 +1110,40 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "2de120e5d52a7252",
+    "56d01ef965505f30",
     "f8a48cf98756f725",
     "40d1c50e031ff0e4",
-    "92bb4137ed45947b",
-    "a0751fc4583adf1d",
+    "ded24f729a2318ac",
+    "0b660f91cac182b9",
     "af29a79ed07f3df5"
    ],
    "record_ids_truncated": false
   },
   {
    "population_id": "arc_agrp",
-   "outcome_id": "insulin_sensitivity",
+   "outcome_id": "locomotor_activity",
    "axis": "increase",
    "axis_class": "circuit_activity",
    "axis_phrase": "more firing",
    "n_records": 6,
-   "n_studies": 3,
-   "n_labs": 3,
+   "n_studies": 2,
+   "n_labs": 2,
    "directions": {
-    "decrease": 4,
-    "no_change": 2
+    "decrease": 1,
+    "increase": 2,
+    "no_change": 3
    },
-   "consensus": "decrease",
-   "agreement": 0.667,
+   "consensus": "no_change",
+   "agreement": 0.5,
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "53cab467a30996d4",
-    "f53a933deaf6857c",
-    "c1f79a7f8757d99d",
-    "76da1447a1cc367a",
-    "5089d34b5309e9a4",
-    "ffa8a89f79d14dea"
+    "0c27e14215860fb0",
+    "f2ba156b1cecda69",
+    "7d179dec75e74cea",
+    "9b6d2ad0b5114417",
+    "231ba7a9142f8499",
+    "ad4a6ccfc070e39c"
    ],
    "record_ids_truncated": false
   },
@@ -1100,12 +1166,39 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "68c50534d04b4154",
-    "4d768761064c1efa",
-    "22987b18bf08d2e8",
-    "e2e93c48dfba6f82",
-    "a0bef5d655ce402f",
-    "d2376427c0ad4cab"
+    "207836afe1bbdc2a",
+    "02c9bc19f0edc587",
+    "a88df028caabb7bc",
+    "e6fed8ed735679b0",
+    "dc358d89ef10f845",
+    "5b48a0d35bc5b378"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 6,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "decrease": 5,
+    "no_change": 1
+   },
+   "consensus": "decrease",
+   "agreement": 0.833,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "83917428c35a1087",
+    "08f52418cff354b8",
+    "93c2e8f0c13a30ed",
+    "61e1b70b6013c1cd",
+    "fdb78695221a531e",
+    "b9c272e891a0e069"
    ],
    "record_ids_truncated": false
   },
@@ -1126,11 +1219,37 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "3741f268ef64671b",
-    "aa28ce5989a270dd",
-    "c0a4a6bfa6349697",
+    "c3ada007f70ce461",
+    "3c6822c579473792",
+    "fc2fa712c66fc355",
     "d452f39f89baf7dc",
     "17d44463a353b7a5"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "energy_expenditure",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 5,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "decrease": 2,
+    "no_change": 3
+   },
+   "consensus": "no_change",
+   "agreement": 0.6,
+   "contested": true,
+   "minority_replicated": true,
+   "record_ids": [
+    "590adcb5f0edcc31",
+    "50346f38bf08a2d0",
+    "95cc05ff83cd3c6e",
+    "55fffbd991a33dc5",
+    "841d17f2da26bd1d"
    ],
    "record_ids_truncated": false
   },
@@ -1152,11 +1271,11 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "322055e3f56f53ea",
-    "7559ce3356179862",
-    "b93d719a40aebb74",
-    "974157ce997421ea",
-    "4a3cf73a75babf7c"
+    "da2e00a4a6298e7f",
+    "7d2be54e91040f3c",
+    "306eda2851dfc8e7",
+    "3fb9a23d967289cc",
+    "faa6e21d620dc961"
    ],
    "record_ids_truncated": false
   },
@@ -1178,10 +1297,10 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "5315b16c4af5fe8a",
+    "c090086821e1b7e6",
     "6326b7fcf00e327c",
-    "ad1c73cbcf528f50",
-    "1669f22136825ec9",
+    "f6960c0317043c02",
+    "b45891b14274922d",
     "0be11f3915150ec0"
    ],
    "record_ids_truncated": false
@@ -1205,9 +1324,9 @@
    "minority_replicated": false,
    "record_ids": [
     "09f570f86c6ed0ae",
-    "525aeef32fc1d733",
-    "03b69990a7f6878c",
-    "9c754cfab12e8832"
+    "e9c9866b0a89febb",
+    "f82635ea85eb0801",
+    "7b479aa5d8773aec"
    ],
    "record_ids_truncated": false
   },
@@ -1230,7 +1349,7 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "20dd53216e779345",
+    "42e055e1994b504e",
     "914865ef08b6b204",
     "901c7a3288734e10",
     "91e7ed764e9efbb7"
@@ -1255,8 +1374,8 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "cc54119130d68974",
-    "4e9bcb7fd4da10e1",
+    "52e6519c0b8e5b15",
+    "1f06eeeb23a00339",
     "eff88b430c271f3d",
     "5ab28ec86562f4d8"
    ],
@@ -1280,10 +1399,10 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "c58a3ae30e1bc0c1",
-    "f2105dd119938aab",
-    "9264fc1ed8ac4856",
-    "58067ce7d66f9132"
+    "0637f95b89b7d929",
+    "24e8af353f4ef45f",
+    "3f26e33ececf3fa7",
+    "bbdcfb70decafb2b"
    ],
    "record_ids_truncated": false
   },
@@ -1306,8 +1425,8 @@
    "record_ids": [
     "3ec44b2351111eaf",
     "adbf0c09b44832f8",
-    "efb1c11e392be23b",
-    "5be4cdae68338e6d"
+    "41c6e9f197af37fb",
+    "c977f68769d3eabb"
    ],
    "record_ids_truncated": false
   },
@@ -1330,10 +1449,10 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "42e995ee183bbe5b",
-    "cdb01f8415cbf7f3",
-    "d6ed08c222db3e03",
-    "2354fb0b79038da7"
+    "298a003c1f515d3e",
+    "d1a0ff9e44b6f25d",
+    "aaa0258ae1cff6e6",
+    "77b671b81efb16d4"
    ],
    "record_ids_truncated": false
   },
@@ -1357,8 +1476,8 @@
    "record_ids": [
     "624176305716a2ef",
     "571dd95f50bd2830",
-    "a5f76ec203761192",
-    "549e3ffb896a056e"
+    "6c6cbd9a4eb476b7",
+    "eae0d7c93ff82ca1"
    ],
    "record_ids_truncated": false
   },
@@ -1407,7 +1526,7 @@
    "record_ids": [
     "2df1fee7fd87178a",
     "1f2c0189ace296a2",
-    "8215b0f7babff7ed"
+    "6a23ec615a83b3bc"
    ],
    "record_ids_truncated": false
   },
@@ -1429,33 +1548,9 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "2992057ee199ba83",
-    "28b00e87fbd518ce",
+    "e17f1e3decf8891f",
+    "68e307fec1e8d483",
     "b15035ec21dc4be8"
-   ],
-   "record_ids_truncated": false
-  },
-  {
-   "population_id": "arc_agrp",
-   "outcome_id": "energy_expenditure",
-   "axis": "increase",
-   "axis_class": "circuit_activity",
-   "axis_phrase": "more firing",
-   "n_records": 3,
-   "n_studies": 2,
-   "n_labs": 2,
-   "directions": {
-    "decrease": 1,
-    "no_change": 2
-   },
-   "consensus": "no_change",
-   "agreement": 0.667,
-   "contested": true,
-   "minority_replicated": false,
-   "record_ids": [
-    "b7bf5817c9d45820",
-    "50346f38bf08a2d0",
-    "95cc05ff83cd3c6e"
    ],
    "record_ids_truncated": false
   },
@@ -1477,8 +1572,8 @@
    "minority_replicated": false,
    "record_ids": [
     "fb098e47a9945beb",
-    "f9d2df73f54aff86",
-    "eeb4788632fab195"
+    "fbf940efe71f13da",
+    "67daa78b7eb4ac2f"
    ],
    "record_ids_truncated": false
   },
@@ -1501,8 +1596,8 @@
    "minority_replicated": false,
    "record_ids": [
     "f91902e5fb544751",
-    "094b0f81b04bf1cd",
-    "3b4ff3abaab3e79d"
+    "65d21ec042d52cbf",
+    "832b7aadc3d41bde"
    ],
    "record_ids_truncated": false
   },
@@ -1526,7 +1621,7 @@
    "record_ids": [
     "f12cdc2916b65836",
     "6153f87b799a9b76",
-    "02b7eece14ee775e"
+    "56c46409744526ef"
    ],
    "record_ids_truncated": false
   },
@@ -1548,9 +1643,9 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "b031ff6802c10536",
-    "4bcc3ab3686ce5be",
-    "c2d1bbf02f5debda"
+    "92ec5f0baa4f646a",
+    "559b55f5f1c9550d",
+    "f1c614e7521ec4f5"
    ],
    "record_ids_truncated": false
   },
@@ -1572,9 +1667,9 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "b4b06ac7970b6598",
-    "7f47688beab13c8c",
-    "f8bcca451767012b"
+    "df66f47098b985df",
+    "23b123614a0837b2",
+    "c08f7cf95798fb5b"
    ],
    "record_ids_truncated": false
   },
@@ -1596,8 +1691,8 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "8863fdaf60a7bb6e",
-    "ce4752d8ef564010",
+    "756bf1ab08c7dfaa",
+    "1c9411330f38f161",
     "a4c1e085f2c31caf"
    ],
    "record_ids_truncated": false
@@ -1620,7 +1715,7 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "53d7d920c935654b",
+    "77c22259c6134267",
     "6a09ec7ea9871cc0",
     "de57cd674c22338b"
    ],
@@ -1644,9 +1739,9 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "5ed6d5ddea922ec0",
-    "d52f7dbaed405a58",
-    "5cf17a45405ecaf9"
+    "6da604c021094c11",
+    "47d621b6a5848641",
+    "4f76552f713b356c"
    ],
    "record_ids_truncated": false
   },
@@ -1668,9 +1763,9 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "5e469343bf8e150d",
-    "d67ec53432c9a9f5",
-    "943bcd8dfdb36692"
+    "14850f72af1ab4a6",
+    "d92d48dadfd45248",
+    "8162d7ea850d1cf0"
    ],
    "record_ids_truncated": false
   },
@@ -1692,9 +1787,9 @@
    "contested": true,
    "minority_replicated": false,
    "record_ids": [
-    "ca0a7f8b8bb43dcf",
+    "53727385b18e0ef6",
     "82c3350698dd415b",
-    "4d70968c061a756e"
+    "9c039529eda213be"
    ],
    "record_ids_truncated": false
   },
@@ -1715,8 +1810,8 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "ad6611a292421be2",
-    "26524d9d6e45a5f0",
+    "d38e944a2ead9f12",
+    "a0ec73f76de720a6",
     "a15230e6b931033e"
    ],
    "record_ids_truncated": false
@@ -1739,7 +1834,7 @@
    "minority_replicated": false,
    "record_ids": [
     "7b7faf8d03bbe017",
-    "c41da60c11a8773b",
+    "a02c1fa6dc517f1e",
     "343db3be8bb1596f"
    ],
    "record_ids_truncated": false
@@ -1787,8 +1882,8 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "a25c065cea883a98",
-    "d611c749c22d35d4"
+    "fca3a480e0b3b878",
+    "58bfadd70c8a0533"
    ],
    "record_ids_truncated": false
   },
@@ -1831,8 +1926,8 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "4aaf5a421a04480f",
-    "0c463fd5c7c4f883"
+    "c4b2b06e415b30bd",
+    "8f66305c1f94591e"
    ],
    "record_ids_truncated": false
   },
@@ -1854,8 +1949,8 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "ef36adeb91b70bb9",
-    "e41caa44391e6a75"
+    "5c4015a0c753d3ef",
+    "b5b1710a75582d53"
    ],
    "record_ids_truncated": false
   },
@@ -1899,30 +1994,7 @@
    "minority_replicated": false,
    "record_ids": [
     "43db6565053e145d",
-    "40555b61b292d72c"
-   ],
-   "record_ids_truncated": false
-  },
-  {
-   "population_id": "arc_agrp",
-   "outcome_id": "locomotor_activity",
-   "axis": "increase",
-   "axis_class": "circuit_activity",
-   "axis_phrase": "more firing",
-   "n_records": 2,
-   "n_studies": 1,
-   "n_labs": 1,
-   "directions": {
-    "decrease": 1,
-    "no_change": 1
-   },
-   "consensus": null,
-   "agreement": 0.5,
-   "contested": false,
-   "minority_replicated": false,
-   "record_ids": [
-    "0c27e14215860fb0",
-    "f2ba156b1cecda69"
+    "33148b7354b90b52"
    ],
    "record_ids_truncated": false
   },
@@ -1988,8 +2060,8 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "0a9e2b33ea2ec5ac",
-    "5f3e5058eceda5b3"
+    "fd75066b8dc5f07d",
+    "801e7f128383b264"
    ],
    "record_ids_truncated": false
   },
@@ -2011,8 +2083,8 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "f8c3758b57144664",
-    "4cc48074fd55ce6a"
+    "b3e13690df8c8b0e",
+    "4ab01ac13b856672"
    ],
    "record_ids_truncated": false
   },
@@ -2034,8 +2106,8 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "e42ec4e50d4b1e46",
-    "2e3d88792ed771b9"
+    "01bd5d7cd0914d99",
+    "b86b02601d47714d"
    ],
    "record_ids_truncated": false
   },
@@ -2056,7 +2128,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "2ca0deb2d7a41243",
+    "7edc37f497db2baa",
     "a40cffa6a572c397"
    ],
    "record_ids_truncated": false
@@ -2079,8 +2151,8 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "d5e9059338deabec",
-    "7dadc4fd8f0e891a"
+    "59ad77826998af41",
+    "2a73f93ea6b13cca"
    ],
    "record_ids_truncated": false
   },
@@ -2124,7 +2196,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "b3572306da643fbb",
+    "0597926b69553b2e",
     "b6fa7717c3afd667"
    ],
    "record_ids_truncated": false
@@ -2147,7 +2219,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "2e35c75ee77996bf",
+    "01bb7712e420002d",
     "f0ac9eeb5117d92e"
    ],
    "record_ids_truncated": false
@@ -2170,7 +2242,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "a0e69e38644a8eb7",
+    "20ba1b092744646b",
     "a9c5fd13434c5e06"
    ],
    "record_ids_truncated": false
@@ -2194,7 +2266,30 @@
    "minority_replicated": false,
    "record_ids": [
     "1df209c7c7c341ce",
-    "f98e80095ff78278"
+    "3b9935689fa2192a"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_mch",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "a94fd33aae5dc2f3",
+    "3b1460b02b48caac"
    ],
    "record_ids_truncated": false
   },
@@ -2222,8 +2317,53 @@
    "record_ids_truncated": false
   },
   {
-   "population_id": "vmh_sf1",
+   "population_id": "pvh_sim1",
    "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 2
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "0603c87086a50b2e",
+    "b7eba5145eebcdd6"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "scn_vip",
+   "outcome_id": "sleep",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "ce0f7c0d00f90183",
+    "3f5a15083f049bd4"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "bat_thermogenesis",
    "axis": "increase",
    "axis_class": "circuit_activity",
    "axis_phrase": "more firing",
@@ -2231,15 +2371,84 @@
    "n_studies": 1,
    "n_labs": 1,
    "directions": {
-    "decrease": 2
+    "increase": 1,
+    "no_change": 1
    },
-   "consensus": "decrease",
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "1a902e8e694ded9f",
+    "bf70066ed8cb044e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 2
+   },
+   "consensus": "increase",
    "agreement": 1.0,
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "83917428c35a1087",
-    "08f52418cff354b8"
+    "d2168b6d5fdb945b",
+    "42ceb0ee3b0ff491"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "heart_rate",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "66da0e83951710aa",
+    "2b9bfbdee6e3bce8"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "084ef0b94ebb99d8",
+    "b5ba983f302eafb9"
    ],
    "record_ids_truncated": false
   },
@@ -2260,7 +2469,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "e4ea9e454ca44758"
+    "18bb2a91c838002a"
    ],
    "record_ids_truncated": false
   },
@@ -2281,7 +2490,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "c3ec045f87c78d5a"
+    "120966f1ae4645d6"
    ],
    "record_ids_truncated": false
   },
@@ -2302,7 +2511,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "1a15eb700dc9975c"
+    "18b682e57628c7b8"
    ],
    "record_ids_truncated": false
   },
@@ -2323,7 +2532,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "36d34543d991b8a7"
+    "034a342a65382c44"
    ],
    "record_ids_truncated": false
   },
@@ -2344,7 +2553,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "7845701687bb2340"
+    "fd32280f3db8e9ca"
    ],
    "record_ids_truncated": false
   },
@@ -2365,7 +2574,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "e0cf13d18f5922e1"
+    "3795dd74e461c1ef"
    ],
    "record_ids_truncated": false
   },
@@ -2386,7 +2595,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "4aeb05ebfac66e2b"
+    "5a0778e270e63af0"
    ],
    "record_ids_truncated": false
   },
@@ -2407,7 +2616,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "ca0c2ef9b98b7e4e"
+    "eda0d24ef76aff0e"
    ],
    "record_ids_truncated": false
   },
@@ -2428,7 +2637,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "efb0f2c532152e5d"
+    "d4a0f6f0f808c2c7"
    ],
    "record_ids_truncated": false
   },
@@ -2449,7 +2658,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "214dfb1d2490d581"
+    "b372933b164eb9f8"
    ],
    "record_ids_truncated": false
   },
@@ -2470,7 +2679,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "f1b8d1745ec57660"
+    "7c6da733c8358f7b"
    ],
    "record_ids_truncated": false
   },
@@ -2491,7 +2700,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "183c7cb741413d2b"
+    "2542324a2b7a259a"
    ],
    "record_ids_truncated": false
   },
@@ -2512,7 +2721,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "9e2da24bddb8b7eb"
+    "66c861bfcbc612e6"
    ],
    "record_ids_truncated": false
   },
@@ -2533,7 +2742,28 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "daa7ed8d5f5e41f1"
+    "57da725c734045aa"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_agrp",
+   "outcome_id": "rer",
+   "axis": "activation",
+   "axis_class": "other",
+   "axis_phrase": "activation",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d50e2d0e7222e6ef"
    ],
    "record_ids_truncated": false
   },
@@ -2554,7 +2784,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "d4bdefbf0158610f"
+    "1e8d306420318107"
    ],
    "record_ids_truncated": false
   },
@@ -2575,7 +2805,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "a7736c4330a6d406"
+    "ddec4c842f1573e9"
    ],
    "record_ids_truncated": false
   },
@@ -2596,7 +2826,28 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "293b5445cf98671e"
+    "7f997d4c565bb5fe"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_ghrh",
+   "outcome_id": "glucose_tolerance",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "78bfd409e60e853d"
    ],
    "record_ids_truncated": false
   },
@@ -2644,6 +2895,27 @@
   },
   {
    "population_id": "arc_pomc",
+   "outcome_id": "bat_thermogenesis",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "9888ab360c73256c"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
    "outcome_id": "blood_glucose",
    "axis": "unclear",
    "axis_class": "circuit_activity",
@@ -2680,7 +2952,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "f373695951753be6"
+    "1a46309e4c998bd4"
    ],
    "record_ids_truncated": false
   },
@@ -2701,7 +2973,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "71d1f5cfd52ef25d"
+    "3cc960417fd84a8c"
    ],
    "record_ids_truncated": false
   },
@@ -2749,6 +3021,27 @@
   },
   {
    "population_id": "arc_pomc",
+   "outcome_id": "core_temperature",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "7fa29de40a19dd5e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "arc_pomc",
    "outcome_id": "corticosterone",
    "axis": "decrease",
    "axis_class": "circuit_activity",
@@ -2764,7 +3057,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "15d74cef84178246"
+    "2fc2766f4f4d3143"
    ],
    "record_ids_truncated": false
   },
@@ -2806,7 +3099,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "13bdebfbf24e4680"
+    "a27645c2d0a7d94c"
    ],
    "record_ids_truncated": false
   },
@@ -2827,7 +3120,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "e949b575106d9ccd"
+    "d2ec876a55688691"
    ],
    "record_ids_truncated": false
   },
@@ -2869,7 +3162,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "03b03fd951905e1f"
+    "4611688bf0625773"
    ],
    "record_ids_truncated": false
   },
@@ -2911,7 +3204,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "e3e3348d2c468c4c"
+    "718aca43266733c4"
    ],
    "record_ids_truncated": false
   },
@@ -2932,7 +3225,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "51da55ac86db9aaf"
+    "83866f87479aeeea"
    ],
    "record_ids_truncated": false
   },
@@ -2953,7 +3246,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "2c59d96f59c401e6"
+    "e740c67c9602d534"
    ],
    "record_ids_truncated": false
   },
@@ -2974,7 +3267,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "b3138b7d62b93f41"
+    "d1414d8588de21e3"
    ],
    "record_ids_truncated": false
   },
@@ -3016,7 +3309,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "5c489aedb4885383"
+    "7dd8e9bf3ef2736e"
    ],
    "record_ids_truncated": false
   },
@@ -3037,7 +3330,7 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "f186db531f10aff5"
+    "3061c9ac162391ee"
    ],
    "record_ids_truncated": false
   },
@@ -3079,7 +3372,322 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "fa6ea36c576f7a59"
+    "bf7d46ac6f1a10c9"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "body_weight",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d0ef1611d7acdc20"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "energy_expenditure",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "c12eb4fa315e7c31"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "energy_expenditure",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "58c0f04776d080a6"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "ea825d117ebe2950"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "4098b5be496b9228"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "gut_motility",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "0a1017bcc885e850"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "gut_motility",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "448336f4954dfca7"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "locomotor_activity",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "4c34056109df2675"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "26415b0a9ce3adfd"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "sleep",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "bd0fa9320548db4c"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_vglut2",
+   "outcome_id": "bat_thermogenesis",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "386423688223bd69"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_crh",
+   "outcome_id": "corticosterone",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "380b2326f5de8456"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_crh",
+   "outcome_id": "corticosterone",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "c4dbcf4b4e37da42"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_crh",
+   "outcome_id": "locomotor_activity",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "2aa66a3069282baa"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_crh",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "96069bd1ae577139"
    ],
    "record_ids_truncated": false
   },
@@ -3208,21 +3816,63 @@
     "f466295a775794c9"
    ],
    "record_ids_truncated": false
+  },
+  {
+   "population_id": "scn_vip",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "e064035ee5976e89"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "vmh_sf1",
+   "outcome_id": "locomotor_activity",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "6cfe8249877d7f8e"
+   ],
+   "record_ids_truncated": false
   }
  ],
- "n_edges": 105,
+ "n_edges": 133,
  "n_edges_contested": 30,
  "n_edges_minority_replicated": 1,
  "n_edges_unclear_axis": 8,
- "n_populations_with_records": 5,
+ "n_populations_with_records": 11,
  "_honesty": [
-  "Nothing on this page is predicted. Every arrow, pulse and number is a count of curated observations already published in 42 papers.",
+  "Nothing on this page is predicted. Every arrow, pulse and number is a count of curated observations already published in 61 papers.",
   "An arrow is a count of published observations, not a measurement of signal flow. It says that perturbing this population was followed by a measured change in this readout in N records; it does not say that a signal travels this way, and the animation's speed and timing carry no physiological units.",
-  "No neural projection is drawn. Only 3 of 362 curated records name a projection target, so this dataset cannot support a wiring diagram and none is shown: the right-hand nodes are bodily readouts, not brain regions.",
-  "67 of 362 records are region-level (no cell-type-specific population) and are excluded from this view entirely. They are real evidence about a nucleus; they just cannot be attached to a population.",
-  "8 of the 105 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
+  "No neural projection is drawn. Only 4 of 458 curated records name a projection target, so this dataset cannot support a wiring diagram and none is shown: the right-hand nodes are bodily readouts, not brain regions.",
+  "104 of 458 records are region-level (no cell-type-specific population) and are excluded from this view entirely. They are real evidence about a nucleus; they just cannot be attached to a population.",
+  "8 of the 133 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
   "The axis and the direction can read as the same two words and are not the same statement. The axis is what the experiment did inside the brain -- more firing, less of a gene product, the population removed. The direction is what the body did. Every axis on this page is therefore written out in words rather than left as its bare value.",
-  "30 of the 105 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 1 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
-  "25 of the 30 vocabulary populations carry no curated record at all. That is a statement about how far curation has got, not about what the literature contains."
+  "30 of the 133 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 1 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
+  "19 of the 30 vocabulary populations carry no curated record at all. That is a statement about how far curation has got, not about what the literature contains."
  ]
 }

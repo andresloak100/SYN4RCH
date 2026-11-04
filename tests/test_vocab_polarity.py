@@ -102,10 +102,20 @@ class PolarityAnnotationTest(unittest.TestCase):
             )
 
     def test_the_rename_is_recorded_in_the_changelog(self):
+        """The rename must stay recorded as later entries are appended.
+
+        This used to assert ``version == "0.2.0"``, which pinned the version
+        the rename happened at and broke on the next legitimate bump (0.3.0,
+        D-049) while the guarantee it is named for -- that the rename is
+        written down -- was never in danger. The version is now checked for
+        shape only; what matters is that the changelog still carries the
+        rename, whatever has been appended after it.
+        """
         changelog = " ".join(self.doc["_meta"].get("changelog") or []).lower()
         self.assertIn("cognitive_decline", changelog)
         self.assertIn("cognitive_performance", changelog)
-        self.assertEqual(self.doc["_meta"]["version"], "0.2.0")
+        version = self.doc["_meta"]["version"]
+        self.assertRegex(version, r"^\d+\.\d+\.\d+$")
 
     def test_annotations_do_not_disturb_synonym_resolution(self):
         # The new fields are metadata; matching still works off `synonyms`.

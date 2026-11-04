@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from syn4rch.curate import pilot
+from syn4rch.schema.record import TierARecord
 
 
 def unit(study, pop, outcome="food_intake", section="Results", locator="Results para 1",
@@ -272,3 +273,45 @@ class ExcludeCuratedTest(unittest.TestCase):
             kept, dropped = pilot.drop_curated_studies(elig, path)
         self.assertEqual(sorted(kept), ["doi:1"])
         self.assertEqual(dropped, 0)
+
+
+class FieldsToCompleteTest(unittest.TestCase):
+    """The field list is derived, because the hand-written one drifted."""
+
+    def test_the_partition_of_the_schema_is_total(self):
+        """Every field is stub, not-the-curator's, or the curator's job.
+
+        This is the guarantee that stops the list drifting again. It drifted
+        once: three readers in one pass were told to record the condition
+        dimension and handed a list that did not mention it.
+        """
+        taken = (set(pilot.STUB_FROM_HARVEST)
+                 | set(pilot.STUB_CONSTANTS)
+                 | set(pilot.NOT_THE_CURATORS_JOB))
+        offered = set(pilot.fields_to_complete())
+        self.assertEqual(taken & offered, set(), "a field is both taken and offered")
+        self.assertEqual(
+            taken | offered, set(TierARecord.field_names()),
+            "the partition misses a schema field",
+        )
+
+    def test_the_condition_dimension_is_offered(self):
+        offered = set(pilot.fields_to_complete())
+        for name in ("sex", "diet", "age_group", "challenge",
+                     "challenge_detail", "condition_evidence"):
+            self.assertIn(name, offered, name)
+
+    def test_derived_and_computed_fields_are_never_offered(self):
+        offered = set(pilot.fields_to_complete())
+        for name in ("record_id", "perturbation_class", "perturbation_polarity",
+                     "conflicts_with"):
+            self.assertNotIn(name, offered, name)
+
+    def test_a_packaged_paper_offers_exactly_that_list(self):
+        units = [unit("doi:1", "arc_agrp")]
+        elig = pilot.eligible(units, ["arc_agrp"])
+        batches = pilot.package(["doi:1"], elig, {"doi:1": {"study_id": "doi:1"}},
+                                n_batches=1, schema_version="0.3.0")
+        self.assertEqual(
+            batches[0][0]["fields_to_complete"], list(pilot.fields_to_complete())
+        )

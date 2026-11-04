@@ -170,6 +170,13 @@ OUTCOME_SYSTEM = {
     "gonadotropins": "reproduction",
     "estrous_cyclicity": "reproduction",
     "locomotor_activity": "behaviour",
+    # Added when the circuit curation pass brought the first records with these
+    # readouts (D-051). The map is asserted total against the real dataset, so a
+    # new outcome fails the suite rather than quietly vanishing from the atlas --
+    # which is the guard working, not a bug in the pass.
+    "sleep": "behaviour",
+    "gut_motility": "autonomic",
+    "bone_density": "body_composition",
 }
 
 #: Order the systems are laid out in. Also presentational.

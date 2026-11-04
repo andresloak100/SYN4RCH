@@ -1783,3 +1783,137 @@ osmolality, the quantity it names, and the entry's notes now ask a record here t
 say in `extraction_notes` which of the two its quote measures. Splitting the id
 is a vocabulary change with no demand behind it yet: one record in the corpus
 uses it.
+
+---
+
+## D-050 - A projection-specific manipulation is a different manipulation
+
+**Decision.** `population_key` now distinguishes a projection-targeted
+manipulation from a somatic one: `arc_agrp->pvh`, not `arc_agrp`. The
+`projection_specific` flag decides it, and a record that declares itself
+projection-specific while naming no target keys as `...->unknown` rather than
+rejoining the somata — the same reasoning as the `raw:` prefix on an unresolved
+population (D-010).
+
+**Why, and found by a curator mid-pass.** A reader working the circuit batches
+pointed out that AgRP→PVH, AgRP→LHA and AgRP→BNST all key as `arc_agrp`, so
+three separately targeted projections pool into one claim. That costs twice, in
+exactly the two directions this project has already paid for once (D-023):
+
+* two laboratories manipulating *different* projections read as two
+  laboratories replicating one claim — manufactured replication;
+* a somatic result disagreeing with a terminal result reads as a contradiction —
+  manufactured conflict. The same reader's batch contains MCH somata
+  (`food_intake` increase) and MCH→ME terminals (`food_intake` no_change), which
+  would have pooled.
+
+**It was latent, and measured before being fixed.** On the committed 362-record
+corpus the change moves cells 274 → 277 and moves **nothing else**: cross-study
+conflicting claims stay at 4, directly opposed at 0, multi-study claims at 5. The
+one pooled cell was a single study, a single laboratory and four `increase`
+records, so it cost nothing yet. It would have started costing the moment the
+new circuit papers landed, which is why the fix went in before they were
+admitted rather than after.
+
+**And it does not move the pre-registered target.** D-048's secondary metric is
+circuit cells with two or more laboratories. Under the corrected key the
+baseline is 59 circuit cells of which **17** are multi-laboratory — the same 17
+as before. Only the denominator moved. The target "17 to >=40" therefore stands
+exactly as written, which matters: a key change that moved the baseline would
+have been goalpost-moving however well argued, and the way to tell the
+difference is to measure both and publish the pair.
+
+**`record_id` is unaffected.** It hashes `population_raw`, not
+`population_key`, so no record was re-identified by this.
+
+---
+
+## D-051 - The 30-paper mechanism check: not flat, and not on track
+
+**The check D-048 permitted.** Thirty of the sixty circuit papers are curated:
+96 records admitted from 30 papers, 0 rejected, 3 of those papers declining to
+yield anything on scope and 7 more yielding nothing from the passages supplied.
+The corpus is 458 records from 61 studies.
+
+| | records | cells | cells with >=2 labs |
+|---|---|---|---|
+| circuit, before | 170 | 59 | **17** |
+| circuit, at 30 papers | 265 | 116 | **23** |
+| molecular, unchanged | 170 | 132 | **0** |
+
+**The abandon condition does not fire.** Multi-laboratory circuit cells rose,
+so the hypothesis that circuit manipulations recur across laboratories is not
+refuted, and curation continues to 60 papers.
+
+**But the rate is not on track, and saying so now is the point of saying it at
+all.** Cells grew by 57 while multi-laboratory cells grew by 6, so 51 of the 57
+new cells are single-laboratory and the *share* of multi-laboratory cells fell
+from 29% to 20%. Thirty more papers at this rate land at about 29, against a
+target of 40. **On the evidence so far the secondary metric will miss.**
+
+That extrapolation is recorded before the second half is curated so that neither
+outcome can be rationalised afterwards. If the final figure comes in near 29,
+this entry predicted it. If it comes in at 40 or above, the second thirty papers
+were materially different from the first thirty and that difference is the thing
+to explain.
+
+**Why the new papers founded cells instead of joining them.** The selection took
+all populations rather than the two the corpus already covers most (D-038's
+reasoning applied to selection: restricting would have guaranteed the metric).
+The 30 papers brought orexin, CRH, VIP, SF1, MCH, LPO and GHR populations, and a
+cell needs a *second laboratory on the same population, perturbation and
+outcome*. Breadth is what this corpus is short of and also what makes replication
+rarer, and both halves of that are the finding rather than a flaw in the pass.
+
+**The primary metric was not measured, and `reports/baseline_benchmark.md` is
+deliberately stale.** It still describes the 362-record corpus. D-048 fixes one
+evaluation at 60 papers, and regenerating the benchmark now would be the second
+look that turns a suggestive result significant by chance. A stale report in a
+repository that requires recomputable numbers is a cost; taking it knowingly,
+and writing down why, is cheaper than the alternative.
+
+---
+
+## D-052 - The one new contradiction pools two genotypes, and is left standing
+
+**What appeared.** Admitting the 30 circuit papers took cross-study conflicting
+claims from 4 to 6 and produced the corpus's first directly-opposed pair since
+the condition fill removed the last one (D-047):
+
+| | direction | study | lab |
+|---|---|---|---|
+| `0c27e142` | decrease | `molmet.2022.101455` | Herzog |
+| `f2ba156b` | no_change | `molmet.2022.101455` | Herzog |
+| `ad4a6ccf` | **increase** | `s41467-020-14291-3` | Brüning |
+
+Cell: `arc_agrp`, chemogenetic activation, `locomotor_activity`, every condition
+slot unknown.
+
+**It is partly real and partly an artefact, and the artefact is nameable.** Both
+papers manipulate AgRP neurons *lacking NPY*, and `arc_agrp` does not record
+that. Herzog's record is explicitly "AGRP neurons that lack Npy"; Brüning's
+quote covers `NPY^wt/wt` and `NPY^Δ/Δ` together. So the cell pools an
+NPY-intact population with an NPY-null one — the same defect class as the
+projection pooling fixed in D-050, one level further in: **a key too coarse to
+tell two experiments apart manufactures a contradiction.** The curator who
+curated it said so at the time, and recommended a genotype dimension rather than
+a `population_raw` string.
+
+**Not fixed, deliberately.** Adding genotype to `population_key` would split
+cells across the whole corpus and move D-048's pre-registered baseline, which is
+the one thing a mid-experiment change must not do (D-050 explains why that
+mattered there, and the same argument binds here). The conflict therefore stands
+as recorded, which is also what SCHEMA.md requires: conflicts are data, nothing
+is resolved, and both sides keep their quote. The caveat is written here so that
+a reader meeting this cell in a QC report knows what it is.
+
+**A second, smaller miss in the same cell, and the system behaved correctly.**
+The two Herzog records come from one sentence — "a significant reduction in
+locomotor activity in the fed but not [fasted]" — and are stored with
+`challenge` null on both, so a fed result and a fasted result share a cell and
+read as a within-study disagreement. The condition dimension exists for exactly
+this. The v0.3.0 extractor did not fill them, and was right not to: a quote
+naming two states triggers
+`refused_quote_names_more_than_one_state` rather than picking one (D-044). The
+fix is a human reading those two records, and the refusal is what makes the
+small set findable.
