@@ -122,7 +122,7 @@ sentence and a locator on every value (`reports/condition_fill_0.3.0.md`):
 | dimension | null before | null after | values carrying evidence |
 |---|---|---|---|
 | `sex` | 224 | 112 | 174 of 235 |
-| `diet` | 197 | 111 | 97 of 229 |
+| `diet` | 197 | 111 | 104 of 236 |
 | `age_group` | 286 | 250 | 36 of 43 |
 | `challenge` | **362** | 337 | 25 of 25 |
 

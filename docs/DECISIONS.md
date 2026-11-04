@@ -1559,9 +1559,11 @@ close, and the report now says so rather than leaving a reader to wonder how a
 **The pass.** `syn4rch.curate.fill_conditions` read the 42 curated papers and
 wrote 362 records at v0.3.0. Per dimension — filled / corrected / confirmed /
 conflicted: `sex` 112 / 7 / 55 / 2, `diet` 86 / 11 / 7 / 0, `age_group` 36 / 0 /
-0 / 0, `challenge` 25 / 0 / 0 / 0. 227 of 362 `record_id`s changed. 332 evidence
-entries on 245 records, 307 from Methods and 25 from a record's own passage; all
-332 resolved to the passage their locator names with the quote found there.
+0 / 0, `challenge` 25 / 0 / 0 / 0. 227 of 362 `record_id`s changed. 339 evidence
+entries on 252 records, 314 from Methods and 25 from a record's own passage; all
+339 resolved to the passage their locator names with the quote found there.
+Per dimension: 174 for `sex`, 104 for `diet`, 36 for `age_group`, 25 for
+`challenge`.
 165 named refusals across 13 rules. Nulls: `sex` 224 → 112, `diet` 197 → 111,
 `age_group` 286 → 250, `challenge` 362 → 337.
 
