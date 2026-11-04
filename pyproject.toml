@@ -29,6 +29,7 @@ dev = ["pytest>=7"]
 syn4rch-qc = "syn4rch.qc.run:main"
 syn4rch-harvest = "syn4rch.harvest.run:main"
 syn4rch-curate = "syn4rch.curate.run:main"
+syn4rch-pilot = "syn4rch.curate.pilot:main"
 syn4rch-yield = "syn4rch.curate.yield_report:main"
 syn4rch-feasibility = "syn4rch.feasibility.run:main"
 syn4rch-models = "syn4rch.models.run:main"
