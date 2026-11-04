@@ -730,6 +730,24 @@ def _results_section(result: BenchmarkResult) -> str:
         "how the field publishes -- one lab, one gene, one paper -- and not a "
         "number to be tuned away."
     )
+    cross_check = next(
+        (
+            (b.unseen_perturbation_identity or {}).get("cross_check")
+            for b in result.bundles
+            if b.status == "ok" and (b.unseen_perturbation_identity or {}).get("cross_check")
+        ),
+        None,
+    )
+    if cross_check:
+        lines.append(
+            "\nThat column is computed in this harness, against the folds each "
+            "row's metrics were computed on, from "
+            "`syn4rch.qc.keys.perturbation_key`. SCHEMA.md 5b names "
+            "`%s` as the module that computes identity reach, so the two "
+            "notions of identity are checked against each other row by row "
+            "rather than assumed to match: **%s**."
+            % (cross_check.get("module"), cross_check.get("detail"))
+        )
     header = (
         ["baseline"]
         + [label for _, label in _COLUMNS]

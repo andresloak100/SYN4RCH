@@ -312,6 +312,68 @@ def _identity(example: Example) -> Tuple[str, ...]:
     return example.features.cell(PERTURBATION_AXIS)
 
 
+def _cross_check_identity(dataset: TaskDataset) -> Dict[str, Any]:
+    """Compare this module's identity against ``syn4rch.feasibility.identity``.
+
+    ``docs/SCHEMA.md`` 5b names that module as the thing that computes the
+    unseen-identity fraction, so the two must not drift. Rather than import it
+    and hope, this checks it on the real rows: both are built on
+    :func:`syn4rch.qc.keys.perturbation_key`, so they are expected to agree on
+    every example, and a disagreement is reported rather than resolved in
+    silence. Nothing here *uses* the other module's value -- the number beside
+    a cross-validated metric has to be computed against the folds that metric
+    used, which only this harness knows -- so a disagreement would be a
+    finding, not a failure.
+
+    The module may legitimately be absent (it is written by another component),
+    and that is reported too.
+    """
+    try:
+        from ..feasibility.identity import perturbation_identity
+    except Exception as exc:
+        return {
+            "module": "syn4rch.feasibility.identity",
+            "available": False,
+            "detail": "not importable (%s: %s)" % (type(exc).__name__, exc),
+        }
+    if not dataset.records or len(dataset.records) != len(dataset.examples):
+        return {
+            "module": "syn4rch.feasibility.identity",
+            "available": True,
+            "detail": (
+                "imported, but this dataset carries no records aligned with "
+                "its examples, so no row-by-row comparison was possible"
+            ),
+        }
+    mismatches: List[str] = []
+    for example, record in zip(dataset.examples, dataset.records):
+        try:
+            theirs = tuple(str(part) for part in perturbation_identity(record).key)
+        except Exception as exc:
+            return {
+                "module": "syn4rch.feasibility.identity",
+                "available": True,
+                "detail": "perturbation_identity raised %s: %s"
+                % (type(exc).__name__, exc),
+            }
+        if theirs != _identity(example):
+            mismatches.append(str(example.record_id))
+    return {
+        "module": "syn4rch.feasibility.identity",
+        "available": True,
+        "n_rows_compared": len(dataset.examples),
+        "n_disagreements": len(mismatches),
+        "example_disagreements": mismatches[:10],
+        "detail": (
+            "agrees on every example; both are built on "
+            "syn4rch.qc.keys.perturbation_key"
+            if not mismatches
+            else "DISAGREES on %d example(s): the two modules have drifted and "
+            "one of them is wrong" % len(mismatches)
+        ),
+    }
+
+
 def perturbation_identity_novelty(
     dataset: TaskDataset,
     folds: Sequence[Tuple[Sequence[int], Sequence[int]]],
@@ -367,6 +429,7 @@ def perturbation_identity_novelty(
     return {
         "identity": "(perturbation_class, perturbation_polarity, perturbation_target)",
         "identity_source": "syn4rch.qc.keys.perturbation_key",
+        "cross_check": _cross_check_identity(dataset),
         "n_test_rows": n_test,
         "n_test_rows_with_unseen_identity": n_unseen,
         "fraction_unseen": (None if n_test == 0 else n_unseen / n_test),

@@ -657,23 +657,31 @@ held-out molecular record's perturbation identity is therefore *always* unseen i
 training. There is nothing for a model to have learned, and an accuracy figure
 averaged over those folds measures the label prior.
 
-**The axis itself is sound, and that is the point.** Pooled across genes, the 17
-`(population, outcome)` cells holding both a loss-of-function and a
-gain-of-function record mostly do not mirror — `arc_pomc / hepatic_lipid` reads
-loss {increase 1, decrease 1} against gain {decrease 1, increase 1} — which looks
-like noise until the target is in the key. Resolve the gene and there are 9
-`(population, outcome, target)` cells where the *same* gene was both knocked out
-and overexpressed. Six mirror cleanly (`bcl6` on food intake, BAT thermogenesis
-and hepatic lipid; `fam172a` on food intake and energy expenditure; `trim31` on
-hepatic lipid), one agrees in both arms as a null, and two have no clear modal
-direction. None contradicts.
+**The axis looks sound, and the look cannot be corroborated.** Pooled across
+genes, the 17 `(population, outcome)` cells holding both a loss-of-function and
+a gain-of-function record mostly do not mirror — `arc_pomc / hepatic_lipid`
+reads loss {increase 1, decrease 1} against gain {decrease 1, increase 1} —
+which looks like noise until the target is in the key. Resolve the gene and
+there are 9 `(population, outcome, target)` cells where the *same* gene was both
+knocked out and overexpressed. Six mirror cleanly (`bcl6` on food intake, BAT
+thermogenesis and hepatic lipid; `fam172a` on food intake and energy
+expenditure; `trim31` on hepatic lipid), one agrees in both arms as a null, two
+have no clear modal direction, and **none contradicts.**
 
-So `perturbation_polarity` is measuring something real: a knockout and an
-overexpression of one gene move the physiology in opposite directions, as they
-should. The problem is not that the molecular axis is meaningless. It is that its
-identity never repeats across laboratories, so nothing learned about one gene
-transfers to another. Internal consistency is excellent and transferability is
-zero.
+**Revised before commit.** An earlier draft read that as "`perturbation_polarity`
+is measuring something real". It does not establish that. **All 9 of those cells
+are a single laboratory and a single study**, verified twice: every mirrored pair
+is one paper reporting both arms of its own experiment. That is exactly as
+consistent with a real biological sign as it is with a paper presenting a
+coherent story, and no analysis available here separates the two. Zero
+gene-level bidirectional comparisons in this corpus span two laboratories.
+
+So the honest statement is narrower: the molecular axis is *internally
+consistent*, which is a necessary condition for it to be measuring anything, and
+its identity never repeats across laboratories, so neither its validity nor its
+transferability can be tested. Nothing learned about one gene transfers to
+another, and nothing in the corpus checks whether a gene's reported sign would
+replicate.
 
 **What follows.** The schema fix was still worth making: it closed an id
 collision class, removed eleven of twelve false contradictions, and made the
@@ -1079,3 +1087,56 @@ carry `CONDITIONS_ALL_UNKNOWN` and are counted separately.
 absence of a specificity gate is a decision on the record rather than an
 oversight. Inventing a threshold there would be inventing the knob `gates.py`
 exists to warn against.
+
+---
+
+## D-036 - The condition dimension fixes conflict detection and does not help prediction
+
+**The measurement.** Adding the condition to the model's cell key makes
+prediction slightly *worse*, not better. Paired against the axis-only cell,
+under `study_id`: −0.006 [−0.015, +0.000] pooled and −0.028 on the rows whose
+cell was seen. The conditioned rung reaches only 88 of 361 predictions, so most
+rows fall through it to a coarser one.
+
+Why, in one table (`reports/baseline_benchmark.md`):
+
+| cell | cells | mean rows per cell | singleton cells | in-sample purity |
+|---|---|---|---|---|
+| population x outcome | 95 | 3.80 | 50.5% | 0.632 |
+| + perturbation axis | 203 | 1.78 | 69.5% | 0.809 |
+| + condition | 249 | 1.45 | 81.1% | 0.875 |
+
+In-sample purity rises monotonically and means nothing: it is a ceiling
+measured on the rows it was computed from, and a cell holding one row is
+trivially pure while contributing nothing to a held-out row of the same cell.
+Four fifths of the conditioned cells hold exactly one record. The refinement
+that fragments the data hardest looks like the one that explains it best, and
+the two columns are published side by side so that it cannot.
+
+**This does not retract D-023.** The condition dimension does what it was added
+for. It removed 16 of 18 false contradictions and it is the only reason the
+remaining 9 conflicting claims can be believed. Conflict detection asks "are
+these two records comparable?", which the condition answers. Prediction asks
+"have I seen enough records like this one?", which the condition makes harder by
+construction, because every slot it adds divides the evidence.
+
+**Both are true at once and neither is the headline.** A schema change can be
+right for the dataset's integrity and useless for its predictive power, and
+reporting only the half that flatters the change would be the error this project
+exists to avoid. The condition dimension is kept, in the claim key and in
+`record_id`, on the integrity argument alone.
+
+**What would change the verdict.** Conditions curated rather than inferred.
+`challenge` is null on all 362 records and 153 know no condition slot at all, so
+today the conditioned cell is mostly splitting `unknown` from `unknown`. The
+measurement above is of a condition dimension that exists in the schema and not
+yet in the data, and it should be re-run once a curation pass has filled it.
+Until then "conditioning hurts" means "conditioning on absent data hurts",
+which is not a finding about biology.
+
+**Also measured, and reported separately rather than blended.** Under
+`study_id` the axis improves ranking (one-vs-rest AUC 0.567 to 0.639) and makes
+calibration distinctly worse (expected calibration error 0.001 to 0.193),
+because cell frequencies drawn from cells of one or two rows are overconfident.
+Accuracy, ranking, calibration and uncertainty are four numbers and this project
+does not combine them.

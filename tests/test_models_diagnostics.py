@@ -265,6 +265,22 @@ class TestIdentityNovelty(unittest.TestCase):
         self.assertEqual(novelty["n_molecular_without_target"], 4)
         self.assertIn("lower bound", novelty["note"])
 
+    def test_the_identity_is_cross_checked_against_the_feasibility_module(self):
+        # SCHEMA.md 5b names syn4rch.feasibility.identity as the module that
+        # computes identity reach. Both are built on qc.keys.perturbation_key,
+        # so they must agree row by row; a disagreement is reported rather than
+        # resolved silently, and the module being absent is reported too.
+        dataset = build_dataset(
+            [molecular(i, target="Gene%d" % i) for i in range(3)]
+            + [synthetic.good_record(source_locator="c1")]
+        )
+        check = perturbation_identity_novelty(dataset, [((0, 1), (2, 3))])["cross_check"]
+        self.assertEqual(check["module"], "syn4rch.feasibility.identity")
+        if not check["available"]:  # pragma: no cover - module is optional
+            self.skipTest("syn4rch.feasibility.identity not importable here")
+        self.assertEqual(check["n_disagreements"], 0)
+        self.assertEqual(check["n_rows_compared"], 4)
+
     def test_a_circuit_record_has_no_gene_to_name_so_is_not_coarse(self):
         # A chemogenetic manipulation has no molecular target by construction.
         # Calling its identity incomplete would invent a missing field.

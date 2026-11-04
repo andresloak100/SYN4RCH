@@ -93,16 +93,28 @@ rather than suspicions:
 * **The molecular records are 17 genes across 16 studies and 16 laboratories,
   and no gene is manipulated by more than one laboratory.** So under study- or
   lab-grouped validation a held-out molecular record's perturbation was never
-  seen in training, and there is nothing to have learned. The axis itself works:
-  where the *same* gene was both knocked out and overexpressed, 6 of 9 cells
-  mirror cleanly and none contradicts. Internal consistency is excellent and
-  transferability is zero. `syn4rch.feasibility.identity` measures this;
-  `docs/DECISIONS.md` D-027 records it.
+  seen in training, and there is nothing to have learned. The axis is at least
+  internally consistent: where the *same* gene was both knocked out and
+  overexpressed, 6 of 9 cells mirror cleanly and none contradicts. But all 9 of
+  those cells are one laboratory and one study, so that consistency is equally
+  consistent with a paper telling a coherent story, and nothing here separates
+  the two. `syn4rch.feasibility.identity` measures the reach;
+  `docs/DECISIONS.md` D-027 records both halves.
 * **Until schema v0.2.0 there was no field that could tell the two halves
   apart.** All 170 molecular records carried `valence: unclear`, which was
   indistinguishable from a circuit manipulation whose net effect the paper did
   not resolve. v0.2.0 did not create the circuit signal — on that subset the old
   and new keys score identically — it made the signal *findable* (D-025, D-028).
+
+One more honest result, since it goes against the change: **conditioning the
+model on sex, diet and metabolic state makes prediction slightly worse**, by
+−0.006 pooled. Four fifths of the conditioned cells hold a single record, so the
+split fragments the evidence faster than it sharpens it. The condition dimension
+is kept because it is what removed the false contradictions, not because it
+predicts better. It is also measured on a field that is still empty: `challenge`
+is null on all 362 records, so today the conditioned cell is mostly separating
+one unknown from another, and the measurement should be re-run once a curation
+pass has filled it (`docs/DECISIONS.md` D-036).
 
 So "the evidence is insufficient" was an artifact of a missing field for half
 the corpus, and remains the right answer for the other half. What to curate next
