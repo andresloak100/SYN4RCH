@@ -21,11 +21,29 @@
   --lit: #c9d3dc;           /* literature layer ink (neutral, never accent) */
   --lit-2: #5c6b78;
   --lit-3: #34424e;         /* literature layer, hypothalamus-only tier */
-  --nucleus: #1d2a35;       /* 3D nucleus body */
-  --nucleus-ctx: #121b23;   /* 3D context nucleus body */
+  --nucleus: #1d2a35;       /* 3D nucleus body, unencoded */
+  --nucleus-ctx: #121b23;   /* 3D context nucleus body, unencoded */
   --edge: #8fb4c8;          /* 3D nucleus linework */
   --shell: #a9d8ea;         /* 3D brain rim light */
   --warn: #d9b26a;          /* semantic: not available / missing */
+
+  /* Data encodings. The cold accent is reserved for selection and hover and is
+     never a data colour. Categorical hues are in the SCHEMA.md transmitter enum
+     order and were checked with the dataviz palette validator against this
+     page's viewport ground (#04070a, dark mode): the three that can colour a
+     volume on their own pass the all-pairs test at CVD dE 12.2 / normal 18.9,
+     and all five pass adjacent at 9.0 / 20.1. A value outside this list falls
+     back to the unknown neutral and says so in the legend. */
+  --nt-gaba: #c45f8f;       /* GABA */
+  --nt-glu: #1d7d3e;        /* glutamate */
+  --nt-dop: #ba8617;        /* dopamine */
+  --nt-his: #6a55c6;        /* histamine */
+  --nt-pep: #a49218;        /* peptidergic */
+  --nt-mixed: #aab7c2;      /* more than one transmitter in this volume */
+  --nt-unknown: #5d6b78;    /* transmitter not established */
+  --none: #243039;          /* this volume has nothing to show in this encoding */
+  /* Sequential, one hue, four log10 steps; passes the ordinal checks. */
+  --seq-1: #6b4a1e; --seq-2: #a9752c; --seq-3: #e0a53f; --seq-4: #ffd47a;
 
   --f-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
   --f-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
@@ -52,7 +70,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .u { color: var(--ink-3); }
 
 /* ---------- shell ---------- */
-.console { display: grid; grid-template-columns: 272px minmax(0, 1fr) 340px; grid-template-rows: auto minmax(560px, 72vh) auto; min-height: 100%; }
+.console { display: grid; grid-template-columns: 272px minmax(0, 1fr) 340px; grid-template-rows: auto auto minmax(560px, 72vh) auto; min-height: 100%; }
 .top { grid-column: 1 / -1; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; padding-block: 12px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); border-bottom: 1px solid var(--rule); background: var(--void); }
 .mark { display: flex; align-items: baseline; gap: 14px; min-width: 0; }
 .mark b { font-family: var(--f-display); font-weight: 600; font-size: 22px; letter-spacing: 0.34em; }
@@ -60,6 +78,21 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .status { margin-left: auto; display: flex; gap: 22px; flex-wrap: wrap; font-family: var(--f-data); font-size: var(--s-1); color: var(--ink-2); }
 .status i { font-style: normal; color: var(--ink-3); margin-right: 6px; }
 .status .live::before { content: ""; display: inline-block; width: 5px; height: 5px; background: var(--accent); margin-right: 8px; vertical-align: 1px; box-shadow: 0 0 6px var(--accent); }
+
+/* ---------- encoding bus ---------- */
+.enc { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; padding-block: 10px 11px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); border-bottom: 1px solid var(--rule); background: var(--panel); }
+.enc-lab { font-family: var(--f-display); font-weight: 500; font-size: var(--s-1); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-3); }
+.enc .seg { flex: 0 1 auto; min-width: 0; flex-wrap: wrap; }
+.enc .seg button { white-space: nowrap; }
+.enc .seg button[aria-pressed="true"] { color: var(--void); background: var(--ink); }
+.enc-key { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 16px; min-width: 0; }
+.key { display: flex; align-items: center; gap: 7px; font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-2); }
+.key i { flex: none; width: 15px; height: 10px; background: var(--sw); border: 1px solid rgba(219, 228, 236, 0.16); }
+.key.off i { background: none; border-style: dashed; border-color: var(--rule-2); }
+.key b { font-weight: 400; color: var(--ink); }
+.key .n { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.enc-flag { font-family: var(--f-data); font-size: var(--s-0); letter-spacing: 0.12em; color: var(--warn); border: 1px dashed var(--warn); padding: 2px 8px; }
+.enc-note { margin: 0; flex-basis: 100%; font-family: var(--f-data); font-size: var(--s-0); line-height: 1.5; color: var(--ink-3); max-width: 108ch; }
 
 .rail { background: var(--panel); min-width: 0; overflow-y: auto; }
 .rail.left { border-right: 1px solid var(--rule); }
@@ -70,7 +103,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 /* structure index */
 .idx { display: grid; }
-.idx button { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 6px 8px; margin: 0 -8px; border-left: 1px solid transparent; }
+.idx button { display: grid; grid-template-columns: 9px 44px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 6px 8px; margin: 0 -8px; border-left: 1px solid transparent; }
+.idx .sw { width: 9px; height: 9px; align-self: center; background: var(--sw, var(--none)); border: 1px solid rgba(219, 228, 236, 0.16); }
 .idx button:hover { background: var(--accent-wash); }
 .idx button[aria-pressed="true"] { border-left-color: var(--accent); background: var(--accent-wash); }
 .idx .acr { font-family: var(--f-data); font-size: var(--s-2); color: var(--ink); }
@@ -162,6 +196,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-2); }
 .legend span::before { content: ""; display: inline-block; width: 14px; height: 4px; margin-right: 6px; vertical-align: 2px; background: var(--sw); }
 
+.well { border: 1px solid var(--rule-2); border-left: 2px solid var(--lit); padding: 18px 16px; display: grid; gap: 8px; background: var(--panel-2); }
 .void-slot { border: 1px dashed var(--rule-2); padding: 18px 16px; display: grid; gap: 8px; background: repeating-linear-gradient(135deg, transparent 0 7px, rgba(143, 180, 200, 0.035) 7px 8px); }
 .big { font-family: var(--f-data); font-size: var(--s-6); line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
 .big small { font-family: var(--f-display); font-size: var(--s-3); letter-spacing: 0.2em; color: var(--ink-3); margin-left: 10px; }
@@ -170,7 +205,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 
 /* ---------- narrow ---------- */
 @media (max-width: 1180px) {
-  .console { grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: auto minmax(520px, 68vh) auto auto; }
+  .console { grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: auto auto minmax(520px, 68vh) auto auto; }
   .rail.right { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--rule); display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
   .bus { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .mod.m-a { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--rule); }
@@ -179,6 +214,8 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   .console { display: flex; flex-direction: column; }
   .view { height: 64vh; min-height: 380px; order: 1; }
   .top { order: 0; }
+  .enc { order: 0; gap: 8px 16px; }
+  .enc-note { font-size: 9.5px; }
   .rail.right { order: 2; display: block; }
   .bus { order: 3; grid-template-columns: minmax(0, 1fr); padding-left: 0; padding-right: 0; }
   .mod { border-right: 0; border-bottom: 1px solid var(--rule); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
@@ -198,6 +235,13 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     <div class="mark"><b>SYN4RCH</b><span>Hypothalamic atlas &middot; Allen CCFv3 2017</span></div>
     <div class="status" id="status"></div>
   </header>
+
+  <section class="enc" aria-label="Colour encoding">
+    <span class="enc-lab">Colour by</span>
+    <div class="seg" role="group" aria-label="Colour the nuclei by" id="enc-seg"></div>
+    <div class="enc-key" id="enc-key"></div>
+    <p class="enc-note" id="enc-note"></p>
+  </section>
 
   <nav class="rail left" aria-label="Structure index">
     <section class="sec">
@@ -271,10 +315,11 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
         <h3>Curated records</h3>
         <p>Verified population &times; perturbation &times; readout observations, each with a verbatim quote and locator.</p>
       </div>
-      <div class="void-slot">
+      <div class="void-slot" id="causal-slot">
         <div class="big" id="causal-n">0<small>RECORDS</small></div>
         <div class="state-line" id="causal-line"></div>
       </div>
+      <div class="lit" id="causal-pops" hidden></div>
       <div class="src" id="causal-src"></div>
     </div>
     <div class="mod m-c">
@@ -331,12 +376,178 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   function tick() { var d = new Date(); $("clock").textContent = "UTC " + d.toISOString().slice(11, 19); }
   tick(); setInterval(tick, 1000);
 
+  /* ---------- colour encodings ----------
+     Every mode reads values already in the scene. The cold accent never
+     encodes data: it is reserved for hover and selection, which keep the
+     volume's data colour and add a cyan rim, so the two channels never
+     compete. A volume with nothing to show in a mode takes the "none"
+     neutral rather than the bottom step of a ramp. */
+  var NT_SW = { GABA: "--nt-gaba", glutamate: "--nt-glu", dopamine: "--nt-dop",
+                histamine: "--nt-his", peptidergic: "--nt-pep" };
+  var NT_ORDER = ["GABA", "glutamate", "dopamine", "histamine", "peptidergic"]; // SCHEMA.md enum order
+  var SEQ = ["--seq-1", "--seq-2", "--seq-3", "--seq-4"];
+  var BIN_LABEL = ["1–9", "10–99", "100–999", "1,000 and over"];
+
+  function ntOf(regionId) {
+    var pops = popsByNucleus[regionId] || [];
+    if (!pops.length) return { key: "none", vals: [] };
+    var seen = {}, vals = [];
+    pops.forEach(function (p) {
+      (p.neurotransmitter || []).forEach(function (v) { if (!seen[v]) { seen[v] = 1; vals.push(v); } });
+    });
+    if (vals.length > 1) return { key: "multi", vals: vals };
+    return { key: vals[0], vals: vals };
+  }
+  function ntSwatch(k) {
+    if (k === "none") return "--none";
+    if (k === "multi" || k === "mixed") return "--nt-mixed";
+    return NT_SW[k] || "--nt-unknown";
+  }
+  function logBin(n) { return n <= 0 ? -1 : n < 10 ? 0 : n < 100 ? 1 : n < 1000 ? 2 : 3; }
+  function countNuclei(fn) { var n = 0; nuclei.forEach(function (s) { if (fn(s)) n++; }); return n; }
+
+  /* a) Allen's own colour_hex_triplet, grouped so the legend names every value */
+  var allenGroups = [];
+  nuclei.forEach(function (s) {
+    var hex = "#" + (s.allen_color || "888888");
+    var g = allenGroups.filter(function (x) { return x.hex === hex; })[0];
+    if (!g) { g = { hex: hex, acrs: [] }; allenGroups.push(g); }
+    g.acrs.push(s.allen_acronym);
+  });
+
+  /* b) transmitter, resolved per volume */
+  function ntKeys() {
+    var order = ["multi"].concat(NT_ORDER, ["mixed", "unknown", "none"]), out = [];
+    order.forEach(function (k) {
+      var n = countNuclei(function (s) { return ntOf(s.region_id).key === k; });
+      var inVocab = k === "multi" || k === "none" ||
+        S.populations.some(function (p) { return (p.neurotransmitter || []).indexOf(k) >= 0; });
+      if (!n && !inVocab) return;
+      out.push({ sw: ntSwatch(k), n: n,
+        label: k === "multi" ? "more than one here" : k === "none" ? "no population" : k,
+        note: k === "multi" ? "populations in this volume do not share one transmitter"
+            : k === "mixed" ? "the vocabulary's own 'mixed' value"
+            : k === "unknown" ? "transmitter not established"
+            : k === "none" ? "no SYN4RCH population is assigned to this volume" : "" });
+    });
+    return out;
+  }
+
+  /* c) literature, log10 bins of papers naming the nucleus */
+  function litColour(s) {
+    var c = regOf(s.region_id);
+    if (!c) return "--none";
+    var b = logBin(c.naming);
+    return b < 0 ? "--none" : SEQ[b];
+  }
+  function litKeys() {
+    var keys = [];
+    for (var b = 3; b >= 0; b--) {
+      (function (b) {
+        keys.push({ sw: SEQ[b], label: BIN_LABEL[b] + " papers",
+          n: countNuclei(function (s) { var c = regOf(s.region_id); return c && logBin(c.naming) === b; }) });
+      })(b);
+    }
+    keys.push({ sw: "--none", label: "0 papers",
+      n: countNuclei(function (s) { var c = regOf(s.region_id); return c && c.naming === 0; }) });
+    var nc = countNuclei(function (s) { return !regOf(s.region_id); });
+    if (nc) keys.push({ sw: "--none", off: true, label: "no count", n: nc });
+    return keys;
+  }
+
+  /* d) curated records. Zero everywhere today, and it must read as zero. */
+  var recTotal = causal.n_records || 0;
+  function recColour(s) {
+    if (!recTotal) return "--none";
+    var pops = popsByNucleus[s.region_id] || [], n = 0;
+    pops.forEach(function (p) { n += (causal.by_population || {})[p.id] || 0; });
+    var b = logBin(n);
+    return b < 0 ? "--none" : SEQ[b];
+  }
+  function recKeys() {
+    if (!recTotal) {
+      return [{ sw: "--none", label: "0 records", n: nuclei.length, note: "every volume" }].concat(
+        SEQ.slice().reverse().map(function (t, i) {
+          return { sw: t, off: true, label: BIN_LABEL[3 - i] + " records", n: 0, note: "unused" };
+        }));
+    }
+    var keys = [];
+    for (var b = 3; b >= 0; b--) {
+      (function (b) {
+        keys.push({ sw: SEQ[b], label: BIN_LABEL[b] + " records",
+          n: countNuclei(function (s) { return recColour(s) === SEQ[b]; }) });
+      })(b);
+    }
+    keys.push({ sw: "--none", label: "0 records",
+      n: countNuclei(function (s) { return recColour(s) === "--none"; }) });
+    return keys;
+  }
+
+  /* e) placement tier, with the swatches the coverage strip already uses */
+  function tierOf(s) { return (popsByNucleus[s.region_id] || []).length ? "population" : "nucleus"; }
+  function tierKeys() {
+    var onModel = { population: 1, nucleus: 1 };
+    return (reg.tier_order || ["population", "nucleus"]).map(function (t) {
+      var vol = onModel[t] ? countNuclei(function (s) { return tierOf(s) === t; }) : 0;
+      return { sw: TIER_SW[t], off: !onModel[t], label: TIER_NAME[t],
+        n: onModel[t] ? vol : null,
+        papers: reg.available ? reg.tiers[t].papers : null,
+        note: onModel[t] ? "" : t === "hypothalamus_only" ? "the outer hypothalamus shell, no nucleus"
+            : "not drawn: no Allen volume to put it on" };
+    });
+  }
+
+  var ENC = {
+    allen: {
+      label: "ALLEN ONTOLOGY",
+      colour: function (s) { return "#" + (s.allen_color || "888888"); },
+      keys: function () {
+        return allenGroups.map(function (g) {
+          return { hex: g.hex, label: g.hex.toUpperCase(), n: g.acrs.length, note: g.acrs.join(" ") };
+        });
+      },
+      note: "The Allen atlas's own colour_hex_triplet for each structure, straight from the downloaded structure graph. The atlas paints the whole hypothalamus in one red family, so these values differ only slightly; that is the ontology's choice and not a signal in our data. This is the default because it interprets nothing."
+    },
+    nt: {
+      label: "NEUROTRANSMITTER",
+      colour: function (s) { return "var(" + ntSwatch(ntOf(s.region_id).key) + ")"; },
+      keys: ntKeys,
+      note: "Fast transmitter of the SYN4RCH populations assigned to each volume, from data/vocab/populations.json. A volume whose populations do not all share one transmitter reads as 'more than one here' and is never given one of their hues. 'unknown' means the vocabulary does not assert a transmitter, not that the neurons have none. Hues follow the SCHEMA.md enum order and were checked for colour-vision separation; identity is also given by the labels here and in the panel."
+    },
+    lit: {
+      label: "LITERATURE",
+      colour: litColour,
+      keys: litKeys,
+      note: "Papers whose title, abstract or MeSH terms name the nucleus, in log10 bins (1–9, 10–99, 100–999, 1,000+), so the largest nucleus does not flatten the rest. Exact counts are in the panel. This counts papers that name a structure. It is not evidence that any perturbation had an effect. Papers naming only the hypothalamus as a whole sit on the outer shell, which is not on this scale."
+    },
+    rec: {
+      label: "CURATED RECORDS",
+      colour: recColour,
+      keys: recKeys,
+      note: "Curated population × perturbation × readout records, summed over the populations in each volume, in the same log10 bins and the same single ramp the literature mode uses; here the ramp counts records, not papers." +
+        (recTotal ? " Source: " + causal.source + ", " + fmt(recTotal) + " records read at " + (causal.built_from_mtime || S.built_at) +
+          ", carried by " + Object.keys(causal.by_population || {}).length + " of " + S.populations.length +
+          " populations. Curation is still running, so a volume drawn as 0 has no curated record yet; that is not a finding about the literature." : ""),
+      empty: !recTotal,
+      emptyNote: "There are none. The file does not exist yet, no record has passed the verbatim gate, and so every volume is drawn in the same neutral and no step of the ramp is in use. Nothing in this view is scaled by curated evidence."
+    },
+    tier: {
+      label: "PLACEMENT TIER",
+      colour: function (s) { return TIER_SW[tierOf(s)]; },  // already a var(...) reference
+      keys: tierKeys,
+      note: "The most specific evidence a volume can carry: a nucleus holding at least one vocabulary population can hold population-level evidence, a mapped nucleus without one can only hold nucleus-level evidence. Swatches and paper counts are the same ones used by the coverage strip in Layer A. Three of the five tiers cannot sit on any nucleus at all, and are listed here so the missing colours are accounted for."
+    }
+  };
+  var ENC_ORDER = ["allen", "nt", "lit", "rec", "tier"];
+  var encMode = "allen";
+
   /* ---------- structure index ---------- */
   var withPop = nuclei.filter(function (s) { return popsByNucleus[s.region_id]; });
   var ctx = nuclei.filter(function (s) { return !popsByNucleus[s.region_id]; });
   function idxRow(s) {
     var n = (popsByNucleus[s.region_id] || []).length;
     return '<button type="button" data-allen="' + s.allen_id + '" aria-pressed="false" title="' + esc(s.allen_name) + '">' +
+      '<span class="sw" aria-hidden="true"></span>' +
       '<span class="acr">' + esc(s.allen_acronym) + '</span><span class="nm">' + esc(s.allen_name) + '</span>' +
       '<span class="np">' + (n ? n + " pop" : s.allen_id) + "</span></button>";
   }
@@ -376,6 +587,41 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   /* coverage: every paper in exactly one placement tier */
   var TIER_SW = { population: "var(--lit)", nucleus: "var(--lit-2)", hypothalamus_only: "var(--lit-3)", unmapped_region: "var(--warn)", unplaced: "var(--rule-2)" };
   var TIER_NAME = { population: "on a population", nucleus: "on a nucleus only", hypothalamus_only: "hypothalamus only", unmapped_region: "region with no volume", unplaced: "not placed" };
+
+  /* ---------- encoding control ---------- */
+  // A key or a mode may name a token ("--seq-1") or a literal ("#ff5d50").
+  function cssColour(v) { return v.indexOf("--") === 0 ? "var(" + v + ")" : v; }
+  function resolveColour(v) {
+    var m = /^(?:var\()?(--[a-z0-9-]+)\)?$/.exec(v);
+    return m ? tok(m[1]) : v;
+  }
+  function encColour(s) { return cssColour(ENC[encMode].colour(s)); }
+  $("enc-seg").innerHTML = ENC_ORDER.map(function (k) {
+    return '<button type="button" data-enc="' + k + '" aria-pressed="' + (k === encMode) + '">' + ENC[k].label + "</button>";
+  }).join("");
+  function renderKey() {
+    var d = ENC[encMode], keys = d.keys();
+    $("enc-key").innerHTML =
+      (d.empty ? '<span class="enc-flag">LAYER EMPTY</span>' : "") +
+      keys.map(function (k) {
+        var sw = cssColour(k.hex || k.sw);
+        var bits = [];
+        if (k.papers != null) bits.push(fmt(k.papers) + " papers");
+        if (k.n != null) bits.push(k.n + (k.n === 1 ? " volume" : " volumes"));
+        if (k.note) bits.push(k.note);
+        return '<span class="key' + (k.off ? " off" : "") + '"><i style="--sw:' + sw + '"></i>' +
+          "<b>" + esc(k.label) + "</b>" + (bits.length ? '<span class="n">' + esc(bits.join(" · ")) + "</span>" : "") + "</span>";
+      }).join("");
+    $("enc-note").textContent = d.note + (d.empty ? " " + d.emptyNote : "");
+  }
+  function setEncoding(k) {
+    encMode = k;
+    document.querySelectorAll("#enc-seg button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.enc === k));
+    });
+    renderKey();
+    paint();
+  }
   if (reg.available) {
     var tot = Math.max(reg.total_papers, 1);
     $("cov").innerHTML =
@@ -425,9 +671,25 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     $("lit-h").textContent = d.h; $("lit-p").textContent = d.p; $("lit-legend").innerHTML = d.legend; $("lit-scale").innerHTML = d.scale;
   }
   setMode("pop");
+  var byPop = causal.by_population || {}, popsWithRec = Object.keys(byPop);
+  var maxRec = Math.max.apply(null, popsWithRec.map(function (k) { return byPop[k]; }).concat([1]));
   $("causal-n").innerHTML = fmt(causal.n_records) + "<small>RECORDS</small>";
-  $("causal-line").textContent = causal.exists ? causal.status : "Curation in progress. No record has passed the verbatim gate yet.";
-  $("causal-src").innerHTML = "<span>SOURCE <b>" + esc(causal.source) + "</b> " + (causal.exists ? "" : "(file not present at build)") + "</span>";
+  $("causal-line").textContent = causal.n_records
+    ? popsWithRec.length + " of " + S.populations.length + " populations carry at least one. Curation is still running, so the rest have none yet rather than none to find."
+    : "Curation in progress. No record has passed the verbatim gate yet.";
+  if (causal.n_records) {
+    $("causal-slot").className = "well";
+    $("causal-pops").hidden = false;
+    $("causal-pops").innerHTML = popsWithRec.sort(function (a, b) { return byPop[b] - byPop[a]; }).map(function (k) {
+      var p = popById[k];
+      return '<button type="button" data-pop="' + esc(k) + '" aria-pressed="false" aria-label="' + esc(p ? p.label : k) + ": " + byPop[k] + ' curated records">' +
+        '<span class="ln">' + esc(k) + '</span><span class="lv">' + fmt(byPop[k]) + "</span>" +
+        '<span class="track"><span class="inc" style="width:' + (100 * byPop[k] / maxRec).toFixed(1) + '%"></span></span></button>';
+    }).join("");
+  }
+  $("causal-src").innerHTML = "<span>SOURCE <b>" + esc(causal.source) + "</b>" + (causal.exists ? "" : " (file not present at build)") + "</span>" +
+    (causal.built_from_mtime ? "<span>READ <b>" + esc(causal.built_from_mtime) + "</b> (file modified, UTC)</span>" : "") +
+    (causal.n_records ? "<span>Bars share one linear scale, 0 to " + fmt(maxRec) + " records. One record is one population, one perturbation and one readout, with a verbatim quote.</span>" : "");
   $("kg-line").textContent = "The knowledge graph is not built. No projections or organ links are drawn.";
   $("kg-src").innerHTML = "<span>SOURCE <b>" + esc(kg.path) + "</b> (" + (kg.module_files.length ? kg.module_files.length + " modules" : "empty") + ")</span>";
 
@@ -511,7 +773,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 
   /* ---------- 3D ---------- */
   var view = $("view");
-  if (!window.THREE || !THREE.OrbitControls) { $("loading").textContent = "3D LIBRARY FAILED TO LOAD"; renderOverview(); wire(); return; }
+  if (!window.THREE || !THREE.OrbitControls) { $("loading").textContent = "3D LIBRARY FAILED TO LOAD"; renderKey(); renderOverview(); wire(); return; }
   var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   view.insertBefore(renderer.domElement, view.firstChild);
@@ -568,9 +830,12 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     nucleusObjs[s.allen_id] = { mesh: mesh, edges: edges, hasPop: hasPop, center: toW(s.vertex_mean_um[0], s.vertex_mean_um[1], s.vertex_mean_um[2]),
       radius: geo.boundingSphere.radius };
   });
-  scene.add(new THREE.AmbientLight(0x9fb4c4, 0.45));
-  var key = new THREE.DirectionalLight(0xe6f4ff, 0.9); key.position.set(4, 8, 6); scene.add(key);
-  var fill = new THREE.DirectionalLight(0x5f8aa0, 0.5); fill.position.set(-6, -3, -5); scene.add(fill);
+  // Lit close to unity so an encoded body reads near its legend swatch
+  // rather than washing out: ambient carries most of it, the key light only
+  // shapes the form.
+  scene.add(new THREE.AmbientLight(0xbccbd6, 0.72));
+  var key = new THREE.DirectionalLight(0xe6f4ff, 0.42); key.position.set(4, 8, 6); scene.add(key);
+  var fill = new THREE.DirectionalLight(0x5f8aa0, 0.26); fill.position.set(-6, -3, -5); scene.add(fill);
 
   // Coronal section contours: exact intersections of the brain mesh with AP planes.
   function contours(geo, s) {
@@ -641,16 +906,27 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 
   /* selection */
   var selected = null, hovered = null, selectedPop = null;
+  var black = new THREE.Color(0);
   function paint() {
+    var swOf = {};
     nuclei.forEach(function (s) {
-      var o = nucleusObjs[s.allen_id], isSel = selected === s.allen_id, isHov = hovered === s.allen_id;
-      o.mesh.material.color.copy(isSel ? colAcc.clone().multiplyScalar(0.32) : (o.hasPop ? colBody : colCtx));
-      o.mesh.material.emissive.copy(isSel ? colAcc.clone().multiplyScalar(0.28) : (isHov ? colAcc.clone().multiplyScalar(0.08) : new THREE.Color(0)));
-      o.mesh.material.opacity = (selected && !isSel) ? (o.hasPop ? 0.55 : 0.32) : (o.hasPop ? 0.96 : 0.7);
+      var o = nucleusObjs && nucleusObjs[s.allen_id], isSel = selected === s.allen_id, isHov = hovered === s.allen_id;
+      var raw = encColour(s);
+      swOf[s.allen_id] = raw;
+      if (!o) return;
+      // The data colour stays on the body in every state; hover and selection
+      // add the cold accent as rim and glow, so the two channels never merge.
+      o.mesh.material.color.set(resolveColour(raw));
+      o.mesh.material.emissive.copy(isSel ? colAcc.clone().multiplyScalar(0.18) : (isHov ? colAcc.clone().multiplyScalar(0.09) : black));
+      o.mesh.material.opacity = (selected && !isSel) ? 0.5 : 0.97;
       o.edges.material.color.copy(isSel || isHov ? colAcc : colEdge);
-      o.edges.material.opacity = isSel ? 0.95 : isHov ? 0.8 : (o.hasPop ? 0.55 : 0.22);
+      o.edges.material.opacity = isSel ? 0.95 : isHov ? 0.8 : (o.hasPop ? 0.5 : 0.22);
     });
-    document.querySelectorAll(".idx button").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.allen === selected)); });
+    document.querySelectorAll(".idx button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(+b.dataset.allen === selected));
+      var sw = swOf[+b.dataset.allen];
+      if (sw) b.querySelector(".sw").style.setProperty("--sw", sw);
+    });
     document.querySelectorAll("#lit button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pop === selectedPop)); });
     document.querySelectorAll("#lit-nuc button").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.allen === selected)); });
   }
@@ -743,14 +1019,15 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     } else { $("lead-line").setAttribute("points", ""); $("lead-dot").setAttribute("cx", -10); $("tag").hidden = true; }
   }
   $("loading").remove();
-  renderOverview(); wire(); paint();
+  renderOverview(); wire(); setEncoding(encMode);
   requestAnimationFrame(frame);
 
   function wire() {
     document.addEventListener("click", function (e) {
       var b = e.target.closest("button"); if (!b) return;
       if (b.id === "by-pop" || b.id === "by-nuc") { if (!b.disabled) setMode(b.id === "by-pop" ? "pop" : "nuc"); return; }
-      if (b.dataset.allen) selectNucleus(+b.dataset.allen);
+      if (b.dataset.enc) setEncoding(b.dataset.enc);
+      else if (b.dataset.allen) selectNucleus(+b.dataset.allen);
       else if (b.dataset.pop) selectPop(b.dataset.pop);
     });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && (selected || selectedPop)) clearSel(); });

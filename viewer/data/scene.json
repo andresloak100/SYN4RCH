@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-04T00:13:23Z",
+ "built_at": "2026-11-04T01:07:42Z",
  "ccf": {
   "version": "CCFv3 2017",
   "units": "micrometres",
@@ -1706,17 +1706,17 @@
    "run_timestamp_kind": "file modified (UTC)",
    "total_papers": 9653,
    "counts": {
-    "hy": {
-     "naming": 6922,
-     "no_population": 5587,
-     "include": 4913,
-     "full_text": 875
-    },
     "pvh": {
      "naming": 1348,
      "no_population": 1026,
      "include": 998,
      "full_text": 183
+    },
+    "hy": {
+     "naming": 6922,
+     "no_population": 5587,
+     "include": 4913,
+     "full_text": 875
     },
     "lha": {
      "naming": 910,
@@ -1802,17 +1802,17 @@
      "include": 42,
      "full_text": 6
     },
-    "mnpo": {
-     "naming": 77,
-     "no_population": 62,
-     "include": 57,
-     "full_text": 7
-    },
     "mpo": {
      "naming": 327,
      "no_population": 304,
      "include": 215,
      "full_text": 18
+    },
+    "mnpo": {
+     "naming": 77,
+     "no_population": 62,
+     "include": 57,
+     "full_text": 7
     },
     "ah": {
      "naming": 296,
@@ -1884,10 +1884,17 @@
   },
   "causal": {
    "source": "data/curated/records.jsonl",
-   "exists": false,
-   "n_records": 0,
-   "by_population": {},
-   "status": "curation in progress; no curated records exist yet"
+   "exists": true,
+   "n_records": 362,
+   "by_population": {
+    "arc_pomc": 105,
+    "arc_kisspeptin": 2,
+    "arc_agrp": 168,
+    "pvh_sim1": 11,
+    "vmh_sf1": 9
+   },
+   "built_from_mtime": "2026-11-04T00:53:30Z",
+   "status": "362 curated record(s)"
   },
   "kg": {
    "available": false,
