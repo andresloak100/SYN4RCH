@@ -72,6 +72,7 @@ from .migrate import (  # noqa: F401
 
 __all__ = [
     "FROM_VERSION",
+    "ACCEPTED_INPUT_VERSIONS",
     "TO_VERSION",
     "FILLED",
     "CORRECTED",
@@ -97,6 +98,18 @@ __all__ = [
 FROM_VERSION = "0.2.0"
 #: The version it writes.
 TO_VERSION = "0.3.0"
+
+#: Input versions this pass accepts. ``0.2.0`` is the original migration;
+#: ``0.3.0`` is a **top-up**, which is what a later curation pass needs: new
+#: records arrive with whatever conditions their own passage stated, and the
+#: Methods of their papers have never been read. A top-up fills only what is
+#: missing, confirms what agrees, and refuses to overwrite a curated value,
+#: because those are the same three rules the first run followed.
+#:
+#: Running it twice over the same file is close to a no-op by construction:
+#: everything it filled the first time comes back `confirmed`, which attaches
+#: no second evidence entry and changes no ``record_id``.
+ACCEPTED_INPUT_VERSIONS = ("0.2.0", "0.3.0")
 
 FILLED = "filled"
 CORRECTED = "corrected"
@@ -145,7 +158,10 @@ def _default(*parts: str) -> str:
 def read_v0_2_0_records(
     path: str,
 ) -> Tuple[List[TierARecord], List[Tuple[int, str]], Dict[str, int]]:
-    """Read a v0.2.0 JSONL, retiring exactly the two fields v0.3.0 removes.
+    """Read a curated JSONL, retiring exactly the two fields v0.3.0 removes.
+
+    Accepts an input at any of :data:`ACCEPTED_INPUT_VERSIONS`. A v0.3.0 file
+    carries neither retired field, so the strip is a no-op on it.
 
     Returns ``(records, errors, versions_seen)``, like
     :func:`syn4rch.curate.migrate.read_records`.
@@ -1015,13 +1031,22 @@ def cmd_run(args) -> int:
     if not records:
         print("refusing to run: no records", file=sys.stderr)
         return 1
-    if set(versions) != {FROM_VERSION}:
+    if len(set(versions)) != 1:
         print(
-            "refusing to run: expected every record at %s, found %s"
-            % (FROM_VERSION, _inline(versions)),
+            "refusing to run: a dataset is one version, found %s"
+            % _inline(versions),
             file=sys.stderr,
         )
         return 1
+    input_version = next(iter(versions))
+    if input_version not in ACCEPTED_INPUT_VERSIONS:
+        print(
+            "refusing to run: this pass reads %s, found %s"
+            % (" or ".join(ACCEPTED_INPUT_VERSIONS), input_version),
+            file=sys.stderr,
+        )
+        return 1
+    top_up = input_version == TO_VERSION
 
     stale = [r.record_id for r in records if not r.id_is_consistent()]
     if stale:
@@ -1081,6 +1106,18 @@ def cmd_run(args) -> int:
         print("dry run: nothing written")
         _print_summary(stats, result)
         return 0
+
+    stem, ext = os.path.splitext(records_path)
+    if args.backup == "%s.%s%s.bak" % (stem, FROM_VERSION, ext):
+        args.backup = "%s.%s%s.bak" % (stem, input_version, ext)
+    if args.id_map == _default(
+        "data", "curated", "record_id_map_%s_to_%s.json" % (FROM_VERSION, TO_VERSION)
+    ) and top_up:
+        args.id_map = _default(
+            "data", "curated", "record_id_map_%s_top_up.json" % TO_VERSION
+        )
+    if top_up and args.report == _default("reports", "condition_fill_0.3.0.md"):
+        args.report = _default("reports", "condition_fill_0.3.0_top_up.md")
 
     if os.path.exists(args.backup) and not args.force:
         print(

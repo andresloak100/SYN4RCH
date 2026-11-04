@@ -193,3 +193,82 @@ class CliTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MethodClassFilterTest(unittest.TestCase):
+    """Selecting by perturbation class reuses the project's own chain."""
+
+    def test_a_screening_id_resolves_to_the_class_the_claim_key_uses(self):
+        # opto_chr2 -> methods.json says "optogenetic" -> rules says circuit.
+        # Three vocabularies would be two too many: "circuit" in a selection
+        # has to mean what it means in the claim key.
+        self.assertEqual(pilot.method_class_of("opto_chr2"), "circuit_activity")
+        self.assertEqual(pilot.method_class_of("chemo_hm3dq"), "circuit_activity")
+        self.assertEqual(pilot.method_class_of("conditional_knockout"), "molecular")
+        self.assertEqual(pilot.method_class_of("ablation_dta"), "structural")
+
+    def test_an_unknown_or_absent_method_id_resolves_to_nothing(self):
+        self.assertIsNone(pilot.method_class_of(None))
+        self.assertIsNone(pilot.method_class_of(""))
+        self.assertIsNone(pilot.method_class_of("no_such_method_id"))
+
+    def test_the_filter_keeps_only_units_of_that_class(self):
+        units = [
+            unit("doi:1", "arc_agrp", method="opto_chr2"),
+            unit("doi:2", "arc_agrp", method="conditional_knockout"),
+            unit("doi:3", "arc_agrp", method="chemo_hm4di"),
+            unit("doi:4", "arc_agrp", method="ablation_unspecified"),
+        ]
+        kept = pilot.filter_units_by_class(units, "circuit_activity")
+        self.assertEqual(sorted(u["study_id"] for u in kept), ["doi:1", "doi:3"])
+
+    def test_an_unmappable_method_is_dropped_rather_than_kept_by_default(self):
+        """Failing closed: an unclassifiable method is not quietly circuit."""
+        units = [unit("doi:1", "arc_agrp", method="no_such_method_id")]
+        self.assertEqual(pilot.filter_units_by_class(units, "circuit_activity"), [])
+
+
+class AllPopulationsTest(unittest.TestCase):
+    def test_all_accepts_every_resolved_population(self):
+        units = [unit("doi:1", "lha_orexin"), unit("doi:2", "arc_pomc"),
+                 unit("doi:3", "tmn_histamine")]
+        elig = pilot.eligible(units, [pilot.ALL_POPULATIONS])
+        self.assertEqual(sorted(elig), ["doi:1", "doi:2", "doi:3"])
+        self.assertEqual(elig["doi:1"]["covers"], {"lha_orexin"})
+
+    def test_all_still_requires_a_resolved_population(self):
+        """An unresolved population is not a stratum; it is an unknown."""
+        units = [unit("doi:1", None), unit("doi:2", "arc_pomc")]
+        elig = pilot.eligible(units, [pilot.ALL_POPULATIONS])
+        self.assertEqual(sorted(elig), ["doi:2"])
+
+    def test_a_named_list_still_filters(self):
+        units = [unit("doi:1", "lha_orexin"), unit("doi:2", "arc_pomc")]
+        self.assertEqual(sorted(pilot.eligible(units, ["arc_pomc"])), ["doi:2"])
+
+
+class ExcludeCuratedTest(unittest.TestCase):
+    """A pilot that re-selects a curated paper would collide record_ids."""
+
+    def test_curated_studies_are_dropped_and_counted(self):
+        units = [unit("doi:1", "arc_agrp"), unit("doi:2", "arc_agrp"),
+                 unit("doi:3", "arc_agrp")]
+        elig = pilot.eligible(units, ["arc_agrp"])
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "curated.jsonl")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(json.dumps({"study_id": "doi:2"}) + "\n")
+                fh.write(json.dumps({"study_id": "doi:3"}) + "\n")
+            kept, dropped = pilot.drop_curated_studies(elig, path)
+        self.assertEqual(sorted(kept), ["doi:1"])
+        self.assertEqual(dropped, 2)
+
+    def test_an_empty_curated_file_drops_nothing(self):
+        units = [unit("doi:1", "arc_agrp")]
+        elig = pilot.eligible(units, ["arc_agrp"])
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "empty.jsonl")
+            open(path, "w").close()
+            kept, dropped = pilot.drop_curated_studies(elig, path)
+        self.assertEqual(sorted(kept), ["doi:1"])
+        self.assertEqual(dropped, 0)

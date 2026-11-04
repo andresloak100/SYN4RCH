@@ -378,3 +378,28 @@ class TestEvidenceMustSitWhereItSaysItDoes(unittest.TestCase):
         self.assertEqual(plan.evidence, [])
         self.assertEqual(plan.updates, {})
         self.assertEqual(r.sex.value, "male")
+
+
+class TestTheTopUpIsIdempotent(unittest.TestCase):
+    """A later curation pass tops up new papers without disturbing old ones."""
+
+    def test_a_second_pass_over_filled_records_changes_no_identity(self):
+        evidence = [{
+            "dimension": "sex", "value": "male", "source": "methods",
+            "locator": "Methods para 1", "quote": "Synthetic quote: male mice.",
+            "rule": "methods_single_sex",
+        }]
+        r = record(sex="male", condition_evidence=evidence)
+        before = r.record_id
+        plan = plan_record(r, paper(sex="male"))
+        self.assertEqual([o.outcome for o in plan.outcomes], [CONFIRMED])
+        self.assertEqual(plan.updates, {})
+        self.assertEqual(plan.evidence, [], "a confirmed value gains no second entry")
+        self.assertFalse(plan.changes_identity)
+        self.assertEqual(r.record_id, before)
+
+    def test_both_input_versions_are_declared_and_the_written_one_is_fixed(self):
+        from syn4rch.curate.fill_conditions import ACCEPTED_INPUT_VERSIONS, FROM_VERSION
+        self.assertIn(FROM_VERSION, ACCEPTED_INPUT_VERSIONS)
+        self.assertIn(TO_VERSION, ACCEPTED_INPUT_VERSIONS)
+        self.assertEqual(TO_VERSION, "0.3.0")

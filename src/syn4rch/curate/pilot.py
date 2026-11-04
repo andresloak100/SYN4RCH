@@ -42,7 +42,10 @@ import hashlib
 import json
 import os
 import sys
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
+
+from ..schema.rules import perturbation_class_from_method
+from ..vocab.core import load as vocab_load
 
 RESULT_SECTIONS = ("Results", "Methods")
 
@@ -110,19 +113,81 @@ def load_papers(path: str) -> Dict[str, Dict]:
     return papers
 
 
+#: ``--populations`` value meaning "every population the units resolve".
+ALL_POPULATIONS = "all"
+
+
 def eligible(units: Sequence[Dict], populations: Sequence[str]) -> Dict[str, Dict]:
-    """``study_id -> {'covers': set, 'units': [...]}`` for result-bearing units."""
+    """``study_id -> {'covers': set, 'units': [...]}`` for result-bearing units.
+
+    ``populations == [ALL_POPULATIONS]`` accepts every resolved population
+    instead of a named list. That is not a convenience: restricting a selection
+    to the populations the corpus already covers most would guarantee that new
+    papers land in existing cells, which is the very thing D-048's secondary
+    metric is supposed to *measure*. A metric satisfied by the selection rule
+    measures the selection rule.
+    """
     want = set(populations)
+    take_all = ALL_POPULATIONS in want
     result_units = [u for u in units if u.get("section_label") in RESULT_SECTIONS]
     by_study: Dict[str, List[Dict]] = collections.defaultdict(list)
     for u in result_units:
         by_study[u["study_id"]].append(u)
     out: Dict[str, Dict] = {}
     for sid, us in by_study.items():
-        covers = {u.get("candidate_population_id") for u in us} & want
+        present = {u.get("candidate_population_id") for u in us if u.get("candidate_population_id")}
+        covers = present if take_all else (present & want)
         if covers:
             out[sid] = {"covers": covers, "units": us}
     return out
+
+
+def method_class_of(method_id: Optional[str]) -> Optional[str]:
+    """Perturbation class of a *screening* method id, by the project's own chain.
+
+    The units carry a finer vocabulary than the schema does -- ``opto_chr2``,
+    ``chemo_hm3dq`` -- so the class is reached in two documented steps:
+    ``data/vocab/methods.json`` maps the screening id to a schema ``method``,
+    and :func:`syn4rch.schema.rules.perturbation_class_from_method` maps that to
+    a class. Nothing here invents a third vocabulary, so "circuit" in a
+    selection means exactly what it means in the claim key (SCHEMA.md 3.4b).
+    """
+    if not method_id:
+        return None
+    try:
+        entry = vocab_load("methods").get(method_id)
+    except Exception:  # pragma: no cover - vocab absent in unit tests
+        return None
+    if not entry:
+        return None
+    cls = perturbation_class_from_method(entry.get("method"))
+    return getattr(cls, "value", cls)
+
+
+def filter_units_by_class(units: Sequence[Dict], method_class: str) -> List[Dict]:
+    """Units whose candidate method belongs to one perturbation class."""
+    return [u for u in units
+            if method_class_of(u.get("candidate_method_id")) == method_class]
+
+
+def drop_curated_studies(
+    elig: Dict[str, Dict], curated_path: str
+) -> Tuple[Dict[str, Dict], int]:
+    """Remove studies that already have records. Returns ``(kept, dropped)``.
+
+    A pilot that re-selects a curated paper spends a reader on work already
+    done, and -- worse -- would propose records whose ``record_id`` collides
+    with one already in the dataset.
+    """
+    curated = set()
+    with open(curated_path, "r", encoding="utf-8") as fh:
+        for line in fh:
+            if line.strip():
+                sid = json.loads(line).get("study_id")
+                if sid:
+                    curated.add(sid)
+    kept = {s: v for s, v in elig.items() if s not in curated}
+    return kept, len(elig) - len(kept)
 
 
 def select(elig: Dict[str, Dict], *, n_papers: int, populations: Sequence[str],
@@ -219,10 +284,18 @@ def main(argv=None) -> int:
     ap.add_argument("--units", default=_default("data", "interim", "extraction_units.jsonl"))
     ap.add_argument("--candidates", default=_default("data", "interim", "candidates.jsonl"))
     ap.add_argument("--out-dir", default=_default("data", "interim", "pilot"))
-    ap.add_argument("--populations", default="arc_agrp,arc_pomc")
+    ap.add_argument("--populations", default="arc_agrp,arc_pomc",
+                    help="comma-separated population ids, or 'all'")
     ap.add_argument("--papers", type=int, default=50)
     ap.add_argument("--batches", type=int, default=5)
     ap.add_argument("--seed", default="syn4rch-pilot-1")
+    ap.add_argument("--method-class", default=None,
+                    help="keep only units whose candidate method belongs to "
+                         "this perturbation class (e.g. circuit_activity), "
+                         "resolved through data/vocab/methods.json and "
+                         "syn4rch.schema.rules.perturbation_class_from_method")
+    ap.add_argument("--exclude-curated", default=None,
+                    help="drop studies that already appear in this curated JSONL")
     args = ap.parse_args(argv)
 
     for path in (args.units, args.candidates):
@@ -237,10 +310,25 @@ def main(argv=None) -> int:
     populations = [p.strip() for p in args.populations.split(",") if p.strip()]
     units = load_units(args.units)
     papers = load_papers(args.candidates)
+    units_in = len(units)
+    if args.method_class:
+        units = filter_units_by_class(units, args.method_class)
+        if not units:
+            sys.stderr.write("no units of class %s\n" % args.method_class)
+            return 1
     elig = eligible(units, populations)
     if not elig:
         sys.stderr.write("no eligible papers for %s\n" % ", ".join(populations))
         return 1
+    dropped_curated = 0
+    if args.exclude_curated:
+        if not os.path.exists(args.exclude_curated):
+            sys.stderr.write("missing %s\n" % args.exclude_curated)
+            return 1
+        elig, dropped_curated = drop_curated_studies(elig, args.exclude_curated)
+        if not elig:
+            sys.stderr.write("every eligible paper is already curated\n")
+            return 1
     sel = select(elig, n_papers=args.papers, populations=populations, seed=args.seed)
     batches = package(sel["chosen"], elig, papers,
                       n_batches=args.batches, schema_version=SCHEMA_VERSION)
@@ -263,6 +351,14 @@ def main(argv=None) -> int:
         "selection_rule": "proportional stratified; order = sha256(seed|study_id)",
         "seed": args.seed,
         "requested_populations": populations,
+        "method_class_filter": args.method_class,
+        "units_before_method_filter": units_in,
+        "units_after_method_filter": len(units),
+        "excluded_curated_from": (
+            os.path.relpath(args.exclude_curated, _repo_root())
+            if args.exclude_curated else None
+        ),
+        "studies_dropped_as_already_curated": dropped_curated,
         "result_sections": list(RESULT_SECTIONS),
         "eligible_papers": sel["eligible_total"],
         "strata_sizes": sel["strata_sizes"],
