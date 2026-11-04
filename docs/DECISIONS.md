@@ -386,3 +386,95 @@ them into one record would either drop two or aggregate across readouts.
 protocol's wording has been corrected. What stays forbidden is the reverse:
 splitting one observation into two records that restate it, and merging two
 passages into one record.
+
+---
+
+## D-021 - Polarity hazards are annotated in the outcomes vocabulary
+
+**Decision.** `data/vocab/outcomes.json` carries two new per-entry fields and a
+`_meta.polarity_policy`. Vocabulary version 0.1.1.
+
+* `inverted_synonyms` — the quantity these words name moves **opposite** to the
+  quantity the entry is named for. `insulin_sensitivity` lists "insulin
+  resistance" and "HOMA-IR"; `glucose_tolerance` lists "glucose excursion";
+  `sleep` lists "sleep latency".
+* `signed_synonyms` — the words already carry a direction or name a clinical
+  state, so `direction` must describe the *change* in the entry's quantity, not
+  the presence of the state. "Reduced hyperglycemia" is `blood_glucose`
+  **decrease**. 17 such synonyms across 10 entries.
+
+`insulin_sensitivity` and `glucose_tolerance` additionally carry a note sending
+raw ITT/GTT glucose values to `blood_glucose` (D-019 step 1).
+
+**Why.** D-019 recorded that nothing made the polarity trap visible. It was
+invisible in exactly the wrong place: at the moment a curator matches the words
+in a paper against a synonym list. Four of five pilot batches hit it, and two
+reached opposite conclusions on the same case. Annotating the entry puts the
+warning where the mistake is made.
+
+**`higher_is` is a different field and was not reused.** It encodes whether a
+higher value is better or worse *for the organism* and is deliberately null for
+39 of 43 entries. Polarity is about whether the assay number tracks the named
+quantity, which is a measurement question, not a value judgement. Conflating
+them would have made both useless.
+
+**Deliberately not automated.** The policy states that these lists must never
+be used to rewrite a direction automatically, and that they are not exhaustive.
+They record the traps found so far. A QC warning when `outcome_raw` matches an
+annotated synonym would be useful and is not implemented.
+
+**Found a second defect, not fixed.** The id `cognitive_decline` and its label
+"Cognitive performance / decline" name both a performance and a decline, so
+`direction` is ambiguous on its face. Its note now rules that direction
+describes cognitive *performance*, and records that the id should be renamed at
+the next version bump.
+
+---
+
+## D-022 - Rulings the first pilot forced, collected
+
+Five curators hit the same ambiguities independently. Settled as follows; none
+required rework, so these record what was accepted.
+
+**Region-level manipulations are kept, with `population_id = null`.** An
+intra-nucleus injection of a ubiquitous-promoter vector, or an i.c.v. drug, is
+not a defined neuronal population, which SCHEMA.md 1 makes the unit of record.
+They are nonetheless causal interventional evidence, 29 records across two
+batches. They are admitted with `population_raw` as the paper names it and
+`population_id` null, which is sufficient because `qc.keys.population_key`
+(D-010) prefixes an unresolved population `raw:`, and `models.task` and
+`feasibility.splits` both use that function. A region-level record can
+therefore never pool into a cell-type-specific cell, nor be used as evidence
+for one. A `raw:` group is not a cell-type-specific claim and must not be read
+as one.
+
+**A condition qualifier may go in `outcome_raw`.** `record_id` (D-002) hashes no
+diet, sex, timepoint or fed/fasted field, so two genuine observations differing
+only in condition collide. Curators disambiguated with the paper's own wording,
+e.g. "food intake (chow diet)", "weight gain, female cohort", 13 records in one
+batch alone. Accepted: the alternative is dropping one of the two, and the
+collisions fall disproportionately on null results, which rule 6 forbids
+dropping. A condition field belongs in the next schema version.
+
+**`significant` is set from a bare "significantly".** The paper asserting
+significance *is* the threshold comparison SCHEMA.md 3.5 asks for. That it does
+not name the test is already reported as `W008`, so the information is not lost.
+
+**`has_actuator_control` is null, not false, when the passage does not mention
+controls.** `false` would assert the paper has no such control, which the
+passage does not support.
+
+**`is_primary_outcome` is left null.** No passage states it; filling it would be
+curator impression.
+
+**Co-perturbation and dual-population designs yield no record.** No field holds
+a second simultaneous manipulation, so a direction would silently attach to the
+wrong cause. Discarded with the reason in `extraction_notes`, not dropped
+silently.
+
+**A reported non-significant trend is `no_change` with `significant = false`**,
+and the trend quoted in `extraction_notes`. `decrease` is unsupported and
+dropping it is forbidden.
+
+**`non_monotonic` covers a biphasic response over dose or over time.** The enum
+named neither.
