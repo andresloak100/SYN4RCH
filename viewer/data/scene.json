@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-03T23:39:29Z",
+ "built_at": "2026-11-03T23:56:03Z",
  "ccf": {
   "version": "CCFv3 2017",
   "units": "micrometres",
@@ -1579,56 +1579,51 @@
  ],
  "evidence": {
   "literature": {
-   "source": "reports/harvest_summary.md",
-   "source_kind": "harvest_summary.md",
-   "run_timestamp": "2026-11-03T18:45:49Z",
-   "run_started": "2026-11-03T18:43:31Z",
-   "run_timestamp_kind": "harvest run finished (UTC)",
-   "total_papers": 9654,
+   "source": "data/interim/candidates.jsonl",
+   "source_kind": "candidates.jsonl",
+   "run_timestamp": "2026-11-03T23:55:48Z",
+   "run_timestamp_kind": "file modified (UTC)",
+   "total_papers": 9653,
    "counts": {
-    "arc_agrp": {
-     "matched_in_text": 321,
-     "include": 208
-    },
-    "lha_orexin": {
-     "matched_in_text": 257,
-     "include": 161
-    },
     "arc_pomc": {
      "matched_in_text": 225,
      "include": 148
-    },
-    "arc_kisspeptin": {
-     "matched_in_text": 216,
-     "include": 80
-    },
-    "pvh_crh": {
-     "matched_in_text": 171,
-     "include": 91
     },
     "pvh_oxt": {
      "matched_in_text": 161,
      "include": 61
     },
+    "pvh_crh": {
+     "matched_in_text": 171,
+     "include": 91
+    },
     "lha_mch": {
      "matched_in_text": 102,
      "include": 57
     },
-    "pvh_avp": {
-     "matched_in_text": 89,
-     "include": 40
+    "lha_orexin": {
+     "matched_in_text": 257,
+     "include": 161
+    },
+    "arc_agrp": {
+     "matched_in_text": 321,
+     "include": 208
+    },
+    "dmh_lepr": {
+     "matched_in_text": 14,
+     "include": 7
+    },
+    "lha_vgat": {
+     "matched_in_text": 25,
+     "include": 16
+    },
+    "arc_sst": {
+     "matched_in_text": 9,
+     "include": 3
     },
     "tmn_histamine": {
      "matched_in_text": 82,
      "include": 45
-    },
-    "scn_vip": {
-     "matched_in_text": 58,
-     "include": 17
-    },
-    "vmh_sf1": {
-     "matched_in_text": 46,
-     "include": 23
     },
     "pvh_trh": {
      "matched_in_text": 35,
@@ -1638,76 +1633,71 @@
      "matched_in_text": 29,
      "include": 17
     },
-    "avpv_kisspeptin": {
-     "matched_in_text": 28,
-     "include": 15
-    },
-    "pvh_mc4r": {
-     "matched_in_text": 26,
-     "include": 6
-    },
     "arc_th": {
      "matched_in_text": 25,
      "include": 13
     },
-    "lha_vgat": {
-     "matched_in_text": 25,
-     "include": 16
-    },
-    "zi_gaba": {
-     "matched_in_text": 22,
-     "include": 8
-    },
-    "pvh_sim1": {
-     "matched_in_text": 19,
-     "include": 8
-    },
-    "pvh_nos1": {
-     "matched_in_text": 18,
-     "include": 6
+    "pvh_avp": {
+     "matched_in_text": 89,
+     "include": 40
     },
     "poa_warm_sensitive": {
      "matched_in_text": 18,
      "include": 10
     },
-    "dmh_lepr": {
-     "matched_in_text": 14,
-     "include": 7
-    },
-    "poa_galanin": {
-     "matched_in_text": 14,
-     "include": 5
-    },
-    "lha_vglut2": {
-     "matched_in_text": 12,
-     "include": 7
-    },
-    "arc_sst": {
-     "matched_in_text": 9,
-     "include": 3
+    "scn_vip": {
+     "matched_in_text": 58,
+     "include": 17
     },
     "vmh_bdnf": {
      "matched_in_text": 4,
      "include": 1
     },
+    "vmh_sf1": {
+     "matched_in_text": 46,
+     "include": 23
+    },
+    "arc_kisspeptin": {
+     "matched_in_text": 216,
+     "include": 80
+    },
+    "pvh_mc4r": {
+     "matched_in_text": 26,
+     "include": 6
+    },
+    "avpv_kisspeptin": {
+     "matched_in_text": 28,
+     "include": 15
+    },
+    "pvh_sim1": {
+     "matched_in_text": 19,
+     "include": 8
+    },
+    "poa_galanin": {
+     "matched_in_text": 14,
+     "include": 5
+    },
     "scn_avp": {
      "matched_in_text": 4,
      "include": 2
     },
+    "zi_gaba": {
+     "matched_in_text": 22,
+     "include": 8
+    },
+    "lha_vglut2": {
+     "matched_in_text": 12,
+     "include": 7
+    },
+    "pvh_nos1": {
+     "matched_in_text": 18,
+     "include": 6
+    },
     "mbh_ikkb": {
      "matched_in_text": 2,
      "include": 0
-    },
-    "arc_tbx3": {
-     "matched_in_text": 0,
-     "include": 0
-    },
-    "dmh_bdnf": {
-     "matched_in_text": 0,
-     "include": 0
     }
-   },
-   "note": "data/interim/candidates.jsonl not present at build time; counts read from the summary report written by the same harvest run"
+   }
   },
   "causal": {
    "source": "data/curated/records.jsonl",

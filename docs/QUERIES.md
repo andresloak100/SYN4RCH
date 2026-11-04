@@ -10,8 +10,8 @@ and the corpus is a relevance-ranked sample of that query, not all of it.
 
 | field | value |
 |---|---|
-| started (UTC) | 2026-11-03T18:43:31Z |
-| finished (UTC) | 2026-11-03T18:45:49Z |
+| started (UTC) | 2026-11-03T23:33:26Z |
+| finished (UTC) | 2026-11-03T23:55:48Z |
 | queries in matrix | 404 |
 | queries issued | 404 |
 | queries ok | 404 |
