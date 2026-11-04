@@ -1,7 +1,7 @@
 {
   "_meta": {
     "vocab": "outcomes",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Tier A physiological and Tier B aging/healthspan outcomes.",
     "higher_is_policy": [
       "higher_is encodes ONLY whether a higher measured value is unambiguously better or worse for the organism, independent of context, genotype, diet, ambient temperature and time of day.",
@@ -17,7 +17,8 @@
       "These lists are not exhaustive and are not a substitute for reading. They record the traps found so far, and must never be used to rewrite a direction automatically."
     ],
     "changelog": [
-      "0.2.0: renamed `cognitive_decline` to `cognitive_performance` and moved its two signed synonyms to inverted_synonyms, adding `escape latency`. The old id named a quantity and its negation at once, which made `direction` ambiguous before a curator even read the paper. No curated record used the id, so the rename costs nothing. See docs/DECISIONS.md D-029."
+      "0.2.0: renamed `cognitive_decline` to `cognitive_performance` and moved its two signed synonyms to inverted_synonyms, adding `escape latency`. The old id named a quantity and its negation at once, which made `direction` ambiguous before a curator even read the paper. No curated record used the id, so the rename costs nothing. See docs/DECISIONS.md D-029.",
+      "0.3.0: annotated 13 unannotated inverted synonyms across 9 entries, found when a curator reading doi:10.1038/s41467-018-08239-x hit the RER / fat oxidation trap. Annotation only: no code reads inverted_synonyms, no id changed, and no stored direction was rewritten. See docs/DECISIONS.md D-049."
     ]
   },
   "entries": {
@@ -48,6 +49,9 @@
       "notes": "Direction of benefit depends entirely on the baseline state (hypoglycemia vs diabetic hyperglycemia).",
       "signed_synonyms": [
         "hyperglycemia",
+        "hypoglycemia"
+      ],
+      "inverted_synonyms": [
         "hypoglycemia"
       ]
     },
@@ -342,6 +346,9 @@
       "signed_synonyms": [
         "hyperphagia",
         "hypophagia"
+      ],
+      "inverted_synonyms": [
+        "hypophagia"
       ]
     },
     "energy_expenditure": {
@@ -389,7 +396,12 @@
         "fat oxidation",
         "lipid oxidation"
       ],
-      "higher_is": null
+      "higher_is": null,
+      "inverted_synonyms": [
+        "fat oxidation",
+        "lipid oxidation"
+      ],
+      "notes": "`fat oxidation` and `lipid oxidation` are inverted: RER is VCO2/VO2, so burning more fat LOWERS it. A single sentence in doi:10.1038/s41467-018-08239-x reports \"an increase in RER\" and \"a decrease in fat utilization\" as one finding; following the synonym list without this annotation yields `rer: decrease` from a sentence that supports `rer: increase` (D-049). `substrate utilization` and `fuel preference` name no direction at all and are neither plain nor inverted."
     },
     "body_weight": {
       "id": "body_weight",
@@ -413,6 +425,9 @@
       ],
       "higher_is": null,
       "signed_synonyms": [
+        "weight loss"
+      ],
+      "inverted_synonyms": [
         "weight loss"
       ]
     },
@@ -510,6 +525,9 @@
       "signed_synonyms": [
         "hyperthermia",
         "hypothermia"
+      ],
+      "inverted_synonyms": [
+        "hypothermia"
       ]
     },
     "heart_rate": {
@@ -555,6 +573,9 @@
       "higher_is": null,
       "signed_synonyms": [
         "hypertension",
+        "hypotension"
+      ],
+      "inverted_synonyms": [
         "hypotension"
       ]
     },
@@ -835,8 +856,13 @@
       ],
       "higher_is": null,
       "inverted_synonyms": [
-        "sleep latency"
-      ]
+        "sleep latency",
+        "wakefulness",
+        "arousal",
+        "insomnia",
+        "sleep fragmentation"
+      ],
+      "notes": "An arousal terminates sleep and `wakefulness` is its complement, so both are inverted along with `insomnia` and `sleep fragmentation` (D-049). `sleep latency` was already annotated."
     },
     "locomotor_activity": {
       "id": "locomotor_activity",
@@ -866,6 +892,9 @@
       "higher_is": null,
       "signed_synonyms": [
         "hyperactivity",
+        "hypoactivity"
+      ],
+      "inverted_synonyms": [
         "hypoactivity"
       ]
     },
@@ -925,7 +954,11 @@
       "signed_synonyms": [
         "hypernatremia",
         "hyponatremia"
-      ]
+      ],
+      "inverted_synonyms": [
+        "hyponatremia"
+      ],
+      "notes": "`hyponatremia` is annotated inverted with respect to osmolality, the quantity it names. Note this id bundles osmolality with AVP, which can move in the opposite direction from it (AVP rises in SIADH while osmolality falls), so a record here should say in `extraction_notes` which of the two its quote measures (D-049)."
     },
     "estrous_cyclicity": {
       "id": "estrous_cyclicity",

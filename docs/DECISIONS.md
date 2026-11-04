@@ -1719,3 +1719,67 @@ ligand or a population, so pharmacological identity remains unmeasurable and
 circuit identity remains coarse. Changing it is a schema version and is out of
 scope here; it is recorded so that the 3-identity figure above is not mistaken
 for a finding.
+
+---
+
+## D-049 - Thirteen polarity traps annotated, and the eight records that could have hit them checked
+
+**Found by a curator, not by a test.** A reader working the circuit pass hit this
+sentence in `doi:10.1038/s41467-018-08239-x`:
+
+> "an increase in RER … a decrease in fat utilization … an increase in
+> carbohydrate utilization"
+
+One calorimetry measurement, stated three ways. `data/vocab/outcomes.json` listed
+`fat oxidation` and `lipid oxidation` as **plain** synonyms of `rer` with no
+`inverted_synonyms` entry — but RER is VCO2/VO2, so burning more fat *lowers* it.
+A curator following the synonym list would enter `rer: decrease` from a sentence
+that supports `rer: increase`, and nothing in the pipeline would object: the
+quote is verbatim, the locator resolves, the direction is stated in the text.
+
+**The trap was not one entry.** Sweeping every entry against its own id using the
+vocabulary's own rule — *an increase in the term implies a decrease in this
+entry's quantity* — turned up 13 unannotated terms across 9 entries:
+
+| entry | newly annotated as inverted |
+|---|---|
+| `rer` | fat oxidation, lipid oxidation |
+| `sleep` | wakefulness, arousal, insomnia, sleep fragmentation |
+| `blood_glucose` | hypoglycemia |
+| `blood_pressure` | hypotension |
+| `body_weight` | weight loss |
+| `core_temperature` | hypothermia |
+| `food_intake` | hypophagia |
+| `locomotor_activity` | hypoactivity |
+| `osmolality_avp` | hyponatremia |
+
+The `hyper-` halves of those pairs are *not* inverted and are left alone;
+`substrate utilization`, `fuel preference`, `glucose clearance` and
+`hyperinsulinemic-euglycemic clamp` name no direction at all and are neither.
+
+**And the records that could already have hit them were checked, one by one.**
+Eight records in the corpus have an `outcome_raw` matching an inverted synonym of
+their own `outcome_id`. **All eight are correct.** Three of them matched `weight
+loss`, which was *not* annotated at the time they were curated, and the readers
+inverted it anyway: "activation of POMC^ARC reduced fasting-induced body weight
+loss" is stored as `body_weight: increase`. So this annotation is **preventive,
+not corrective** — nothing was rewritten, because nothing was wrong.
+
+That distinction is worth stating rather than leaving implied. An annotation pass
+that silently "fixed" eight directions would have been indistinguishable in the
+diff from one that corrupted eight directions, and the only way to tell is to
+check each against its quote and say so.
+
+**Annotation only.** No code reads `inverted_synonyms` (D-021: the vocabulary
+annotates the known traps, it does not resolve them, because the fix is a reading
+judgement). No id changed, no stored direction changed, no key changed, so no
+number in any report moves. The outcomes vocabulary goes to 0.3.0 with a
+changelog entry.
+
+**One defect found and not fixed.** `osmolality_avp` bundles plasma osmolality
+with AVP, and the two can move in opposite directions — AVP rises in SIADH while
+osmolality falls. `hyponatremia` is annotated inverted with respect to
+osmolality, the quantity it names, and the entry's notes now ask a record here to
+say in `extraction_notes` which of the two its quote measures. Splitting the id
+is a vocabulary change with no demand behind it yet: one record in the corpus
+uses it.
