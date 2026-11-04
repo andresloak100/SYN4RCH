@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-03T23:56:03Z",
+ "built_at": "2026-11-04T00:13:23Z",
  "ontology_url": "https://api.brain-map.org/api/v2/structure_graph_download/1.json",
  "rules": "Resolve SYN4RCH region vocabulary entries to Allen structure ids.\n\nMatching rules (exact, never fuzzy):\n\n* Search scope is the Allen Hypothalamus subtree (acronym ``HY``) only, so a\n  synonym such as ``ARC`` cannot accidentally hit an unrelated structure\n  elsewhere in the brain.\n* Tier 1: the entry's ``abbreviation`` equals an Allen acronym (case\n  sensitive), or its ``label`` equals an Allen name (normalised).\n* Tier 2: any ``synonym`` equals an Allen acronym (case sensitive) or name\n  (normalised).\n* One distinct tier-1 id wins; other ids hit only by synonyms are reported as\n  ``alternates`` so the reviewer can see the ambiguity. With no tier-1 hit,\n  exactly one distinct tier-2 id resolves. Anything else is unresolved.",
  "regions": [

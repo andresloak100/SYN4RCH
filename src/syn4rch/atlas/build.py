@@ -144,6 +144,9 @@ def build(offline: bool = False, root: str = None) -> Dict:
     lit = evidence.literature(
         os.path.join(root, "data", "interim", "candidates.jsonl"),
         os.path.join(root, "reports", "harvest_summary.md"))
+    regions_lit = evidence.region_literature(
+        os.path.join(root, "data", "interim", "candidates.jsonl"),
+        [m["region_id"] for m in mapping if m["status"] == "resolved"])
     causal = evidence.causal_records(os.path.join(root, "data", "curated", "records.jsonl"))
     kg_dir = os.path.join(root, "src", "syn4rch", "kg")
     kg_files = [f for f in os.listdir(kg_dir) if f.endswith(".py")] if os.path.isdir(kg_dir) else []
@@ -159,6 +162,7 @@ def build(offline: bool = False, root: str = None) -> Dict:
         "populations": pop_rows,
         "evidence": {
             "literature": lit,
+            "regions": regions_lit,
             "causal": causal,
             "kg": {"available": False, "path": "src/syn4rch/kg/", "module_files": kg_files,
                    "status": "knowledge graph not built; no brain-to-body links are drawn"},

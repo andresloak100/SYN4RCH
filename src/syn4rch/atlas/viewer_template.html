@@ -20,6 +20,7 @@
   --accent-wash: rgba(121, 226, 255, 0.08);
   --lit: #c9d3dc;           /* literature layer ink (neutral, never accent) */
   --lit-2: #5c6b78;
+  --lit-3: #34424e;         /* literature layer, hypothalamus-only tier */
   --nucleus: #1d2a35;       /* 3D nucleus body */
   --nucleus-ctx: #121b23;   /* 3D context nucleus body */
   --edge: #8fb4c8;          /* 3D nucleus linework */
@@ -137,7 +138,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 .src b { font-weight: 400; color: var(--ink-2); }
 
 .lit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
-.lit button { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 2px 10px; align-items: center; padding: 5px 0; border-top: 1px solid var(--rule); }
+.lit button, .lit .row-static { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 2px 10px; align-items: center; padding: 5px 0; border-top: 1px solid var(--rule); }
 .lit button:hover .ln, .lit button[aria-pressed="true"] .ln { color: var(--accent); }
 .lit .ln { font-family: var(--f-data); font-size: var(--s-1); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lit .lv { font-family: var(--f-data); font-size: var(--s-1); color: var(--lit); text-align: right; font-variant-numeric: tabular-nums; }
@@ -146,6 +147,18 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
 .lit .track .all { position: absolute; inset: 0 auto 0 0; background: var(--lit-2); }
 .lit .track .inc { position: absolute; inset: 0 auto 0 0; background: var(--lit); }
 .lit .zero { color: var(--warn); }
+.seg { display: inline-flex; justify-self: start; border: 1px solid var(--rule-2); }
+.seg button { font-family: var(--f-data); font-size: var(--s-0); letter-spacing: 0.1em; padding: 4px 10px; color: var(--ink-2); }
+.seg button + button { border-left: 1px solid var(--rule-2); }
+.seg button[aria-pressed="true"] { color: var(--void); background: var(--lit); }
+.seg button:disabled { color: var(--ink-3); cursor: not-allowed; }
+.cov { display: grid; gap: 8px; }
+.cov .strip { display: flex; height: 8px; background: var(--rule); gap: 1px; }
+.cov .strip span { display: block; height: 100%; background: var(--sw); }
+.cov .rows { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto 44px; gap: 4px 10px; align-items: center; font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-2); }
+.cov .rows i { display: block; width: 12px; height: 4px; background: var(--sw); }
+.cov .rows .n { color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+.cov .rows .pc { color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--f-data); font-size: var(--s-0); color: var(--ink-2); }
 .legend span::before { content: ""; display: inline-block; width: 14px; height: 4px; margin-right: 6px; vertical-align: 2px; background: var(--sw); }
 
@@ -239,11 +252,17 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     <div class="mod m-a">
       <div class="mod-h">
         <span class="ch">LAYER A &middot; LITERATURE COVERAGE</span>
-        <h3>Papers that mention each population</h3>
-        <p>Count of harvested papers whose title, abstract or MeSH terms mention the population. A mention count, not evidence that any perturbation had an effect.</p>
+        <h3 id="lit-h">Papers that mention each population</h3>
+        <p id="lit-p">Count of harvested papers whose title, abstract or MeSH terms mention the population. A mention count, not evidence that any perturbation had an effect.</p>
       </div>
-      <div class="legend"><span style="--sw: var(--lit-2)">mentioned in text</span><span style="--sw: var(--lit)">of which passed screen (include)</span></div>
+      <div class="cov" id="cov"></div>
+      <div class="seg" role="group" aria-label="Count papers by">
+        <button type="button" id="by-pop" aria-pressed="true">BY POPULATION</button>
+        <button type="button" id="by-nuc" aria-pressed="false">BY NUCLEUS</button>
+      </div>
+      <div class="legend" id="lit-legend"></div>
       <div class="lit" id="lit"></div>
+      <div class="lit" id="lit-nuc" hidden></div>
       <div class="src" id="lit-src"></div>
     </div>
     <div class="mod m-b">
@@ -298,6 +317,8 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   var hy = S.structures.filter(function (s) { return s.role === "context"; })[0];
   var nuclei = S.structures.filter(function (s) { return s.role === "nucleus"; });
   function litOf(pid) { return (lit.counts && lit.counts[pid]) || null; }
+  var reg = S.evidence.regions || { available: false, status: "region counts not built" };
+  function regOf(rid) { return (reg.available && reg.counts && reg.counts[rid]) || null; }
 
   /* ---------- header status ---------- */
   var resolved = S.regions.filter(function (r) { return r.status === "resolved"; }).length;
@@ -326,7 +347,9 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   $("n-un").textContent = un.length;
   $("unmapped").innerHTML = un.map(function (r) {
     var aff = (popsByNucleus[r.region_id] || []).map(function (p) { return p.id; });
+    var rc = regOf(r.region_id);
     return "<div><code>" + esc(r.region_id.toUpperCase()) + "</code><span>" + esc(r.label) +
+      (rc ? ' <span class="u">&middot; ' + fmt(rc.naming) + " papers</span>" : "") +
       (aff.length ? ' <span class="u">&middot; holds ' + esc(aff.join(", ")) + "</span>" : "") + "</span></div>";
   }).join("");
 
@@ -348,7 +371,60 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
     "<span>RUN <b>" + esc(lit.run_timestamp) + "</b> (" + esc(lit.run_timestamp_kind) + ")</span>" +
     (lit.total_papers ? "<span>CORPUS <b>" + fmt(lit.total_papers) + "</b> unique papers, title/abstract screen</span>" : "") +
     (lit.note ? "<span>" + esc(lit.note) + "</span>" : "") +
-    "<span>Bars share one linear scale, 0 to " + fmt(maxLit) + " papers. A paper can mention several populations.</span>";
+    '<span id="lit-scale"></span>';
+
+  /* coverage: every paper in exactly one placement tier */
+  var TIER_SW = { population: "var(--lit)", nucleus: "var(--lit-2)", hypothalamus_only: "var(--lit-3)", unmapped_region: "var(--warn)", unplaced: "var(--rule-2)" };
+  var TIER_NAME = { population: "on a population", nucleus: "on a nucleus only", hypothalamus_only: "hypothalamus only", unmapped_region: "region with no volume", unplaced: "not placed" };
+  if (reg.available) {
+    var tot = Math.max(reg.total_papers, 1);
+    $("cov").innerHTML =
+      '<div class="strip" role="img" aria-label="Placement of ' + fmt(reg.total_papers) + ' papers: ' +
+      reg.tier_order.map(function (t) { return fmt(reg.tiers[t].papers) + " " + TIER_NAME[t]; }).join(", ") + '">' +
+      reg.tier_order.map(function (t) { return '<span style="--sw:' + TIER_SW[t] + ";width:" + (100 * reg.tiers[t].papers / tot).toFixed(2) + '%"></span>'; }).join("") +
+      '</div><div class="rows">' +
+      reg.tier_order.map(function (t) {
+        return '<i style="--sw:' + TIER_SW[t] + '"></i><span title="' + esc(reg.tier_labels[t]) + '">' + TIER_NAME[t] + "</span>" +
+          '<span class="n">' + fmt(reg.tiers[t].papers) + '</span><span class="pc">' + (100 * reg.tiers[t].papers / tot).toFixed(0) + "%</span>";
+      }).join("") +
+      '</div><div class="state-line">Where each of the ' + fmt(reg.total_papers) + " papers can sit on the model. Every paper is counted once, by the most specific thing it names.</div>";
+  } else {
+    $("cov").innerHTML = '<div class="state-line">' + esc(reg.status) + "</div>";
+    $("by-nuc").disabled = true;
+  }
+
+  /* per-nucleus list; the whole hypothalamus is left off this scale and stated in the coverage tiers */
+  var nucRows = S.regions.filter(function (r) { return r.region_id !== "hy" && regOf(r.region_id); })
+    .sort(function (a, b) { return regOf(b.region_id).naming - regOf(a.region_id).naming; });
+  var maxReg = Math.max.apply(null, nucRows.map(function (r) { return regOf(r.region_id).naming; }).concat([1]));
+  $("lit-nuc").innerHTML = nucRows.map(function (r) {
+    var c = regOf(r.region_id), ok = r.status === "resolved";
+    var name = ok ? r.allen_acronym : r.region_id.toUpperCase();
+    var inner = '<span class="ln">' + esc(name) + " <span class=\"u\">" + esc(r.label) + "</span>" + (ok ? "" : ' <span class="zero">no volume</span>') + "</span>" +
+      '<span class="lv">' + fmt(c.naming) + " <small>/" + fmt(c.no_population) + "</small></span>" +
+      '<span class="track"><span class="all" style="width:' + (100 * c.naming / maxReg).toFixed(1) + '%"></span><span class="inc" style="width:' + (100 * c.no_population / maxReg).toFixed(1) + '%"></span></span>';
+    var lab = esc(r.label) + ": " + c.naming + " papers name it, " + c.no_population + " of them name no population" + (ok ? "" : "; no Allen volume");
+    return ok ? '<button type="button" data-allen="' + r.allen_id + '" aria-pressed="false" aria-label="' + lab + '">' + inner + "</button>"
+              : '<div class="row-static" role="group" aria-label="' + lab + '">' + inner + "</div>";
+  }).join("");
+
+  var MODES = {
+    pop: { h: "Papers that mention each population",
+           p: "Count of harvested papers whose title, abstract or MeSH terms mention the population. A mention count, not evidence that any perturbation had an effect.",
+           legend: '<span style="--sw: var(--lit-2)">mentioned in text</span><span style="--sw: var(--lit)">of which passed screen (include)</span>',
+           scale: "Bars share one linear scale, 0 to " + fmt(maxLit) + " papers. A paper can mention several populations." },
+    nuc: { h: "Papers that name each nucleus",
+           p: "Count of harvested papers whose title, abstract or MeSH terms name the nucleus, including papers that name no population at all. A mention count, not evidence that any perturbation had an effect.",
+           legend: '<span style="--sw: var(--lit-2)">names the nucleus</span><span style="--sw: var(--lit)">of which name no population</span>',
+           scale: "Bars share one linear scale, 0 to " + fmt(maxReg) + " papers. A paper naming two nuclei counts for both. Papers naming only the hypothalamus as a whole are in the coverage tiers above, not on this scale." + (reg.available ? " Source: " + esc(reg.source) + ", " + esc(reg.run_timestamp) + "." : "") }
+  };
+  function setMode(m) {
+    var d = MODES[m];
+    $("lit").hidden = m !== "pop"; $("lit-nuc").hidden = m !== "nuc";
+    $("by-pop").setAttribute("aria-pressed", String(m === "pop")); $("by-nuc").setAttribute("aria-pressed", String(m === "nuc"));
+    $("lit-h").textContent = d.h; $("lit-p").textContent = d.p; $("lit-legend").innerHTML = d.legend; $("lit-scale").innerHTML = d.scale;
+  }
+  setMode("pop");
   $("causal-n").innerHTML = fmt(causal.n_records) + "<small>RECORDS</small>";
   $("causal-line").textContent = causal.exists ? causal.status : "Curation in progress. No record has passed the verbatim gate yet.";
   $("causal-src").innerHTML = "<span>SOURCE <b>" + esc(causal.source) + "</b> " + (causal.exists ? "" : "(file not present at build)") + "</span>";
@@ -393,6 +469,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
       "<dt>Vocab region</dt><dd>" + esc(s.region_id) + " &middot; " + esc(r.label) + "</dd>" +
       "<dt>Matched by</dt><dd>" + esc((r.matched_by || []).slice(0, 2).join("; ")) + "</dd>" +
       (alt.length ? "<dt>Also matched</dt><dd>" + esc(alt.join(", ")) + " (synonym only; not used)</dd>" : "") +
+      (function () { var rc = regOf(s.region_id); return "<dt>A &middot; papers</dt><dd>" + (rc ? fmt(rc.naming) + " name it &middot; " + fmt(rc.no_population) + " name no population &middot; " + fmt(rc.full_text) + " full text" : "no count") + "</dd>"; })() +
       "<dt>Centroid</dt><dd>" + s.vertex_mean_um.map(fmt).join(" / ") + " &micro;m</dd>" +
       "<dt>Extent</dt><dd>" + mm(s.bbox_um[0][0], s.bbox_um[1][0]) + " &times; " + mm(s.bbox_um[0][1], s.bbox_um[1][1]) + " &times; " + mm(s.bbox_um[0][2], s.bbox_um[1][2]) + " mm</dd>" +
       "<dt>Mesh</dt><dd>" + fmt(s.source_vertex_count) + " &rarr; " + fmt(s.vertex_count) + " vtx &middot; cell " + s.cluster_cell_um + " &micro;m</dd>" +
@@ -574,7 +651,8 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
       o.edges.material.opacity = isSel ? 0.95 : isHov ? 0.8 : (o.hasPop ? 0.55 : 0.22);
     });
     document.querySelectorAll(".idx button").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.allen === selected)); });
-    document.querySelectorAll(".lit button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pop === selectedPop)); });
+    document.querySelectorAll("#lit button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pop === selectedPop)); });
+    document.querySelectorAll("#lit-nuc button").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.allen === selected)); });
   }
   function selectNucleus(allenId, pop) {
     var o = nucleusObjs[allenId]; if (!o) return;
@@ -671,6 +749,7 @@ dl.kv dd { margin: 0; font-family: var(--f-data); font-size: var(--s-1); color: 
   function wire() {
     document.addEventListener("click", function (e) {
       var b = e.target.closest("button"); if (!b) return;
+      if (b.id === "by-pop" || b.id === "by-nuc") { if (!b.disabled) setMode(b.id === "by-pop" ? "pop" : "nuc"); return; }
       if (b.dataset.allen) selectNucleus(+b.dataset.allen);
       else if (b.dataset.pop) selectPop(b.dataset.pop);
     });

@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-03T23:56:03Z",
+ "built_at": "2026-11-04T00:13:23Z",
  "ccf": {
   "version": "CCFv3 2017",
   "units": "micrometres",
@@ -1697,6 +1697,189 @@
      "matched_in_text": 2,
      "include": 0
     }
+   }
+  },
+  "regions": {
+   "available": true,
+   "source": "data/interim/candidates.jsonl",
+   "run_timestamp": "2026-11-03T23:55:48Z",
+   "run_timestamp_kind": "file modified (UTC)",
+   "total_papers": 9653,
+   "counts": {
+    "hy": {
+     "naming": 6922,
+     "no_population": 5587,
+     "include": 4913,
+     "full_text": 875
+    },
+    "pvh": {
+     "naming": 1348,
+     "no_population": 1026,
+     "include": 998,
+     "full_text": 183
+    },
+    "lha": {
+     "naming": 910,
+     "no_population": 713,
+     "include": 605,
+     "full_text": 106
+    },
+    "arc": {
+     "naming": 863,
+     "no_population": 476,
+     "include": 568,
+     "full_text": 146
+    },
+    "tmn": {
+     "naming": 67,
+     "no_population": 18,
+     "include": 32,
+     "full_text": 11
+    },
+    "poa": {
+     "naming": 852,
+     "no_population": 767,
+     "include": 616,
+     "full_text": 72
+    },
+    "pefa": {
+     "naming": 98,
+     "no_population": 70,
+     "include": 81,
+     "full_text": 12
+    },
+    "scn": {
+     "naming": 268,
+     "no_population": 201,
+     "include": 150,
+     "full_text": 37
+    },
+    "mbh": {
+     "naming": 200,
+     "no_population": 161,
+     "include": 155,
+     "full_text": 22
+    },
+    "me": {
+     "naming": 234,
+     "no_population": 195,
+     "include": 176,
+     "full_text": 16
+    },
+    "ph": {
+     "naming": 211,
+     "no_population": 192,
+     "include": 185,
+     "full_text": 8
+    },
+    "sch_on": {
+     "naming": 204,
+     "no_population": 148,
+     "include": 145,
+     "full_text": 14
+    },
+    "dmh": {
+     "naming": 287,
+     "no_population": 248,
+     "include": 218,
+     "full_text": 44
+    },
+    "zi": {
+     "naming": 77,
+     "no_population": 60,
+     "include": 33,
+     "full_text": 7
+    },
+    "vmh": {
+     "naming": 613,
+     "no_population": 542,
+     "include": 422,
+     "full_text": 66
+    },
+    "lpo": {
+     "naming": 59,
+     "no_population": 57,
+     "include": 42,
+     "full_text": 6
+    },
+    "mnpo": {
+     "naming": 77,
+     "no_population": 62,
+     "include": 57,
+     "full_text": 7
+    },
+    "mpo": {
+     "naming": 327,
+     "no_population": 304,
+     "include": 215,
+     "full_text": 18
+    },
+    "ah": {
+     "naming": 296,
+     "no_population": 279,
+     "include": 238,
+     "full_text": 7
+    },
+    "pvp": {
+     "naming": 83,
+     "no_population": 48,
+     "include": 51,
+     "full_text": 8
+    },
+    "avpv": {
+     "naming": 78,
+     "no_population": 24,
+     "include": 33,
+     "full_text": 14
+    },
+    "pmv": {
+     "naming": 27,
+     "no_population": 22,
+     "include": 9,
+     "full_text": 3
+    },
+    "vmpo": {
+     "naming": 11,
+     "no_population": 9,
+     "include": 8,
+     "full_text": 1
+    }
+   },
+   "tiers": {
+    "population": {
+     "papers": 1787,
+     "full_text": 338
+    },
+    "nucleus": {
+     "papers": 3411,
+     "full_text": 356
+    },
+    "hypothalamus_only": {
+     "papers": 2418,
+     "full_text": 272
+    },
+    "unmapped_region": {
+     "papers": 68,
+     "full_text": 8
+    },
+    "unplaced": {
+     "papers": 1969,
+     "full_text": 0
+    }
+   },
+   "tier_order": [
+    "population",
+    "nucleus",
+    "hypothalamus_only",
+    "unmapped_region",
+    "unplaced"
+   ],
+   "tier_labels": {
+    "population": "names a vocabulary population; placed on that population's nucleus",
+    "nucleus": "names no population but at least one mapped nucleus; placed on each nucleus it names",
+    "hypothalamus_only": "names no population and no specific mapped nucleus, only the hypothalamus as a whole",
+    "unmapped_region": "names only regions with no single Allen structure (e.g. preoptic area), so has no volume",
+    "unplaced": "names no vocabulary population or region; cannot be placed"
    }
   },
   "causal": {

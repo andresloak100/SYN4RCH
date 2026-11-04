@@ -100,6 +100,71 @@ def literature(candidates_path: str, summary_path: str) -> Dict:
     return lit
 
 
+TIER_ORDER = ("population", "nucleus", "hypothalamus_only", "unmapped_region", "unplaced")
+TIER_LABELS = {
+    "population": "names a vocabulary population; placed on that population's nucleus",
+    "nucleus": "names no population but at least one mapped nucleus; placed on each nucleus it names",
+    "hypothalamus_only": "names no population and no specific mapped nucleus, only the hypothalamus as a whole",
+    "unmapped_region": "names only regions with no single Allen structure (e.g. preoptic area), so has no volume",
+    "unplaced": "names no vocabulary population or region; cannot be placed",
+}
+
+
+def _tier(pops, regions, resolved, hy_id):
+    if pops:
+        return "population"
+    named = set(regions)
+    if named & (resolved - {hy_id}):
+        return "nucleus"
+    if hy_id in named:
+        return "hypothalamus_only"
+    if named:
+        return "unmapped_region"
+    return "unplaced"
+
+
+def region_literature(path: str, resolved_region_ids, hy_id: str = "hy") -> Dict:
+    """Paper counts per vocabulary region, plus one exclusive placement tier per paper.
+
+    Region counts are mentions: a paper naming ARC and PVH counts once for each.
+    The tiers partition the corpus (each paper in exactly one), so they sum to
+    the total and say how much of the literature the model can place, and how.
+    Only readable from candidates.jsonl: the summary report has no region table.
+    """
+    if not os.path.exists(path):
+        return {"available": False, "source": os.path.relpath(path),
+                "status": "candidates.jsonl not present at build; no region-level counts"}
+    resolved = set(resolved_region_ids)
+    counts: Dict[str, Dict[str, int]] = {}
+    tiers = {t: {"papers": 0, "full_text": 0} for t in TIER_ORDER}
+    total = 0
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            rec = json.loads(line)
+            total += 1
+            s = rec.get("screen") or {}
+            pops = s.get("matched_populations") or []
+            regions = s.get("matched_regions") or []
+            ft = bool(rec.get("full_text_available"))
+            t = _tier(pops, regions, resolved, hy_id)
+            tiers[t]["papers"] += 1
+            tiers[t]["full_text"] += int(ft)
+            for rid in set(regions):
+                c = counts.setdefault(rid, {"naming": 0, "no_population": 0, "include": 0, "full_text": 0})
+                c["naming"] += 1
+                c["no_population"] += int(not pops)
+                c["include"] += int(s.get("decision") == "include")
+                c["full_text"] += int(ft)
+    assert sum(v["papers"] for v in tiers.values()) == total
+    return {"available": True, "source": os.path.relpath(path),
+            "run_timestamp": _utc_mtime(path), "run_timestamp_kind": "file modified (UTC)",
+            "total_papers": total, "counts": counts,
+            "tiers": tiers, "tier_order": list(TIER_ORDER), "tier_labels": TIER_LABELS}
+
+
 def causal_records(path: str) -> Dict:
     if not os.path.exists(path):
         return {"source": os.path.relpath(path), "exists": False, "n_records": 0,

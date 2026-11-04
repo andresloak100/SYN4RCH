@@ -59,6 +59,41 @@ class EvidenceTest(unittest.TestCase):
         self.assertFalse(c["exists"])
         self.assertEqual(c["n_records"], 0)
 
+    def _cands(self, rows):
+        with open(self.p("r.jsonl"), "w") as fh:
+            for r in rows:
+                fh.write(json.dumps(r) + "\n")
+        return self.p("r.jsonl")
+
+    def test_region_tiers_partition_the_corpus(self):
+        rows = [
+            {"screen": {"matched_populations": ["arc_agrp"], "matched_regions": ["arc"]}},          # population
+            {"screen": {"matched_populations": [], "matched_regions": ["arc", "pvh", "hy"]},         # nucleus
+             "full_text_available": True},
+            {"screen": {"matched_populations": [], "matched_regions": ["hy", "poa"]}},              # hypothalamus only
+            {"screen": {"matched_populations": [], "matched_regions": ["poa"]}},                    # unmapped region
+            {"screen": {"matched_populations": [], "matched_regions": []}},                         # unplaced
+        ]
+        r = evidence.region_literature(self._cands(rows), ["arc", "pvh", "hy"])
+        self.assertTrue(r["available"])
+        self.assertEqual({t: v["papers"] for t, v in r["tiers"].items()},
+                         {"population": 1, "nucleus": 1, "hypothalamus_only": 1,
+                          "unmapped_region": 1, "unplaced": 1})
+        self.assertEqual(sum(v["papers"] for v in r["tiers"].values()), r["total_papers"])
+        self.assertEqual(r["tiers"]["nucleus"]["full_text"], 1)
+
+    def test_region_counts_are_mentions_not_exclusive(self):
+        rows = [{"screen": {"matched_populations": [], "matched_regions": ["arc", "pvh"], "decision": "include"}},
+                {"screen": {"matched_populations": ["arc_pomc"], "matched_regions": ["arc"]}}]
+        r = evidence.region_literature(self._cands(rows), ["arc", "pvh"])
+        self.assertEqual(r["counts"]["arc"], {"naming": 2, "no_population": 1, "include": 1, "full_text": 0})
+        self.assertEqual(r["counts"]["pvh"]["naming"], 1)
+
+    def test_region_layer_unavailable_without_candidates(self):
+        r = evidence.region_literature(self.p("missing.jsonl"), ["arc"])
+        self.assertFalse(r["available"])
+        self.assertNotIn("counts", r)
+
 
 if __name__ == "__main__":
     unittest.main()
