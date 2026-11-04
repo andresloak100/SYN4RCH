@@ -86,8 +86,17 @@ class TestUsability(unittest.TestCase):
             self.assertIn(expected, reasons, override)
 
     def test_an_unknown_key_version_is_refused_rather_than_defaulted(self):
+        # A key version that is deliberately not a declared one. Spelled
+        # against KEY_VERSION_CURRENT rather than as the literal "0.3.0" that
+        # used to sit here: the claim-key versions have tracked the schema
+        # version so far, so the next generation of the key could well be
+        # called 0.3.0, and this test would then be asserting that a real key
+        # version is refused.
         with self.assertRaises(KeyError):
-            exclusion_reasons(synthetic.good_record(), key_version="0.3.0")
+            exclusion_reasons(
+                synthetic.good_record(),
+                key_version=KEY_VERSION_CURRENT + "-not-this",
+            )
 
     def test_an_unsigned_perturbation_is_counted_not_silently_dropped(self):
         records = [synthetic.good_record(), synthetic.good_record(valence="unclear")]

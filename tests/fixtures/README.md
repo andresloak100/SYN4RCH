@@ -12,7 +12,11 @@ code**. None of it was extracted from any publication.
 * These files must never be copied into `data/curated/`, cited, aggregated,
   used to train or evaluate a model, or quoted as a finding about biology.
 * The fixtures deliberately contain *defective* records -- missing quotes,
-  unsupported numbers, planted conflicts -- because their purpose is to make
-  the QC layer fail in the right places.
+  unsupported numbers, planted conflicts, condition evidence that names no
+  passage or disagrees with its own field -- because their purpose is to make
+  the QC layer fail in the right places. `records_bad.jsonl` carries one
+  record per anti-fabrication rule, so a rule added to
+  `syn4rch.schema.validate` without a record here is a rule nothing exercises
+  end to end.
 
 If you are looking for real data, there is none in this repository yet.

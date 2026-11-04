@@ -34,7 +34,13 @@ from .enums import (
     PerturbationClass,
     RetrievedFrom,
 )
-from .record import SCHEMA_VERSION, TierARecord
+from .record import (
+    CONDITION_DIMENSIONS,
+    EVIDENCE_DIMENSIONS,
+    EVIDENCE_FOR_CONDITION,
+    SCHEMA_VERSION,
+    TierARecord,
+)
 from .rules import (
     assign_age_group,
     assign_confidence,
@@ -50,6 +56,7 @@ __all__ = [
     "hard_findings",
     "warning_findings",
     "is_admissible",
+    "unevidenced_conditions",
 ]
 
 _DIGIT = re.compile(r"\d")
@@ -135,13 +142,34 @@ RULES = {
         "extraction_method",
         "extraction_method must honestly record whether a human reviewed this.",
     ),
-    "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR": (
+    "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR": (
         Severity.HARD,
-        "condition_locator",
-        "condition_source=methods permits a condition read from the paper's "
-        "Methods rather than from the record's own passage. That route is only "
-        "admissible if it can be audited, so condition_locator must name the "
-        "passage it came from.",
+        "condition_evidence",
+        "A condition evidence entry must name where its quote came from. The "
+        "Methods route in particular is only admissible if it can be audited, "
+        "which means naming the passage, not merely the section.",
+    ),
+    "A009_CONDITION_EVIDENCE_WITHOUT_QUOTE": (
+        Severity.HARD,
+        "condition_evidence",
+        "A condition evidence entry exists because a sentence was found. "
+        "Without the sentence the entry asserts that evidence exists while "
+        "withholding it, which is worse than leaving the dimension null.",
+    ),
+    "A010_CONDITION_EVIDENCE_MALFORMED": (
+        Severity.HARD,
+        "condition_evidence",
+        "A condition evidence entry must name one of the four condition "
+        "dimensions exactly once, and its source must be passage or methods. "
+        "not_reported is not a source: an absence cannot be quoted.",
+    ),
+    "A011_CONDITION_EVIDENCE_VALUE_MISMATCH": (
+        Severity.HARD,
+        "condition_evidence",
+        "A condition evidence entry must agree with the field it describes. An "
+        "entry that disagrees with its own field, or that supports a dimension "
+        "left null or recorded as not_reported, is provenance pointing at a "
+        "value that is not there.",
     ),
     # --- S: structural (hard) ------------------------------------------
     "S001_MISSING_STUDY_ID": (
@@ -304,6 +332,14 @@ RULES = {
         "it acts as a loss of function. Resolve by hand; this rule never "
         "rewrites the stored value.",
     ),
+    "W017_CONDITION_WITHOUT_EVIDENCE": (
+        Severity.WARNING,
+        "condition_evidence",
+        "A condition dimension holds a positive value but carries no evidence "
+        "entry, so a reader cannot check it without re-reading the paper. The "
+        "362 records curated before v0.3.0 are all in this state; the warning "
+        "exists to count the remaining gap rather than to hide it.",
+    ),
 }
 
 #: Wordings that mark an allele whose expression *reduces* the target's
@@ -346,6 +382,129 @@ _CONDITION_UNKNOWN = frozenset({None, "not_reported"})
 def _blank(value: Any) -> bool:
     """True if a text field is absent or whitespace-only."""
     return value is None or not str(value).strip()
+
+
+def _condition_field_value(record, dimension: str):
+    """The record's own value for one condition dimension, as a plain string."""
+    raw = getattr(record, dimension, None)
+    return getattr(raw, "value", raw)
+
+
+def unevidenced_conditions(record) -> List[str]:
+    """Condition dimensions holding a positive value with no evidence behind it.
+
+    Public because the QC report counts the same population. Two
+    implementations of one rule agree until the day one of them is corrected,
+    so there is one.
+
+    ``not_reported`` is excluded deliberately: it asserts an absence, and an
+    absence has no sentence to quote (see :class:`ConditionEvidence`).
+
+    ``age_group`` is answered for by an ``age_value`` entry rather than one of
+    its own, because the band is derived from the age by rule and no paper
+    writes the word ``young_adult``
+    (:data:`~syn4rch.schema.record.EVIDENCE_FOR_CONDITION`, D-045). An age band
+    is therefore auditable exactly when the age it was computed from is quoted.
+    """
+    evidenced = {
+        e.dimension
+        for e in (record.condition_evidence or [])
+        if isinstance(getattr(e, "dimension", None), str)
+    }
+    out = []
+    for dimension in CONDITION_DIMENSIONS:
+        value = _condition_field_value(record, dimension)
+        if value in _CONDITION_UNKNOWN:
+            continue
+        if EVIDENCE_FOR_CONDITION[dimension] not in evidenced:
+            out.append(dimension)
+    return out
+
+
+def _same_value(stored: Any, claimed: Any) -> bool:
+    """Does an entry's ``value`` name the same thing as the field's value?
+
+    Stringly for enums, numerically for ``age_value``: a paper writes "12 weeks
+    old", so a curator may record ``"12"`` where the field holds ``12.0``, and
+    refusing that would be an equality bug dressed as an integrity rule.
+    """
+    if stored == claimed:
+        return True
+    try:
+        return float(stored) == float(claimed)
+    except (TypeError, ValueError):
+        return False
+
+
+def _check_condition_evidence(record) -> List["ValidationError"]:
+    """A008-A011: every condition evidence entry must be auditable and true.
+
+    The four rules are deliberately separate findings rather than one. A
+    missing locator, a missing quote, a malformed entry and an entry that
+    disagrees with its own field are four different mistakes with four
+    different fixes, and a report that collapses them tells a curator only
+    that something is wrong with the condition.
+
+    A010 is the exception and reports alone: an entry naming no recognisable
+    dimension cannot be checked for anything else, because there is no field to
+    compare it against and no way to know which value it was meant to support.
+    So a malformed entry that is *also* missing its quote reports one finding
+    rather than two. That is deliberate, and it is the right order of work --
+    identify the dimension first, then everything else becomes checkable.
+    """
+    out: List["ValidationError"] = []
+    entries = record.condition_evidence or []
+    seen = set()
+    for entry in entries:
+        dimension = getattr(entry, "dimension", None)
+        source = getattr(entry, "source", None)
+        label = dimension if isinstance(dimension, str) and dimension else "?"
+        malformed = (
+            dimension not in EVIDENCE_DIMENSIONS
+            or dimension in seen
+            or source is None
+            or source is ConditionSource.not_reported
+        )
+        if isinstance(dimension, str):
+            seen.add(dimension)
+        if malformed:
+            out.append(
+                _err(
+                    record,
+                    "A010_CONDITION_EVIDENCE_MALFORMED",
+                    "entry for %r with source=%s"
+                    % (label, getattr(source, "value", source)),
+                )
+            )
+            continue
+        if _blank(getattr(entry, "locator", None)):
+            out.append(
+                _err(
+                    record,
+                    "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR",
+                    "%s evidence carries no locator" % label,
+                )
+            )
+        if _blank(getattr(entry, "quote", None)):
+            out.append(
+                _err(
+                    record,
+                    "A009_CONDITION_EVIDENCE_WITHOUT_QUOTE",
+                    "%s evidence carries no quote" % label,
+                )
+            )
+        stored = _condition_field_value(record, dimension)
+        claimed = getattr(entry, "value", None)
+        if stored in _CONDITION_UNKNOWN or not _same_value(stored, claimed):
+            out.append(
+                _err(
+                    record,
+                    "A011_CONDITION_EVIDENCE_VALUE_MISMATCH",
+                    "%s evidence says %r but the field says %r"
+                    % (label, claimed, stored),
+                )
+            )
+    return out
 
 
 def _err(record, code, message=None, field=None):
@@ -418,10 +577,7 @@ def validate(record: TierARecord) -> List[ValidationError]:
         )
     if record.extraction_method is None:
         out.append(_err(record, "A007_MISSING_EXTRACTION_METHOD"))
-    if record.condition_source is ConditionSource.methods and _blank(
-        record.condition_locator
-    ):
-        out.append(_err(record, "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR"))
+    out.extend(_check_condition_evidence(record))
 
     # --- S: structural ----------------------------------------------------
     if _blank(record.study_id):
@@ -642,6 +798,15 @@ def validate(record: TierARecord) -> List[ValidationError]:
         for v in condition_values
     ):
         out.append(_err(record, "W015_CONDITION_UNSPECIFIED"))
+    unevidenced = unevidenced_conditions(record)
+    if unevidenced:
+        out.append(
+            _err(
+                record,
+                "W017_CONDITION_WITHOUT_EVIDENCE",
+                "no evidence entry for %s" % ", ".join(unevidenced),
+            )
+        )
     if effective_class is PerturbationClass.molecular:
         targeting_text = " ".join(
             t for t in (record.targeting_strategy, record.actuator, record.target_raw)

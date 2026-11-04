@@ -17,11 +17,12 @@ Python 3.10 compatible, standard library only.
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
+from ..schema.record import CONDITION_DIMENSIONS
 from ..schema.validate import Severity as SchemaSeverity
-from ..schema.validate import validate
+from ..schema.validate import unevidenced_conditions, validate
 from .comparability import comparability_coverage, find_missing_comparability_fields, unclear_valence_count
 from .conflicts import annotate_conflicts, find_conflicts, key_comparison
-from .keys import condition_specificity
+from .keys import NULL, condition_specificity
 from .duplicates import run_duplicate_checks
 from .findings import QCFinding, QCSeverity
 from .units import check_units
@@ -149,6 +150,7 @@ def run_qc(
         "direction_counts": _direction_counts(records),
         "claim_key_comparison": key_comparison(records),
         "condition_specificity": _specificity_counts(records),
+        "condition_evidence": _condition_evidence_counts(records),
     }
     return report
 
@@ -164,6 +166,122 @@ def _specificity_counts(records) -> Dict[str, int]:
     for record in records:
         counts[str(condition_specificity(record))] += 1
     return counts
+
+
+#: The one condition value that asserts an absence. It carries no evidence
+#: entry by construction, so it is neither evidenced nor a gap. Spelled here
+#: rather than imported because :mod:`syn4rch.qc.keys` pools it with ``None``
+#: for key-building, and this section needs the two apart.
+_NOT_REPORTED = "not_reported"
+
+
+def _condition_value(record, dimension: str):
+    """One condition dimension's own value, as a plain string or ``None``."""
+    raw = getattr(record, dimension, None)
+    return getattr(raw, "value", raw)
+
+
+def _condition_evidence_counts(records) -> Dict[str, Any]:
+    """What the condition dimension can be *checked* against (schema v0.3.0).
+
+    Distinct from :func:`_specificity_counts`, which counts how many
+    dimensions are *known*. A dimension can be known and unquoted: all 362
+    records curated before v0.3.0 are, which is the gap W017 counts.
+
+    Three counts here are deliberately kept apart rather than summed:
+
+    * ``evidenced`` -- a verbatim sentence was found and recorded;
+    * ``not_reported`` -- the paper was read and states nothing, so there is
+      no sentence to quote and no evidence entry by construction;
+    * ``null`` -- the dimension was never addressed.
+
+    Adding the first two into a "covered" share would read as provenance for
+    an assertion that by definition has none.
+
+    ``by_rule`` carries ``entries`` *and* ``records`` per rule because one
+    record can be touched by one rule on three dimensions: the entry count
+    says how often a rule fired, and only the record count says how much of
+    the dataset a wrong rule would affect.
+
+    ``study_reach`` is here because the per-dimension shares cannot tell
+    evidence drawn from two papers from evidence spread across forty.
+    """
+    records = list(records)
+    dimensions: Dict[str, Dict[str, int]] = {
+        name: {"positive": 0, "evidenced": 0, "not_reported": 0, "null": 0}
+        for name in CONDITION_DIMENSIONS
+    }
+    by_source: Dict[str, int] = {"passage": 0, "methods": 0}
+    rules: Dict[str, Dict[str, int]] = {}
+    n_entries = 0
+    gap_records = 0
+    gap_values = 0
+    reached_studies = set()
+    evidenced_without_study = 0
+
+    for record in records:
+        entries = list(record.condition_evidence or [])
+        # The gap is read from the rule that raises W017 rather than recomputed
+        # here. Two implementations of one rule agree until the day one of them
+        # is corrected, and this section's whole claim is that its numbers are
+        # the validator's numbers.
+        missing = set(unevidenced_conditions(record))
+        record_gap = 0
+        record_evidenced = 0
+        for name in CONDITION_DIMENSIONS:
+            row = dimensions[name]
+            value = _condition_value(record, name)
+            if value is None:
+                row["null"] += 1
+            elif value == _NOT_REPORTED:
+                row["not_reported"] += 1
+            else:
+                row["positive"] += 1
+                if name in missing:
+                    record_gap += 1
+                else:
+                    row["evidenced"] += 1
+                    record_evidenced += 1
+        if record_gap:
+            gap_records += 1
+            gap_values += record_gap
+        if record_evidenced:
+            if record.study_id:
+                reached_studies.add(record.study_id)
+            else:
+                evidenced_without_study += 1
+
+        seen_rules = set()
+        for entry in entries:
+            n_entries += 1
+            source = getattr(entry, "source", None)
+            token = getattr(source, "value", source) or NULL
+            by_source[token] = by_source.get(token, 0) + 1
+            rule = getattr(entry, "rule", None) or NULL
+            tally = rules.setdefault(rule, {"entries": 0, "records": 0})
+            tally["entries"] += 1
+            if rule not in seen_rules:
+                seen_rules.add(rule)
+                tally["records"] += 1
+
+    return {
+        "_total_records": len(records),
+        "n_entries": n_entries,
+        "dimensions": dimensions,
+        "by_source": by_source,
+        "by_rule": dict(
+            sorted(
+                rules.items(),
+                key=lambda kv: (-kv[1]["entries"], -kv[1]["records"], kv[0]),
+            )
+        ),
+        "gap": {"records": gap_records, "values": gap_values},
+        "study_reach": {
+            "n_studies": len({r.study_id for r in records if r.study_id}),
+            "n_studies_with_evidenced_value": len(reached_studies),
+            "n_evidenced_records_without_study_id": evidenced_without_study,
+        },
+    }
 
 
 def _direction_counts(records) -> Dict[str, int]:
@@ -185,6 +303,91 @@ def _section(title, findings, limit=None) -> List[str]:
         lines.append("      %s" % finding.message)
     if limit is not None and len(findings) > limit:
         lines.append("  ... %d more" % (len(findings) - limit))
+    lines.append("")
+    return lines
+
+
+def _render_condition_evidence(stats: Dict[str, Any]) -> List[str]:
+    """The condition-evidence section, as report lines.
+
+    Prints counts only. There is deliberately no single figure of merit for a
+    record's or a dataset's condition provenance: the four dimensions are
+    evidenced through different routes, and a dataset that is fully evidenced
+    on sex and not at all on challenge is not 50% of anything.
+    """
+    if not stats or not stats.get("_total_records"):
+        return []
+    dimensions = stats.get("dimensions") or {}
+    gap = stats.get("gap") or {}
+    reach = stats.get("study_reach") or {}
+
+    lines = [
+        "Condition evidence (what is quoted, not what is known)",
+        "-" * 72,
+        "  %-12s %8s %9s %12s %5s"
+        % ("dimension", "positive", "evidenced", "not_reported", "null"),
+    ]
+    for name in CONDITION_DIMENSIONS:
+        row = dimensions.get(name) or {}
+        lines.append(
+            "  %-12s %8d %9d %12d %5d"
+            % (
+                name,
+                row.get("positive", 0),
+                row.get("evidenced", 0),
+                row.get("not_reported", 0),
+                row.get("null", 0),
+            )
+        )
+
+    by_source = stats.get("by_source") or {}
+    lines.append("  evidence entries by source (%d in all)" % stats.get("n_entries", 0))
+    ordered = ["passage", "methods"] + sorted(set(by_source) - {"passage", "methods"})
+    for token in ordered:
+        lines.append("    %-12s %8d" % (token, by_source.get(token, 0)))
+
+    by_rule = stats.get("by_rule") or {}
+    lines.append("  evidence entries by rule (most frequent first -- the audit handle)")
+    if not by_rule:
+        lines.append("    none")
+    for rule, tally in by_rule.items():
+        lines.append(
+            "    %-22s %6d entries  %5d record(s)"
+            % (rule, tally.get("entries", 0), tally.get("records", 0))
+        )
+
+    lines.append(
+        "  positive values with no evidence entry: %d, on %d record(s) "
+        "(the W017 population)" % (gap.get("values", 0), gap.get("records", 0))
+    )
+    lines.append(
+        "  studies with at least one evidenced value: %d of %d"
+        % (
+            reach.get("n_studies_with_evidenced_value", 0),
+            reach.get("n_studies", 0),
+        )
+    )
+    orphans = reach.get("n_evidenced_records_without_study_id", 0)
+    if orphans:
+        lines.append(
+            "    (%d record(s) carry evidence but no study_id and so cannot be"
+            % orphans
+        )
+        lines.append("    counted into that reach figure)")
+    lines.append(
+        "  Reach is reported because no single coverage figure can tell evidence"
+    )
+    lines.append("  drawn from two papers from evidence spread across forty.")
+    lines.append(
+        "  An evidence entry means a verbatim sentence was found and checked, while"
+    )
+    lines.append(
+        "  a not_reported value asserts that the paper carries no such sentence and"
+    )
+    lines.append(
+        '  so has none by construction -- the two must never be added into one'
+    )
+    lines.append('  "covered" figure.')
     lines.append("")
     return lines
 
@@ -298,6 +501,8 @@ def render_text(report: QCReport, path=None, limit=None) -> str:
                 "  found that way may be condition heterogeneity instead."
             )
         lines.append("")
+
+    lines.extend(_render_condition_evidence(report.stats.get("condition_evidence") or {}))
 
     lines.extend(
         _section("HARD schema violations -- must not enter data/curated/", report.hard, limit)

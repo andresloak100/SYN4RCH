@@ -1,4 +1,4 @@
-"""SYN4RCH Tier A schema (v0.2.0): enums, record, derived rules, validation, IO.
+"""SYN4RCH Tier A schema (v0.3.0): enums, record, derived rules, validation, IO.
 
 ``docs/SCHEMA.md`` is the binding contract; this package implements it.
 """
@@ -43,8 +43,10 @@ from .io import (  # noqa: F401
     write_jsonl,
 )
 from .record import (  # noqa: F401
+    CONDITION_DIMENSIONS,
     RECORD_ID_FIELDS,
     SCHEMA_VERSION,
+    ConditionEvidence,
     SchemaCoercionError,
     TierARecord,
     compute_record_id,

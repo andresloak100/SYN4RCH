@@ -157,7 +157,7 @@ class Challenge(_StrEnum):
 
 
 class ConditionSource(_StrEnum):
-    """Where a record's condition fields came from (v0.2.0).
+    """Where one condition dimension of a record came from (v0.2.0).
 
     SCHEMA.md 2 rule 4 requires that a field the record's own passage does not
     report be ``null``. Conditions are a property of the *experiment*, not of
@@ -166,11 +166,19 @@ class ConditionSource(_StrEnum):
     with no diet and 224 with no sex, which is what made the condition gap
     unfixable by curating harder.
 
-    ``methods`` permits the Methods route and makes it auditable: a record
-    whose conditions came from Methods must carry ``condition_locator``
-    naming the passage they came from, and the verbatim gate applies to that
-    locator as it does to any other. ``passage`` means the record's own quoted
-    passage states them. See docs/DECISIONS.md (D-024).
+    ``methods`` permits the Methods route and makes it auditable. ``passage``
+    means the record's own quoted passage states the value. See
+    docs/DECISIONS.md (D-024).
+
+    v0.3.0 moved this from a record-level field to
+    :class:`~syn4rch.schema.record.ConditionEvidence`, one entry per filled
+    dimension, because a record's sex and its acute metabolic state routinely
+    arrive by different routes and one scalar could not say so (D-037). The
+    locator moved with it and is now required on **every** entry, whatever its
+    source (``A008``): the sentence stating the diet is not the sentence the
+    effect was read from even when both are in Results, so ``source_locator``
+    does not locate it. The verbatim gate applies to an entry's locator as it
+    does to any other.
     """
 
     passage = "passage"

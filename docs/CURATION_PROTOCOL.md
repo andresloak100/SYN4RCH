@@ -1,4 +1,4 @@
-# SYN4RCH curation protocol (v0.2.0)
+# SYN4RCH curation protocol (v0.3.0)
 
 How a published experiment becomes a Tier A record. `docs/SCHEMA.md` defines
 *what* a record is; this document defines *how* one is allowed to come into
@@ -111,6 +111,15 @@ reporting no result yields none.
   polarity and the `direction` share the words `increase` and `decrease` and
   mean different things: the polarity is what was done inside the brain, the
   direction is what the body did (`docs/DECISIONS.md` D-033).
+- Applying a Methods-stated condition to a paper's records when the Methods
+  describe **two** cohorts on that dimension. Both diets of a diet-comparison
+  study appear in its Methods, and neither is the answer for any particular
+  figure (`docs/DECISIONS.md` D-038).
+- Reading a husbandry sentence as a `challenge`, or an assay name as its own
+  `challenge` (`docs/DECISIONS.md` D-040, D-041). Both are set out in 3b.
+- Writing a condition value with no `condition_evidence` entry behind it. The
+  value may be right and a reader still cannot check it without re-reading the
+  paper; `W017` counts how much of the corpus is in that state.
 
 ## 3b. Stage 6: the condition dimension
 
@@ -121,22 +130,63 @@ Papers put the result in Results and the sex and diet in Methods. Reading the
 passage alone therefore guaranteed the gap this version exists to close: 197 of
 the first 362 records carried no diet and 224 no sex, and the curators were
 right every single time. So a condition **may** be taken from the paper's
-Methods, on two conditions:
+Methods, on three conditions, all carried by a `condition_evidence` entry on the
+record (v0.3.0):
 
-1. `condition_source = methods`, stated, not implied.
-2. `condition_locator` names the Methods passage it came from. Its absence is a
-   HARD finding (`A008`) and the record is refused.
+1. `source = methods`, stated, not implied.
+2. `locator` names the Methods passage it came from. Its absence is a HARD
+   finding (`A008`) and the record is refused.
+3. `quote` is the sentence itself, verbatim. Its absence is a HARD finding
+   (`A009`). An entry asserting that evidence exists while withholding it is
+   worse than a `null`, because it reads as checked.
+
+The entry also names the `dimension` it supports and repeats the `value`, and
+that value must equal the field (`A011`). One entry per filled dimension: a
+record may take its sex from Methods and its challenge from its own passage, and
+each says so separately.
 
 Everything else about rule 4 stands. A condition that no passage of the paper
-states is `null`. `condition_source` widens where a value may be read *from*;
+states is `null`. `condition_evidence` widens where a value may be read *from*;
 it does not widen what may be written down. A reader who infers a diet from a
 figure legend's y-axis, from a strain's typical husbandry, or from what the lab
 usually does has fabricated it.
+
+**A Methods value applies only where the paper holds the dimension constant.**
+If the Methods describe one cohort on a dimension -- "male C57BL/6 mice" -- that
+value is true of every figure in the paper and may be written on every record
+from it. If they describe two -- a chow group and a high-fat group -- the Methods
+have told you both diets exist and nothing about which group produced Figure 3C.
+Then the dimension stays `null` on every record whose own passage does not say,
+however obvious the answer feels. See D-038.
 
 `challenge` is the acute state at the moment of measurement — fasted, refed,
 glucose-loaded, cold-exposed — and is not `diet`, which is the maintenance diet
 over weeks. In this literature the challenge frequently decides the sign of the
 result, which is why it is now a field and not a note.
+
+**`challenge` is almost never a Methods value.** It is a property of a
+measurement, and a Methods section describing a fast, a glucose load and a
+metabolic cage run does not say which one Figure 3C reports. Two specific
+readings are forbidden outright:
+
+* **Husbandry is not a challenge.** "Mice were allowed ad libitum access to
+  water and standard chow" says how the animals were kept, not the state any
+  measurement was made in. Nearly every paper here contains such a sentence, so
+  accepting it would fill `challenge` across most of the corpus and report the
+  result as near-complete coverage. It is the most damaging mistake available in
+  this stage: wrong in the flattering direction, wrong on hundreds of records at
+  once, and re-identifying every one of them. See D-040.
+* **An assay does not supply its own challenge.** A glucose tolerance test is a
+  glucose load by definition, so writing `glucose_load` on a
+  `glucose_tolerance` record restates the outcome column. It separates nothing
+  that `outcome_id` does not already separate, while raising the apparent
+  coverage. See D-041.
+
+What `challenge` is *for* is the measurement whose assay does not fix its state:
+food intake, body weight, energy expenditure, blood glucose. "Food intake in the
+fed state" and "food intake after a fast" are two different experiments, and
+telling them apart is the entire value of the field. Those come from the
+record's own passage, where the paper says it.
 
 **Honest labelling.** `extraction_method` records what actually happened:
 `llm` for an unreviewed model proposal, `llm_human_reviewed` only once a human
@@ -176,9 +226,18 @@ Stated plainly, because a reader of the dataset is entitled to know.
   `review_status` are the only honest record of whether a human made it.
 - Effect sizes, dispersions and sample sizes transcribed from text are not
   recomputed from the underlying data. They are as right as the paper is.
-- The verbatim gate does not yet re-check `condition_locator`; it reads
-  `source_locator` only. A condition taken from Methods is therefore checked
-  for *provenance* but not yet for *substance* (`docs/DECISIONS.md` D-024).
+- The standing verbatim gate (`syn4rch.curate.verify.gate`) reads
+  `source_locator` and `support_quote` only. It does not re-check the
+  `locator` and `quote` on a `condition_evidence` entry, so a condition
+  evidence entry written or edited outside the condition fill is not caught by
+  the gate every record passes through.
+  The condition fill checks its own output and checks it harder than the gate
+  would: `syn4rch.curate.fill_conditions.check_evidence_locators` resolves each
+  entry's locator to the passage it names and confirms the quote occurs *in
+  that passage*, not merely somewhere in the paper, and refuses to write if any
+  entry fails. So every entry in the dataset today has been checked for
+  substance; what is missing is a standing check that keeps that true for
+  entries added by some other route (`docs/DECISIONS.md` D-024, D-037).
 - Nothing detects a polarity inversion mechanically. The outcomes vocabulary
   annotates the known traps (D-021) and the perturbation key keeps molecular
   and circuit signs apart (D-025), but a reader who states the wrong direction

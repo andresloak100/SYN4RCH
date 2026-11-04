@@ -111,10 +111,47 @@ model on sex, diet and metabolic state makes prediction slightly worse**, by
 −0.006 pooled. Four fifths of the conditioned cells hold a single record, so the
 split fragments the evidence faster than it sharpens it. The condition dimension
 is kept because it is what removed the false contradictions, not because it
-predicts better. It is also measured on a field that is still empty: `challenge`
-is null on all 362 records, so today the conditioned cell is mostly separating
-one unknown from another, and the measurement should be re-run once a curation
-pass has filled it (`docs/DECISIONS.md` D-036).
+predicts better (`docs/DECISIONS.md` D-036).
+
+## What the condition curation pass changed (schema v0.3.0)
+
+D-036's verdict above was measured on a field that was empty. A curation pass has
+now read all 42 papers and filled what their text supports, with a verbatim
+sentence and a locator on every value (`reports/condition_fill_0.3.0.md`):
+
+| dimension | null before | null after | values carrying evidence |
+|---|---|---|---|
+| `sex` | 224 | 112 | 174 of 235 |
+| `diet` | 197 | 111 | 97 of 229 |
+| `age_group` | 286 | 250 | 36 of 43 |
+| `challenge` | **362** | 337 | 25 of 25 |
+
+**The verdict did not change.** Conditioned against axis-only, under `study_id`:
+−0.006 [−0.021, +0.006], 0.479 against 0.485, McNemar p=0.754, `no_difference` —
+the same −0.006 as on empty conditions, and *worse* (−0.061) on the rows whose
+conditioned cell was seen in training. Real condition information makes the
+conditioned cell finer, not better informed: 203 → 268 cells, 69.5% → 81.3%
+singletons. Three schema versions of work on this dimension have not made it
+useful for prediction.
+
+**What it did change is the quality of the replication evidence.** Before the
+pass this corpus held 11 claims reported by more than one study, **8 of which
+matched at condition specificity 0** — grouped together partly because nobody
+knew their conditions. After it there are 5, and **none matches on nothing
+known**. Records knowing no condition slot at all fell from 153 to 46. Cross-study
+conflicting claims fell from 9 to 4 and the last directly-opposed pair to 0.
+
+**And a prediction written down beforehand failed.** 7 multi-study claims had been
+lost *only* because one paper stated a condition another omitted, and curating the
+conditions was supposed to recover some. It made it worse: 7 became 10. Filling
+the conditions a paper reports makes it *less* comparable with a paper reporting
+none, since `unknown` matches no stated value. Partial condition curation
+increases unadjudicable non-comparability; only curating both sides of a pair
+reduces it (`docs/DECISIONS.md` D-047).
+
+No claim in the corpus reaches specificity 4 of 4, so **no replication figure here
+describes two experiments known to have run under the same conditions** — the same
+caveat as before the pass, still true after it.
 
 So "the evidence is insufficient" was an artifact of a missing field for half
 the corpus, and remains the right answer for the other half. What to curate next
@@ -135,6 +172,7 @@ circuit rows still have no evidence in their cell at all.
       raw/          harvest dumps, append-only, never hand-edited   [untracked]
       interim/      screening decisions, parsed texts               [untracked]
       curated/      records.jsonl  <- THE dataset                   [tracked]
+                    record_id_map_*.json  old-to-new ids per migration [tracked]
       inferred/     anything derived (KG edges, imputations)        [untracked]
       predictions/  model outputs only                              [untracked]
       vocab/        controlled vocabularies (JSON)                  [tracked]
@@ -220,13 +258,13 @@ example would have been clearer, a synthetic one is used instead.
 
 ## Layout
 
-    docs/SCHEMA.md         binding data contract (v0.2.0)
+    docs/SCHEMA.md         binding data contract (v0.3.0)
     docs/DECISIONS.md      append-only decision log
     src/syn4rch/schema/    enums, TierARecord, derived rules, validation, JSONL IO
     src/syn4rch/qc/        duplicates, conflicts, units, conditions, report, CLI
     src/syn4rch/vocab/     controlled-vocabulary loader and resolver
     src/syn4rch/harvest/   literature retrieval
-    src/syn4rch/curate/    extraction and curation tooling
+    src/syn4rch/curate/    extraction, curation, conditions, migrations
     src/syn4rch/feasibility/  can this question be answered from this corpus?
     src/syn4rch/models/    modelling experiments (never a source of evidence)
     src/syn4rch/kg/        knowledge graph (association and anatomy classes)

@@ -207,7 +207,27 @@ class TestRecordIdSensitivity(unittest.TestCase):
             # target_id is the resolved form of target_raw, which is hashed.
             {"target_id": "syn:something_else"},
             {"challenge_detail": "different fabricated detail"},
-            {"condition_source": "not_reported"},
+            # Schema v0.3.0. ``condition_evidence`` says *why* a condition
+            # holds the value it holds; the value itself is hashed and the
+            # provenance is not. A record whose sex was read from Methods and
+            # the same record whose sex was later traced to a figure legend
+            # are one observation, so re-sourcing a condition must leave the
+            # id alone -- otherwise filling in provenance would re-identify
+            # the corpus and orphan every conflicts_with reference to it.
+            # (This case replaces the retired condition_source scalar.)
+            {
+                "condition_evidence": [
+                    {
+                        "dimension": "sex",
+                        "value": "male",
+                        "source": "passage",
+                        "locator": "Fig S1A legend (synthetic)",
+                        "quote": "Synthetic quote: male mice, as above.",
+                        "rule": "synthetic-other",
+                    }
+                ]
+            },
+            {"condition_evidence": []},
         ):
             self.assertEqual(
                 synthetic.good_record(**override).record_id,

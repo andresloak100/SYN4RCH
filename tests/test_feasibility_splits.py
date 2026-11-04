@@ -272,7 +272,23 @@ class TestTheClaimKeyChangeDoesNotReachTheFolds(unittest.TestCase):
         {"age_group": "aged", "age_value": 80.0, "age_unit": "weeks"},
         {"challenge": "fasted"},
         {"sex": None, "diet": None, "age_group": None, "challenge": None},
-        {"condition_source": "methods", "condition_locator": "Methods para 2"},
+        # The condition's provenance. A record-level
+        # ``condition_source``/``condition_locator`` pair in v0.2.0, replaced
+        # in v0.3.0 by one ``condition_evidence`` entry per dimension; neither
+        # shape may reach a fold, because where a condition was read from is
+        # not part of any claim.
+        {
+            "condition_evidence": [
+                {
+                    "dimension": "sex",
+                    "value": "male",
+                    "source": "methods",
+                    "locator": "Methods para 2 (synthetic)",
+                    "quote": "Synthetic quote: male mice were used throughout.",
+                    "rule": "synthetic",
+                }
+            ]
+        },
     )
 
     def _baseline(self):

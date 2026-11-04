@@ -6,7 +6,7 @@ See README.md for framing and docs/SCHEMA.md for the binding data contract.
 Standard library only; targets Python 3.10.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 #: Version of the Tier A record schema this tree implements (docs/SCHEMA.md).
 #:

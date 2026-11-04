@@ -23,6 +23,20 @@ above it:
     nothing.** Matching reuses :class:`syn4rch.harvest.screen.TermMatcher`
     unchanged.
 
+:mod:`syn4rch.curate.conditions`
+    Read the condition dimension -- ``sex``, ``diet``, ``age_group``,
+    ``challenge`` -- out of a paper's own text, with a verbatim quote and a
+    locator for every value returned. Owns the distinction between a dimension
+    a paper holds *constant* (admissible for every record from it) and one that
+    *varies* within the paper (admissible for none), and the named refusals
+    that keep a confident wrong value from being produced where a refusal
+    belongs (D-038, D-040, D-041, D-044).
+
+:mod:`syn4rch.curate.fill_conditions`
+    ``python3 -m syn4rch.curate.fill_conditions run``: applies the above to the
+    curated table, attaches the evidence, re-identifies what it changed and
+    leaves an old-to-new map. The second writer to touch the dataset (D-031).
+
 :mod:`syn4rch.curate.verify`
     The verbatim gate. ``verify_support`` confirms a record's
     ``support_quote`` occurs in the paper's retrieved text under one fixed
@@ -89,6 +103,20 @@ from .verify import (  # noqa: F401
     verify_support,
 )
 
+from .conditions import (  # noqa: F401
+    DIMENSIONS,
+    REFUSALS,
+    RULES,
+    VERDICTS,
+    Extracted,
+    PaperConditions,
+    paper_text,
+    read_paper_conditions,
+    read_record_conditions,
+    sentences,
+    verify_against_paper,
+)
+
 __all__ = [
     # jats
     "SECTION_LABELS",
@@ -110,6 +138,18 @@ __all__ = [
     "build_index",
     "parse_locator",
     "split_passages",
+    # conditions
+    "DIMENSIONS",
+    "REFUSALS",
+    "RULES",
+    "VERDICTS",
+    "Extracted",
+    "PaperConditions",
+    "paper_text",
+    "read_paper_conditions",
+    "read_record_conditions",
+    "sentences",
+    "verify_against_paper",
     # units
     "SCORE_WEIGHTS",
     "ExtractionUnitCandidate",

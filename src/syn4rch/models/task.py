@@ -1047,17 +1047,41 @@ def build_dataset(
 # locating and loading the curated table
 # --------------------------------------------------------------------------- #
 
+#: Versions older than the current one whose **feature tuple** is identical to
+#: it, and which this task may therefore read beside it.
+#:
+#: This list is not "versions we tolerate". A version belongs here only when
+#: every field in :data:`TaskSpec.statement` means the same thing in it, so
+#: that two records from two versions are two observations of one task rather
+#: than two tasks silently pooled.
+#:
+#: * ``0.1.0`` -- the pooled claim key, kept so the v0.2.0 key change stays
+#:   falsifiable (D-023).
+#: * ``0.2.0`` -- differs from 0.3.0 only in condition *provenance*
+#:   (``condition_evidence`` replacing a null scalar pair, D-037). Provenance is
+#:   not a feature of this task and not a component of any key, so a 0.2.0
+#:   record and a 0.3.0 record are the same observation. Listing it is what
+#:   lets the conditioning verdict of D-036 be re-measured against the filled
+#:   corpus on one task rather than two.
+_FEATURE_EQUIVALENT_VERSIONS: Tuple[str, ...] = ("0.2.0", "0.1.0")
+
+
 def _accepted_schema_versions() -> Tuple[str, ...]:
     """The schema versions this task will read, current first.
 
     ``syn4rch.schema.record.SCHEMA_VERSION`` is read at import time rather than
     hard-coded, so this list follows the schema instead of drifting behind it.
+    The rest come from :data:`_FEATURE_EQUIVALENT_VERSIONS`, and belong there on
+    the argument recorded with it -- not because they are old, but because the
+    task's features mean the same thing in them.
     """
     try:
         from ..schema.record import SCHEMA_VERSION
     except Exception:  # pragma: no cover - schema is stdlib-only
-        return ("0.2.0", "0.1.0")
-    return tuple(dict.fromkeys((SCHEMA_VERSION, "0.1.0")))
+        return _FEATURE_EQUIVALENT_VERSIONS
+    return tuple(
+        dict.fromkeys((SCHEMA_VERSION,) + _FEATURE_EQUIVALENT_VERSIONS)
+    )
 
 
 #: Schema versions :func:`load_dataset` will read. See its docstring for why

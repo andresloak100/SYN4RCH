@@ -268,7 +268,14 @@ class TestRuleCatalogue(unittest.TestCase):
 
 
 class V020ConditionAndPerturbationTest(unittest.TestCase):
-    """The rules schema v0.2.0 added (A008, S007, S008, W013..W015)."""
+    """The rules schema v0.2.0 added (S007, S008, W013..W015).
+
+    A008 was a v0.2.0 rule too, about the record-level
+    ``condition_source``/``condition_locator`` pair. v0.3.0 retired that pair
+    and restated A008 against ``condition_evidence``, so A008 is exercised in
+    :class:`V030ConditionEvidenceTest` below, next to the three hard rules and
+    the warning added with it.
+    """
 
     def codes(self, record):
         return [f.code for f in validate(record)]
@@ -276,7 +283,6 @@ class V020ConditionAndPerturbationTest(unittest.TestCase):
     def test_a_clean_fixture_triggers_none_of_them(self):
         """Guards against the new rules firing on a well-formed record."""
         new_codes = {
-            "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR",
             "S007_PERTURBATION_CLASS_MISMATCH",
             "S008_TARGET_ON_NON_MOLECULAR",
             "W013_PERTURBATION_POLARITY_RULE_MISMATCH",
@@ -286,30 +292,6 @@ class V020ConditionAndPerturbationTest(unittest.TestCase):
         self.assertEqual(set(self.codes(synthetic.good_record())) & new_codes, set())
         self.assertEqual(
             set(self.codes(synthetic.molecular_record())) & new_codes, set()
-        )
-
-    def test_methods_sourced_condition_needs_a_locator(self):
-        bad = synthetic.good_record(
-            condition_source="methods", condition_locator=None
-        )
-        self.assertIn("A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR", self.codes(bad))
-        self.assertTrue(
-            any(f.is_hard for f in validate(bad)
-                if f.code == "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR")
-        )
-        good = synthetic.good_record(
-            condition_source="methods", condition_locator="Methods para 2"
-        )
-        self.assertNotIn(
-            "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR", self.codes(good)
-        )
-
-    def test_passage_sourced_condition_needs_no_locator(self):
-        r = synthetic.good_record(
-            condition_source="passage", condition_locator=None
-        )
-        self.assertNotIn(
-            "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR", self.codes(r)
         )
 
     def test_class_disagreeing_with_method_is_refused_not_warned(self):
@@ -384,7 +366,6 @@ class V020ConditionAndPerturbationTest(unittest.TestCase):
 
     def test_every_new_code_is_declared_in_the_catalogue(self):
         for code in (
-            "A008_CONDITION_FROM_METHODS_WITHOUT_LOCATOR",
             "S007_PERTURBATION_CLASS_MISMATCH",
             "S008_TARGET_ON_NON_MOLECULAR",
             "W013_PERTURBATION_POLARITY_RULE_MISMATCH",
@@ -393,6 +374,264 @@ class V020ConditionAndPerturbationTest(unittest.TestCase):
         ):
             self.assertIn(code, RULES)
 
+
+class V030ConditionEvidenceTest(unittest.TestCase):
+    """The rules schema v0.3.0 added: A008..A011 and W017 (D-037).
+
+    v0.2.0 recorded a condition's provenance in one record-level
+    ``condition_source``/``condition_locator`` pair, and A008 asked for a
+    locator only when that pair said ``methods``. The pair was null on all 362
+    curated records and could not have worked: a record's sex comes from the
+    paper's Methods while its acute state, when stated at all, comes from the
+    passage the record was read from, and one scalar pair cannot carry two
+    provenances. v0.3.0 replaced it with one
+    :class:`~syn4rch.schema.record.ConditionEvidence` entry per filled
+    dimension, each carrying its own source, locator and quote.
+    """
+
+    #: Dimensions a fully specified fixture record fills, in schema order.
+    DIMENSIONS = ("sex", "diet", "age_group", "challenge")
+
+    def codes(self, record):
+        return [f.code for f in validate(record)]
+
+    def entry(self, **changes):
+        """One well-formed ``sex`` evidence entry, with ``changes`` applied.
+
+        Well-formed means: it names a condition dimension, its source is a
+        route a condition may legitimately be read by, it carries the sentence
+        it was read from and the passage that sentence is in, and its value is
+        the value the record's own ``sex`` field holds. Each test below breaks
+        exactly one of those.
+        """
+        entry = {
+            "dimension": "sex",
+            "value": "male",
+            "source": "methods",
+            "locator": "Methods para 2 (synthetic)",
+            "quote": "Synthetic quote: male mice were used throughout.",
+            "rule": "synthetic",
+        }
+        entry.update(changes)
+        return entry
+
+    def assert_hard(self, code, record, note=None):
+        findings = validate(record)
+        self.assertIn(
+            code, codes(hard_findings(findings)), note or [str(f) for f in findings]
+        )
+        self.assertFalse(is_admissible(record), note)
+
+    def test_the_good_record_triggers_none_of_them(self):
+        """The fixture evidences all four of its dimensions, so none fire."""
+        new_codes = {
+            "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR",
+            "A009_CONDITION_EVIDENCE_WITHOUT_QUOTE",
+            "A010_CONDITION_EVIDENCE_MALFORMED",
+            "A011_CONDITION_EVIDENCE_VALUE_MISMATCH",
+            "W017_CONDITION_WITHOUT_EVIDENCE",
+        }
+        self.assertEqual(set(self.codes(synthetic.good_record())) & new_codes, set())
+        self.assertEqual(
+            set(self.codes(synthetic.molecular_record())) & new_codes, set()
+        )
+
+    def test_every_condition_evidence_entry_needs_a_locator(self):
+        """A008.
+
+        The v0.2.0 rule this replaces asked for a locator only on the Methods
+        route, on the reasoning that a record's own passage is already located
+        by ``source_locator``. That reasoning does not survive per-dimension
+        evidence: the sentence that states the diet is not the sentence the
+        effect was read from even when both are in Results, so an entry that
+        names no passage cannot be checked whatever its source.
+        """
+        code = "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR"
+        for locator in (None, "", "   ", "\n\t"):
+            record = synthetic.good_record(
+                condition_evidence=[self.entry(locator=locator)]
+            )
+            self.assert_hard(code, record, "locator=%r" % (locator,))
+        good = synthetic.good_record(condition_evidence=[self.entry()])
+        self.assertNotIn(code, self.codes(good))
+        self.assertEqual(hard_findings(validate(good)), [])
+
+    def test_a_passage_sourced_entry_needs_a_locator_too(self):
+        """A008, the half of it v0.2.0 exempted.
+
+        Under v0.2.0 ``condition_source=passage`` with no locator was
+        admissible. Under v0.3.0 it is not, and this test is the old
+        ``test_passage_sourced_condition_needs_no_locator`` inverted on
+        purpose rather than deleted: the exemption was the defect.
+        """
+        code = "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR"
+        bad = synthetic.good_record(
+            condition_evidence=[self.entry(source="passage", locator=None)]
+        )
+        self.assert_hard(code, bad)
+        good = synthetic.good_record(
+            condition_evidence=[
+                self.entry(source="passage", locator="Results para 1 (synthetic)")
+            ]
+        )
+        self.assertNotIn(code, self.codes(good))
+
+    def test_a_condition_evidence_entry_needs_its_quote(self):
+        """A009: an entry exists because a sentence was found.
+
+        Withholding the sentence is worse than leaving the dimension null:
+        null says nothing is known, while a quoteless entry asserts that
+        evidence exists and declines to show it.
+        """
+        code = "A009_CONDITION_EVIDENCE_WITHOUT_QUOTE"
+        for quote in (None, "", "   ", "\n\t"):
+            record = synthetic.good_record(
+                condition_evidence=[self.entry(quote=quote)]
+            )
+            self.assert_hard(code, record, "quote=%r" % (quote,))
+        self.assertNotIn(code, self.codes(synthetic.good_record()))
+
+    def test_a_malformed_condition_evidence_entry_is_refused(self):
+        """A010: an entry must name one of the four dimensions, exactly once.
+
+        ``not_reported`` is not a source. It asserts that the paper was
+        checked and says nothing, and an absence has no sentence to quote, so
+        an entry claiming it is provenance for nothing.
+        """
+        code = "A010_CONDITION_EVIDENCE_MALFORMED"
+        for changes in (
+            {"dimension": "body_weight"},   # not a condition dimension
+            {"dimension": "strain"},        # a real field, but not a dimension
+            {"dimension": ""},              # no dimension at all
+            {"source": None},               # no route
+            {"source": "not_reported"},     # not a route
+        ):
+            record = synthetic.good_record(
+                condition_evidence=[self.entry(**changes)]
+            )
+            self.assert_hard(code, record, repr(changes))
+        twice = synthetic.good_record(
+            condition_evidence=[
+                self.entry(),
+                self.entry(locator="Methods para 3 (synthetic)"),
+            ]
+        )
+        self.assert_hard(code, twice, "one dimension, two entries")
+
+    def test_condition_evidence_must_agree_with_the_field_it_describes(self):
+        """A011: provenance pointing at a value that is not there.
+
+        Three shapes of the same mistake: the entry contradicts its own field,
+        the field is null, or the field says ``not_reported``. The last two
+        matter most in practice -- they are what a half-finished curation pass
+        leaves behind when a value is edited and its evidence is not.
+        """
+        code = "A011_CONDITION_EVIDENCE_VALUE_MISMATCH"
+        self.assert_hard(
+            code,
+            synthetic.good_record(condition_evidence=[self.entry(value="female")]),
+            "entry says female, field says male",
+        )
+        self.assert_hard(
+            code,
+            synthetic.good_record(sex=None, condition_evidence=[self.entry()]),
+            "evidence for a dimension left null",
+        )
+        self.assert_hard(
+            code,
+            synthetic.good_record(
+                sex="not_reported",
+                condition_evidence=[self.entry(value="not_reported")],
+            ),
+            "evidence for an absence",
+        )
+        self.assertNotIn(code, self.codes(synthetic.good_record()))
+
+    def test_an_unevidenced_condition_is_a_warning_not_a_refusal(self):
+        """W017: the gap is counted, not hidden and not blocking.
+
+        Every record curated before v0.3.0 is in this state. Making it hard
+        would make the whole corpus inadmissible overnight, and making it
+        silent would lose the only measure of how much condition provenance is
+        still missing.
+        """
+        code = "W017_CONDITION_WITHOUT_EVIDENCE"
+        record = synthetic.good_record(condition_evidence=[])
+        findings = validate(record)
+        self.assertEqual(hard_findings(findings), [], [str(f) for f in findings])
+        self.assertTrue(is_admissible(record))
+        self.assertIn(code, codes(warning_findings(findings)))
+        message = [f.message for f in findings if f.code == code][0]
+        for dimension in self.DIMENSIONS:
+            self.assertIn(dimension, message, dimension)
+
+    def test_a_partly_evidenced_record_is_warned_about_the_rest(self):
+        code = "W017_CONDITION_WITHOUT_EVIDENCE"
+        record = synthetic.good_record(condition_evidence=[self.entry()])
+        message = [f.message for f in validate(record) if f.code == code][0]
+        self.assertNotIn("sex", message)
+        for dimension in ("diet", "age_group", "challenge"):
+            self.assertIn(dimension, message, dimension)
+
+    def test_an_absent_condition_is_not_warned_about(self):
+        """W017 asks for evidence of a value, and ``not_reported`` is not one.
+
+        A record that says the paper does not report its sex has nothing to
+        quote. Demanding an entry there would push curators to invent one,
+        which is the failure mode the rule exists to prevent.
+        """
+        record = synthetic.good_record(
+            sex="not_reported",
+            diet="not_reported",
+            age_group="not_reported",
+            challenge="not_reported",
+            age_value=None,
+            age_unit=None,
+            condition_evidence=[],
+        )
+        self.assertNotIn("W017_CONDITION_WITHOUT_EVIDENCE", self.codes(record))
+        self.assertEqual(hard_findings(validate(record)), [])
+
+    def test_every_new_code_is_declared_in_the_catalogue(self):
+        for code in (
+            "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR",
+            "A009_CONDITION_EVIDENCE_WITHOUT_QUOTE",
+            "A010_CONDITION_EVIDENCE_MALFORMED",
+            "A011_CONDITION_EVIDENCE_VALUE_MISMATCH",
+            "W017_CONDITION_WITHOUT_EVIDENCE",
+        ):
+            self.assertIn(code, RULES)
+
+    def test_the_four_hard_rules_are_distinct_findings(self):
+        """One record, four defects, four codes: a report must say which.
+
+        A missing locator, a missing quote, a malformed entry and an entry
+        that disagrees with its field have four different fixes, and a single
+        "something is wrong with the condition" finding would tell a curator
+        none of them.
+        """
+        record = synthetic.good_record(
+            condition_evidence=[
+                self.entry(dimension="sex", locator=None),
+                self.entry(dimension="diet", value="chow", quote=None),
+                self.entry(dimension="body_weight"),
+                self.entry(dimension="challenge", value="fasted"),
+            ]
+        )
+        self.assertEqual(
+            sorted(set(self.codes(record)) & {
+                "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR",
+                "A009_CONDITION_EVIDENCE_WITHOUT_QUOTE",
+                "A010_CONDITION_EVIDENCE_MALFORMED",
+                "A011_CONDITION_EVIDENCE_VALUE_MISMATCH",
+            }),
+            [
+                "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR",
+                "A009_CONDITION_EVIDENCE_WITHOUT_QUOTE",
+                "A010_CONDITION_EVIDENCE_MALFORMED",
+                "A011_CONDITION_EVIDENCE_VALUE_MISMATCH",
+            ],
+        )
 
 
 class W016AlleleInversionTest(unittest.TestCase):

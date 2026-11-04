@@ -1140,3 +1140,497 @@ calibration distinctly worse (expected calibration error 0.001 to 0.193),
 because cell frequencies drawn from cells of one or two rows are overconfident.
 Accuracy, ranking, calibration and uncertainty are four numbers and this project
 does not combine them.
+
+---
+
+## D-037 - Condition provenance is per dimension, not per record
+
+**Supersedes D-024**, which required a `condition_locator` on a record whose
+`condition_source` was `methods`. The requirement was right and the shape it
+was attached to was wrong; the locator requirement survives, per entry and
+whatever the source (A008).
+
+**Decision.** v0.3.0 removes the record-level `condition_source` and
+`condition_locator` fields and replaces them with `condition_evidence`, a list
+holding one entry per *filled* condition dimension. Each entry carries the
+dimension, the value it supports, the source class (`passage` or `methods`), a
+locator, a verbatim quote, and the name of the rule that read it.
+
+**Why.** The scalar pair could describe one provenance, and a single record
+genuinely has two. The sex of the animals is stated once in a paper's Methods
+and holds for every figure in it. The acute metabolic state at the moment of
+measurement is stated, when it is stated at all, by the passage the record was
+read from. A record filling `sex` from Methods and `challenge` from its own
+passage cannot say so with one `condition_source`, so the honest options were a
+field that describes half the record or no field at all. In practice the second
+happened: `condition_source` was null on all 362 records of the first corpus,
+and the condition gap went unfixed partly because the schema had no way to
+record a fix.
+
+**Cost.** The schema gains its first list-of-objects field, so `to_dict`,
+`from_dict` and the coercion path in `record.py` grew a case. Four validation
+rules replaced one (A008, A009, A010, A011), because a missing locator, a
+missing quote, a malformed entry and an entry contradicting its own field are
+four different mistakes with four different fixes, and a report that collapses
+them tells a curator only that something is wrong with the condition.
+
+**Nothing was lost.** Both removed fields were null on every record in the
+corpus. This change was free in data and would have stopped being free the
+moment one record used them.
+
+---
+
+## D-038 - A paper may settle a dimension it holds constant, and may not settle one that varies
+
+**Decision.** The condition fill reads `sex`, `diet` and `age_group` from a
+paper's Methods and applies the value to every record from that paper **only
+when the paper holds that dimension constant across every experiment it
+reports**. Where the Methods describe two cohorts on that dimension, the fill
+assigns nothing and the field stays `null`.
+
+**Why.** This is the whole argument for why a Methods-sourced condition is
+admissible at all. A paper stating "male C57BL/6 mice were used" has told you
+the sex of the animals behind every figure in it. A paper comparing a chow group
+against a high-fat group has told you that both diets exist in the study and
+nothing whatever about which group produced Figure 3C. Treating the second like
+the first would stamp one of the two diets across every record of a
+diet-comparison paper -- and diet-comparison papers are most of this corpus's
+high-fat records, so the error would land precisely where it does most damage.
+
+**`varies` is not an extraction failure.** It is the paper declining to answer
+the question at the scope the question was asked, and `null` is the correct
+record of that. A pass that reported `varies` as a gap to be closed by better
+parsing would be measuring the wrong thing: the information is not in the
+Methods to be found.
+
+**Cost.** The fill cannot reach the dimensions that matter most for conflict
+detection in exactly the papers where those dimensions were deliberately
+manipulated. Closing those requires reading each figure panel's own cohort,
+which is a human curation task, not a parsing task.
+
+---
+
+## D-039 - `not_reported` asserted from one passage may be corrected by the Methods; a curated value may not be overwritten
+
+**Decision.** The fill applies a Methods-sourced value over a stored
+`not_reported`, and records that as a *correction*. It never applies one over a
+stored positive value: where the two disagree the disagreement is reported and
+the curated value stands.
+
+**Why.** `not_reported` is a claim about the paper -- that it was checked and
+does not say (SCHEMA.md 3.3b). The extraction that produced the first corpus
+could see one passage, so a record reading `sex: not_reported` means "this
+passage does not say", which at paper scope is a different and often false
+statement. One record's `extraction_notes` says so outright: *"Species not
+stated in this passage, so left null."* Correcting those is not overruling a
+curator's judgement; it is widening the scope the judgement was made at.
+
+A stored *positive* value is the opposite case. It was read from the record's
+own passage, which describes this measurement, while the Methods describe the
+study. The passage is the more specific statement and it wins. A paper that used
+both sexes and a record that says `male` are not in conflict at all -- the
+record is simply more precise than the paper-level reading.
+
+**And genuine disagreements are not resolved.** A stored `male` against a
+Methods section that describes only females is a real contradiction, and this
+project does not have a rule for picking a side. Those records are listed in
+`reports/condition_fill_0.3.0.md` with both values and the locator, and they
+keep saying what the original curation said until a human reads the paper.
+
+---
+
+## D-040 - No Methods sentence can state a measurement's challenge
+
+**Decision.** "Mice were allowed ad libitum access to water and standard chow",
+and every sentence like it, may not be read as `challenge = ad_libitum`. The
+rule that would do so is implemented as a named refusal,
+`refused_housing_statement_is_not_a_challenge`.
+
+**Why.** It describes how animals were kept between experiments. The same paper
+measures glucose during a glucose load, food intake after an overnight fast, and
+energy expenditure in a metabolic cage, and the housing sentence is true of the
+animals in all three while describing the state of measurement in none. Nearly
+every paper in this corpus contains such a sentence, so accepting it would have
+filled `challenge` on most of the 362 records, taken the dimension's coverage
+from zero to near-total, and made the condition dimension look solved.
+
+**This is the most dangerous available mistake in this pass**, which is why it
+is a tested refusal rather than a matter of care. It is wrong in the direction
+that produces an impressive number, it is wrong on hundreds of records at once,
+and because `challenge` is a `record_id` component it would have re-identified
+the whole corpus on the strength of a sentence about cage husbandry.
+
+**Revised before commit, and widened.** The first version of this rule refused
+husbandry sentences specifically. Testing the extractor against
+`doi:10.1038/s41467-018-05711-6` showed the rule being routed around by a
+sentence that is not husbandry at all: *"Ad libitum fed rats were anesthetized
+by an i.p. injection of ketamine..."* -- a stereotaxic surgery preparation. It
+was read as a paper-level `challenge` of `ad_libitum`, which would have been
+stamped on all 34 of that paper's records on the strength of the animals'
+feeding state at the moment they were anaesthetised.
+
+Patching the phrase list would have left the next wording to be found. The
+correct rule is the general one: **no sentence in a Methods section is
+admissible evidence for `challenge`**, because the Methods describe the study's
+procedures and the field describes the state of one measurement. The Methods
+route for this dimension is therefore removed rather than filtered, and the
+refusal is named `refused_methods_cannot_state_a_measurement_state`. `challenge`
+has exactly one admissible source: the record's own passage, where the paper
+says which state *this* readout was taken in.
+
+---
+
+## D-041 - An assay does not supply its own challenge
+
+**Decision.** `challenge` is not derived from the outcome. `outcome_id =
+glucose_tolerance` does not yield `glucose_load`, and `GTT`, `ITT`, `glucose
+tolerance test` and `ipGTT` in a record's `outcome_raw` yield no challenge.
+Named refusal: `refused_assay_implies_its_own_challenge`.
+
+**Why.** It is true and useless. A glucose tolerance test is a glucose load by
+definition, so the derived value is a function of a key component the record
+already carries. In the claim key it discriminates nothing, since any two
+records it separates were already separated by `outcome_id`. In the model's cell
+key it adds a feature with no information. What it would do is raise the
+reported condition coverage by the 43 records whose outcome is a tolerance test,
+and re-identify every one of them, in exchange for nothing.
+
+**What the dimension is actually for.** The acute state of measurements whose
+assay does *not* fix it: food intake, body weight, energy expenditure, blood
+glucose. "Food intake in the fed state" and "food intake after a fast" are two
+different experiments that `outcome_id` alone cannot separate, and separating
+them is the entire value of the field. Those come from the record's own passage.
+
+**Consequence for the coverage figure.** `challenge` coverage after this pass is
+low, and it is low honestly. A reader comparing it against a figure that
+included the assay-derived values would conclude this pass did worse, when the
+difference is that the other figure counts restatements of the outcome column.
+
+---
+
+## D-042 - The unevidenced values already in the corpus are counted, not rejected
+
+**Decision.** A condition dimension holding a positive value with no evidence
+entry raises `W017_CONDITION_WITHOUT_EVIDENCE`, a warning. It is not a hard
+finding, so the 362 records curated before v0.3.0 remain admissible.
+
+**Why.** Making it hard would reject the entire dataset at the moment the rule
+was introduced, which is not a standard being enforced but a dataset being
+deleted. The values are not worthless: they were read from a passage by an
+extraction pass whose output was quote-verified, and they are what the first
+corpus was measured on. What is missing is the sentence that lets a reader check
+one without re-reading the paper.
+
+**What the warning is for.** Counting. The QC report says how many condition
+*values* and how many *records* are in that state, so the remaining gap is a
+number in a report rather than an impression. A later pass closes it by
+attaching evidence to values it confirms, and the count is how progress is
+visible.
+
+**Why not retro-fit evidence by searching for a sentence that agrees.** Because
+that is confirmation bias mechanised: searching a paper for a sentence matching
+a value you already hold will find one in a paper that mentions both sexes, and
+the resulting entry would document agreement that was never tested. The fill
+derives the value from the paper first and compares second, which is the only
+order in which a disagreement can surface.
+
+---
+
+---
+
+## D-043 - An age at the start of a protocol is not the age at measurement
+
+**Decision.** An age statement is refused when its sentence also carries a
+protocol-start or protocol-duration cue -- "starting at", "beginning at", "from
+N weeks of age", "for N consecutive weeks". Named refusal:
+`refused_protocol_start_age_is_not_measurement_age`. Separately, if **any** age
+statement in a paper's Methods is refused for any reason, the paper's `age_group`
+verdict may not be `constant`.
+
+**Why.** Both halves came from one sentence in
+`doi:10.1038/s41467-018-05711-6`: *"C57BL/6 mice were fed with HFD for 12
+consecutive weeks (starting at 5 weeks of age)."* The first draft of the
+extractor read 5 weeks, converted it, and returned `age_group = juvenile`. Those
+animals were five weeks old when their diet began and roughly seventeen weeks
+old when anything was measured in them. `juvenile` is not a slightly imprecise
+answer, it is the wrong band, and it is wrong about the only thing the band is
+for: the animal's state when the readout was taken.
+
+**The second half is the subtler bug.** That paper's first Methods paragraph
+says "8-10-week-old ... male Sprague Dawley rats and C57/BL6 WT mice", which the
+rat refusal (D-003's mouse-only boundaries) correctly skipped. With that
+statement gone the 5-week statement stood alone, looked unanimous, and was
+promoted to `constant`. A refusal is evidence that the paper states an age the
+rule cannot use; treating the survivors as consensus turns a declined reading
+into a confident one. That is cherry-picking implemented as a loop, and it is
+invisible in the output -- the verdict says `constant` and names a real quote.
+
+**Also.** No age band is assigned unless the paper's species is established as
+mouse. The same paper returned `species = None`, because its Methods name both
+mice and rats, while still receiving a mouse band. `assign_age_group` refuses
+every non-mouse by design (D-003), and passing it a hard-coded
+`"mus_musculus"` for a paper whose species is unresolved bypasses that refusal
+rather than satisfying it.
+
+---
+
+## D-044 - A `constant` verdict must be established, not merely undetected
+
+**Decision.** The condition extractor may return `constant` for a dimension only
+when the absence of a second value has been *established*. Every refused
+sentence, every skipped statement and every term the vocabulary does not
+recognise forces the verdict away from `constant`. Specifically: an unclassified
+diet-shaped token (`\b\w*\s?diet\b`, `chow`, or an abbreviation of the `HFD` /
+`ND` / `NCD` / `LFD` shape) yields `varies` and names the token; a disjunction
+("fed either a ND or a HFD") yields `varies` whatever its arms are called; a
+cohort sentence scoped to one figure or one procedure does not vote at paper
+level; and a disjunctive sex ("male or female mice") votes nothing rather than
+`both`.
+
+**Why.** Every one of these was a real wrong answer in the first draft, found by
+reading all 42 papers' extracted values against the sentence each came from. The
+worst was `doi:10.1016/j.isci.2024.110259`:
+
+> "Mice were fed either a ND (18% fat ...) or a HFD (45% fat ..."
+
+a plain diet-comparison study, returned as `constant high_fat`. The cause was
+that the synonym table I wrote listed `NCD`, `SCD` and `normal diet` but not the
+bare `ND`, so one arm of the comparison was simply invisible, the other stood
+unopposed, and the rule concluded the paper held diet constant. All four of that
+paper's records would have been stamped `high_fat` on the strength of a missing
+dictionary entry.
+
+**The shape of the bug is what matters, not the instance.** `constant` is a
+claim about what the paper does *not* contain, and a claim about absence drawn
+from a lexicon is only as good as the lexicon. Adding `ND` fixes this paper and
+leaves the next abbreviation to be found by whoever reads the dataset. So the
+rule fails closed: anything diet-shaped that the table cannot classify is
+evidence that the table is incomplete, and an incomplete table must produce a
+refusal.
+
+The same reasoning retired three other readings. A sentence saying "Experiments
+(Figure 3) were performed in female mice only" was read as a paper-level
+`female`, when the word "only" beside a figure reference says precisely that the
+paper has other figures with other animals. A slice-preparation sentence reading
+"male or female mice were deeply anesthetized" was read as `both`, when a
+disjunction leaves any individual record's sex unresolved. And "animals with the
+expected ... response to chow" was read as `diet = chow`, when the chow in that
+sentence is a stimulus presented during a recording.
+
+**The contrast with D-040 is the useful part.** A stereotaxic surgery sentence
+*is* admissible evidence for `sex`, because an animal's sex does not change
+between surgery and readout, and inadmissible for `challenge`, because its
+feeding state does. What makes a sentence evidence is not where it sits in the
+Methods but whether the property it states is invariant between that sentence
+and the measurement. `sex` is invariant, `diet` is invariant over weeks and so
+survives a housing sentence, `age_group` is invariant only if the sentence
+describes the animals at the experiment rather than at the start of a protocol
+(D-043), and `challenge` is invariant over nothing at all (D-040).
+
+**One marked exception, where the value is kept and the doubt is published.**
+Where a record's quote carries a state token that a trap rule excluded *and* a
+different token that matched, the extraction is returned rather than refused,
+under the distinct rule name
+`quote_names_the_state_with_a_competing_token`, with both tokens named in the
+notes. The case that prompted it:
+
+> "chow-fed Htr2cSim1KO mice exhibited an anorectic response to a sub-anorectic
+> dose of dFen (1 mg/kg) that otherwise did not suppress refeeding (during the
+> first 2 h) in wild-type littermates"
+
+`chow-fed` is correctly excluded as a diet compound, which leaves `refeeding`
+unopposed, which is the promotion-after-a-refusal shape this entry otherwise
+forbids. `refed` is probably right, and `challenge` is the scarcest dimension in
+this corpus, so refusing it costs more than publishing the doubt. The rule name
+is what makes that choice visible: these extractions are counted on their own
+line in the fill report, so the set a human has to re-read is small and named
+rather than mixed into the rest.
+
+---
+
+## D-045 - The age band's evidence is its quote plus the rule that read it
+
+**Decision.** All four condition dimensions carry their own evidence entry,
+`age_group` included. An `age_group` entry quotes the sentence stating the age
+and names the rule that converted it (`EVIDENCE_DIMENSIONS`, the identity
+mapping in `EVIDENCE_FOR_CONDITION`). An alternative was built and reverted:
+entries keyed on `age_value` instead, so that the quote and the value it
+supports would be the same fact.
+
+**The objection that prompted it is a good one.** A reviewer reading the
+fixtures pointed out that an entry pairing *"mice were 12 weeks old at
+surgery"* with the value `young_adult` offers a quote that does not contain the
+value. A009 asks for the sentence a value came from and A011 asks the entry to
+agree with its field, and for a value no paper writes, those look
+irreconcilable.
+
+**Why it was reverted anyway.** Two measurements.
+
+Half of this corpus's age statements are ranges -- "8-10-week-old",
+"6-24 weeks", "2-3 months" -- 16 ranges against 15 scalars across the 42
+papers. A range yields a band when both of its ends fall in one band, and
+yields no number to put in `age_value`. Keying the evidence on `age_value`
+would therefore have left about half the filled bands with no entry at all,
+flagged by `W017` as unevidenced, while the sentence that settles them sat in
+the paper unquoted. That is a worse account of the evidence, not a better one.
+
+And the objection proves too much. **No condition value is literally present
+in its own quote.** `diet = chow` comes from "animals received ad libitum
+access to standard rodent chow (ssniff V1554)", and `sex = male` from "C57Bl/6,
+db/+ and db/db male mice were purchased from CLEA Japan". Every entry in this
+schema pairs a sentence with the schema's term for what the sentence says. The
+mapping is the curation.
+
+**What is genuinely different about the age, and what follows.** Its mapping is
+*parametric* rather than lexical: arithmetic against a boundary table that
+could be revised without a single quote becoming wrong (D-003 records that
+those boundaries were a judgement call). So an `age_group` entry is the one
+whose audit needs both halves -- the `quote` for what the paper stated, and
+`rule` for how the band was reached -- where the other three are checkable from
+the quote alone. That is the reason `rule` is on the entry at all.
+
+**A limitation this surfaced, which is not fixed.** `W009` checks a stored
+`age_group` against `assign_age_group(age_value, age_unit, species)`, and for a
+range-stated age `age_value` is null, so the rule returns `not_reported` and
+the check cannot run. **A band derived from a range is not mechanically
+verifiable by anything in this repository**, whichever field its evidence hangs
+on. It is verifiable by a reader, from the quote and the rule name, which is
+why both are stored. Making it machine-checkable needs a representation for a
+stated range, and that is a schema change with no demand behind it yet.
+
+**On the process.** This entry records a change that was made, tested green,
+reviewed, rebuilt the other way, measured, and reverted. The measurement is
+what decided it, and it was cheap: counting scalars against ranges took one
+command. The first version was reverted because it was right about the
+principle and wrong about this corpus.
+
+---
+
+## D-046 - A version artefact is set aside on both sides, in every comparison
+
+**Decision.** `S005` and `S006` -- the findings that fire when a file's
+`schema_version` is not the validator's -- are excluded from **both** sides of
+every before/after comparison in `syn4rch.curate.migrate`, including the
+`records_hard_clean` figure, via one shared `_non_artefact` helper. And
+`read_records` strips the fields retired after 0.2.0 (`condition_source`,
+`condition_locator`) so that a file this module wrote stays readable by the
+code that reads it.
+
+**Why, and what it was hiding.** Pinning the 0.1.0 -> 0.2.0 migration's target
+to the literal `0.2.0` (so it would not drift when the schema moved to 0.3.0)
+exposed two latent faults at once.
+
+The first stopped the migration from writing anything: `cmd_run`'s gate
+filtered the artefacts out of the *baseline* and not out of the result, so once
+the output declared a version older than the validator, every output record
+tripped `S006` and the gate read it as `+362` hard findings the migration had
+introduced. The report and the gate disagreed about what they were comparing,
+and the disagreement was invisible for as long as the target version tracked
+the schema package.
+
+The second was a published number. `reports/schema_migration_0.2.0.md` read
+*"0 of 362 input records carried no hard finding at all, and 362 of 362 do
+now"*, which flatters the migration and contradicts the sentence immediately
+after it, which sets `S005` and `S006` aside and states that neither file
+carries a hard finding. The `0` was produced entirely by a 0.1.0 file being
+validated by newer code. Both columns now read 362, and the regenerated report
+says what the correction was.
+
+**And the report stays recomputable.** Once 0.3.0 removed two fields, 0.3.0
+code could no longer read a 0.2.0 file at all, which silently cost this
+repository the ability to check the published migration numbers --
+`docs/CURATION_PROTOCOL.md` 6 forbids exactly that. Teaching the reader which
+keys were retired restores it. The strip is targeted rather than
+`strict=False`, which would also have swallowed a misspelled field name, and a
+retired field found holding a non-null value is still refused: both were null
+on all 362 records, and that is the only reason retiring them was free.
+
+**One consequence to read carefully.** Recomputation runs under current code,
+so a rule introduced *after* a migration appears in that migration's table.
+`W017`, added by v0.3.0, counts 209 records with a condition value carrying no
+verbatim sentence. It describes a gap the 0.2.0 migration never claimed to
+close, and the report now says so rather than leaving a reader to wonder how a
+2026 migration failed a rule that did not exist.
+
+---
+
+## D-047 - What filling the conditions measured, including the prediction that failed
+
+**The pass.** `syn4rch.curate.fill_conditions` read the 42 curated papers and
+wrote 362 records at v0.3.0. Per dimension — filled / corrected / confirmed /
+conflicted: `sex` 112 / 7 / 55 / 2, `diet` 86 / 11 / 7 / 0, `age_group` 36 / 0 /
+0 / 0, `challenge` 25 / 0 / 0 / 0. 227 of 362 `record_id`s changed. 332 evidence
+entries on 245 records, 307 from Methods and 25 from a record's own passage; all
+332 resolved to the passage their locator names with the quote found there.
+165 named refusals across 13 rules. Nulls: `sex` 224 → 112, `diet` 197 → 111,
+`age_group` 286 → 250, `challenge` 362 → 337.
+
+**What it bought, and it is not the headline I expected.** Cross-study
+conflicting claims fell from 9 to 4 and the last directly-opposed pair from 1 to
+0 (QC, 362 records; the feasibility report's 2 → 1 counts the same change over
+its 347 usable records). But the decomposition matters more than the count. Of
+the 9 conflicts, **4 split because two records state genuinely different
+conditions** and **5 split because one record states a condition the other
+leaves unknown**. The second kind is not a contradiction resolved; it is a
+comparison withdrawn, and this corpus cannot say whether the two experiments
+agreed.
+
+The real gain is in *replication quality*. Before the fill the corpus held 11
+multi-study claims, **8 of which matched at condition specificity 0** — grouped
+together partly because nobody knew their conditions. After it there are 5, and
+**none of them matches on nothing known**: 4 sit at 1 of 4 stated slots and 1 at
+2 of 4. Records knowing no condition slot at all fell from 153 to 46. So the
+count halved and what remains is qualified, which is the trade this dimension
+exists to make.
+
+**The prediction I wrote down beforehand, and it failed.** `reports/` recorded
+that 7 multi-study cells had been lost *only* because one paper stated a
+condition the other omitted, and I expected a curation pass to let some of them
+be adjudicated. It went the other way: **7 became 10**. Filling the conditions a
+paper reports makes that paper *less* comparable with a paper that reports none,
+because `unknown` matches no stated value. Partial condition curation therefore
+increases unadjudicable non-comparability, and only curating *both* sides of a
+pair can reduce it. The honest summary of the cost line is that 32 of 35
+multi-study pooled cells gave up their replication — 18 to different
+perturbations, 4 to genuinely different conditions, and 10 to this asymmetry.
+
+**And D-036 stands, now measured on data instead of absence.** D-036 said
+conditioning the model hurts slightly and that the measurement should be re-run
+once the conditions were curated, because it was then "of a condition dimension
+that exists in the schema and not yet in the data". Re-run: conditioned against
+axis-only, under `study_id`, **−0.006 [−0.021, +0.006]**, 0.479 against 0.485,
+McNemar p=0.754, verdict `no_difference`. The pooled figure is the same −0.006 it
+was on empty conditions, and on the rows whose conditioned cell was seen in
+training it is now **−0.061**, worse than the −0.028 it was before.
+
+The mechanism is the one D-036 named, and filling the dimension sharpened it.
+The cell refinement table now reads 95 → 203 → **268** cells, singletons 50.5% →
+69.5% → **81.3%**, in-sample purity 0.632 → 0.809 → **0.898**. Real condition
+information makes the conditioned cell *finer*, so more of it is singletons, so
+it generalises worse. Four fifths of conditioned cells hold one record.
+
+**One thing the re-run did establish**, reported separately because it is a
+different question: on the 49 rows whose conditioned cell was seen in training,
+the conditioned baseline scores 0.673 against 0.327 for guessing the mode —
+**+0.347 [+0.077, +0.695]**, McNemar p=0.006, verdict `established`. Where a
+conditioned cell exists it is strongly informative. It just loses to the
+unconditioned axis cell on those same rows (0.673 against 0.735), because the
+coarser cell has more evidence in it. Both facts are true and neither is the
+headline.
+
+The circuit-activity signal is untouched: 0.517 against 0.397, +0.121 [+0.008,
++0.271], McNemar p=0.156, still `suggestive` (D-028).
+
+**So the condition dimension is still kept on the integrity argument alone**, and
+that argument is now stronger than it was: it is what took 8 of 11 replications
+off a match on mutual ignorance. It remains useless for prediction, and three
+schema versions of work on it have not made it otherwise.
+
+**What would change the verdict now.** Not more of this. `challenge` reaches 25
+records because the only admissible source for it is the record's own passage
+(D-040), and `age_group` reaches 43 because most stated ages are at surgery, at
+vendor arrival or at the start of a diet (D-043). No claim in the corpus reaches
+specificity 4 of 4, so no replication figure here describes two experiments known
+to have matched on all four conditions — the same sentence this project wrote
+before the pass, still true after it. Closing that needs the condition recorded
+per figure panel by a human reading the paper, which is curation, not parsing.

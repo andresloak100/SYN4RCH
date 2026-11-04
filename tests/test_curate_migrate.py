@@ -20,6 +20,7 @@ from contextlib import redirect_stdout, redirect_stderr
 import synthetic
 from syn4rch.curate.migrate import (
     AMBIGUOUS,
+    CONDITION_FIELDS_STILL_IN_THE_SCHEMA,
     CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL,
     FROM_VERSION,
     NO_MATCH,
@@ -77,6 +78,12 @@ def v010_record(**overrides) -> TierARecord:
 
     The v0.2.0 fields are cleared and ``record_id`` is the seven-component
     v0.1.0 hash, so this is what the migration actually meets on disk.
+
+    ``condition_evidence`` is cleared too. It is a v0.3.0 field, so a v0.1.0
+    file cannot carry one, and leaving the fixture's four entries on a record
+    whose ``challenge`` has just been cleared would make the input assert
+    provenance for a value it no longer holds (A011) -- a defect of the
+    fixture, not of the migration under test.
     """
     record = synthetic.good_record(**overrides)
     data = record.to_dict()
@@ -86,8 +93,9 @@ def v010_record(**overrides) -> TierARecord:
         "perturbation_polarity",
         "target_raw",
         "target_id",
-    ) + CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL:
+    ) + CONDITION_FIELDS_STILL_IN_THE_SCHEMA:
         data[name] = None
+    data["condition_evidence"] = []
     data["record_id"] = compute_record_id_0_1_0(data)
     return TierARecord.from_dict(data)
 
@@ -159,6 +167,17 @@ class DerivedFieldsTest(unittest.TestCase):
         self.assertEqual(migrated.perturbation_polarity.value, "remove")
 
     def test_migrated_records_carry_no_new_hard_finding(self):
+        """The migration removes the id finding and introduces nothing.
+
+        The version finding stays, and must: these records declare v0.2.0,
+        which is what this migration targets, and they are being validated by
+        v0.3.0 code. ``S006`` on a v0.2.0 record read by v0.3.0 code is the
+        version marker doing its job, not a defect the migration left behind,
+        which is why it is one of ``migrate._VERSION_ARTEFACT_CODES`` and is
+        excluded from the before/after comparison the CLI refuses on. What
+        this test pins is that ``S005`` is gone (every id was recomputed) and
+        that nothing else appeared.
+        """
         record = v010_record(method="conditional_knockout", valence="unclear")
         before = {f.code for f in validate(record) if f.severity is Severity.HARD}
         self.assertEqual(
@@ -166,43 +185,92 @@ class DerivedFieldsTest(unittest.TestCase):
         )
         migrated, _ = migrate_record(record, fixture_index())
         self.assertEqual(
-            [f.code for f in validate(migrated) if f.severity is Severity.HARD], []
+            [f.code for f in validate(migrated) if f.severity is Severity.HARD],
+            ["S006_SCHEMA_VERSION_MISMATCH"],
         )
 
 
 class ConditionFieldsTest(unittest.TestCase):
     """The four condition fields are never invented. This is the whole point."""
 
+    def test_the_two_lists_of_condition_fields_agree(self):
+        """Four slots were named; two of them are still schema fields.
+
+        ``CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL`` names the v0.2.0
+        schema's four, because the slot count in
+        ``reports/schema_migration_0.2.0.md`` is a statement about v0.2.0 and
+        has to stay reproducible. ``condition_source`` and
+        ``condition_locator`` were retired in v0.3.0, so only the live subset
+        may be read off a record -- and the subset is derived, not listed, so
+        the two cannot disagree.
+        """
+        self.assertEqual(len(CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL), 4)
+        live = set(TierARecord.field_names())
+        self.assertEqual(
+            CONDITION_FIELDS_STILL_IN_THE_SCHEMA,
+            tuple(
+                name
+                for name in CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL
+                if name in live
+            ),
+        )
+        self.assertEqual(
+            CONDITION_FIELDS_STILL_IN_THE_SCHEMA, ("challenge", "challenge_detail")
+        )
+
     def test_condition_fields_stay_null(self):
         record = v010_record()
         migrated, _ = migrate_record(record, fixture_index())
-        for name in CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL:
+        for name in CONDITION_FIELDS_STILL_IN_THE_SCHEMA:
             self.assertIsNone(
                 getattr(migrated, name),
                 "%s was filled by the migration; it requires reading the paper"
                 % name,
             )
+        # The retired pair is held to the same rule a fortiori: the migration
+        # cannot fill a field the schema no longer has. Asserted rather than
+        # assumed, so that re-adding one of them puts it back under the loop
+        # above instead of quietly escaping it.
+        for name in CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL:
+            if name in CONDITION_FIELDS_STILL_IN_THE_SCHEMA:
+                continue
+            self.assertNotIn(name, TierARecord.field_names())
+            self.assertNotIn(name, migrated.to_dict())
 
     def test_not_reported_is_not_written_either(self):
         # ``not_reported`` is a claim that a curator checked the paper
         # (SCHEMA.md 3.3b). The migration checked nothing, so it may not say so.
         migrated, _ = migrate_record(v010_record(), fixture_index())
-        for name in CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL:
+        for name in CONDITION_FIELDS_STILL_IN_THE_SCHEMA:
             value = getattr(migrated, name)
             self.assertNotEqual(getattr(value, "value", value), "not_reported")
 
+    def test_no_condition_evidence_is_invented_either(self):
+        """v0.3.0's successor to the pair is out of reach for the same reason.
+
+        An evidence entry is a verbatim quote and the passage it came from.
+        This code has read no passage, so it may not write one, and a v0.2.0
+        file has nowhere to put one anyway.
+        """
+        migrated, _ = migrate_record(v010_record(), fixture_index())
+        self.assertEqual(migrated.condition_evidence, [])
+
     def test_a_curated_condition_value_is_preserved(self):
+        """A value a curator did write survives untouched.
+
+        Two fields rather than the original four: ``condition_source`` and
+        ``condition_locator`` were retired in v0.3.0, and a v0.1.0 input
+        carrying them would no longer load at all. The guarantee is unchanged
+        for every condition field that still exists.
+        """
         record = v010_record()
         data = record.to_dict()
         data["challenge"] = "fasted"
         data["challenge_detail"] = "16 h synthetic fast"
-        data["condition_source"] = "methods"
-        data["condition_locator"] = "Methods para 2 (synthetic)"
         data["record_id"] = compute_record_id_0_1_0(data)
         migrated, _ = migrate_record(TierARecord.from_dict(data), fixture_index())
         self.assertEqual(migrated.challenge.value, "fasted")
-        self.assertEqual(migrated.condition_source.value, "methods")
-        self.assertEqual(migrated.condition_locator, "Methods para 2 (synthetic)")
+        self.assertEqual(migrated.challenge_detail, "16 h synthetic fast")
 
     def test_curated_subject_fields_are_untouched(self):
         record = v010_record(sex="female", diet="high_fat")
@@ -498,7 +566,13 @@ class IdempotenceTest(unittest.TestCase):
         )
 
     def test_a_record_already_at_0_2_0_is_not_double_migrated(self):
+        # Stamped at TO_VERSION explicitly. The fixture builder stamps the
+        # version the schema package implements, which is no longer this
+        # migration's target: a record at 0.3.0 is not a record this migration
+        # has already produced, and the re-stamp would be the only difference
+        # the assertion below found.
         already = synthetic.good_record(
+            schema_version=TO_VERSION,
             method="conditional_knockout",
             valence="unclear",
             actuator=None,
@@ -594,10 +668,15 @@ class CliTest(unittest.TestCase):
 
         from syn4rch.schema.io import read_jsonl
 
-        for record in read_jsonl(self.records_path):
+        # Read at TO_VERSION, not at the version this code implements: the
+        # output of a migration to v0.2.0 is a v0.2.0 file, and
+        # ``syn4rch.schema.io`` is right to refuse it by default. The one hard
+        # finding left is that same version difference; S005 is gone, which is
+        # the part the migration is responsible for.
+        for record in read_jsonl(self.records_path, expect_version=TO_VERSION):
             self.assertEqual(
                 [f.code for f in validate(record) if f.severity is Severity.HARD],
-                [],
+                ["S006_SCHEMA_VERSION_MISMATCH"],
                 record.record_id,
             )
 
@@ -631,7 +710,11 @@ class CliTest(unittest.TestCase):
     def test_run_refuses_a_file_that_is_not_at_0_1_0(self):
         write_jsonl_text(
             self.records_path,
-            [synthetic.good_record()],  # already at TO_VERSION
+            # Already at TO_VERSION, which is the migration's own output and
+            # the case the extra hint in the refusal is for. Spelled against
+            # TO_VERSION rather than taken from the fixture builder, which
+            # stamps whatever the schema package implements today.
+            [synthetic.good_record(schema_version=TO_VERSION)],
         )
         before = read_bytes(self.records_path)
         code, _out, err = self.run_cli(self.base_argv())
@@ -644,13 +727,22 @@ class CliTest(unittest.TestCase):
         self.assertFalse(os.path.exists(self.backup))
 
     def test_run_refuses_an_unknown_version_rather_than_guessing(self):
+        # A version this migration knows nothing about. It used to be spelled
+        # "0.3.0", which the v0.3.0 bump turned into a real schema version:
+        # had TO_VERSION still been tracking the schema package, this test
+        # would have passed through the "already at the target version" branch
+        # instead and stopped testing what it names. Spelled so that neither
+        # FROM_VERSION nor TO_VERSION can ever become it.
+        unknown = "0.0.0-no-such-schema-version"
+        self.assertNotIn(unknown, (FROM_VERSION, TO_VERSION))
         data = self.corpus[0].to_dict()
-        data["schema_version"] = "0.3.0"
+        data["schema_version"] = unknown
         with open(self.records_path, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(json.dumps(data) + "\n")
         code, _out, err = self.run_cli(self.base_argv())
         self.assertEqual(code, 2)
-        self.assertIn("0.3.0", err)
+        self.assertIn(unknown, err)
+        self.assertNotIn("already at", err)
 
     def test_run_refuses_a_mixed_version_file(self):
         mixed = list(self.corpus[:2]) + [synthetic.good_record()]

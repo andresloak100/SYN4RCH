@@ -20,6 +20,91 @@ from syn4rch.schema.rules import (
 #: Prefix every fabricated study identifier carries.
 SYNTHETIC_PREFIX = "synthetic:"
 
+#: One fabricated :class:`~syn4rch.schema.record.ConditionEvidence` entry per
+#: condition dimension (schema v0.3.0), keyed by dimension. ``good_record``
+#: carries one for every dimension it holds a positive value for, which is what
+#: keeps it clear of W017. Two sources are represented on purpose: a record's
+#: sex is typically stated in Methods while its acute state is stated by the
+#: passage the record was read from, and a fixture that only ever says
+#: ``methods`` could not exercise the difference. Every quote here is
+#: fabricated, like everything else in this module.
+_CONDITION_EVIDENCE = {
+    "sex": {
+        "dimension": "sex",
+        "value": "male",
+        "source": "methods",
+        "locator": "Methods para 1",
+        "quote": "Synthetic quote: male mice were used throughout.",
+        "rule": "synthetic",
+    },
+    "diet": {
+        "dimension": "diet",
+        "value": "chow",
+        "source": "methods",
+        "locator": "Methods para 1",
+        "quote": "Synthetic quote: animals were fed standard chow.",
+        "rule": "synthetic",
+    },
+    # The band's quote states the age and its ``rule`` names the derivation:
+    # the one dimension whose audit needs both halves (D-045).
+    "age_group": {
+        "dimension": "age_group",
+        "value": "young_adult",
+        "source": "methods",
+        "locator": "Methods para 1",
+        "quote": "Synthetic quote: mice were 12 weeks old at surgery.",
+        "rule": "synthetic",
+    },
+    "challenge": {
+        "dimension": "challenge",
+        "value": "ad_libitum",
+        "source": "passage",
+        "locator": "Results para 1",
+        "quote": "Synthetic quote: measured in ad libitum fed animals.",
+        "rule": "synthetic",
+    },
+}
+
+
+def condition_evidence_for(data) -> list:
+    """The evidence entries the condition values in ``data`` require.
+
+    Derived from the record's own condition values rather than fixed, for the
+    same reason ``perturbation_class`` is derived (see :func:`good_record`).
+    Schema v0.3.0 made an evidence entry a claim about *one particular value*,
+    so ``good_record(sex="female")`` carrying the default ``sex`` entry would
+    assert provenance for a value the record no longer holds and earn a HARD
+    ``A011_CONDITION_EVIDENCE_VALUE_MISMATCH``. A test that changes a condition
+    to make a different claim would then be testing a malformed record.
+
+    A dimension left ``null`` gets no entry, and neither does one recorded as
+    ``not_reported``: that value asserts an absence, and an absence has no
+    sentence to quote (A009, A011).
+    """
+    out = []
+    for dimension, template in _CONDITION_EVIDENCE.items():
+        value = data.get(dimension)
+        value = getattr(value, "value", value)
+        if value is None or value == "not_reported":
+            continue
+        entry = dict(template)
+        # The entry asserts provenance for the field it names, which for an age
+        # band is ``age_value`` rather than the band itself.
+        claimed_field = entry["dimension"]
+        claimed = data.get(claimed_field, value)
+        claimed = getattr(claimed, "value", claimed)
+        if claimed is None:
+            continue
+        claimed = str(claimed)
+        if claimed != entry["value"]:
+            entry["value"] = claimed
+            entry["quote"] = (
+                "Synthetic quote: the %s of this cohort was %s (fabricated)."
+                % (claimed_field, claimed)
+            )
+        out.append(entry)
+    return out
+
 
 def good_record(**overrides) -> TierARecord:
     """A fabricated record that satisfies every rule, hard and soft.
@@ -64,8 +149,9 @@ def good_record(**overrides) -> TierARecord:
         # about a *missing* condition has to say so explicitly.
         challenge="ad_libitum",
         challenge_detail="fed ad libitum (fabricated)",
-        condition_source="passage",
-        condition_locator=None,
+        # schema v0.3.0: every positive condition value carries its own
+        # evidence entry, or the record earns W017. Filled in below from
+        # ``_CONDITION_EVIDENCE`` once the caller's overrides are known.
         method="chemogenetic",
         actuator="synthetic-actuator",
         valence="activation",
@@ -130,6 +216,12 @@ def good_record(**overrides) -> TierARecord:
         data["perturbation_polarity"] = perturbation_polarity_from(
             data.get("method"), data.get("valence")
         )
+    # ``condition_evidence`` is derived for the same reason (schema v0.3.0):
+    # an entry is provenance for one value, so it has to follow whatever
+    # condition values the caller ended up with. See
+    # :func:`condition_evidence_for`.
+    if "condition_evidence" not in overrides:
+        data["condition_evidence"] = condition_evidence_for(data)
     return TierARecord(**data)
 
 

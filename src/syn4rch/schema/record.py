@@ -1,6 +1,6 @@
 """The Tier A record: one (population x perturbation x readout x study) observation.
 
-Field-for-field implementation of SCHEMA.md 3.1-3.6 (v0.2.0).
+Field-for-field implementation of SCHEMA.md 3.1-3.6 (v0.3.0).
 
 Design note -- why almost every field has a default of ``None``:
 ``TierARecord`` is a *container*, not a gate. Rule 4 of SCHEMA.md ("if a field
@@ -50,6 +50,10 @@ __all__ = [
     "SCHEMA_VERSION",
     "RECORD_ID_FIELDS",
     "RECORD_ID_LENGTH",
+    "CONDITION_DIMENSIONS",
+    "EVIDENCE_DIMENSIONS",
+    "EVIDENCE_FOR_CONDITION",
+    "ConditionEvidence",
     "SchemaCoercionError",
     "TierARecord",
     "compute_record_id",
@@ -61,7 +65,14 @@ __all__ = [
 #: 0.2.0 added the condition dimension and split the perturbation axis. Every
 #: ``record_id`` in the corpus changed, because the hash input set changed.
 #: See docs/DECISIONS.md (D-023 .. D-026).
-SCHEMA_VERSION = "0.2.0"
+#:
+#: 0.3.0 gave the condition dimension per-dimension provenance
+#: (:class:`ConditionEvidence`) and retired the record-level
+#: ``condition_source``/``condition_locator`` pair, which was never populated.
+#: ``record_id`` is unaffected by that change, but the curation pass that filled
+#: ``sex``, ``diet``, ``age_group`` and ``challenge`` re-identified every record
+#: it touched, because all four are hash components. See D-037 .. D-041.
+SCHEMA_VERSION = "0.3.0"
 
 #: Length (hex characters) of ``record_id``. 16 hex chars = 64 bits; with a
 #: corpus of ~10^5 records the collision probability is ~3e-10.
@@ -238,7 +249,6 @@ _ENUM_FIELDS = {
     "age_group": AgeGroup,
     "diet": Diet,
     "challenge": Challenge,
-    "condition_source": ConditionSource,
     "method": PerturbationMethod,
     "valence": Valence,
     "perturbation_class": PerturbationClass,
@@ -263,6 +273,110 @@ _ENUM_LIST_FIELDS = {
 
 #: Fields holding a list of plain strings.
 _STR_LIST_FIELDS = ("marker_genes", "conflicts_with")
+
+
+#: The four dimensions of the condition (SCHEMA.md 3.3b). Each may carry its own
+#: evidence entry, because a record's sex is typically stated in Methods while
+#: its acute state, when stated at all, is stated by the passage the record was
+#: read from.
+CONDITION_DIMENSIONS = ("sex", "diet", "age_group", "challenge")
+
+#: The fields a condition evidence entry may describe: the same four.
+#:
+#: An ``age_value`` entry was tried instead of an ``age_group`` one, on the
+#: argument that a quote reading "12 weeks old" does not contain the word
+#: ``young_adult``, and was reverted (D-045). Two things sank it. Half this
+#: corpus's age statements are *ranges* -- "8-10-week-old", "6-24 weeks" --
+#: which yield a band when both ends agree but no scalar to store, so the split
+#: would have left half the bands with no entry at all while the sentence sat
+#: right there. And no condition value is literally present in its own quote:
+#: "standard rodent chow (ssniff V1554)" becomes ``chow`` by a mapping too.
+#:
+#: What *is* true of the age and of nothing else here is that its mapping is
+#: **parametric** rather than lexical -- arithmetic against a boundary table
+#: that could be revised without any quote becoming wrong (D-003). So an
+#: ``age_group`` entry is the one whose audit needs both halves: the quote for
+#: what the paper said, and ``rule`` for how the band was reached.
+EVIDENCE_DIMENSIONS = CONDITION_DIMENSIONS
+
+#: Which evidence dimension answers for which condition dimension. The
+#: identity, kept as a named mapping because the question "what evidence would
+#: settle this dimension?" is worth asking in one place.
+EVIDENCE_FOR_CONDITION = {name: name for name in CONDITION_DIMENSIONS}
+
+
+@dataclass
+class ConditionEvidence:
+    """Why one condition dimension on one record holds the value it holds.
+
+    One entry per filled dimension. The entry exists *because* a verbatim
+    sentence was found, which is why ``quote`` and ``locator`` are both
+    mandatory and why there is no entry for a dimension left ``null``.
+
+    There is also no entry for a dimension recorded as ``not_reported``: that
+    value asserts an absence, and an absence cannot be quoted. ``not_reported``
+    is therefore the one condition value that carries no evidence, and
+    :mod:`syn4rch.schema.validate` enforces the distinction in both directions
+    (A009, A011).
+
+    ``rule`` names the extraction rule that fired, so that a wrong value can be
+    traced to the rule that produced it and the rule corrected for every record
+    at once rather than one record at a time. It is an audit field: nothing
+    reads it to make a decision.
+    """
+
+    #: One of :data:`EVIDENCE_DIMENSIONS`.
+    dimension: str = ""
+    value: str = ""
+    source: Optional[ConditionSource] = None
+    locator: str = ""
+    quote: str = ""
+    rule: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        self.source = _coerce_enum(ConditionSource, self.source, "source")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "dimension": self.dimension,
+            "value": self.value,
+            "source": self.source.value if self.source is not None else None,
+            "locator": self.locator,
+            "quote": self.quote,
+            "rule": self.rule,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Any) -> "ConditionEvidence":
+        if isinstance(data, cls):
+            return data
+        if not isinstance(data, dict):
+            raise SchemaCoercionError(
+                "condition_evidence entries must be objects, got %s"
+                % type(data).__name__
+            )
+        known = {"dimension", "value", "source", "locator", "quote", "rule"}
+        unknown = sorted(set(data) - known)
+        if unknown:
+            raise SchemaCoercionError(
+                "unknown condition_evidence key(s) %s"
+                % ", ".join(repr(u) for u in unknown)
+            )
+        return cls(**data)
+
+
+def _coerce_evidence_list(value: Any, field_name: str) -> List[ConditionEvidence]:
+    if value is None:
+        return []
+    if isinstance(value, (str, bytes)) or not hasattr(value, "__iter__"):
+        raise SchemaCoercionError(
+            "%s must be a list of objects, got %r" % (field_name, value)
+        )
+    return [ConditionEvidence.from_dict(v) for v in value]
+
+
+#: Fields holding a list of dataclass objects: name -> coercion function.
+_OBJ_LIST_FIELDS = {"condition_evidence": _coerce_evidence_list}
 
 
 @dataclass
@@ -313,8 +427,11 @@ class TierARecord:
     # condition dimension, v0.2.0 (SCHEMA.md 3.3b, DECISIONS.md D-023/D-024)
     challenge: Optional[Challenge] = None
     challenge_detail: Optional[str] = None
-    condition_source: Optional[ConditionSource] = None
-    condition_locator: Optional[str] = None
+    #: Per-dimension provenance for the condition, v0.3.0 (D-037). Replaces the
+    #: record-level ``condition_source``/``condition_locator`` pair, which could
+    #: describe only one dimension and so could not describe a record whose sex
+    #: came from Methods and whose challenge came from its own passage.
+    condition_evidence: List["ConditionEvidence"] = field(default_factory=list)
 
     # --- 3.4 perturbation --------------------------------------------------
     method: Optional[PerturbationMethod] = None
@@ -388,6 +505,8 @@ class TierARecord:
             )
         for name in _STR_LIST_FIELDS:
             setattr(self, name, _coerce_str_list(getattr(self, name), name))
+        for name, coerce in _OBJ_LIST_FIELDS.items():
+            setattr(self, name, coerce(getattr(self, name), name))
         if not self.record_id:
             self.record_id = self.compute_id()
 
@@ -410,7 +529,10 @@ class TierARecord:
             value = getattr(self, f.name)
             if isinstance(value, list):
                 out[f.name] = [
-                    v.value if hasattr(v, "value") else v for v in value
+                    v.to_dict()
+                    if hasattr(v, "to_dict")
+                    else (v.value if hasattr(v, "value") else v)
+                    for v in value
                 ]
             elif hasattr(value, "value"):
                 out[f.name] = value.value

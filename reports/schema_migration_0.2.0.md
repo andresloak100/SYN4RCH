@@ -1,8 +1,8 @@
 # Schema migration: curated records v0.1.0 -> v0.2.0
 
-Recomputed 2026-11-04T04:17:42Z by `python3 -m syn4rch.curate.migrate report` from the committed dataset. No record was written.
+Recomputed 2026-11-04T20:36:28Z by `python3 -m syn4rch.curate.migrate report` from the committed dataset. No record was written.
 
-Every number below is recomputed from `data/curated/records.jsonl` by `python3 -m syn4rch.curate.migrate report` (`docs/CURATION_PROTOCOL.md` 6). Nothing here is estimated.
+Every number below is recomputed from `data/curated/records.0.2.0.jsonl.bak` by `python3 -m syn4rch.curate.migrate report` (`docs/CURATION_PROTOCOL.md` 6). Nothing here is estimated.
 
 ## 1. What moved
 
@@ -173,6 +173,7 @@ The migration refuses to write if the result would carry a hard validation findi
 
 | finding | severity | records |
 |---|---|---|
+| `S006_SCHEMA_VERSION_MISMATCH` | HARD | 362 |
 | `W001_NO_CONTROL_TYPE` | WARNING | 152 |
 | `W002_NO_SAMPLE_SIZE` | WARNING | 352 |
 | `W003_POPULATION_ID_NULL` | WARNING | 67 |
@@ -182,6 +183,7 @@ The migration refuses to write if the result would carry a hard validation findi
 | `W010_NO_LAB_IDENTITY` | WARNING | 10 |
 | `W015_CONDITION_UNSPECIFIED` | WARNING | 153 |
 | `W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE` | WARNING | 8 |
+| `W017_CONDITION_WITHOUT_EVIDENCE` | WARNING | 209 |
 
 362 of 362 records carry no hard finding.
 
@@ -203,12 +205,19 @@ Counted by running `syn4rch.schema.validate` over the v0.1.0 file at the v0.2.0 
 | `W014_MOLECULAR_TARGET_UNIDENTIFIED` | WARNING | 170 |
 | `W015_CONDITION_UNSPECIFIED` | WARNING | 153 |
 | `W016_POLARITY_MAY_BE_INVERTED_BY_ALLELE` | WARNING | 8 |
+| `W017_CONDITION_WITHOUT_EVIDENCE` | WARNING | 209 |
 
-0 of 362 input records carried no hard finding at all, and 362 of 362 do now.
+362 of 362 input records carried no hard finding at all, and 362 of 362 do now.
 
 Setting `S005` and `S006` aside, the input carried no hard finding and the migrated dataset carries no hard finding. The migration therefore introduced no hard finding, which is the condition `migrate run` checks before it will write anything.
 
 `W014` (molecular perturbation with no identified target) is the one warning this migration was able to retire, and it did so by resolving a field the curators had already written, not by learning anything new about any paper.
+
+**This report describes the dataset as it stood at v0.2.0.** The v0.3.0 condition fill has since rewritten `data/curated/records.jsonl` and re-identified 227 of its 362 records, so `migrate report` can no longer recompute these numbers from the committed dataset: it refuses, naming the version mismatch. Recomputing them needs the preserved v0.2.0 state (`data/curated/records.0.2.0.jsonl.bak`, untracked like every backup), and `data/curated/record_id_map_0.2.0_to_0.3.0.json` carries any id in this report forward to the record it is now. This is the ordinary consequence of a second migration, and it is stated here rather than left for a reader to discover from an error message.
+
+**Two notes on reading the counts above.** They are what the *current* validator sees in these two files, because a report whose numbers cannot be recomputed from the committed dataset does not belong in this repository (`docs/CURATION_PROTOCOL.md` 6). So a rule introduced after this migration appears in its table: `W017`, added by schema v0.3.0, counts condition values that carry no verbatim sentence, and it describes a gap this migration never claimed to close.
+
+And the "carried no hard finding at all" figure sets `S005` and `S006` aside, as every other before/after comparison here does. An earlier rendering did not, which made it read **0 of 362** for the input -- a number produced entirely by a 0.1.0 file being validated by newer code, and one that contradicted the sentence immediately below it. The migration neither introduced nor removed a hard finding, and both columns now say so.
 
 ## 7. What the migration filled, and what it refused to
 

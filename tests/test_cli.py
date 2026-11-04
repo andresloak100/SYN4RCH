@@ -95,8 +95,38 @@ class TestCliOnBadFixture(unittest.TestCase):
             "A006_EVIDENCE_CLASS_NOT_CAUSAL",
             "A007_MISSING_EXTRACTION_METHOD",
             "A004_EFFECT_SIZE_UNSUPPORTED",
+            # schema v0.3.0: the four condition-evidence rules. One record of
+            # the fixture violates each, so the fixture keeps carrying one
+            # instance of every anti-fabrication defect the CLI can report.
+            "A008_CONDITION_EVIDENCE_WITHOUT_LOCATOR",
+            "A009_CONDITION_EVIDENCE_WITHOUT_QUOTE",
+            "A010_CONDITION_EVIDENCE_MALFORMED",
+            "A011_CONDITION_EVIDENCE_VALUE_MISMATCH",
         ):
-            self.assertIn(code, out, code)
+            self.assertIn(code, out, out)
+
+    def test_the_bad_fixture_carries_one_record_per_hard_rule(self):
+        """The fixture's contract, asserted rather than left to the README.
+
+        A rule added to ``syn4rch.schema.validate`` without a record in
+        ``records_bad.jsonl`` is a rule the CLI has never been seen to report.
+        Only the A family is required here: the S and V families are reached
+        by records that could not be written to a fixture file at all (a
+        tampered ``record_id``, a foreign ``schema_version``), and those are
+        exercised in ``tests/test_validate.py``.
+        """
+        from syn4rch.schema import RULES, validate
+        from syn4rch.schema.validate import hard_findings
+
+        reported = set()
+        for record in read_jsonl(BAD):
+            reported |= {f.code for f in hard_findings(validate(record))}
+        missing = sorted(
+            code
+            for code in RULES
+            if code.startswith("A") and code not in reported
+        )
+        self.assertEqual(missing, [], "no record in records_bad.jsonl violates %s" % missing)
 
     def test_limit_truncates_sections(self):
         status, out, _err = run_cli([BAD, "--limit", "1"])

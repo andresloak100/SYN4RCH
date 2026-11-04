@@ -1,7 +1,24 @@
-# SYN4RCH Tier A Record Schema (v0.2.0)
+# SYN4RCH Tier A Record Schema (v0.3.0)
 
 This document is the **binding contract**. Code, extraction prompts and QC checks
 must conform to it. Changes require a version bump and an entry in `docs/DECISIONS.md`.
+
+**v0.3.0 gave the condition dimension evidence, and nothing else.** Every filled
+`sex`, `diet`, `age_group` and `challenge` now carries a `condition_evidence`
+entry: a verbatim sentence, the passage it sits in, and the name of the rule that
+read it (3.3b, D-037). The record-level `condition_source`/`condition_locator`
+pair it replaces could describe one provenance where a record genuinely has two —
+the animals' sex is stated once in Methods, the acute state of a measurement only
+by the passage the record came from — and so described neither; it was null on all
+362 records of the first corpus.
+
+The claim key, the perturbation axis and the `record_id` *input set* are unchanged
+from v0.2.0. The condition **values** changed, and because all four are hash
+components (D-026), the curation pass that filled them re-identified every record
+it touched; `data/curated/record_id_map_0.2.0_to_0.3.0.json` is the map and
+`reports/condition_fill_0.3.0.md` is what it did, refusal by refusal. Four hard
+rules (A008-A011) make an entry auditable or inadmissible, and one warning (W017)
+counts the values still carrying no sentence rather than rejecting them (D-042).
 
 **v0.2.0 changed two things and every `record_id` in the corpus.** It added the
 condition dimension (3.3b) and split the perturbation axis (3.4b). The reason was
@@ -86,8 +103,26 @@ never by impression. Mouse: <8 wk juvenile, 8-26 wk young_adult, 27-64 wk middle
 |---|---|---|
 | `challenge` | enum? | `ad_libitum`, `fasted`, `refed`, `cold_exposure`, `thermoneutral`, `glucose_load`, `insulin_load`, `high_fat_challenge`, `restraint_stress`, `exercise`, `other`, `not_reported` |
 | `challenge_detail` | str? | the paper's own wording, e.g. "16 h overnight fast" |
-| `condition_source` | enum? | `passage`, `methods`, `not_reported` |
-| `condition_locator` | str? | **required** when `condition_source = methods` |
+| `condition_evidence` | list[obj] | one entry per **filled** dimension (v0.3.0) |
+
+Each `condition_evidence` entry carries `dimension` (one of `sex`, `diet`,
+`age_group`, `challenge`), `value` (the enum value the entry supports), `source`
+(`passage` or `methods`), `locator`, `quote` and `rule`. `locator` and `quote`
+are both mandatory, and `value` must equal the field it describes; A008, A009,
+A010 and A011 enforce those four things separately, because a missing locator, a
+missing quote, a malformed entry and an entry that contradicts its own field are
+four different mistakes with four different fixes.
+
+A dimension recorded as `not_reported` carries **no** entry. That value asserts
+an absence, and an absence has no sentence to quote. It is the one condition
+value in the schema that is a claim about the paper rather than a reading of it,
+which is also why it is the one value a wider-scope reading is allowed to
+replace (D-039).
+
+`rule` names the extraction rule that produced the entry. It exists so that a
+rule later found to be wrong can be traced to every value it produced, and the
+correction applied once to all of them rather than record by record. Nothing
+reads it to make a decision.
 
 `challenge` is the acute physiological state at the moment of measurement, and is
 distinct from `diet`, which is the maintenance diet over weeks. In this literature
@@ -100,14 +135,32 @@ condition dimension differs are **not comparable**: they may disagree because th
 biology disagrees, or because the experiments were never the same experiment. The
 dataset cannot distinguish those, so it refuses to.
 
-`condition_source` exists because rule 4 of section 2 and the way papers are written
-are in direct tension. A result lives in Results; the diet and the sex live in
-Methods. Forbidding the Methods route left 197 of the first 362 records with no diet
-and 224 with no sex, which made the condition gap unfixable by curating harder.
-`condition_source = methods` permits the Methods route **and makes it auditable**:
-the record must then carry `condition_locator`, and the verbatim gate applies to
-that locator as it does to any other. `condition_source` is never a licence to
-infer: a condition that no passage of the paper states is still `null`.
+`condition_evidence` exists because rule 4 of section 2 and the way papers are
+written are in direct tension. A result lives in Results; the diet and the sex
+live in Methods. Forbidding the Methods route left 197 of the first 362 records
+with no diet and 224 with no sex, which made the condition gap unfixable by
+curating harder. `source = methods` permits the Methods route **and makes it
+auditable**: the entry must name the Methods passage and quote the sentence, and
+the verbatim gate applies to that quote as it does to any other. It is never a
+licence to infer: a condition that no passage of the paper states is still
+`null`.
+
+The provenance is per dimension rather than per record (v0.3.0, D-037) because a
+single record genuinely draws its dimensions from different places. The sex of
+the animals is stated once in Methods and holds for every figure in the paper;
+the acute state at the moment of measurement is stated, when it is stated at
+all, by the passage the record was read from. A single record-level
+`condition_source` could describe only one of those, so it described neither,
+and it was null on all 362 records of the first corpus.
+
+**What a Methods reading may and may not settle** (D-038). A dimension a paper
+holds *constant* across every experiment it reports can be read from Methods and
+applied to each of that paper's records. A dimension that *varies* within the
+paper cannot be applied at all: a paper comparing a chow group against a
+high-fat group states both diets in Methods, and nothing in Methods says which
+group any individual figure panel belongs to. `varies` is not a failure to
+extract. It is the paper declining to answer the question at the scope the
+question was asked, and the honest record of that is `null`.
 
 `not_reported` and `null` are different statements and both are kept. `null` means
 the curator did not address the question; `not_reported` means the paper was checked
@@ -252,7 +305,20 @@ only remedy is a second laboratory repeating the same manipulation.
 - A `direction` for the assay number where that number runs opposite to the quantity
   `outcome_id` names (D-019). Falling glucose in an insulin tolerance test is
   *rising* insulin sensitivity.
-- A condition the paper does not state. `condition_source` widens where a condition
-  may be *read from*; it does not permit one to be inferred (3.3b).
+- A condition the paper does not state. `condition_evidence` widens where a
+  condition may be *read from*; it does not permit one to be inferred (3.3b).
 - A net circuit `valence` for a molecular perturbation. `unclear` is the answer, and
   `perturbation_polarity` carries the sign of what was actually done (3.4b).
+- A `challenge` taken from a husbandry sentence. "Mice were allowed ad libitum
+  access to water and standard chow" describes how animals were kept, not the
+  state any particular measurement was made in, and the same paper measures
+  glucose during a glucose load and food intake after a fast. Reading it as a
+  challenge would stamp `ad_libitum` across a whole paper and report the result
+  as near-complete coverage (D-040).
+- A `challenge` implied by the assay that produced the outcome. A glucose
+  tolerance test is a glucose load by definition, so deriving `glucose_load`
+  from `outcome_id = glucose_tolerance` restates what the outcome already says:
+  it discriminates nothing in any key, while raising the apparent condition
+  coverage and re-identifying every record it touches. The schema wants the
+  acute state of measurements whose assay does *not* fix it -- food intake,
+  body weight, blood glucose -- and refuses the rest (D-041).

@@ -25,7 +25,9 @@ curators' own fields already determine:
   (:func:`syn4rch.schema.rules.perturbation_class_from_method`).
 * ``perturbation_polarity`` -- a function of ``(method, valence)``
   (:func:`syn4rch.schema.rules.perturbation_polarity_from`).
-* ``schema_version``        -- set to the version this code implements.
+* ``schema_version``        -- set to :data:`TO_VERSION`, the fixed version
+  this migration targets, which is not necessarily the version the schema
+  package implements today.
 * ``record_id``             -- recomputed, because ``RECORD_ID_FIELDS`` grew
   from seven components to twelve. **Every id in the corpus changes**, so the
   old-id -> new-id map is written out and used to rewrite every
@@ -43,6 +45,16 @@ code has read no paper. In particular it does **not** write ``not_reported``:
 per SCHEMA.md 3.3b that means a curator checked the paper and it does not say,
 and writing it here would record a curation act that never happened. The
 unfilled fields are counted and published instead.
+
+Two of those four no longer exist. Schema v0.3.0 retired the record-level
+``condition_source``/``condition_locator`` pair -- null on all 362 records --
+and replaced it with ``condition_evidence``, one entry per filled condition
+dimension, each carrying its own source, locator and quote (D-037). The reason
+is the one this migration ran into from the other side: a record's sex is
+stated in the paper's Methods and its acute metabolic state, if stated at all,
+in the passage the record was read from, so one scalar pair could never have
+described both. This module still names the pair, because it targets v0.2.0 and
+that is what v0.2.0 had; it never constructs the fields.
 
 ``sex``, ``diet`` and ``age_group`` are already curated where known and are not
 touched.
@@ -133,10 +145,10 @@ from ..schema.io import JsonlError, dumps_record, loads_record
 from ..schema.record import (
     RECORD_ID_FIELDS,
     RECORD_ID_LENGTH,
-    SCHEMA_VERSION,
     TierARecord,
     normalize_for_hash,
 )
+# ``SCHEMA_VERSION`` is deliberately *not* imported here: see TO_VERSION.
 from ..schema.rules import perturbation_class_from_method, perturbation_polarity_from
 from ..schema.validate import Severity, validate
 
@@ -146,6 +158,7 @@ __all__ = [
     "RECORD_ID_FIELDS_ADDED_IN_0_2_0",
     "RECORD_ID_FIELDS_0_1_0",
     "CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL",
+    "CONDITION_FIELDS_STILL_IN_THE_SCHEMA",
     "TARGET_BEARING_CLASSES",
     "TARGET_SEARCH_FIELDS",
     "MIN_SYNONYM_CHARS",
@@ -180,9 +193,19 @@ __all__ = [
 #: refused, not guessed at.
 FROM_VERSION = "0.1.0"
 
-#: The version this migration writes. Pinned to the schema package so the two
-#: cannot drift apart.
-TO_VERSION = SCHEMA_VERSION
+#: The version this migration writes. A **literal**, deliberately, and not
+#: ``SCHEMA_VERSION``.
+#:
+#: A migration names a fixed pair of versions by nature: this module fills the
+#: fields v0.2.0 added, recomputes the twelve-component v0.2.0 ``record_id``,
+#: and wrote ``reports/schema_migration_0.2.0.md``,
+#: ``data/curated/record_id_map_0.1.0_to_0.2.0.json`` and
+#: ``data/curated/records.0.1.0.jsonl.bak``. Reading the target from the schema
+#: package made it move on its own at the v0.3.0 bump, which would have
+#: stamped records ``0.3.0`` while filling nothing v0.3.0 added -- a file
+#: claiming a schema whose fields it does not carry. Each later schema version
+#: needs its own migration module; this one stays what it is.
+TO_VERSION = "0.2.0"
 
 #: The five ``record_id`` components v0.2.0 added (D-026). Named here so the
 #: v0.1.0 id function can be reconstructed by subtraction rather than by a
@@ -203,11 +226,33 @@ RECORD_ID_FIELDS_0_1_0 = tuple(
 #: Condition fields the migration is forbidden to fill: each one requires
 #: reading the paper (SCHEMA.md 3.3b). ``not_reported`` is forbidden too -- it
 #: is a claim that the paper was checked.
+#:
+#: Named as the **v0.2.0** schema named them, which is the schema this module
+#: migrates to. ``condition_source`` and ``condition_locator`` existed then,
+#: were left null on all 362 records, and were retired in v0.3.0 in favour of
+#: per-dimension ``condition_evidence`` (D-037) for exactly the reason this
+#: migration could not fill them: one record-level pair cannot carry the
+#: provenance of a sex read from Methods and a challenge read from the
+#: record's own passage. They stay in this tuple because the four-slot count
+#: published in ``reports/schema_migration_0.2.0.md`` is a statement about the
+#: v0.2.0 schema, and rewriting history to two slots would make that report
+#: unreproducible. Nothing here constructs them: see
+#: :data:`CONDITION_FIELDS_STILL_IN_THE_SCHEMA`.
 CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL = (
     "challenge",
     "challenge_detail",
     "condition_source",
     "condition_locator",
+)
+
+#: The subset of the above that is still a field of :class:`TierARecord`.
+#: Every code path that reads or writes a record goes through this; the full
+#: tuple is only ever counted and printed. Derived rather than listed, so that
+#: retiring or restoring a condition field cannot leave the two disagreeing.
+CONDITION_FIELDS_STILL_IN_THE_SCHEMA = tuple(
+    name
+    for name in CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL
+    if name in TierARecord.field_names()
 )
 
 #: Perturbation classes that may carry a molecular target (SCHEMA.md 3.4b).
@@ -585,7 +630,7 @@ def migrate_record(
         data["target_raw"] = resolution.target_raw
         data["target_id"] = resolution.target_id
 
-    for name in CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL:
+    for name in CONDITION_FIELDS_STILL_IN_THE_SCHEMA:
         # Explicit, not incidental: the value the curators left is the value
         # that stays, and for all 362 records of the first corpus that is
         # ``None``. Writing ``not_reported`` here would claim a paper was
@@ -873,7 +918,12 @@ def dataset_stats(
     # --- conditions ------------------------------------------------------
     condition = {}
     for name in ("sex", "diet", "age_group") + CONDITION_FIELDS_THE_MIGRATION_MAY_NOT_FILL:
-        values = [getattr(r, name) for r in records]
+        # ``getattr`` with a default, for the two fields v0.3.0 retired: they
+        # were null on every record of the v0.2.0 corpus, so counting them as
+        # null is what the v0.2.0 report said and still true of the data. The
+        # alternative -- dropping them from the count -- would silently change
+        # the published slot total.
+        values = [getattr(r, name, None) for r in records]
         condition[name] = {
             "set": sum(1 for v in values if v is not None),
             "null": sum(1 for v in values if v is None),
@@ -893,13 +943,25 @@ def dataset_stats(
     clean = 0
     for record in records:
         findings = validate(record)
-        if not any(f.severity is Severity.HARD for f in findings):
+        # Version artefacts are set aside here for the same reason they are set
+        # aside in every before/after comparison (:func:`_non_artefact`): this
+        # module writes a file at a pinned TO_VERSION, so once the schema moved
+        # past it, S005/S006 fire on every output record and say only that the
+        # validator is newer than the file. Counting them here made the figure
+        # "N of M records carry no hard finding" collapse to zero, and
+        # contradict the sentence printed immediately after it, which sets the
+        # same two codes aside.
+        if not any(
+            f.severity is Severity.HARD and f.code not in _VERSION_ARTEFACT_CODES
+            for f in findings
+        ):
             clean += 1
         for finding in findings:
             bucket = hard if finding.severity is Severity.HARD else warn
             bucket[finding.code] = bucket.get(finding.code, 0) + 1
     stats["hard_findings"] = hard
     stats["warning_findings"] = warn
+    #: Records with no hard finding **other than** a version artefact.
     stats["records_hard_clean"] = clean
 
     stats["conflicts_with_references"] = sum(len(r.conflicts_with) for r in records)
@@ -1306,16 +1368,8 @@ def render_report_md(
         for code, count in sorted(baseline["warning_findings"].items()):
             A("| `%s` | WARNING | %d |" % (code, count))
         A("")
-        before_other = {
-            code: count
-            for code, count in baseline["hard_findings"].items()
-            if code not in _VERSION_ARTEFACT_CODES
-        }
-        after_other = {
-            code: count
-            for code, count in stats["hard_findings"].items()
-            if code not in _VERSION_ARTEFACT_CODES
-        }
+        before_other = _non_artefact(baseline["hard_findings"])
+        after_other = _non_artefact(stats["hard_findings"])
         A(
             "%d of %d input records carried no hard finding at all, and %d of "
             "%d do now."
@@ -1350,6 +1404,39 @@ def render_report_md(
         "warning this migration was able to retire, and it did so by resolving "
         "a field the curators had already written, not by learning anything new "
         "about any paper."
+    )
+    A("")
+    A(
+        "**This report describes the dataset as it stood at v0.2.0.** The "
+        "v0.3.0 condition fill has since rewritten `data/curated/records.jsonl` "
+        "and re-identified 227 of its 362 records, so `migrate report` can no "
+        "longer recompute these numbers from the committed dataset: it refuses, "
+        "naming the version mismatch. Recomputing them needs the preserved "
+        "v0.2.0 state (`data/curated/records.0.2.0.jsonl.bak`, untracked like "
+        "every backup), and `data/curated/record_id_map_0.2.0_to_0.3.0.json` "
+        "carries any id in this report forward to the record it is now. This is "
+        "the ordinary consequence of a second migration, and it is stated here "
+        "rather than left for a reader to discover from an error message."
+    )
+    A("")
+    A(
+        "**Two notes on reading the counts above.** They are what the *current* "
+        "validator sees in these two files, because a report whose numbers "
+        "cannot be recomputed from the committed dataset does not belong in "
+        "this repository (`docs/CURATION_PROTOCOL.md` 6). So a rule introduced "
+        "after this migration appears in its table: `W017`, added by schema "
+        "v0.3.0, counts condition values that carry no verbatim sentence, and "
+        "it describes a gap this migration never claimed to close."
+    )
+    A("")
+    A(
+        "And the \"carried no hard finding at all\" figure sets `S005` and "
+        "`S006` aside, as every other before/after comparison here does. An "
+        "earlier rendering did not, which made it read **0 of 362** for the "
+        "input -- a number produced entirely by a 0.1.0 file being validated "
+        "by newer code, and one that contradicted the sentence immediately "
+        "below it. The migration neither introduced nor removed a hard "
+        "finding, and both columns now say so."
     )
     A("")
 
@@ -1395,15 +1482,36 @@ def render_report_md(
     return "\n".join(L) + "\n"
 
 
-#: Hard findings that every v0.1.0 record carries when read by v0.2.0 code, and
-#: that the migration exists to remove. Excluded when the before and after
-#: validation states are compared, because counting them as "fixed" would
-#: flatter the migration and counting them as "pre-existing" would hide a real
-#: regression behind them.
+#: Hard findings that a version difference alone explains, on either side of
+#: the migration: every v0.1.0 input record carries both when read by code
+#: implementing a later schema, and every v0.2.0 output record carries
+#: ``S006`` when read by code implementing a later schema still -- which, from
+#: v0.3.0 onwards, is all of it. Excluded when the before and after validation
+#: states are compared, because counting them as "fixed" would flatter the
+#: migration and counting them as "introduced" would block a migration that
+#: did nothing wrong.
 _VERSION_ARTEFACT_CODES = (
     "S005_RECORD_ID_INCONSISTENT",
     "S006_SCHEMA_VERSION_MISMATCH",
 )
+
+
+def _non_artefact(findings: Dict[str, int]) -> Dict[str, int]:
+    """``findings`` without the codes a version difference alone explains.
+
+    Applied to **both** sides of every before/after comparison. It used to be
+    applied to the input side only, which was invisible while
+    :data:`TO_VERSION` tracked the schema package -- the output then declared
+    the current version and carried no ``S006`` to subtract. With the target
+    pinned to v0.2.0 the one-sided filter counted the output's version marker
+    as a finding the migration had introduced, and ``migrate run`` refused to
+    write at all.
+    """
+    return {
+        code: count
+        for code, count in findings.items()
+        if code not in _VERSION_ARTEFACT_CODES
+    }
 
 
 def _findings_phrase(findings: Dict[str, int]) -> str:
@@ -1426,6 +1534,37 @@ def _inline(dist: Dict[str, int]) -> str:
 # --------------------------------------------------------------------------- #
 
 
+#: Fields that existed at 0.2.0 and no longer exist in the schema (D-037).
+#:
+#: This module reads files written at :data:`TO_VERSION`, and the current
+#: ``TierARecord`` refuses an unknown key by design, so without this a 0.2.0
+#: file became unreadable the moment 0.3.0 removed a field -- and with it went
+#: the ability to recompute ``reports/schema_migration_0.2.0.md``.
+#: `docs/CURATION_PROTOCOL.md` 6 says a number that cannot be recomputed does
+#: not belong in a report, so the reader is taught what was retired rather than
+#: the report being left unverifiable.
+#:
+#: A retired field holding a **non-null** value is still an error: both were
+#: null on all 362 records, which is the only reason retiring them was free.
+FIELDS_RETIRED_AFTER_0_2_0 = ("condition_source", "condition_locator")
+
+
+def strip_retired_fields(data: dict) -> List[str]:
+    """Drop retired keys from a decoded record. Returns any that held a value.
+
+    Targeted rather than ``strict=False``, which would also have swallowed a
+    misspelled field name -- and a silently dropped key is how a column quietly
+    stops being curated.
+    """
+    kept: List[str] = []
+    for name in FIELDS_RETIRED_AFTER_0_2_0:
+        if name in data:
+            value = data.pop(name)
+            if value is not None:
+                kept.append("%s=%r" % (name, value))
+    return kept
+
+
 def read_records(
     path: str, expect_version: Optional[str]
 ) -> Tuple[List[TierARecord], List[Tuple[int, str]], Dict[str, int]]:
@@ -1434,6 +1573,9 @@ def read_records(
     ``expect_version`` is checked here rather than inside
     :func:`syn4rch.schema.io.loads_record` so that the error message can name
     every version found instead of only the first offending line.
+
+    Keys retired after 0.2.0 are stripped (:func:`strip_retired_fields`) so
+    that a file this module wrote stays readable by the code that reads it.
     """
     records: List[TierARecord] = []
     errors: List[Tuple[int, str]] = []
@@ -1443,6 +1585,19 @@ def read_records(
             if not line.strip():
                 continue
             try:
+                decoded = json.loads(line)
+                if isinstance(decoded, dict):
+                    held = strip_retired_fields(decoded)
+                    if held:
+                        errors.append(
+                            (
+                                number,
+                                "refusing to drop a retired field that holds a "
+                                "value: %s" % ", ".join(held),
+                            )
+                        )
+                        continue
+                    line = json.dumps(decoded)
                 record = loads_record(
                     line, expect_version=None, path=path, line_number=number
                 )
@@ -1618,12 +1773,8 @@ def cmd_run(args) -> int:
 
     stats = dataset_stats(result.records, index)
     new_hard = _positive_deltas(
-        {
-            code: count
-            for code, count in baseline["hard_findings"].items()
-            if code not in _VERSION_ARTEFACT_CODES
-        },
-        stats["hard_findings"],
+        _non_artefact(baseline["hard_findings"]),
+        _non_artefact(stats["hard_findings"]),
     )
     if new_hard and not args.allow_new_findings:
         sys.stderr.write(
