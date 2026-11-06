@@ -14,6 +14,7 @@ from syn4rch.atlas import signaling
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REAL_RECORDS = os.path.join(ROOT, "data", "curated", "records.jsonl")
+GRAPH = os.path.join(ROOT, "viewer", "data", "signaling.json")
 POPS = os.path.join(ROOT, "data", "vocab", "populations.json")
 OUTCOMES = os.path.join(ROOT, "data", "vocab", "outcomes.json")
 
@@ -299,6 +300,53 @@ class SignalingTest(unittest.TestCase):
             g["outcomes_without_a_declared_system"],
         )
         self.assertTrue(g["edges"], "the graph must still build")
+
+    def test_the_committed_graph_is_not_stale_against_the_committed_dataset(self):
+        """The hole that let a stale tracked artifact sit in the tree.
+
+        `viewer/data/signaling.json` is a committed output. Between 3266ebe and
+        5c2b118 it carried `sleep` and none of the five split state ids, because
+        a regeneration pass ran while the old exhaustiveness assert was still in
+        place: the signaling generator died partway, the five markdown reports
+        that had already succeeded made the tree look regenerated, and the only
+        trace was in stderr.
+
+        The obvious guard would not have caught it. `n_records_in` was 508
+        before and after, because the split changed outcome ids without changing
+        the record count. The invariant that does catch it is containment: every
+        outcome id in the dataset must appear in the graph. That is what the
+        generator asserted at write time and what nothing checked of the
+        artifact afterwards.
+        """
+        with open(REAL_RECORDS, encoding="utf-8") as fh:
+            dataset = {
+                json.loads(l)["outcome_id"]
+                for l in fh
+                if l.strip() and json.loads(l).get("outcome_id")
+            }
+        with open(GRAPH, encoding="utf-8") as fh:
+            graph = json.load(fh)
+        in_graph = {o["id"] for o in graph["outcomes"]}
+        missing = sorted(dataset - in_graph)
+        self.assertEqual(
+            missing,
+            [],
+            "viewer/data/signaling.json is stale: the dataset has outcome "
+            "id(s) the committed graph does not. Regenerate with "
+            "`python3 -m syn4rch.atlas.signaling`.",
+        )
+
+    def test_the_committed_graph_counts_the_committed_records(self):
+        """Weaker than containment and kept because it is free.
+
+        It would NOT have caught the staleness above on its own -- the count was
+        unchanged across the split -- which is exactly why the containment test
+        sits beside it rather than this one standing alone.
+        """
+        with open(REAL_RECORDS, encoding="utf-8") as fh:
+            n = sum(1 for l in fh if l.strip())
+        with open(GRAPH, encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh)["n_records_in"], n)
 
     def test_unclassified_is_a_legal_layout_slot(self):
         self.assertIn(signaling.UNCLASSIFIED_SYSTEM, signaling.SYSTEM_ORDER)
