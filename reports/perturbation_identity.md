@@ -8,7 +8,7 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-06T02:33:36Z |
+| generated (UTC) | 2026-11-06T17:17:38Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
 | scope | all records read |
@@ -42,7 +42,7 @@ Groupings are `syn4rch.models.task.GROUPINGS`, reused rather than restated: SCHE
 
 | grouping | leakage-prone | groups | placed records | single-group records | unseen-identity fraction | identity not placeable | ungroupable |
 |---|---|---|---|---|---|---|---|
-| `lab` | no | 75 | 502 | 170 | 33.9% | 6 | 0 |
+| `lab` | no | 68 | 502 | 170 | 33.9% | 6 | 0 |
 | `population` | no | 44 | 502 | 122 | 24.3% | 6 | 0 |
 | `population_outcome` | no | 182 | 502 | 0 | 0.0% | 6 | 0 |
 | `record` | yes | 508 | 502 | 0 | 0.0% | 6 | 0 |
@@ -159,14 +159,14 @@ The numbers above are not a sample-size problem. They are a description of publi
 | class | records | studies | labs | labs with >1 study | targeting strategies | strategies in >1 study | one study per lab |
 |---|---|---|---|---|---|---|---|
 | `<null>` | 1 | 1 | 1 | 0 | 0 | 0 | yes |
-| `circuit_activity` | 314 | 57 | 57 | 0 | 89 | 0 | yes |
+| `circuit_activity` | 314 | 57 | 50 | 4 | 89 | 0 | no |
 | `molecular` | 170 | 16 | 16 | 0 | 28 | 0 | yes |
 | `pharmacological` | 5 | 2 | 2 | 0 | 2 | 0 | yes |
 | `structural` | 18 | 2 | 2 | 0 | 1 | 0 | yes |
 
 `<null>` rests on a single study, so for it the unseen-identity fraction is not yet a statement about how the field publishes: it is a statement that the corpus holds one paper.
 
-For `circuit_activity`, `molecular`, `pharmacological`, `structural`, every study comes from a different laboratory and no laboratory contributed two: the study-to-lab map is one-to-one. Holding out a lab therefore holds out exactly one study, so `study_id` and `lab` grouping must give these classes the same unseen-identity fraction, now and after the targets are resolved. The two groupings cannot be played off against each other to make the number smaller.
+For `molecular`, `pharmacological`, `structural`, every study comes from a different laboratory and no laboratory contributed two: the study-to-lab map is one-to-one. Holding out a lab therefore holds out exactly one study, so `study_id` and `lab` grouping must give these classes the same unseen-identity fraction, now and after the targets are resolved. The two groupings cannot be played off against each other to make the number smaller.
 
 ## What this corpus can and cannot support
 

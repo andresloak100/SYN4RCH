@@ -641,10 +641,10 @@ class Grouping(object):
 
 
 def _lab_group(record) -> Optional[str]:
-    key = lab_key(record)
-    if key is None:
-        return None
-    return "%s | %s" % key
+    # The group *is* the lab key: the normalised last author (D-056). It was
+    # "author | affiliation" until D-056, which made this grouping identical to
+    # study_id on a corpus where no two papers spell one department the same.
+    return lab_key(record)
 
 
 def _population_outcome_group(record) -> Optional[str]:
@@ -667,7 +667,8 @@ GROUPINGS: Dict[str, Grouping] = {
     "lab": Grouping(
         name="lab",
         description=(
-            "no (last_author + affiliation) appears in both train and test; "
+            "no last author appears in both train and test (a lab is a "
+            "person, D-056); "
             "records with no lab identity cannot be grouped and are reported, "
             "not quietly pooled into one anonymous lab"
         ),

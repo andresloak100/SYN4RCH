@@ -431,6 +431,7 @@ def cell_reach(records: Iterable, grouping: str) -> List[ClassCellReach]:
             % (grouping, ", ".join(sorted(GROUPINGS)))
         )
     by_class: Dict[str, Dict[tuple, set]] = {}
+    rows_per_cell: Dict[str, Dict[tuple, int]] = {}
     counts: Dict[str, int] = {}
     for record in records:
         cls = getattr(record.perturbation_class, "value", record.perturbation_class)
@@ -446,9 +447,12 @@ def cell_reach(records: Iterable, grouping: str) -> List[ClassCellReach]:
         members = bucket.setdefault(cell, set())
         if group:
             members.add(group)
+        rows = rows_per_cell.setdefault(cls, {})
+        rows[cell] = rows.get(cell, 0) + 1
     out: List[ClassCellReach] = []
     for cls in sorted(set(counts) | set(by_class)):
         cells = by_class.get(cls, {})
+        rows = rows_per_cell.get(cls, {})
         multi = [c for c, g in cells.items() if len(g) > 1]
         out.append(
             ClassCellReach(
@@ -457,6 +461,15 @@ def cell_reach(records: Iterable, grouping: str) -> List[ClassCellReach]:
                 n_records=counts.get(cls, 0),
                 n_cells=len(cells),
                 n_cells_multi_group=len(multi),
+                # Populated since D-056. The field was declared with a default
+                # of 0, never passed, and serialised by to_dict -- so anything
+                # reading the JSON was told that 0 records lived in the 26
+                # multi-group circuit cells. It is also the number the cell
+                # depth question is asked in: how much of the corpus sits in a
+                # cell that more than one group has reached.
+                n_records_in_multi_group_cells=sum(
+                    rows.get(cell, 0) for cell in multi
+                ),
             )
         )
     return out

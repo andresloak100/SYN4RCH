@@ -6,7 +6,9 @@ import unittest
 import synthetic
 from syn4rch.qc import (
     QCSeverity,
+    affiliation_tokens,
     find_exact_duplicates,
+    find_lab_identity_collisions,
     find_locator_collisions,
     find_possible_non_independence,
 )
@@ -149,12 +151,49 @@ class TestPossibleNonIndependence(unittest.TestCase):
         )
         self.assertEqual(find_possible_non_independence([a, b]), [])
 
-    def test_same_author_different_affiliation_is_a_different_lab(self):
+    def test_same_author_different_affiliation_is_the_same_lab(self):
+        """D-056. This test asserted the opposite, and the assertion was the defect.
+
+        While the affiliation was part of the lab identity this check could not
+        fire on the real corpus at all: four labs had published eleven papers
+        and every one of those papers spelled its own department differently,
+        so no lab ever appeared in two studies and the detector's silence read
+        as a clean result.
+        """
         a = synthetic.good_record()
         b = synthetic.same_lab_other_study_record(
             last_author_affiliation="A different synthetic institute"
         )
-        self.assertEqual(find_possible_non_independence([a, b]), [])
+        self.assertEqual(
+            codes(find_possible_non_independence([a, b])),
+            ["QC_POSSIBLE_NON_INDEPENDENCE"],
+        )
+
+    def test_the_message_names_the_claim_components_it_prints(self):
+        """The components are named, not positional.
+
+        They were printed positionally under the wrong names until D-056:
+        claim_key stopped carrying `valence` when v0.2.0 added the perturbation
+        axis, so the message had been labelling the perturbation class
+        "valence", the polarity "outcome" and the target "direction". Nothing
+        noticed, because the check never fired.
+        """
+        found = find_possible_non_independence(
+            [
+                synthetic.good_record(),
+                synthetic.same_lab_other_study_record(
+                    last_author_affiliation="A different synthetic institute"
+                ),
+            ]
+        )
+        self.assertEqual(len(found), 1)
+        message = found[0].message
+        self.assertIn("perturbation_class=circuit_activity", message)
+        self.assertIn("direction=increase", message)
+        self.assertNotIn("valence=", message)
+        claim = found[0].details["claim"]
+        self.assertEqual(claim["perturbation_class"], "circuit_activity")
+        self.assertEqual(found[0].details["lab"], "fixture, b.")
 
     def test_unresolved_populations_group_by_raw_name_only(self):
         """A null population_id must not group with a resolved one."""
@@ -166,6 +205,119 @@ class TestPossibleNonIndependence(unittest.TestCase):
             codes(find_possible_non_independence([a, c])),
             ["QC_POSSIBLE_NON_INDEPENDENCE"],
         )
+
+
+class TestLabIdentityCollisions(unittest.TestCase):
+    """The homonym check D-056 added when it dropped the affiliation.
+
+    `lab_key` is now the author alone, which can merge two researchers who
+    share a name. The merge costs test rows in every leave-one-lab-out split
+    and reports two independent results as one lab replicating itself, so it
+    is detected rather than assumed away.
+    """
+
+    def test_one_author_at_two_unrelated_places_warns(self):
+        found = find_lab_identity_collisions(
+            [
+                synthetic.good_record(
+                    last_author_affiliation=(
+                        "Department of Physiology, Kyoto Prefectural "
+                        "University, Kyoto, Japan"
+                    )
+                ),
+                synthetic.same_lab_other_study_record(
+                    last_author_affiliation=(
+                        "Rowett Institute, Aberdeen, Scotland"
+                    )
+                ),
+            ]
+        )
+        self.assertEqual(codes(found), ["QC_POSSIBLE_LAB_HOMONYM"])
+        self.assertEqual(found[0].severity, QCSeverity.WARNING)
+        self.assertEqual(found[0].field_name, "last_author_affiliation")
+        self.assertEqual(found[0].details["lab"], "fixture, b.")
+
+    def test_the_same_department_typed_differently_does_not_warn(self):
+        """The four real cases from D-056 are all of this shape."""
+        found = find_lab_identity_collisions(
+            [
+                synthetic.good_record(
+                    last_author_affiliation=(
+                        "Max Planck Institute for Metabolism Research, "
+                        "Department of Neuronal Control of Metabolism, "
+                        "Gleueler Str. 50, 50931 Cologne, Germany"
+                    )
+                ),
+                synthetic.same_lab_other_study_record(
+                    last_author_affiliation=(
+                        "Neuronal Control of Metabolism Group, Max Planck "
+                        "Institute for Metabolism Research, Cologne, Germany."
+                    )
+                ),
+            ]
+        )
+        self.assertEqual(found, [])
+
+    def test_a_shared_generic_word_is_not_a_shared_place(self):
+        """Two unrelated labs are both a department at a university somewhere."""
+        found = find_lab_identity_collisions(
+            [
+                synthetic.good_record(
+                    last_author_affiliation=(
+                        "Department of Medicine, University of Padua, Italy"
+                    )
+                ),
+                synthetic.same_lab_other_study_record(
+                    last_author_affiliation=(
+                        "Department of Medicine, University of Otago, "
+                        "New Zealand"
+                    )
+                ),
+            ]
+        )
+        self.assertEqual(codes(found), ["QC_POSSIBLE_LAB_HOMONYM"])
+
+    def test_a_blank_affiliation_is_not_evidence_of_two_labs(self):
+        found = find_lab_identity_collisions(
+            [
+                synthetic.good_record(),
+                synthetic.same_lab_other_study_record(
+                    last_author_affiliation=None
+                ),
+            ]
+        )
+        self.assertEqual(found, [])
+
+    def test_one_affiliation_cannot_collide_with_itself(self):
+        found = find_lab_identity_collisions(
+            [synthetic.good_record(), synthetic.same_lab_other_study_record()]
+        )
+        self.assertEqual(found, [])
+
+    def test_records_without_a_last_author_are_skipped(self):
+        found = find_lab_identity_collisions(
+            [
+                synthetic.good_record(
+                    last_author=None, last_author_affiliation="Place A"
+                ),
+                synthetic.same_lab_other_study_record(
+                    last_author=None, last_author_affiliation="Place B"
+                ),
+            ]
+        )
+        self.assertEqual(found, [])
+
+    def test_tokens_drop_generic_words_and_short_ones(self):
+        tokens = affiliation_tokens(
+            "Department of Neuroscience, Garvan Institute of Medical "
+            "Research, NSW 2010, Australia"
+        )
+        self.assertIn("garvan", tokens)
+        self.assertIn("2010", tokens)
+        self.assertNotIn("department", tokens)
+        self.assertNotIn("institute", tokens)
+        self.assertNotIn("australia", tokens)
+        self.assertNotIn("nsw", tokens)  # three characters
 
 
 if __name__ == "__main__":  # pragma: no cover

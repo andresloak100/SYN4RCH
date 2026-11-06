@@ -1,6 +1,6 @@
 # SYN4RCH feasibility report (Phase 2)
 
-**Verdict: 1 of 180 (population, outcome) task(s) are feasible for predictive modelling (1 marginal, 178 insufficient), from 492 usable record(s) from 71 studies and 71 identified lab(s).**
+**Verdict: 1 of 180 (population, outcome) task(s) are feasible for predictive modelling (1 marginal, 178 insufficient), from 492 usable record(s) from 71 studies and 65 identified lab(s).**
 
 Every number below is counted from the input named in the Run table. Nothing is estimated, imputed or projected. An `insufficient` verdict is a measurement of the corpus, not a failure of this module.
 
@@ -8,7 +8,7 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-06T02:33:38Z |
+| generated (UTC) | 2026-11-06T17:17:37Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
 | records read | 508 |
@@ -17,7 +17,7 @@ Every number below is counted from the input named in the Run table. Nothing is 
 | usability predicate | schema v0.2.0 |
 | claim key | `population + perturbation_class + perturbation_polarity + perturbation_target + outcome_id + sex + diet + age_group + challenge` (schema v0.2.0, 9 components) |
 | distinct studies | 71 |
-| distinct labs (last author + affiliation) | 71 |
+| distinct labs (last author, D-056) | 65 |
 | usable records with no lab identity | 0 |
 | usable records stating none of the 4 conditions | 137 |
 | load errors | 0 |
@@ -323,14 +323,14 @@ The dense grid is not drawn: 42 x 30 exceeds the 12 x 12 printable limit. 1080 c
 
 | population | outcome | records | studies | labs |
 |---|---|---|---|---|
-| `arc_agrp` | `food_intake` | 62 | 23 | 23 |
+| `arc_agrp` | `food_intake` | 62 | 23 | 20 |
 | `arc_pomc` | `food_intake` | 29 | 15 | 15 |
 | `arc_pomc` | `body_weight` | 16 | 12 | 12 |
-| `arc_agrp` | `body_weight` | 15 | 9 | 9 |
+| `arc_agrp` | `body_weight` | 15 | 9 | 8 |
 | `arc_agrp` | `locomotor_activity` | 14 | 5 | 5 |
-| `arc_agrp` | `energy_expenditure` | 13 | 7 | 7 |
+| `arc_agrp` | `energy_expenditure` | 13 | 7 | 6 |
 | `arc_agrp` | `glucose_tolerance` | 13 | 7 | 7 |
-| `arc_agrp` | `insulin_sensitivity` | 12 | 7 | 7 |
+| `arc_agrp` | `insulin_sensitivity` | 12 | 7 | 6 |
 | `arc_pomc` | `fat_mass` | 10 | 5 | 5 |
 | `arc_agrp` | `rer` | 9 | 5 | 5 |
 | `arc_agrp` | `blood_glucose` | 8 | 3 | 3 |
@@ -377,7 +377,7 @@ Grouping is also not the whole of leakage control. SCHEMA.md 5b: a split can kee
 | grouping | groups | usable folds | cross-validation possible | records excluded as ungroupable |
 |---|---|---|---|---|
 | `by_study` | 71 | 71 | yes | 0 |
-| `by_lab` | 71 | 71 | yes | 0 |
+| `by_lab` | 65 | 65 | yes | 0 |
 | `leave_one_population_out` | 42 | 42 | yes | 0 |
 
 ## What this report does not claim

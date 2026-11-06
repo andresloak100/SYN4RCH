@@ -426,7 +426,7 @@ class ReplicationCell:
     n_labs: int = 0
     n_records_without_lab: int = 0
     studies: Tuple[str, ...] = ()
-    labs: Tuple[Tuple[str, str], ...] = ()
+    labs: Tuple[str, ...] = ()
 
     #: Minimum :func:`syn4rch.qc.keys.condition_specificity` over the records
     #: in this cell -- the weakest link. One record specifying nothing is
@@ -622,7 +622,7 @@ class ReplicationCell:
             "n_labs": self.n_labs,
             "n_records_without_lab": self.n_records_without_lab,
             "studies": list(self.studies),
-            "labs": [list(lab) for lab in self.labs],
+            "labs": list(self.labs),
             "min_condition_specificity": self.min_condition_specificity,
             "max_condition_specificity": self.max_condition_specificity,
             "n_condition_slots": N_CONDITION_SLOTS,
@@ -723,7 +723,7 @@ def _build_cell(
     fields: Tuple[str, ...],
 ) -> ReplicationCell:
     by_study: Dict[str, List] = {}
-    by_lab: Dict[Tuple[str, str], List] = {}
+    by_lab: Dict[str, List] = {}
     for record in group:
         by_study.setdefault(study_key(record), []).append(record)
         lab = lab_key(record)

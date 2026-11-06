@@ -606,6 +606,46 @@ class CellReachTest(unittest.TestCase):
         self.assertEqual(circuit.n_cells, 2)
         self.assertEqual(circuit.n_cells_multi_group, 0)
 
+    def test_records_in_multi_group_cells_are_counted(self):
+        """The field was declared, defaulted to 0, and never populated (D-056).
+
+        `to_dict` serialised it, so a reader of the JSON was told that zero
+        records lived in the 26 multi-group circuit cells of the real corpus.
+        A number that is always 0 is worse than an absent one.
+        """
+        rows = [
+            synthetic.good_record(population_raw="p1", population_id="syn:p1",
+                                  outcome_id="food_intake", outcome_raw="o"),
+            synthetic.other_lab_record(population_raw="p1", population_id="syn:p1",
+                                       outcome_id="food_intake", outcome_raw="o"),
+            # A second cell, one lab only: its rows must not be counted.
+            synthetic.other_lab_record(population_raw="p2", population_id="syn:p2",
+                                       outcome_id="body_weight", outcome_raw="o2",
+                                       source_locator="Fig 9Z (synthetic)"),
+        ]
+        circuit = {r.perturbation_class: r for r in cell_reach(rows, "lab")}[
+            "circuit_activity"
+        ]
+        self.assertEqual(circuit.n_records, 3)
+        self.assertEqual(circuit.n_cells, 2)
+        self.assertEqual(circuit.n_cells_multi_group, 1)
+        self.assertEqual(circuit.n_records_in_multi_group_cells, 2)
+        self.assertEqual(
+            circuit.to_dict()["n_records_in_multi_group_cells"], 2
+        )
+
+    def test_no_multi_group_cell_means_no_records_in_one(self):
+        rows = [
+            synthetic.good_record(population_raw="p1", population_id="syn:p1",
+                                  outcome_id="food_intake", outcome_raw="o"),
+            synthetic.other_lab_record(population_raw="p2", population_id="syn:p2",
+                                       outcome_id="body_weight", outcome_raw="o2"),
+        ]
+        circuit = {r.perturbation_class: r for r in cell_reach(rows, "lab")}[
+            "circuit_activity"
+        ]
+        self.assertEqual(circuit.n_records_in_multi_group_cells, 0)
+
     def test_the_share_is_none_not_zero_when_there_are_no_cells(self):
         """"No cells" and "no cell reaches two groups" are opposite findings."""
         row = ClassCellReach(perturbation_class="molecular", grouping="lab")

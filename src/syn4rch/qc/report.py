@@ -22,8 +22,8 @@ from ..schema.validate import Severity as SchemaSeverity
 from ..schema.validate import unevidenced_conditions, validate
 from .comparability import comparability_coverage, find_missing_comparability_fields, unclear_valence_count
 from .conflicts import annotate_conflicts, find_conflicts, key_comparison
-from .keys import NULL, condition_specificity
 from .duplicates import run_duplicate_checks
+from .keys import NULL, condition_specificity, lab_key
 from .findings import QCFinding, QCSeverity
 from .units import check_units
 
@@ -133,13 +133,11 @@ def run_qc(
     coverage = comparability_coverage(records)
     report.stats = {
         "n_studies": len({r.study_id for r in records if r.study_id}),
-        "n_labs": len(
-            {
-                (r.last_author or "", r.last_author_affiliation or "")
-                for r in records
-                if r.last_author
-            }
-        ),
+        # lab_key, not a second definition of lab identity. This counted
+        # (last_author, last_author_affiliation) inline until D-056 and so
+        # kept reporting 75 labs for 75 studies after the shared key was
+        # corrected -- the exact duplication keys.py exists to prevent.
+        "n_labs": len({lab_key(r) for r in records if lab_key(r) is not None}),
         "n_populations_unresolved": sum(1 for r in records if r.population_id is None),
         "n_abstract_only": sum(1 for r in records if r.full_text_available is not True),
         "n_valence_unclear": unclear_valence_count(records),

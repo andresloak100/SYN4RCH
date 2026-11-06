@@ -287,7 +287,8 @@ RULES = {
     "W010_NO_LAB_IDENTITY": (
         Severity.WARNING,
         "last_author",
-        "Missing last_author/affiliation: lab-level leakage control is weakened.",
+        "Missing last_author: the record has no lab identity at all, so it is "
+        "excluded from every leave-one-lab-out fold (D-009).",
     ),
     "W011_NO_OUTCOME_TIER": (
         Severity.WARNING,
@@ -339,6 +340,16 @@ RULES = {
         "entry, so a reader cannot check it without re-reading the paper. The "
         "362 records curated before v0.3.0 are all in this state; the warning "
         "exists to count the remaining gap rather than to hide it.",
+    ),
+    "W018_NO_LAB_AFFILIATION": (
+        Severity.WARNING,
+        "last_author_affiliation",
+        "last_author is present, so the record groups by lab (D-056), but the "
+        "affiliation is missing. The affiliation is no longer part of lab "
+        "identity; its one remaining job is the homonym check "
+        "(QC_POSSIBLE_LAB_HOMONYM), which cannot look at this author. The "
+        "warning exists so that a corpus whose affiliations are all absent "
+        "cannot leave that check silently vacuous.",
     ),
 }
 
@@ -747,8 +758,14 @@ def validate(record: TierARecord) -> List[ValidationError]:
                     % (record.age_group.value, expected_age.value),
                 )
             )
-    if _blank(record.last_author) or _blank(record.last_author_affiliation):
+    # Tracks lab_key exactly (D-056): lab identity is the last author alone,
+    # so a record with an author and no affiliation *has* a lab identity and
+    # must not be told it has none. Until this was split, 17 records in the
+    # corpus carried W010 while grouping perfectly well.
+    if _blank(record.last_author):
         out.append(_err(record, "W010_NO_LAB_IDENTITY"))
+    elif _blank(record.last_author_affiliation):
+        out.append(_err(record, "W018_NO_LAB_AFFILIATION"))
     if record.outcome_tier is None:
         out.append(_err(record, "W011_NO_OUTCOME_TIER"))
     if _blank(record.title) or record.year is None:

@@ -264,7 +264,14 @@ class TestCellCountsStudiesAndLabs(unittest.TestCase):
         self.assertEqual(cell.n_labs, 1)
         self.assertFalse(cell.is_multi_lab)
 
-    def test_same_last_author_at_a_different_affiliation_is_a_different_lab(self):
+    def test_same_last_author_at_a_different_affiliation_is_the_same_lab(self):
+        """D-056: a lab is a person, not a person plus however they typed their address.
+
+        This test asserted the opposite until D-056, and the assertion was the
+        defect: the affiliation is free text and the same department is spelled
+        differently in every paper, so one laboratory counted as two and the
+        multi-lab replication counts were overstated.
+        """
         matrix = build_matrix(
             [
                 synthetic.good_record(),
@@ -276,7 +283,10 @@ class TestCellCountsStudiesAndLabs(unittest.TestCase):
                 ),
             ]
         )
-        self.assertEqual(matrix.cell("syn:pop_alpha", "syn:outcome_1").n_labs, 2)
+        cell = matrix.cell("syn:pop_alpha", "syn:outcome_1")
+        self.assertEqual(cell.n_labs, 1)
+        self.assertEqual(cell.n_studies, 2)
+        self.assertFalse(cell.is_multi_lab)
 
     def test_records_without_lab_identity_are_counted_not_pooled(self):
         matrix = build_matrix(

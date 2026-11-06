@@ -63,7 +63,7 @@ A record failing any of these is invalid and must not enter `data/curated/`.
 | `study_id` | str | canonical: `doi:...`; fallback `pmid:...` |
 | `pmid` / `pmcid` / `doi` | str? | all that are known |
 | `title`, `journal`, `year` | str/int | |
-| `first_author`, `last_author`, `last_author_affiliation` | str? | **required for lab-level leakage control** |
+| `first_author`, `last_author`, `last_author_affiliation` | str? | `last_author` is **the lab identity** used for leakage control (D-056: a laboratory is a person). The affiliation is free text and is *not* part of that identity; its one job is the homonym check `QC_POSSIBLE_LAB_HOMONYM`. Missing author → `W010`; missing affiliation → `W018` |
 | `retrieved_from` | enum | `pubmed`, `europepmc_oa`, `europepmc_abstract`, `crossref`, `manual` |
 | `full_text_available` | bool | abstract-only records are marked and down-weighted |
 | `schema_version` | str | `0.2.0` |
@@ -271,8 +271,15 @@ A value in `inferred/` or `predictions/` may never be cited as evidence.
 Splits must be grouped so that none of the following cross the train/test boundary:
 
 1. `study_id` — the obvious one.
-2. **Lab identity** (`last_author` + affiliation) — the same group publishing the
+2. **Lab identity** (the normalised `last_author`) — the same group publishing the
    same circuit repeatedly is the single largest leakage risk in this corpus.
+   This was `last_author` **+ affiliation** until D-056, and that key did not
+   work: the affiliation is free text, the same department is spelled
+   differently in every paper, and the corpus held 75 studies and 75 "labs", so
+   `by_lab` was numerically identical to `by_study` while four laboratories had
+   published eleven papers between them. A laboratory is a person. The failure
+   mode of the looser key is a homonym, which `QC_POSSIBLE_LAB_HOMONYM` detects
+   from the affiliations the key no longer uses.
 3. **Shared cohort** — multiple papers on one animal cohort; flagged manually.
 4. **Population x outcome cell** — for generalization claims, evaluate
    leave-one-population-out as well as leave-one-study-out.
@@ -296,6 +303,18 @@ rows whose perturbation identity was unseen in training. `syn4rch.feasibility.id
 computes it. A high unseen fraction is not a modelling failure to be tuned away; it is
 a statement about how this field publishes — one lab, one gene, one paper — and the
 only remedy is a second laboratory repeating the same manipulation.
+
+**For circuit records the operative version of this is cell depth, not identity
+(D-048, D-057).** `perturbation_key` is `(class, polarity, target)` and a circuit
+record has no target, so the whole circuit half holds about three identities and
+none is confined to one group — the unseen-identity fraction is 0% and measures
+nothing. What distinguishes one circuit manipulation from another is the
+population, which lives in the cell. D-057 measured the direction result by how
+many laboratories had reached the test row's own cell: at zero the model is
+*identical* to the floor by construction, at one the difference spans zero, and
+the whole of the established effect is in cells two or more laboratories had
+reached. A cross-validated number on circuit records should therefore be read
+with that stratification, which `syn4rch.models.generalise` reports.
 
 ## 6. What this schema deliberately refuses to represent
 

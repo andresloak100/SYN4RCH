@@ -140,6 +140,11 @@ is intact.
 **Decision.** Missing `last_author` / `last_author_affiliation` emits
 `W010_NO_LAB_IDENTITY`, not a hard failure.
 
+> **Amended by D-056 and D-057.** Lab identity is the `last_author` alone, so
+> `W010` now fires only when the author is missing and the new
+> `W018_NO_LAB_AFFILIATION` covers a missing affiliation. The severity decision
+> below is unchanged; only which field triggers which warning.
+
 **Why.** SCHEMA.md 3.1 types them `str?` yet annotates them "required for
 lab-level leakage control" -- an internal inconsistency. Blocking admission
 would discard usable evidence; ignoring it would silently break the leakage
@@ -2090,6 +2095,14 @@ studies is established, not accurate, and it is established on the subset where
 a cell was seen — a third of circuit rows still have no evidence in their cell
 at all.
 
+> **Chased, in D-056 (pre-registration) and D-057 (result).** It generalises
+> across laboratories — `established` at the same +0.208 under a lab grouping
+> that, until D-056, had silently been identical to `study_id`. It does not
+> generalise across cell depth: the whole effect lives in the 88 rows whose
+> cell two or more laboratories had already reached, while the 66 rows with one
+> prior laboratory give +0.106 spanning zero. The "26 cells carry the 154 rows"
+> sentence below is now computed by `cell_reach` rather than by hand.
+
 ### Also, and separately: the first feasible task
 
 `syn4rch.feasibility` now reports **1 of 180 (population, outcome) tasks
@@ -2230,4 +2243,191 @@ The generalisation question has a known negative answer on two of its three
 faces before anything new is run. The open face is whether the within-cell
 signal is cross-laboratory, and the reason that face was open is a key that has
 silently agreed with `study_id` for the life of the project.
+
+
+---
+
+## D-057 - The generalisation test: cross-laboratory yes, unreplicated cells no, and one prediction wrong
+
+**The D-056 probes, run once.** Five of six predictions held. The one that
+failed is stated first, because a pre-registration whose misses are buried at
+the bottom is a press release.
+
+### Prediction 3 was wrong
+
+I predicted that correcting lab identity would cut circuit cells spanning two or
+more laboratories from 26 to "somewhere in 20-25", and that the corrected figure
+"can only be worse". **It is 26.** Not one of the 26 multi-study circuit cells
+was a laboratory agreeing with itself: the four repeat laboratories' cells either
+are not multi-study cells, or carry a third laboratory as well.
+
+So D-048's secondary metric missed at 26 against a target of 40, and it missed at
+26 under both definitions of a laboratory. My reasoning — 39% of circuit records
+sit in four repeat labs, therefore some of the replication must be theirs — was
+an inference from the right number to the wrong conclusion, and the measurement
+says so.
+
+### Prediction 1: lab groups 75 -> 68, nothing ungroupable. Held
+
+68 groups, 0 records ungroupable, and the largest group grows from 34 rows to 54
+(Herzog's two papers). `syn4rch.qc.report` had a **fourth** copy of the lab
+identity, computed inline as `(last_author, last_author_affiliation)`, and kept
+printing "labs identified: 75" after the shared key was corrected. It now calls
+`lab_key`, which is the duplication `qc/keys.py` exists to prevent.
+
+### Prediction 2: the signal is cross-laboratory. Held
+
+| grouping | delta | clustered 95% CI | accuracy | rows / groups | McNemar | verdict |
+|---|---|---|---|---|---|---|
+| `study_id` | +0.208 | [+0.089, +0.354] | 0.558 vs 0.351 | 154 / 35 | p=0.004 | **established** |
+| `lab` (corrected) | +0.208 | [+0.086, +0.385] | 0.558 vs 0.351 | 154 / 32 | p=0.004 | **established** |
+
+The threshold was `established` with delta >= +0.10. It is `established` at
++0.208, so D-055's primary is not one laboratory agreeing with itself.
+
+**And the accuracies being equal to four decimals is a coincidence, not an
+identity.** Merging the four repeat laboratories into single folds changed
+exactly **two** predictions: one row with truth `decrease` went
+`no_change` -> `decrease` (wrong to right) and one with truth `no_change` went
+`no_change` -> `decrease` (right to wrong). They cancel. Reporting "the
+predictions are unchanged" would have been a stronger and false claim; what
+changed is the clustering, 35 groups to 32, which widens the interval.
+
+### Prediction 5: it needs a replicated cell, not merely a seen one. Held, with a caveat on my own wording
+
+Circuit rows by how many distinct **laboratories** had reached the test row's own
+cell in training:
+
+| stratum | rows | delta | clustered 95% CI | accuracy | McNemar | verdict |
+|---|---|---|---|---|---|---|
+| `depth_0` | 159 | **+0.000** | [+0.000, +0.000] | 0.459 vs 0.459 | n/a | no_difference |
+| `depth_1` | 66 | +0.106 | [−0.113, +0.421] | 0.485 vs 0.379 | p=0.349 | no_difference |
+| `depth_2_plus` | 88 | **+0.284** | [+0.108, +0.484] | 0.614 vs 0.330 | p=0.006 | **established** |
+
+`depth_0` is exactly 0.000 with zero discordant rows, which is the instrument
+check: where the cell was never populated the candidate *is* the floor, and a
+non-zero value there would have meant this baseline is not what the project says
+it is. It is reported rather than assumed.
+
+I predicted the delta would be "larger at >=2 laboratories than at 1, and
+positive at both". Literally that held: +0.284 against +0.106, both positive. But
++0.106 on 66 rows in 18 groups spans zero in both tests, so the honest reading is
+**one prior laboratory in a cell buys nothing this corpus can detect, and the
+whole of the established effect lives in the 88 rows whose cell two or more
+laboratories had reached.** That is a sharper and smaller claim than the
+headline, and it is the claim the system can actually support.
+
+### Prediction 6: the verdict rule is calibrated. Held, and the pre-registered 200 permutations were not enough to say so
+
+Labels permuted **within** study, so every study keeps its own label multiset and
+the cell structure is untouched; what is destroyed is the association between a
+cell and a direction across studies.
+
+| permutations | reached `established` | rate | null deltas >= observed | empirical p |
+|---|---|---|---|---|
+| 200 (pre-registered) | 6 | 3.0% | 0 of 200 | 0.005 |
+| 2000 (precision) | 43 | 2.15% | 0 of 2000 | 0.0005 |
+
+The rule fires on null data 2.15% of the time, under the 5% threshold. **But
+6/200 has a binomial 95% upper bound of about 6.4%, which crosses the very
+threshold the probe was testing** — the pre-registered permutation count was too
+small to answer its own question, and I only noticed when the answer was close
+to the line. The 2000-permutation run is more of the same quantity at the same
+threshold, not a new metric, and it settles it at about [1.6%, 2.9%].
+
+**The null is not centred on zero, and that is the most useful thing this probe
+produced.** Its median delta is +0.039 and its 95th percentile +0.104, because
+permuting within study preserves each study's label multiset: a cell one study
+dominates keeps that study's labels, so cell lookup still recovers study-level
+label structure. Anyone reading "delta > 0" as evidence that a cell carries
+direction information is comparing against the wrong origin. The observed +0.208
+exceeds every one of 2000 permuted deltas (max +0.195).
+
+### Prediction 4: the one feasible task survives. Held
+
+`arc_agrp` / circuit activation / `food_intake` is still 3 studies, **3
+laboratories**, agreement 1.00, both claim-keyed variants still passing every
+gate. Its three studies have three distinct last authors, so the first feasible
+task this project ever found is not an artefact of lab over-splitting. The cell
+it sits in did lose laboratories: `arc_agrp` / `food_intake` goes from 23
+studies / 23 labs to 23 studies / **20** labs.
+
+### What the three probes say together
+
+The result generalises **across laboratories** and not **across cells**. Those
+are different axes and only the first was open:
+
+* across laboratories: yes, with the same effect size and a wider interval;
+* across cell depth: no — the effect is entirely in cells two or more
+  laboratories had already reached;
+* to an unseen population: no, and exactly so. D-056 read this out of the
+  committed benchmark rather than re-running it: the candidate's delta against
+  the floor is **0.000** under leave-one-population-out. The population is a
+  component of the cell, so holding it out empties the cell and the model
+  reduces to the global mode. Its only mechanism is cell lookup;
+* to the molecular half: no, for the same reason at a different key — 0 of 170
+  molecular rows have a populated cell under leave-one-study-out.
+
+So the system predicts the direction of a circuit manipulation when at least two
+laboratories have already published that exact manipulation and readout. That is
+a real and measurable capability, it is not a model of the hypothalamus, and the
+distance between those two sentences is the project's position.
+
+### Three defects found while running it, each fixed as a class
+
+**1. `n_records_in_multi_group_cells` was declared, serialised and never
+populated.** It defaulted to 0 and `cell_reach` never passed it, so anything
+reading the identity JSON was told that **0** records lived in the 26 multi-group
+circuit cells. It now reports **154** — which independently confirms D-055's
+assertion that "26 cells carry the 154 rows the primary is measured on". That
+sentence was true when I wrote it and I had computed it by hand; the code now
+computes it.
+
+**2. `W010_NO_LAB_IDENTITY` contradicted the key it exists to protect.** It
+fired when the author *or* the affiliation was blank, so after D-056 made lab
+identity the author alone, **17 records that group perfectly well were being told
+they have no lab identity**. W010 now tracks `lab_key` exactly, and a new
+`W018_NO_LAB_AFFILIATION` covers the real cost of a missing affiliation: the
+homonym check cannot look at that author. Without the second warning, a corpus
+with no affiliations at all would leave `QC_POSSIBLE_LAB_HOMONYM` silently
+vacuous, which is the failure D-056 was written about. Total warnings are
+unchanged at 2714: the same 17 records, under the code that describes them.
+
+**3. `find_possible_non_independence` printed its claim components under the
+wrong names.** `claim_key` stopped carrying `valence` when v0.2.0 added the
+perturbation axis, and the message had since been labelling the perturbation
+class "valence", the polarity "outcome" and the target "direction". Nothing
+noticed because the check never fired. The components are now named from
+`CLAIM_KEY_FIELDS`.
+
+### And a correction to D-056's own framing
+
+D-056 said the non-independence detector "returned nothing on a corpus in which
+four labs had published eleven papers", implying the affiliation was why. The
+cause was right and the implication was wrong: **after the fix it still returns
+nothing.** `claim_key` has nine components including all four conditions, and no
+laboratory in this corpus repeats a claim that specific. Under the coarser
+`(population, outcome, direction)` there are six lab-level repeats, among them
+Brüning reporting `arc_agrp` -> `food_intake` increase in three separate studies.
+
+So the detector keys on something **finer than the thing labs actually repeat**,
+and finer than the cell the model learns on. That is a real gap and it is left
+open deliberately: the claim key is the right granularity for conflict and
+replication, the cell is the right granularity for leakage, and they are two
+questions. The leakage question is now answered directly by probe 1 rather than
+inferred from a detector — which is the better answer anyway.
+
+### What moved in the committed reports
+
+Every `by_lab` number in `reports/baseline_benchmark.md` changed, and every
+`study_id` number is bit-identical to the version committed at c21ce6d. That
+equality is also the control on a refactor made for this work:
+`evaluate.paired_slice` was extracted from a closure so the depth strata could
+use the same interval and the same test as the headline slice, and the way to
+show an extraction changed nothing is to show the numbers it does not touch
+standing still.
+
+One substantive change beyond the group counts: `neurotransmitter_sign` under
+`by_lab` falls from `established` to `suggestive`. It is *worse* than the floor
+by 0.162, and the corrected grouping makes that harm less certain, not more.
 

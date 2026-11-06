@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-06T02:33:53Z",
+ "generated_at": "2026-11-06T17:18:43Z",
  "generated_from": "data/curated/records.jsonl",
  "mode_label": "Measured signalling - evidence playback",
  "mode_note": "Recorded observations animated. Nothing is simulated: no equation is integrated and no unmeasured response is inferred.",
@@ -824,7 +824,7 @@
    "axis_phrase": "more firing",
    "n_records": 36,
    "n_studies": 16,
-   "n_labs": 16,
+   "n_labs": 14,
    "directions": {
     "increase": 31,
     "no_change": 5
@@ -870,7 +870,7 @@
    "axis_phrase": "less firing",
    "n_records": 23,
    "n_studies": 7,
-   "n_labs": 7,
+   "n_labs": 6,
    "directions": {
     "decrease": 14,
     "no_change": 9
@@ -1007,7 +1007,7 @@
    "axis_phrase": "more firing",
    "n_records": 8,
    "n_studies": 4,
-   "n_labs": 4,
+   "n_labs": 3,
    "directions": {
     "decrease": 6,
     "no_change": 2
@@ -1232,7 +1232,7 @@
    "axis_phrase": "less firing",
    "n_records": 5,
    "n_studies": 3,
-   "n_labs": 3,
+   "n_labs": 2,
    "directions": {
     "no_change": 5
    },
@@ -1257,7 +1257,7 @@
    "axis_phrase": "more firing",
    "n_records": 5,
    "n_studies": 3,
-   "n_labs": 3,
+   "n_labs": 2,
    "directions": {
     "decrease": 2,
     "no_change": 3

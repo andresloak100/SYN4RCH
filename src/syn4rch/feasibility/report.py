@@ -425,7 +425,7 @@ def _section_run(report: "FeasibilityReport") -> List[str]:
             ),
         ],
         ["distinct studies", str(coverage.n_studies)],
-        ["distinct labs (last author + affiliation)", str(coverage.n_labs)],
+        ["distinct labs (last author, D-056)", str(coverage.n_labs)],
         ["usable records with no lab identity", str(coverage.n_records_without_lab)],
         [
             "usable records stating none of the %d conditions" % N_CONDITION_SLOTS,

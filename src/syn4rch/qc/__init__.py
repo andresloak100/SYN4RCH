@@ -21,7 +21,9 @@ from .conflicts import (  # noqa: F401
     find_conflicts,
 )
 from .duplicates import (  # noqa: F401
+    affiliation_tokens,
     find_exact_duplicates,
+    find_lab_identity_collisions,
     find_locator_collisions,
     find_possible_non_independence,
     run_duplicate_checks,

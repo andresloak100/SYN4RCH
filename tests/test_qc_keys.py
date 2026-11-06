@@ -177,6 +177,36 @@ class LabKeyTest(unittest.TestCase):
         self.assertEqual(K.lab_key(a), K.lab_key(b))
         self.assertNotEqual(K.study_key(a), K.study_key(b))
 
+    def test_the_key_is_the_author_and_nothing_else(self):
+        """D-056. The affiliation is not part of lab identity.
+
+        Stated as an equality against the author rather than as "two records
+        group together", because the thing that went wrong was a key that
+        *looked* like a lab identity and behaved like a study identity.
+        """
+        record = synthetic.good_record(
+            last_author="Brüning JC.",
+            last_author_affiliation="Max Planck Institute, Cologne",
+        )
+        self.assertEqual(K.lab_key(record), "brüning jc.")
+
+    def test_retyping_the_affiliation_does_not_found_a_new_lab(self):
+        a = synthetic.good_record(
+            last_author_affiliation="Gleueler Str. 50, 50931 Cologne"
+        )
+        b = synthetic.same_lab_other_study_record(
+            last_author_affiliation="Gleueler Strasse 50, Cologne, Germany"
+        )
+        self.assertEqual(K.lab_key(a), K.lab_key(b))
+
+    def test_the_affiliation_is_still_available_under_its_own_name(self):
+        record = synthetic.good_record(last_author_affiliation="A Place")
+        self.assertEqual(K.lab_affiliation(record), "a place")
+        self.assertEqual(
+            K.lab_affiliation(synthetic.good_record(last_author_affiliation=None)),
+            "",
+        )
+
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

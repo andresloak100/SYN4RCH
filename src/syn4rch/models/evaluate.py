@@ -60,7 +60,17 @@ Python 3.10 compatible, standard library only.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from . import metrics as M
 from ._compat import optional_dependency_report
@@ -77,6 +87,7 @@ from .task import (
 )
 
 __all__ = [
+    "paired_slice",
     "UnlabelledMetricError",
     "ComparisonSlice",
     "Comparison",
@@ -1388,6 +1399,114 @@ class Comparison:
         }
 
 
+def paired_slice(
+    *,
+    name: str,
+    description: str,
+    grouping: str,
+    rows: Sequence[int],
+    correct_baseline: Mapping[int, int],
+    correct_reference: Mapping[int, int],
+    group_values: Sequence[Optional[str]],
+    n_bootstrap: int = 1000,
+    seed: int = 20240101,
+) -> ComparisonSlice:
+    """One :class:`ComparisonSlice` over an arbitrary subset of paired rows.
+
+    ``rows`` indexes into ``group_values`` and into the two correctness maps,
+    which hold 1 or 0 per paired row. Everything else about a slice -- the
+    group-clustered bootstrap of the *paired difference*, the exact McNemar
+    test on the discordant rows, the two size caveats, and the empty-slice
+    statement -- is here, once.
+
+    It is a module-level function rather than a closure because
+    :mod:`syn4rch.models.generalise` asks the same question of subsets this
+    module does not define (how deep the test row's cell was in training), and
+    a second implementation of the interval and the test would produce numbers
+    that could not be compared with the benchmark's.
+    """
+    if not rows:
+        # A requested slice with no rows is reported as a slice with no rows,
+        # not omitted. "No row of this half had its cell populated in training"
+        # is a finding -- it is what SCHEMA.md 5b predicts for a perturbation
+        # that exists in one study -- and an absent table row would read as an
+        # oversight.
+        return ComparisonSlice(
+            name=name,
+            description=description,
+            grouping=grouping,
+            n_rows=0,
+            n_groups=0,
+            caveats=(
+                "no paired test row falls in this slice, so the two baselines "
+                "cannot differ here and no difference exists to report",
+            ),
+        )
+    row_list = list(rows)
+    groups = M.index_groups([group_values[i] for i in row_list])
+
+    def _delta(positions: Sequence[int]) -> Optional[float]:
+        if not positions:
+            return None
+        n_ = len(positions)
+        return (
+            sum(correct_baseline[row_list[p]] for p in positions) / n_
+            - sum(correct_reference[row_list[p]] for p in positions) / n_
+        )
+
+    n_rows = len(row_list)
+    accuracy = sum(correct_baseline[i] for i in row_list) / n_rows
+    reference_accuracy = sum(correct_reference[i] for i in row_list) / n_rows
+    only_mine = sum(
+        1 for i in row_list if correct_baseline[i] and not correct_reference[i]
+    )
+    only_theirs = sum(
+        1 for i in row_list if correct_reference[i] and not correct_baseline[i]
+    )
+    # Every slice uses the same seed on purpose. Two slices that happen to hold
+    # the same rows -- which is what happens when one half of the corpus
+    # contributes every row of a subset -- then report the same interval,
+    # rather than two Monte Carlo draws of it that a reader would have to
+    # reconcile.
+    ci = M.bootstrap_group_ci(_delta, groups, n_boot=n_bootstrap, seed=seed)
+    slice_caveats: List[str] = []
+    if n_rows < MIN_ROWS_FOR_METRIC:
+        slice_caveats.append(
+            "n=%d paired rows is below %d: this difference does not carry "
+            "meaning" % (n_rows, MIN_ROWS_FOR_METRIC)
+        )
+    if len(groups) < MIN_GROUPS_FOR_CI:
+        slice_caveats.append(
+            "only %d independent %s group(s): treat the interval as "
+            "indicative" % (len(groups), grouping)
+        )
+    if ci is not None and ci.get("ci_low") is None and ci.get("note"):
+        slice_caveats.append(str(ci["note"]))
+    return ComparisonSlice(
+        name=name,
+        description=description,
+        grouping=grouping,
+        n_rows=n_rows,
+        n_groups=len(groups),
+        accuracy=accuracy,
+        reference_accuracy=reference_accuracy,
+        delta=accuracy - reference_accuracy,
+        ci=ci,
+        n_only_baseline_right=only_mine,
+        n_only_reference_right=only_theirs,
+        n_both_right=sum(
+            1 for i in row_list if correct_baseline[i] and correct_reference[i]
+        ),
+        n_both_wrong=sum(
+            1
+            for i in row_list
+            if not correct_baseline[i] and not correct_reference[i]
+        ),
+        mcnemar_p=M.mcnemar_exact_p(only_mine, only_theirs),
+        caveats=tuple(slice_caveats),
+    )
+
+
 def compare_under_grouping(
     factory: Callable[[], Baseline],
     reference_factory: Callable[[], Baseline],
@@ -1495,86 +1614,16 @@ def compare_under_grouping(
     correct_theirs = {i: 1 if theirs[i] == truth[i] else 0 for i in paired}
 
     def _slice(name: str, description: str, rows: Sequence[int]):
-        if not rows:
-            # A requested slice with no rows is reported as a slice with no
-            # rows, not omitted. "No row of this half had its cell populated in
-            # training" is a finding -- it is what SCHEMA.md 5b predicts for a
-            # perturbation that exists in one study -- and an absent table row
-            # would read as an oversight.
-            return ComparisonSlice(
-                name=name,
-                description=description,
-                grouping=grouping,
-                n_rows=0,
-                n_groups=0,
-                caveats=(
-                    "no paired test row falls in this slice, so the two "
-                    "baselines cannot differ here and no difference exists to "
-                    "report",
-                ),
-            )
-        groups = M.index_groups([pooled_group[i] for i in rows])
-        row_list = list(rows)
-
-        def _delta(positions: Sequence[int]) -> Optional[float]:
-            if not positions:
-                return None
-            n_ = len(positions)
-            return (
-                sum(correct_mine[row_list[p]] for p in positions) / n_
-                - sum(correct_theirs[row_list[p]] for p in positions) / n_
-            )
-
-        # index_groups indexes into the slice's own row list, so the bootstrap
-        # resamples whole groups *of this slice*.
-        n_rows = len(row_list)
-        accuracy = sum(correct_mine[i] for i in row_list) / n_rows
-        reference_accuracy = sum(correct_theirs[i] for i in row_list) / n_rows
-        only_mine = sum(
-            1 for i in row_list if correct_mine[i] and not correct_theirs[i]
-        )
-        only_theirs = sum(
-            1 for i in row_list if correct_theirs[i] and not correct_mine[i]
-        )
-        # Every slice uses the same seed on purpose. Two slices that happen to
-        # hold the same rows -- which is what happens when one half of the
-        # corpus contributes every row of a subset -- then report the same
-        # interval, rather than two Monte Carlo draws of it that a reader would
-        # have to reconcile.
-        ci = M.bootstrap_group_ci(_delta, groups, n_boot=n_bootstrap, seed=seed)
-        slice_caveats: List[str] = []
-        if n_rows < MIN_ROWS_FOR_METRIC:
-            slice_caveats.append(
-                "n=%d paired rows is below %d: this difference does not carry "
-                "meaning" % (n_rows, MIN_ROWS_FOR_METRIC)
-            )
-        if len(groups) < MIN_GROUPS_FOR_CI:
-            slice_caveats.append(
-                "only %d independent %s group(s): treat the interval as "
-                "indicative" % (len(groups), grouping)
-            )
-        if ci is not None and ci.get("ci_low") is None and ci.get("note"):
-            slice_caveats.append(str(ci["note"]))
-        return ComparisonSlice(
+        return paired_slice(
             name=name,
             description=description,
             grouping=grouping,
-            n_rows=n_rows,
-            n_groups=len(groups),
-            accuracy=accuracy,
-            reference_accuracy=reference_accuracy,
-            delta=accuracy - reference_accuracy,
-            ci=ci,
-            n_only_baseline_right=only_mine,
-            n_only_reference_right=only_theirs,
-            n_both_right=sum(
-                1 for i in row_list if correct_mine[i] and correct_theirs[i]
-            ),
-            n_both_wrong=sum(
-                1 for i in row_list if not correct_mine[i] and not correct_theirs[i]
-            ),
-            mcnemar_p=M.mcnemar_exact_p(only_mine, only_theirs),
-            caveats=tuple(slice_caveats),
+            rows=rows,
+            correct_baseline=correct_mine,
+            correct_reference=correct_theirs,
+            group_values=pooled_group,
+            n_bootstrap=n_bootstrap,
+            seed=seed,
         )
 
     seen_rows = [i for i in paired if primary_seen[i]]

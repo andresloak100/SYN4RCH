@@ -57,6 +57,7 @@ __all__ = [
     "condition_specificity",
     "claim_key",
     "claim_key_pooled",
+    "lab_affiliation",
     "lab_key",
     "observation_key",
     "study_key",
@@ -269,17 +270,44 @@ def claim_key_pooled(record) -> Tuple[str, str, str]:
     )
 
 
-def lab_key(record) -> Optional[Tuple[str, str]]:
-    """``(last_author, affiliation)`` or ``None`` if lab identity is unknown.
+def lab_key(record) -> Optional[str]:
+    """The normalised ``last_author``, or ``None`` if there is none.
 
     SCHEMA.md 5 names lab identity as the largest leakage risk in this corpus.
     ``None`` means "cannot be grouped": such records are skipped by
     non-independence detection rather than lumped into one anonymous lab.
+
+    **A laboratory is a person, not a person plus an address** (D-056). This
+    key was ``(last_author, last_author_affiliation)`` until D-056, and the
+    affiliation made it useless: it is free text harvested from PubMed, every
+    paper spells the same department differently, and the corpus therefore held
+    75 studies and 75 "labs". Leave-one-lab-out was numerically identical to
+    leave-one-study-out in every report this project published, and
+    :func:`syn4rch.qc.duplicates.find_possible_non_independence` -- whose whole
+    subject is one lab publishing a claim twice -- returned nothing on a corpus
+    in which four labs had published eleven papers.
+
+    The failure mode of this looser key is a **homonym**: two unrelated
+    researchers whose normalised surname and initials coincide merge into one
+    lab, which costs test rows and manufactures a replication. That is detected
+    rather than assumed away, by
+    :func:`syn4rch.qc.duplicates.find_lab_identity_collisions`, which reads the
+    affiliations the key no longer uses.
     """
     author = norm(record.last_author)
     if not author:
         return None
-    return (author, norm(record.last_author_affiliation))
+    return author
+
+
+def lab_affiliation(record) -> str:
+    """The normalised affiliation. Not part of :func:`lab_key` (D-056).
+
+    Kept as its own function so that the homonym check has one definition of
+    the string it compares, and so that a caller reaching for an affiliation is
+    reaching for something that says in its name it is not an identity.
+    """
+    return norm(record.last_author_affiliation)
 
 
 def observation_key(record):

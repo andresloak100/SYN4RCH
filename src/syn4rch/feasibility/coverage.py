@@ -418,7 +418,7 @@ class Cell:
     n_labs: int = 0
     n_records_without_lab: int = 0
     studies: Tuple[str, ...] = ()
-    labs: Tuple[Tuple[str, str], ...] = ()
+    labs: Tuple[str, ...] = ()
     valences: Tuple[str, ...] = ()
     perturbation_classes: Tuple[str, ...] = ()
     perturbation_polarities: Tuple[str, ...] = ()
@@ -443,7 +443,7 @@ class Cell:
             "n_labs": self.n_labs,
             "n_records_without_lab": self.n_records_without_lab,
             "studies": list(self.studies),
-            "labs": [list(lab) for lab in self.labs],
+            "labs": list(self.labs),
             "valences": list(self.valences),
             "perturbation_classes": list(self.perturbation_classes),
             "perturbation_polarities": list(self.perturbation_polarities),

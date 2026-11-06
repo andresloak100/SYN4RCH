@@ -225,6 +225,42 @@ class TestWarningsAreDistinguishable(unittest.TestCase):
         record = synthetic.good_record(last_author=None, last_author_affiliation=None)
         self.assertIn("W010_NO_LAB_IDENTITY", codes(warning_findings(validate(record))))
 
+    def test_an_author_with_no_affiliation_still_has_a_lab_identity(self):
+        """W010 tracks lab_key exactly (D-056), and lab_key is the author.
+
+        Seventeen records in the corpus carried W010 while grouping perfectly
+        well, because this check asked for the affiliation that D-056 removed
+        from the key. The affiliation's absence is still worth a warning -- the
+        homonym check needs it -- but it is a different warning.
+        """
+        record = synthetic.good_record(last_author_affiliation=None)
+        found = codes(warning_findings(validate(record)))
+        self.assertNotIn("W010_NO_LAB_IDENTITY", found)
+        self.assertIn("W018_NO_LAB_AFFILIATION", found)
+
+    def test_a_record_with_no_author_is_not_also_told_about_its_affiliation(self):
+        """One statement per record: it has no lab identity at all."""
+        record = synthetic.good_record(last_author=None, last_author_affiliation=None)
+        found = codes(warning_findings(validate(record)))
+        self.assertIn("W010_NO_LAB_IDENTITY", found)
+        self.assertNotIn("W018_NO_LAB_AFFILIATION", found)
+
+    def test_the_two_lab_warnings_agree_with_lab_key(self):
+        from syn4rch.qc.keys import lab_key
+
+        for overrides in (
+            {},
+            {"last_author_affiliation": None},
+            {"last_author": None, "last_author_affiliation": None},
+        ):
+            record = synthetic.good_record(**overrides)
+            found = codes(warning_findings(validate(record)))
+            self.assertEqual(
+                lab_key(record) is None,
+                "W010_NO_LAB_IDENTITY" in found,
+                overrides,
+            )
+
     def test_unreviewed_llm_extraction_is_a_warning(self):
         record = synthetic.good_record(extraction_method="llm", review_status="unreviewed")
         self.assertIn("W005_UNREVIEWED_LLM_EXTRACTION", codes(validate(record)))

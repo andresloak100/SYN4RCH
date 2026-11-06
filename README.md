@@ -78,6 +78,35 @@ agree, which they had never done before in this project. It took 60 more
 optogenetic and chemogenetic papers to get there; on the 362-record corpus the
 same code reports +0.097 [−0.019, +0.245], p=0.266, `no_difference`.
 
+**It survives a harder split, and it does not survive an unreplicated cell.**
+Three pre-registered probes (D-056, run in D-057; `reports/generalisation.md`):
+
+| probe | result |
+|---|---|
+| leave-one-**laboratory**-out instead of leave-one-study-out | +0.208 [+0.086, +0.385], 154 rows / 32 labs, p=0.004 — still **established** |
+| cell reached by **one** prior laboratory in training (66 rows) | +0.106 [−0.113, +0.421], p=0.349 — `no_difference` |
+| cell reached by **two or more** (88 rows) | +0.284 [+0.108, +0.484], p=0.006 — **established** |
+| 2000 label permutations *within* study | the `established` rule fires 2.15% of the time; 0 of 2000 null deltas reach +0.208 |
+
+    PYTHONPATH=src python3 -m syn4rch.models.generalise --permutations 200
+
+So the honest claim is narrower than the headline: **direction is predictable
+for a circuit manipulation that at least two laboratories have already published
+with that readout.** One prior observation of the cell buys nothing this corpus
+can detect, and the null these numbers are read against is not centred on zero —
+permuting labels within study still leaves the cell baseline +0.039 ahead of the
+floor at the median, because a cell one study dominates keeps that study's
+labels.
+
+Setting those probes up turned up a key that had never worked. Lab identity was
+`(last_author, affiliation)`, the affiliation is free text from PubMed, and the
+same department is spelled differently in every paper — so the corpus held 75
+studies and 75 "labs", and every leave-one-lab-out number this project published
+was a leave-one-study-out number under another name, on a corpus where four
+laboratories had published eleven papers between them. A laboratory is now a
+person: 68 labs, and the `by_lab` half of the benchmark moved while every
+`study_id` number stayed bit-identical.
+
 Pooled across both halves, nothing beats guessing, which is what every earlier
 benchmark here reported. The molecular half is still not *bad* at prediction —
 it has nothing to predict from.
@@ -184,15 +213,21 @@ Those are not in tension, and the reconciliation is the finding: **the signal di
 not come from broad cross-laboratory replication.** 26 cells carry all 154 rows
 the primary is measured on; the other 130 circuit cells hold one laboratory each.
 Sixty papers added depth in the few populations the field keeps returning to,
-and depth is what the direction model needed. So the result rests on a narrow
-base, and whether it generalises is the next question rather than a settled one.
+and depth is what the direction model needed.
+
+That narrow base was then probed rather than left as a caveat (D-056, D-057).
+Five of six predictions held; **the one that failed is that correcting lab
+identity would cut the 26 multi-laboratory cells to 20–25.** It is still 26 —
+not one of them was a laboratory agreeing with itself, so the secondary metric
+missed under both definitions of a laboratory.
 
 **And one task is now feasible**, where every previous run said none: `arc_agrp`
 / circuit activation / `food_intake`, across 3 studies and 3 laboratories with
-agreement 1.00. It is also the most reproduced claim in this literature, so it is
-a sanity check on the pipeline rather than a discovery — and both of its variants
-matched on 0 or 1 of 4 stated conditions, which the report labels
-`CONDITIONS_ALL_UNKNOWN`.
+agreement 1.00 — still 3 laboratories after lab identity was corrected, so it is
+not an artefact of over-splitting. It is also the most reproduced claim in this
+literature, so it is a sanity check on the pipeline rather than a discovery — and
+both of its variants matched on 0 or 1 of 4 stated conditions, which the report
+labels `CONDITIONS_ALL_UNKNOWN`.
 
 So "the evidence is insufficient" was an artifact of a missing field for half
 the corpus, and remains the right answer for the other half. What to curate next
@@ -310,4 +345,4 @@ example would have been clearer, a synthetic one is used instead.
     src/syn4rch/models/    modelling experiments (never a source of evidence)
     src/syn4rch/kg/        knowledge graph (association and anatomy classes)
     tests/                 unittest suite; fabricated fixtures only
-    reports/               generated QC reports (untracked)
+    reports/               generated reports; the .md ones are tracked (D-016)

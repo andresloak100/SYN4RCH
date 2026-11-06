@@ -3,8 +3,8 @@
 Implements SCHEMA.md 5. Three groupings, each leave-one-group-out:
 
 * :func:`by_study` -- item 1, ``study_id``.
-* :func:`by_lab` -- item 2, ``last_author`` + affiliation. The one SCHEMA.md
-  calls the largest leakage risk in this corpus.
+* :func:`by_lab` -- item 2, the normalised ``last_author`` (D-056). The one
+  SCHEMA.md calls the largest leakage risk in this corpus.
 * :func:`leave_one_population_out` -- item 4, the generalisation question:
   can the model say anything about a population it has never seen?
 
@@ -75,10 +75,12 @@ _NOTES: Dict[str, str] = {
         "for that. " + _SHARED_COHORT_CAVEAT
     ),
     "by_lab": (
-        "Leave-one-lab-out on (last_author, last_author_affiliation) "
-        "(SCHEMA.md 5 item 2). Records with no lab identity are excluded from "
-        "every fold and listed; they are not pooled into an anonymous lab "
-        "(docs/DECISIONS.md D-009). " + _SHARED_COHORT_CAVEAT
+        "Leave-one-lab-out on the normalised last_author (SCHEMA.md 5 item 2; "
+        "docs/DECISIONS.md D-056 -- the affiliation was part of this key until "
+        "then, and made it identical to by_study). Records with no lab "
+        "identity are excluded from every fold and listed; they are not "
+        "pooled into an anonymous lab (docs/DECISIONS.md D-009). "
+        + _SHARED_COHORT_CAVEAT
     ),
     "leave_one_population_out": (
         "Leave-one-population-out (SCHEMA.md 5 item 4), grouping on "
@@ -248,10 +250,10 @@ def _study_group(record) -> Optional[str]:
 
 
 def _lab_group(record) -> Optional[str]:
-    lab = lab_key(record)
-    if lab is None:
-        return None
-    return " | ".join(lab)
+    # D-056: the lab key is the normalised last author, and is already the
+    # group label. Joining an affiliation onto it is what made this split
+    # indistinguishable from by_study.
+    return lab_key(record)
 
 
 def _population_group(record) -> Optional[str]:
