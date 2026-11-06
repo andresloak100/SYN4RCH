@@ -3503,3 +3503,108 @@ arriving on schedule, and D-023's framing has now survived two tests.
   ids, all mapping to `behaviour` as `sleep` already does. That file belongs to
   another session this pass; it made the change rather than me.
 
+
+## D-065 - Mapping populations to atlas clusters: the coverage invariant that rejected everything, and why ambient RNA made it do that
+
+**A second session proposed three structural fixes** after an adversarial pass
+refuted three of thirteen hand-made population → HypoMap cluster mappings. All
+three were aimed at real gaps. One of them, applied literally, rejected 12 of 12
+mappings — and that failure is the most useful thing in this entry.
+
+`data/curated/population_cluster_mapping.json` now holds the mapping for all 30
+declared populations, built by `syn4rch.atlas.population_clusters` from the
+atlas (`doi:10.1038/s42255-022-00657-y`, 384,925 mouse cells × 51,216 genes,
+asserted on `NCBITaxon:10090`). **Tier B, and never a training target.** A
+mapping here says a cluster plausibly corresponds to a population the
+vocabulary already declares; it is not evidence that any intervention did
+anything.
+
+### The proposed coverage invariant failed, and the reason generalises
+
+The proposal: for each mapped population, record what fraction of the atlas's
+marker-positive cells the chosen cluster set captures. It targets the one defect
+adversarial verification *cannot* catch — `scn_vip` was confirmed while holding
+roughly 44% of the high-Vip SCN cells, because the mapping was not wrong, only
+incomplete.
+
+Measured, it rejected everything. 12 of 12 populations held under half their
+marker-positive cells; `lha_mch` held 1%. The denominator is the problem: 58,480
+of 384,925 cells read as Pmch-positive. **15% of the hypothalamus is not MCH
+neurons.** Droplet dissociation leaves a soup of transcripts from the most
+highly-expressing cells, and a highly-expressed neuropeptide is detectable in
+nearly every droplet. An absolute threshold on log-normalised counts cannot tell
+ambient contamination from expression.
+
+Transcript *mass* share fails for the same reason, which is less obvious. Mass
+looked robust — ambient contributes little per cell — but there are vastly more
+contaminated cells, so the product dominates. Ranked by Pmch mass, the top three
+clusters in the atlas are astrocytes, oligodendrocytes and astrocytes again;
+`Pmch.GLU-7`, with a mean of 6.316 against their 0.392, comes fourth.
+
+**A metric that fails every case is measuring itself, not the cases.** What
+survives is a scale-free ratio: `contrast`, the median marker mean of the chosen
+clusters over the median of the region candidates left out. Ambient lifts every
+cluster together, so a ratio is unchanged by it.
+
+### Three refusals that were mine, not the data's
+
+* The region table invented `Tuberomammillary`. The atlas does not use it — the
+  histaminergic cluster is filed under `(Pre)Mammillary region` — so
+  `tmn_histamine` refused for want of a label, and now maps at 118× contrast.
+* The rule was pinned to one cluster level. `pvh_crh` has no PVH-majority Crh
+  cluster at C185 at all; it resolves only at C286/C465. The level is now chosen
+  per population by greatest contrast — not the finest, which averages fewer
+  cells, always wins on raw magnitude, and would fragment every population.
+* Within-cluster rank was treated as specificity. Crh ranks **544th of 51,216
+  genes** inside the cluster HypoMap's own authors named `Crh.Tent5a.GLU-2`.
+  Rank tracks abundance, which differs by orders of magnitude between a
+  neuropeptide and a transcription factor, so gating on it silently selects for
+  abundance. Rank is recorded and never gated on.
+
+A fourth was caught by the tests rather than the data: contrast was first
+measured best-against-all-others, which counts a population's own siblings
+against it and penalises it for genuinely spanning several clusters —
+`arc_agrp` occupies five C465 clusters, `scn_avp` seven.
+
+### What the atlas authors' own names decide
+
+The tier is the output a caller should read, and tier A requires the marker to
+appear in HypoMap's name for *every* chosen cluster: an expert judgement this
+rule did not generate. Name support and contrast are combined rather than
+gated, because an earlier version discarded full name support on a round
+number — `poa_galanin` has Gal in all four of its cluster names and contrast
+9.01, and was filed beside `zi_gaba`, whose pan-GABAergic marker keeps the whole
+zona incerta and picks nothing out of it.
+
+**11 tier A, 4 tier B, 8 tier C, 7 refused.** The refusals form a regularity
+worth stating: every population defined by a neuropeptide maps at 17–140×
+contrast, and every one defined by a receptor or a kinase fails the floor —
+`Lepr` peaks at 0.074 across the DMH, `Mc4r` at 0.055 across the PVH, `Ikbkb`
+at 0.328. `Nr5a1` reaches 0.391 and `vmh_sf1` is refused. These are real
+populations with real Cre lines; the driver gene simply does not carry enough
+transcript to mark a cluster. **A Cre line is not a marker**, and the mapping
+says so rather than guessing.
+
+### The rule was declared after looking, and the file says so
+
+`declared_after_inspecting_the_atlas: true` is recorded in the artefact. This is
+not pre-registration in the sense of D-048/D-056 and must not be cited as if it
+were: the parameters were chosen knowing what the atlas contains. What the rule
+buys is reproducibility and uniform application to all 30 populations, including
+the ones where it returns an answer nobody wanted.
+
+### One nesting survives, and D-059 has to be able to see it
+
+`arc_kisspeptin` is a subset of `arc_tbx3`. That is the biology — Tbx3 is
+expressed in the ARC Kiss1/Tac2 neurons — and it is reported rather than
+forbidden. But two populations sharing clusters have expression vectors
+correlated **by construction**, so a similarity ranking would find them alike
+for a reason that is an artefact of this mapping rather than a fact about
+transcriptomes. The pre-registered per-row diagnostics of D-059 must therefore
+carry the cluster-set overlap of each nearest-neighbour pair, or the experiment
+can rediscover its own input as a result.
+
+The third proposal — assert region composition sums to ~100% — passes on all
+1002 clusters. The composition data was always sound; the truncation that
+manufactured one of the three refutations was in the consumer, which kept only
+the top region per cluster and discarded a 44% PVH share.
