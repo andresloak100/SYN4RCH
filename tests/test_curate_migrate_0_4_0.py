@@ -238,6 +238,12 @@ class CLITest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.path = os.path.join(self.tmp, "records.jsonl")
+        # Every case passes --report explicitly. Two of them did not, and the
+        # CLI then fell back to _default("reports", ...) and overwrote the
+        # repository's own tracked migration report with a one-record
+        # synthetic run. A test that writes into the tree it is testing is a
+        # defect in the test.
+        self.report = os.path.join(self.tmp, "report.md")
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
@@ -251,7 +257,9 @@ class CLITest(unittest.TestCase):
     def test_dry_run_writes_nothing(self):
         write(self.path, [as_v0_3_0()])
         unchanged = open(self.path, encoding="utf-8").read()
-        code, out, err = self._run([self.path, "--dry-run"])
+        code, out, err = self._run(
+            [self.path, "--dry-run", "--report", self.report]
+        )
         self.assertEqual(code, 0, err)
         self.assertIn("dry run", out)
         self.assertIn("no id map needed", out)
@@ -274,7 +282,7 @@ class CLITest(unittest.TestCase):
     def test_a_backup_preserves_the_pre_migration_file(self):
         write(self.path, [as_v0_3_0()])
         before = open(self.path, encoding="utf-8").read()
-        self._run([self.path, "--quiet"])
+        self._run([self.path, "--quiet", "--report", self.report])
         backup = open(self.path + ".pre-%s.bak" % TO_VERSION, encoding="utf-8").read()
         self.assertIn(FROM_VERSION, backup)
         self.assertEqual(
@@ -285,14 +293,14 @@ class CLITest(unittest.TestCase):
         with open(self.path, "w", encoding="utf-8") as handle:
             handle.write(json.dumps(as_v0_3_0()) + "\n{not json\n")
         unchanged = open(self.path, encoding="utf-8").read()
-        code, _, err = self._run([self.path])
+        code, _, err = self._run([self.path, "--report", self.report])
         self.assertEqual(code, 1)
         self.assertIn("could not be read", err)
         self.assertEqual(open(self.path, encoding="utf-8").read(), unchanged)
 
     def test_an_empty_file_is_refused(self):
         open(self.path, "w", encoding="utf-8").close()
-        code, _, err = self._run([self.path])
+        code, _, err = self._run([self.path, "--report", self.report])
         self.assertEqual(code, 2)
         self.assertIn("no records", err)
 

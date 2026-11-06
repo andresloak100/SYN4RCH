@@ -1,189 +1,275 @@
 {
- "_meta": {
-  "vocab": "targets",
-  "version": "0.1.0",
-  "description": "Molecular targets of perturbations whose perturbation_class is molecular or pharmacological: the gene whose product was removed or added inside the population, not the Cre driver that defined the population.",
-  "why_this_vocabulary_exists": [
-   "Until schema v0.2.0 the perturbed gene had no field. It sat inside the free text of targeting_strategy, so 170 of the first 362 curated records -- every conditional knockout and conditional overexpression -- keyed as one undifferentiated 'molecular perturbation of this population'.",
-   "Measured on those 170 records: 17 distinct target genes, 16 distinct studies, 16 distinct laboratories, and every gene manipulated by exactly one laboratory. 'Molecular perturbation of AgRP neurons' therefore looked like 89 observations of one thing while being a dozen unrelated single-gene experiments.",
-   "A target id makes that visible. It does not make it go away: see the collinearity note in reports/schema_migration_0.2.0.md."
-  ],
-  "id_policy": [
-   "The id is the official mouse gene symbol, lowercased (MGI nomenclature), even where no paper in the corpus writes it that way: trp53 rather than p53, rptor rather than raptor, prkce rather than pkce, kiss1r rather than gpr54.",
-   "Every entry's notes state which symbol was chosen and why, and the paper's own spelling is always listed as a synonym so that nothing has to be re-read to find the record again.",
-   "No network lookup was made or is possible here (DECISIONS.md D-001: standard library only, no network). The official-symbol claims are the curator's, recorded per entry precisely so that they can be checked against MGI by hand.",
-   "Non-mouse spellings (human-style all-caps symbols) are synonyms, not ids. A record's species stays in the record."
-  ],
-  "synonym_policy": [
-   "These synonyms are matched as a CASE-INSENSITIVE SUBSTRING of the curated free text in targeting_strategy and actuator, with no word boundary, because genotype strings concatenate the symbol with the driver and the floxed allele: 'AgRPp53 KO', 'Sh2b1f/f;POMC-Cre', 'Htr2cfl/Y', 'TrspAgrpKO', 'Bcl6fl/fl'. A word-boundary rule would miss most real targets.",
-   "The price of that is a false-match risk, so a synonym must be distinctive enough to be safe as a bare substring. A string that is a common word, shorter than three characters, or a substring of another entry's symbol must not be listed here; put it in notes instead.",
-   "Cre-driver and population-marker genes (Agrp, Pomc, Sim1, Lepr) are deliberately absent from this vocabulary. They identify the population, not the perturbation, and listing them would make almost every genotype string ambiguous. Npy is an entry because one study deleted it; it is still not a driver.",
-   "A match is not a curation. The gene is only as good as the targeting_strategy a curator wrote: see the module docstring of syn4rch/curate/migrate.py."
-  ],
-  "ambiguity_policy": [
-   "Resolution requires that the text name exactly ONE entry of this vocabulary. Two entries matching is not arbitrated: target_raw and target_id stay null, the record is listed in the migration report, and a human curates it.",
-   "Several synonyms of the SAME entry matching is not ambiguity (a paper that writes both 'SH2B1' and 'Sh2b1' names one gene)."
-  ]
- },
- "entries": {
-  "trp53": {
-   "id": "trp53",
-   "label": "Transformation related protein 53 (p53)",
-   "synonyms": [
-    "Trp53",
-    "p53",
-    "Tp53",
-    "TP53"
-   ],
-   "notes": "Official mouse symbol is Trp53; every paper in the corpus writes 'p53', which is listed as a synonym and is what target_raw records. TP53 is the human orthologue's symbol and is listed only so a human-tissue record would resolve."
+  "_meta": {
+    "vocab": "targets",
+    "version": "0.2.0",
+    "description": "Molecular targets of perturbations whose perturbation_class is molecular or pharmacological: the gene whose product was removed or added inside the population, not the Cre driver that defined the population. Since v0.2.0 the same id space also serves the BACKGROUND genotype dimension (D-060): npy as a background gene is the same gene as npy as a perturbation target, so sharing the ids is correct rather than merely convenient, and the distinction between the two roles is carried by the record (target_raw versus background_genotype) rather than by two vocabularies that could drift apart.",
+    "why_this_vocabulary_exists": [
+      "Until schema v0.2.0 the perturbed gene had no field. It sat inside the free text of targeting_strategy, so 170 of the first 362 curated records -- every conditional knockout and conditional overexpression -- keyed as one undifferentiated 'molecular perturbation of this population'.",
+      "Measured on those 170 records: 17 distinct target genes, 16 distinct studies, 16 distinct laboratories, and every gene manipulated by exactly one laboratory. 'Molecular perturbation of AgRP neurons' therefore looked like 89 observations of one thing while being a dozen unrelated single-gene experiments.",
+      "A target id makes that visible. It does not make it go away: see the collinearity note in reports/schema_migration_0.2.0.md."
+    ],
+    "id_policy": [
+      "The id is the official mouse gene symbol, lowercased (MGI nomenclature), even where no paper in the corpus writes it that way: trp53 rather than p53, rptor rather than raptor, prkce rather than pkce, kiss1r rather than gpr54.",
+      "Every entry's notes state which symbol was chosen and why, and the paper's own spelling is always listed as a synonym so that nothing has to be re-read to find the record again.",
+      "No network lookup was made or is possible here (DECISIONS.md D-001: standard library only, no network). The official-symbol claims are the curator's, recorded per entry precisely so that they can be checked against MGI by hand.",
+      "Non-mouse spellings (human-style all-caps symbols) are synonyms, not ids. A record's species stays in the record."
+    ],
+    "synonym_policy": [
+      "These synonyms are matched as a CASE-INSENSITIVE SUBSTRING of the curated free text in targeting_strategy and actuator, with no word boundary, because genotype strings concatenate the symbol with the driver and the floxed allele: 'AgRPp53 KO', 'Sh2b1f/f;POMC-Cre', 'Htr2cfl/Y', 'TrspAgrpKO', 'Bcl6fl/fl'. A word-boundary rule would miss most real targets.",
+      "The price of that is a false-match risk, so a synonym must be distinctive enough to be safe as a bare substring. A string that is a common word, shorter than three characters, or a substring of another entry's symbol must not be listed here; put it in notes instead.",
+      "Cre-driver and population-marker genes (Agrp, Pomc, Sim1, Lepr) are deliberately absent from this vocabulary. They identify the population, not the perturbation, and listing them would make almost every genotype string ambiguous. Npy is an entry because one study deleted it; it is still not a driver.",
+      "A match is not a curation. The gene is only as good as the targeting_strategy a curator wrote: see the module docstring of syn4rch/curate/migrate.py."
+    ],
+    "ambiguity_policy": [
+      "Resolution requires that the text name exactly ONE entry of this vocabulary. Two entries matching is not arbitrated: target_raw and target_id stay null, the record is listed in the migration report, and a human curates it.",
+      "Several synonyms of the SAME entry matching is not ambiguity (a paper that writes both 'SH2B1' and 'Sh2b1' names one gene)."
+    ],
+    "changelog": [
+      "0.2.0 (D-060): added asip, lep, slc17a6, slc32a1, gabrg2, trpv1, snca -- the genes of the 12 adversarially confirmed background genotypes. Only those; the genes of the 13 refuted claims are deliberately NOT added, because adding an id for data that does not exist is how a vocabulary becomes a wish list (D-054's rule). 'asip' is a documented exception to id_policy; see its notes."
+    ]
   },
-  "sh2b1": {
-   "id": "sh2b1",
-   "label": "SH2B adaptor protein 1",
-   "synonyms": [
-    "Sh2b1",
-    "SH2B1"
-   ],
-   "notes": "Official mouse symbol Sh2b1. The one study using this gene writes 'Sh2b1' for the floxed allele and 'SH2B1' for the overexpression construct; both spellings are listed so that target_raw can keep whichever the record used."
-  },
-  "htr2c": {
-   "id": "htr2c",
-   "label": "5-hydroxytryptamine (serotonin) receptor 2C",
-   "synonyms": [
-    "Htr2c",
-    "5-HT2CR"
-   ],
-   "notes": "Official mouse symbol Htr2c. '5-HT2C' alone is not listed: it is a receptor name that appears in prose about serotonin pharmacology and would be unsafe as a bare substring. '5-HT2CR' is specific enough."
-  },
-  "smad7": {
-   "id": "smad7",
-   "label": "SMAD family member 7",
-   "synonyms": [
-    "Smad7",
-    "SMAD7"
-   ],
-   "notes": "Official mouse symbol Smad7, and the only spelling used in the corpus."
-  },
-  "trim31": {
-   "id": "trim31",
-   "label": "Tripartite motif-containing 31",
-   "synonyms": [
-    "Trim31",
-    "TRIM31"
-   ],
-   "notes": "Official mouse symbol Trim31; the study writes it all-caps. Both appear here only as case variants -- matching is case-insensitive, so one would do; they are listed for the reader, not the matcher."
-  },
-  "prkce": {
-   "id": "prkce",
-   "label": "Protein kinase C epsilon",
-   "synonyms": [
-    "Prkce",
-    "PKCe",
-    "PKC-epsilon",
-    "PKCepsilon"
-   ],
-   "notes": "Official mouse symbol Prkce. The study writes 'PKCe' for protein kinase C epsilon. A Greek-letter spelling (PKC followed by U+03B5) will NOT match these ASCII synonyms, and the vocabulary normaliser does not fold epsilon; a record spelled that way would come back unresolved rather than wrong, which is the intended failure direction."
-  },
-  "rptor": {
-   "id": "rptor",
-   "label": "Regulatory associated protein of MTOR complex 1 (Raptor)",
-   "synonyms": [
-    "Rptor",
-    "Raptor"
-   ],
-   "notes": "Official mouse symbol Rptor; the literature and this study write 'Raptor'. The id follows MGI so that an Rptor record from another paper lands in the same cell."
-  },
-  "fam172a": {
-   "id": "fam172a",
-   "label": "Family with sequence similarity 172, member A",
-   "synonyms": [
-    "Fam172a",
-    "FAM172A"
-   ],
-   "notes": "Official mouse symbol Fam172a."
-  },
-  "trsp": {
-   "id": "trsp",
-   "label": "tRNA selenocysteine, tRNA[Ser]Sec (Trsp)",
-   "synonyms": [
-    "Trsp"
-   ],
-   "notes": "Official mouse symbol Trsp. Not a protein-coding gene: deleting it removes the selenocysteine tRNA and therefore the whole selenoprotein class, so this entry is a target of unusually broad scope and a record on it is not comparable to a single-protein knockout. That is a property of the experiment and is recorded here rather than silently averaged."
-  },
-  "raf1": {
-   "id": "raf1",
-   "label": "Raf-1 proto-oncogene, serine/threonine kinase",
-   "synonyms": [
-    "Raf1",
-    "RAF1",
-    "c-Raf"
-   ],
-   "notes": "Official mouse symbol Raf1. 'c-Raf' is the protein name and is distinctive enough to list."
-  },
-  "npy": {
-   "id": "npy",
-   "label": "Neuropeptide Y",
-   "synonyms": [
-    "Npy",
-    "NPY"
-   ],
-   "notes": "Official mouse symbol Npy. Npy is also a marker gene of the AgRP population, which is why 'neuropeptide Y' spelled out is NOT listed: it occurs in prose describing the population and would match records that did not delete it. Only the symbol is matched, and in this corpus it fires on exactly one study, which deleted Npy in AgRP neurons."
-  },
-  "sirt1": {
-   "id": "sirt1",
-   "label": "Sirtuin 1",
-   "synonyms": [
-    "Sirt1",
-    "SIRT1"
-   ],
-   "notes": "Official mouse symbol Sirt1. The one study using it overexpresses either wild-type Sirt1 or the deacetylase-dead Sirt1-H355Y point mutant, which acts as a dominant negative. This vocabulary records the gene, not the allele: the two are distinguished only by targeting_strategy and actuator, and a reader pooling them would be pooling a gain of function with a loss of function. Flagged here because perturbation_polarity cannot see it."
-  },
-  "bcl6": {
-   "id": "bcl6",
-   "label": "B cell leukemia/lymphoma 6",
-   "synonyms": [
-    "Bcl6",
-    "BCL6"
-   ],
-   "notes": "Official mouse symbol Bcl6."
-  },
-  "kiss1r": {
-   "id": "kiss1r",
-   "label": "Kisspeptin receptor (Gpr54)",
-   "synonyms": [
-    "Kiss1r",
-    "Gpr54",
-    "GPR54"
-   ],
-   "notes": "Official mouse symbol is Kiss1r; the study writes the older orphan-receptor name 'Gpr54', which target_raw keeps. One of the four genes the first pass over this corpus did not pattern-match."
-  },
-  "il17ra": {
-   "id": "il17ra",
-   "label": "Interleukin 17 receptor A",
-   "synonyms": [
-    "Il17ra",
-    "IL17RA",
-    "IL-17RA"
-   ],
-   "notes": "Official mouse symbol Il17ra. Shares a study and a laboratory with socs3: the only study in the corpus that perturbs two different genes."
-  },
-  "socs3": {
-   "id": "socs3",
-   "label": "Suppressor of cytokine signaling 3",
-   "synonyms": [
-    "Socs3",
-    "SOCS3"
-   ],
-   "notes": "Official mouse symbol Socs3. Shares a study and a laboratory with il17ra."
-  },
-  "manf": {
-   "id": "manf",
-   "label": "Mesencephalic astrocyte-derived neurotrophic factor",
-   "synonyms": [
-    "Manf",
-    "MANF"
-   ],
-   "notes": "Official mouse symbol Manf; the study writes it all-caps."
+  "entries": {
+    "asip": {
+      "id": "asip",
+      "label": "Agouti signalling protein (mouse gene symbol 'a', nonagouti)",
+      "synonyms": [
+        "Asip",
+        "ASIP",
+        "agouti",
+        "A^y",
+        "lethal yellow agouti",
+        "nonagouti"
+      ],
+      "notes": "A DOCUMENTED EXCEPTION to id_policy, which otherwise mandates the official lowercased mouse symbol. That symbol is the single letter 'a', name 'nonagouti' (MGI:87853), where 'Asip' is listed only as a synonym and is the HUMAN symbol. 'a' is nonetheless unusable as an id here, and the reason is this project's own machinery rather than a preference: two independent guards refuse it. build_synonym_index rejects any synonym under three characters because matching has no word boundary, and the vocabulary self-check rejects 'a' as a substring of 'fam172a'. Both are correct -- a one-character matcher would fire inside fam172a, agrp and most of the corpus -- and an id is auto-included as a matchable synonym, so the constraint cannot be dodged by omitting it from the synonym list. Hence 'asip', with the true mouse symbol recorded here so nobody 'corrects' it back. Separately: the adversarial verification pass returned 'agouti -> Asip' twice with confidence 'confident', and was wrong about WHY -- it gave the human symbol as though it were the mouse one. The answer happens to be right and the reasoning was not, which is only visible because MGI was checked. A^y (lethal yellow) is an ALLELE at this locus, not a gene, and is a synonym so a record writing it resolves here."
+    },
+    "bcl6": {
+      "id": "bcl6",
+      "label": "B cell leukemia/lymphoma 6",
+      "synonyms": [
+        "Bcl6",
+        "BCL6"
+      ],
+      "notes": "Official mouse symbol Bcl6."
+    },
+    "fam172a": {
+      "id": "fam172a",
+      "label": "Family with sequence similarity 172, member A",
+      "synonyms": [
+        "Fam172a",
+        "FAM172A"
+      ],
+      "notes": "Official mouse symbol Fam172a."
+    },
+    "gabrg2": {
+      "id": "gabrg2",
+      "label": "GABA-A receptor subunit gamma 2",
+      "synonyms": [
+        "Gabrg2",
+        "GABRG2",
+        "gamma2",
+        "GABA-A receptor gamma2"
+      ],
+      "notes": "The surveyed spelling was the bare Greek letter 'γ2', which is a subunit name rather than a gene symbol and could not have keyed on anything. Both survey entries were corrected to Gabrg2. 'γ2' is deliberately NOT a synonym: build_synonym_index refuses anything under three characters because matching has no word boundary, and a two-character matcher would fire inside unrelated genotypes. A record writing 'γ2' therefore has to be resolved by a reader, which is the right outcome -- the paper's own spelling names a protein subunit and the reader has to decide which gene it is."
+    },
+    "htr2c": {
+      "id": "htr2c",
+      "label": "5-hydroxytryptamine (serotonin) receptor 2C",
+      "synonyms": [
+        "Htr2c",
+        "5-HT2CR"
+      ],
+      "notes": "Official mouse symbol Htr2c. '5-HT2C' alone is not listed: it is a receptor name that appears in prose about serotonin pharmacology and would be unsafe as a bare substring. '5-HT2CR' is specific enough."
+    },
+    "il17ra": {
+      "id": "il17ra",
+      "label": "Interleukin 17 receptor A",
+      "synonyms": [
+        "Il17ra",
+        "IL17RA",
+        "IL-17RA"
+      ],
+      "notes": "Official mouse symbol Il17ra. Shares a study and a laboratory with socs3: the only study in the corpus that perturbs two different genes."
+    },
+    "kiss1r": {
+      "id": "kiss1r",
+      "label": "Kisspeptin receptor (Gpr54)",
+      "synonyms": [
+        "Kiss1r",
+        "Gpr54",
+        "GPR54"
+      ],
+      "notes": "Official mouse symbol is Kiss1r; the study writes the older orphan-receptor name 'Gpr54', which target_raw keeps. One of the four genes the first pass over this corpus did not pattern-match."
+    },
+    "lep": {
+      "id": "lep",
+      "label": "Leptin",
+      "synonyms": [
+        "Lep",
+        "leptin",
+        "ob/ob",
+        "Lep^ob",
+        "Lepob",
+        "obese"
+      ],
+      "notes": "The ob/ob mouse is homozygous for a nonsense mutation in Lep, so 'ob/ob' names an allelic state of this gene and resolves here. Distinct from lepr: ob/ob lacks the ligand, db/db lacks the receptor, and pooling them would merge two different lesions in one pathway. Synonym(s) 'ob' dropped: build_synonym_index refuses anything under three characters, because matching has no word boundary and a two-character matcher fires inside unrelated genotypes."
+    },
+    "manf": {
+      "id": "manf",
+      "label": "Mesencephalic astrocyte-derived neurotrophic factor",
+      "synonyms": [
+        "Manf",
+        "MANF"
+      ],
+      "notes": "Official mouse symbol Manf; the study writes it all-caps."
+    },
+    "npy": {
+      "id": "npy",
+      "label": "Neuropeptide Y",
+      "synonyms": [
+        "Npy",
+        "NPY"
+      ],
+      "notes": "Official mouse symbol Npy. Npy is also a marker gene of the AgRP population, which is why 'neuropeptide Y' spelled out is NOT listed: it occurs in prose describing the population and would match records that did not delete it. Only the symbol is matched, and in this corpus it fires on exactly one study, which deleted Npy in AgRP neurons."
+    },
+    "prkce": {
+      "id": "prkce",
+      "label": "Protein kinase C epsilon",
+      "synonyms": [
+        "Prkce",
+        "PKCe",
+        "PKC-epsilon",
+        "PKCepsilon"
+      ],
+      "notes": "Official mouse symbol Prkce. The study writes 'PKCe' for protein kinase C epsilon. A Greek-letter spelling (PKC followed by U+03B5) will NOT match these ASCII synonyms, and the vocabulary normaliser does not fold epsilon; a record spelled that way would come back unresolved rather than wrong, which is the intended failure direction."
+    },
+    "raf1": {
+      "id": "raf1",
+      "label": "Raf-1 proto-oncogene, serine/threonine kinase",
+      "synonyms": [
+        "Raf1",
+        "RAF1",
+        "c-Raf"
+      ],
+      "notes": "Official mouse symbol Raf1. 'c-Raf' is the protein name and is distinctive enough to list."
+    },
+    "rptor": {
+      "id": "rptor",
+      "label": "Regulatory associated protein of MTOR complex 1 (Raptor)",
+      "synonyms": [
+        "Rptor",
+        "Raptor"
+      ],
+      "notes": "Official mouse symbol Rptor; the literature and this study write 'Raptor'. The id follows MGI so that an Rptor record from another paper lands in the same cell."
+    },
+    "sh2b1": {
+      "id": "sh2b1",
+      "label": "SH2B adaptor protein 1",
+      "synonyms": [
+        "Sh2b1",
+        "SH2B1"
+      ],
+      "notes": "Official mouse symbol Sh2b1. The one study using this gene writes 'Sh2b1' for the floxed allele and 'SH2B1' for the overexpression construct; both spellings are listed so that target_raw can keep whichever the record used."
+    },
+    "sirt1": {
+      "id": "sirt1",
+      "label": "Sirtuin 1",
+      "synonyms": [
+        "Sirt1",
+        "SIRT1"
+      ],
+      "notes": "Official mouse symbol Sirt1. The one study using it overexpresses either wild-type Sirt1 or the deacetylase-dead Sirt1-H355Y point mutant, which acts as a dominant negative. This vocabulary records the gene, not the allele: the two are distinguished only by targeting_strategy and actuator, and a reader pooling them would be pooling a gain of function with a loss of function. Flagged here because perturbation_polarity cannot see it."
+    },
+    "slc17a6": {
+      "id": "slc17a6",
+      "label": "Vesicular glutamate transporter 2 (VGLUT2)",
+      "synonyms": [
+        "Slc17a6",
+        "Vglut2",
+        "VGLUT2",
+        "vesicular glutamate transporter 2"
+      ],
+      "notes": "Papers write the protein name Vglut2; the official mouse gene symbol is Slc17a6. Three survey entries came back as 'Vglut2' and were corrected. Note that Slc17a6 is a pan-glutamatergic marker, which is why lha_vglut2 has no specific HypoMap cluster (D-059)."
+    },
+    "slc32a1": {
+      "id": "slc32a1",
+      "label": "Vesicular GABA transporter (VGAT)",
+      "synonyms": [
+        "Slc32a1",
+        "Vgat",
+        "VGAT",
+        "vesicular GABA transporter",
+        "Viaat"
+      ],
+      "notes": "Papers write the protein name Vgat; the official mouse gene symbol is Slc32a1. Pan-GABAergic, so the same caveat as slc17a6 applies when it is used to define a population rather than to name a deletion."
+    },
+    "smad7": {
+      "id": "smad7",
+      "label": "SMAD family member 7",
+      "synonyms": [
+        "Smad7",
+        "SMAD7"
+      ],
+      "notes": "Official mouse symbol Smad7, and the only spelling used in the corpus."
+    },
+    "snca": {
+      "id": "snca",
+      "label": "Synuclein alpha",
+      "synonyms": [
+        "Snca",
+        "SNCA",
+        "α-synuclein",
+        "alpha-synuclein",
+        "A53T-SNCA"
+      ],
+      "notes": "The confirmed background is an AAV-delivered A53T mutant, which is a gain-of-function construct delivered to a region rather than a germline allele -- hence scope region_restricted. The surveyed spelling 'SNCA' is the human symbol and was corrected to Snca."
+    },
+    "socs3": {
+      "id": "socs3",
+      "label": "Suppressor of cytokine signaling 3",
+      "synonyms": [
+        "Socs3",
+        "SOCS3"
+      ],
+      "notes": "Official mouse symbol Socs3. Shares a study and a laboratory with il17ra."
+    },
+    "trim31": {
+      "id": "trim31",
+      "label": "Tripartite motif-containing 31",
+      "synonyms": [
+        "Trim31",
+        "TRIM31"
+      ],
+      "notes": "Official mouse symbol Trim31; the study writes it all-caps. Both appear here only as case variants -- matching is case-insensitive, so one would do; they are listed for the reader, not the matcher."
+    },
+    "trp53": {
+      "id": "trp53",
+      "label": "Transformation related protein 53 (p53)",
+      "synonyms": [
+        "Trp53",
+        "p53",
+        "Tp53",
+        "TP53"
+      ],
+      "notes": "Official mouse symbol is Trp53; every paper in the corpus writes 'p53', which is listed as a synonym and is what target_raw records. TP53 is the human orthologue's symbol and is listed only so a human-tissue record would resolve."
+    },
+    "trpv1": {
+      "id": "trpv1",
+      "label": "Transient receptor potential cation channel subfamily V member 1",
+      "synonyms": [
+        "Trpv1",
+        "TRPV1",
+        "VR1",
+        "capsaicin receptor"
+      ],
+      "notes": "Already the official mouse symbol as the paper writes it; no correction needed. Recorded because a global Trpv1 knockout is a confirmed background in doi:10.1038/s41467-018-08239-x."
+    },
+    "trsp": {
+      "id": "trsp",
+      "label": "tRNA selenocysteine, tRNA[Ser]Sec (Trsp)",
+      "synonyms": [
+        "Trsp"
+      ],
+      "notes": "Official mouse symbol Trsp. Not a protein-coding gene: deleting it removes the selenocysteine tRNA and therefore the whole selenoprotein class, so this entry is a target of unusually broad scope and a record on it is not comparable to a single-protein knockout. That is a property of the experiment and is recorded here rather than silently averaged."
+    }
   }
- }
 }
