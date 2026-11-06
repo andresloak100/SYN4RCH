@@ -95,10 +95,31 @@ class Record:
 
 
 class TestModuleVocabulary(unittest.TestCase):
-    def test_dimensions_match_the_schema(self):
+    def test_dimensions_are_a_subset_of_the_schema(self):
+        """D-060: a SUBSET, and deliberately so.
+
+        This asserted equality until D-060 added ``background_genotype``. This
+        module is the paper-reading extractor for the conditions a Methods
+        section states about a cohort; deciding whether an allele is the
+        recorded perturbation or the substrate it was applied to is a
+        per-record judgement it cannot make, so genotype is curated by its own
+        pass. The subset relation is the true claim, and it is asserted rather
+        than left as a comment so a dimension cannot silently go unextracted
+        without this test naming it.
+        """
         from syn4rch.schema.record import CONDITION_DIMENSIONS
 
-        self.assertEqual(C.DIMENSIONS, CONDITION_DIMENSIONS)
+        self.assertTrue(set(C.DIMENSIONS) <= set(CONDITION_DIMENSIONS))
+        self.assertEqual(
+            tuple(d for d in CONDITION_DIMENSIONS if d in set(C.DIMENSIONS)),
+            C.DIMENSIONS,
+            "the extractor's order must follow the schema's",
+        )
+        self.assertEqual(
+            sorted(set(CONDITION_DIMENSIONS) - set(C.DIMENSIONS)),
+            ["background_genotype"],
+            "only background_genotype is extracted by another pass (D-060)",
+        )
 
     def test_every_rule_name_is_declared(self):
         # No rule may be emitted that RULES does not name: a value whose rule

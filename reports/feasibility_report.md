@@ -8,18 +8,18 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-06T17:34:31Z |
+| generated (UTC) | 2026-11-06T20:41:40Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
 | records read | 508 |
 | records usable as observations | 492 |
 | records held out of the matrix | 16 |
 | usability predicate | schema v0.2.0 |
-| claim key | `population + perturbation_class + perturbation_polarity + perturbation_target + outcome_id + sex + diet + age_group + challenge` (schema v0.2.0, 9 components) |
+| claim key | `population + perturbation_class + perturbation_polarity + perturbation_target + outcome_id + sex + diet + age_group + challenge + background_genotype` (schema v0.2.0, 10 components) |
 | distinct studies | 71 |
 | distinct labs (last author, D-056) | 65 |
 | usable records with no lab identity | 0 |
-| usable records stating none of the 4 conditions | 138 |
+| usable records stating none of the 5 conditions | 138 |
 | load errors | 0 |
 
 ### Why records were held out of the matrix
@@ -120,7 +120,7 @@ Counted by reason, so nothing is filtered silently. A record may appear under mo
 
 ## 3. How many neuron-outcome relationships have independent replication?
 
-The unit is the claim `syn4rch.qc.keys.claim_key`, which under schema v0.2.0 is `(population, perturbation_class, perturbation_polarity, perturbation_target, outcome_id, sex, diet, age_group, challenge)`. SCHEMA.md 1 forbids aggregating across perturbations, so a circuit activation and a gene knockout on the same pair are two claims, not two observations of one; and the condition is in the key for the same reason one step further out, because a fasted male cohort and a fed female one were never comparable.
+The unit is the claim `syn4rch.qc.keys.claim_key`, which under schema v0.2.0 is `(population, perturbation_class, perturbation_polarity, perturbation_target, outcome_id, sex, diet, age_group, challenge, background_genotype)`. SCHEMA.md 1 forbids aggregating across perturbations, so a circuit activation and a gene knockout on the same pair are two claims, not two observations of one; and the condition is in the key for the same reason one step further out, because a fasted male cohort and a fed female one were never comparable.
 
 **9 of 393 claim(s) are replicated across two or more labs**; a further 0 are replicated across studies within a single lab and are discounted (SCHEMA.md 5.2 names repeat publication by one group as the largest leakage risk here); 333 claim(s) rest on a single observation.
 
@@ -136,19 +136,20 @@ The unit is the claim `syn4rch.qc.keys.claim_key`, which under schema v0.2.0 is 
 
 ### Every replication figure, by minimum condition specificity
 
-`condition_specificity` counts how many of the 4 condition slots (`sex`, `diet`, `age_group`, `challenge`) a record actually states. The **minimum** over a cell's records is what qualifies the cell, because one record stating nothing is enough to make the whole match a match on `unknown`. A row at specificity 0 says the claim's records were grouped together partly because their conditions were not known, not because they were the same.
+`condition_specificity` counts how many of the 5 condition slots (`sex`, `diet`, `age_group`, `challenge`, `background_genotype`) a record actually states. The **minimum** over a cell's records is what qualifies the cell, because one record stating nothing is enough to make the whole match a match on `unknown`. A row at specificity 0 says the claim's records were grouped together partly because their conditions were not known, not because they were the same.
 
 | min condition specificity | claims | replicated >= 2 studies | replicated >= 2 labs | agreement defined | mean agreement |
 |---|---|---|---|---|---|
-| 0 of 4 | 109 | 4 | 4 | 4 | 0.75 |
-| 1 of 4 | 122 | 4 | 4 | 4 | 0.75 |
-| 2 of 4 | 146 | 1 | 1 | 1 | 0.50 |
-| 3 of 4 | 16 | 0 | 0 | 0 | undefined |
-| 4 of 4 | 0 | 0 | 0 | 0 | undefined |
+| 0 of 5 | 109 | 4 | 4 | 4 | 0.75 |
+| 1 of 5 | 122 | 4 | 4 | 4 | 0.75 |
+| 2 of 5 | 146 | 1 | 1 | 1 | 0.50 |
+| 3 of 5 | 16 | 0 | 0 | 0 | undefined |
+| 4 of 5 | 0 | 0 | 0 | 0 | undefined |
+| 5 of 5 | 0 | 0 | 0 | 0 | undefined |
 
 The pooled mean agreement across all specificities is 0.72. It is printed last and deliberately: a mean taken across cells that matched on nothing and cells that matched on three stated conditions describes neither, and the row-by-row breakdown above is the figure to read.
 
-No claim in this corpus reaches specificity 4 of 4: not one record states all four conditions. Every replication figure above is therefore qualified, and none of them describes two experiments known to have run under the same conditions.
+No claim in this corpus reaches specificity 5 of 5: not one record states every condition. Every replication figure above is therefore qualified, and none of them describes two experiments known to have run under the same conditions.
 
 ## 4. How often do independent studies agree on effect direction?
 
@@ -158,19 +159,19 @@ Agreement is the fraction of independent studies stating the modal direction, wi
 
 Of the 9 claim(s) with a defined agreement, 4 are unanimous and 5 are contested (independent studies state incompatible directions, by the QC definition in docs/DECISIONS.md D-011). 109 of them matched on conditions that were unknown rather than known to be the same; the mean agreement is broken down by specificity in section 3 rather than pooled here. Nothing was resolved, averaged or dropped.
 
-The `min cond` column is the minimum condition specificity of the cell, out of 4. It is not a footnote: an agreement at `0/4` was computed over studies that matched on their conditions being unknown.
+The `min cond` column is the minimum condition specificity of the cell, out of 5. It is not a footnote: an agreement at `0/5` was computed over studies that matched on their conditions being unknown.
 
 | population | perturbation (class / polarity / target) | outcome | condition | min cond | studies | labs | modal direction | agreement | 95% CI | conflicts |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown | 0/4 | 4 | 4 | increase | 1.00 | [0.51, 1.00] | - |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=ad_libitum | 1/4 | 3 | 3 | increase | 1.00 | [0.44, 1.00] | - |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=male, diet=chow, age_group=unknown, challenge=unknown | 2/4 | 2 | 2 | increase | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown | 1/4 | 2 | 2 | increase | 1.00 | [0.34, 1.00] | - |
-| `arc_pomc` | circuit_activity / increase / <null> | `body_weight` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown | 1/4 | 2 | 2 | decrease (tied) | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
-| `arc_pomc` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown | 1/4 | 2 | 2 | no_change | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
-| `arc_agrp` | circuit_activity / increase / <null> | `locomotor_activity` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown | 0/4 | 2 | 2 | increase | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL, QC_CONFLICT_OPPOSED |
-| `pvh_sim1` | circuit_activity / decrease / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown | 0/4 | 2 | 2 | increase | 1.00 | [0.34, 1.00] | - |
-| `scn_vip` | circuit_activity / increase / <null> | `sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown | 0/4 | 2 | 2 | increase (tied) | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 4 | 4 | increase | 1.00 | [0.51, 1.00] | - |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=ad_libitum, background_genotype=unknown | 1/5 | 3 | 3 | increase | 1.00 | [0.44, 1.00] | - |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=male, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 2/5 | 2 | 2 | increase | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | 2 | 2 | increase | 1.00 | [0.34, 1.00] | - |
+| `arc_pomc` | circuit_activity / increase / <null> | `body_weight` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | 2 | 2 | decrease (tied) | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
+| `arc_pomc` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | 2 | 2 | no_change | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
+| `arc_agrp` | circuit_activity / increase / <null> | `locomotor_activity` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | increase | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL, QC_CONFLICT_OPPOSED |
+| `pvh_sim1` | circuit_activity / decrease / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | increase | 1.00 | [0.34, 1.00] | - |
+| `scn_vip` | circuit_activity / increase / <null> | `sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | increase (tied) | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
 
 ### Modal direction per claim
 
@@ -185,7 +186,7 @@ The `min cond` column is the minimum condition specificity of the cell, out of 4
 
 **Feasible for at least one population and valence: `food_intake`.**
 
-Verdicts are per claim-keyed task (the nine-component schema v0.2.0 key) and then rolled up to the `(population, outcome)` pairs the Phase 2 question is phrased in; a pair is as feasible as its best claim and the rollup names which perturbation and which condition that was. No threshold in `gates.py` changed at v0.2.0 — only the unit they apply to, which is finer, so fewer cells can clear a gate that counts studies and labs. The section on the key change measures that cost.
+Verdicts are per claim-keyed task (the full claim key) and then rolled up to the `(population, outcome)` pairs the Phase 2 question is phrased in; a pair is as feasible as its best claim and the rollup names which perturbation and which condition that was. No threshold in `gates.py` changed at v0.2.0 — only the unit they apply to, which is finer, so fewer cells can clear a gate that counts studies and labs. The section on the key change measures that cost.
 
 | verdict | tasks | (population, outcome) pairs |
 |---|---|---|
@@ -197,20 +198,20 @@ Verdicts are per claim-keyed task (the nine-component schema v0.2.0 key) and the
 
 | population | perturbation | outcome | condition | min cond | verdict | records | studies | labs | agreement | reasons | notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown | 0/4 | feasible | 5 | 4 | 4 | 1.00 | `MEETS_ALL_FEASIBLE_GATES` | `CONDITIONS_ALL_UNKNOWN` |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=ad_libitum | 1/4 | feasible | 3 | 3 | 3 | 1.00 | `MEETS_ALL_FEASIBLE_GATES` | `CONDITIONS_PARTIALLY_UNKNOWN` |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown | 1/4 | marginal | 7 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE` | `CONDITIONS_PARTIALLY_UNKNOWN` |
-| `pvh_sim1` | circuit_activity / decrease / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown | 0/4 | marginal | 3 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE` | `CONDITIONS_ALL_UNKNOWN` |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | feasible | 5 | 4 | 4 | 1.00 | `MEETS_ALL_FEASIBLE_GATES` | `CONDITIONS_ALL_UNKNOWN` |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=ad_libitum, background_genotype=unknown | 1/5 | feasible | 3 | 3 | 3 | 1.00 | `MEETS_ALL_FEASIBLE_GATES` | `CONDITIONS_PARTIALLY_UNKNOWN` |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | marginal | 7 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE` | `CONDITIONS_PARTIALLY_UNKNOWN` |
+| `pvh_sim1` | circuit_activity / decrease / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | marginal | 3 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE` | `CONDITIONS_ALL_UNKNOWN` |
 
 ### Verdicts by minimum condition specificity
 
 A `feasible` verdict whose cell matched on unknown conditions is still a `feasible` verdict — there is no specificity gate, because inventing a threshold here would be inventing a knob (`MIN_CONDITION_SPECIFICITY_GATE` is `None` on purpose). It is counted separately instead, so the qualification cannot be lost between this table and the headline count.
 
-| verdict | 0/4 | 1/4 | 2/4 | 3/4 | 4/4 |
-|---|---|---|---|---|---|
-| feasible | 1 | 1 | 0 | 0 | 0 |
-| marginal | 1 | 1 | 0 | 0 | 0 |
-| insufficient | 107 | 120 | 146 | 16 | 0 |
+| verdict | 0/5 | 1/5 | 2/5 | 3/5 | 4/5 | 5/5 |
+|---|---|---|---|---|---|---|
+| feasible | 1 | 1 | 0 | 0 | 0 | 0 |
+| marginal | 1 | 1 | 0 | 0 | 0 | 0 |
+| insufficient | 107 | 120 | 146 | 16 | 0 | 0 |
 
 ### Why tasks did not pass
 
@@ -369,7 +370,7 @@ The dense grid is not drawn: 42 x 30 exceeds the 12 x 12 printable limit. 1080 c
 
 SCHEMA.md 5: a cross-validated number reported without naming its grouping is an invalid result in this project. `syn4rch.feasibility.splits` therefore returns folds only inside a labelled fold set, and `attach_metric` raises if a caller tries to bind a number to folds without the label. Shared animal cohorts (SCHEMA.md 5 item 3) are not controlled by any grouping here: the schema records no cohort identity.
 
-**The claim key change does not reach this table.** All three fold generators key on `study_key`, `lab_key` and `population_key`; none of them reads `claim_key`, a perturbation field or a condition field, so fold membership is identical before and after schema v0.2.0. That is checked rather than assumed: `tests/test_feasibility_splits.py` holds records that differ only in `perturbation_class`, `perturbation_polarity`, `target_id` and the four conditions, and asserts the folds come out unchanged.
+**The claim key change does not reach this table.** All three fold generators key on `study_key`, `lab_key` and `population_key`; none of them reads `claim_key`, a perturbation field or a condition field, so fold membership is identical before and after schema v0.2.0. That is checked rather than assumed: `tests/test_feasibility_splits.py` holds records that differ only in `perturbation_class`, `perturbation_polarity`, `target_id` and the every condition, and asserts the folds come out unchanged.
 
 Grouping is also not the whole of leakage control. SCHEMA.md 5b: a split can keep a lab off both sides and still hand the model a test row whose perturbation identity never appeared in training, which is unlearnable rather than merely hard. That fraction is measured in `reports/perturbation_identity.md` and is required next to any cross-validated number from this corpus.
 
@@ -386,6 +387,6 @@ Grouping is also not the whole of leakage control. SCHEMA.md 5b: a split can kee
 - It does not treat a single observation as agreement, and it does not treat repeated publication by one lab as independent replication.
 - It cannot rule out two studies sharing one animal cohort (SCHEMA.md 5 item 3): the schema records no cohort identity.
 - A `feasible` verdict says a prediction task can be posed and cross-validated with the grouping named, not that a model will work. It does not say the held-out rows were learnable: see `reports/perturbation_identity.md` (SCHEMA.md 5b).
-- It does not claim that two records in one cell ran under the same conditions. Where the minimum condition specificity is below 4, they were grouped partly because the conditions were unknown. No claim in this corpus states all 4.
+- It does not claim that two records in one cell ran under the same conditions. Where the minimum condition specificity is below 5, they were grouped partly because the conditions were unknown. No claim in this corpus states all 5.
 - The pooled (v0.1.0) key appears only in the section on the key change. It is never a verdict: it pools experiments that were never comparable, which is the defect v0.2.0 exists to fix.
 - Tier B outcomes are excluded as prediction targets by `EXCLUDE_TIER_B_AS_TARGET` (SCHEMA.md 6: Tier B is an annotation layer, not a training target).

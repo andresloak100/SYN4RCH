@@ -109,7 +109,7 @@ class TestSingleObservation(unittest.TestCase):
 class TestTwoLabsAgreeing(unittest.TestCase):
     def setUp(self):
         self.cell = cell_of(
-            [synthetic.good_record(), synthetic.other_lab_record()]
+            [synthetic.fully_specified_record(), synthetic.other_lab_record(background_genotype="wild_type")]
         )
 
     def test_independence_is_counted_at_both_levels(self):
@@ -320,7 +320,7 @@ class TestClaimKeying(unittest.TestCase):
             build_replication_cells([synthetic.good_record()], "whatever")
 
     def test_cells_are_deterministic_and_serialisable(self):
-        records = [synthetic.good_record(), synthetic.other_lab_record()]
+        records = [synthetic.fully_specified_record(), synthetic.other_lab_record(background_genotype="wild_type")]
         first = [c.to_dict() for c in build_replication_cells(records)]
         second = [c.to_dict() for c in build_replication_cells(list(reversed(records)))]
         self.assertEqual(first, second)
@@ -387,7 +387,7 @@ class TestAgreementCannotBeStatedWithoutItsSpecificity(unittest.TestCase):
         self.assertTrue(agreement.matched_on_unknown_conditions)
 
     def test_a_fully_specified_cell_does_not_claim_to_have_matched_on_unknown(self):
-        cell = cell_of([synthetic.good_record(), synthetic.other_lab_record()])
+        cell = cell_of([synthetic.fully_specified_record(), synthetic.other_lab_record(background_genotype="wild_type")])
         self.assertEqual(cell.min_condition_specificity, N_CONDITION_SLOTS)
         self.assertFalse(cell.matched_on_unknown_conditions)
         self.assertFalse(cell.agreement_studies.matched_on_unknown_conditions)
@@ -404,9 +404,13 @@ class TestAgreementCannotBeStatedWithoutItsSpecificity(unittest.TestCase):
         visible.
         """
         records = [
-            synthetic.good_record(),
+            synthetic.fully_specified_record(),
             synthetic.other_lab_record(
-                sex=None, diet=None, age_group=None, challenge=None
+                sex=None,
+                diet=None,
+                age_group=None,
+                challenge=None,
+                background_genotype=None,
             ),
         ]
         strict = build_replication_cells(records, KEY_STRICT)
@@ -448,7 +452,7 @@ class TestAgreementCannotBeStatedWithoutItsSpecificity(unittest.TestCase):
         self.assertEqual(cell.agreement_studies.value, 1.0)
 
     def test_the_summary_breaks_replication_down_by_specificity(self):
-        specified = cell_of([synthetic.good_record(), synthetic.other_lab_record()])
+        specified = cell_of([synthetic.fully_specified_record(), synthetic.other_lab_record(background_genotype="wild_type")])
         unspecified = cell_of(
             [
                 synthetic.good_record(
@@ -479,7 +483,7 @@ class TestAgreementCannotBeStatedWithoutItsSpecificity(unittest.TestCase):
         )
 
     def test_a_specificity_bucket_with_no_cells_has_no_mean_rather_than_zero(self):
-        cell = cell_of([synthetic.good_record(), synthetic.other_lab_record()])
+        cell = cell_of([synthetic.fully_specified_record(), synthetic.other_lab_record(background_genotype="wild_type")])
         means = summarize_replication([cell])[
             "mean_agreement_by_min_condition_specificity"
         ]

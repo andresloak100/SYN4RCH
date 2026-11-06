@@ -81,7 +81,7 @@ class TestSingleObservationIsInsufficient(unittest.TestCase):
 class TestTwoLabsAgreeingIsMarginalNotFeasible(unittest.TestCase):
     def setUp(self):
         self.verdict = verdict_of(
-            [synthetic.good_record(), synthetic.other_lab_record()]
+            [synthetic.fully_specified_record(), synthetic.other_lab_record(background_genotype="wild_type")]
         )
 
     def test_verdict_is_marginal(self):
@@ -100,9 +100,9 @@ class TestThreeStudiesAcrossThreeLabsCanBeFeasible(unittest.TestCase):
     def setUp(self):
         self.verdict = verdict_of(
             [
-                synthetic.good_record(),
-                synthetic.other_lab_record(),
-                third_lab_record(),
+                synthetic.fully_specified_record(),
+                synthetic.other_lab_record(background_genotype="wild_type"),
+                third_lab_record(background_genotype="wild_type"),
             ]
         )
 
@@ -269,7 +269,7 @@ class TestConditionSpecificityQualifiesEveryVerdict(unittest.TestCase):
 
     def test_the_specificity_rides_in_the_numbers_dict_next_to_the_fraction(self):
         verdict = verdict_of(
-            [synthetic.good_record(), synthetic.other_lab_record()]
+            [synthetic.fully_specified_record(), synthetic.other_lab_record(background_genotype="wild_type")]
         )
         numbers = verdict.numbers
         self.assertEqual(numbers["agreement_studies"], 1.0)
@@ -283,9 +283,9 @@ class TestConditionSpecificityQualifiesEveryVerdict(unittest.TestCase):
 
     def test_the_summary_splits_the_verdict_counts_by_specificity(self):
         specified = [
-            synthetic.good_record(),
-            synthetic.other_lab_record(),
-            third_lab_record(),
+            synthetic.fully_specified_record(),
+            synthetic.other_lab_record(background_genotype="wild_type"),
+            third_lab_record(background_genotype="wild_type"),
         ]
         unspecified = [
             self._unspecified(synthetic.good_record, population_id="syn:pop_beta"),

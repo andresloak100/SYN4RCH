@@ -249,10 +249,23 @@ class TestReportAndStats(unittest.TestCase):
         self.assertEqual(stats["dimensions"]["sex"]["after"], {"null": 1})
 
     def test_a_pass_that_introduces_a_hard_finding_is_visible_in_the_stats(self):
+        """Since D-060 this pass DOES introduce one, and that is correct.
+
+        `TO_VERSION` is pinned to the literal "0.3.0" so the published
+        `reports/condition_fill_0.3.0.md` keeps recomputing (D-046). The code
+        now implements 0.4.0, so every record this historical pass stamps is
+        one version behind and earns `S006_SCHEMA_VERSION_MISMATCH` by
+        construction. The point of the test is unchanged -- a hard finding a
+        pass introduces must be *visible in the stats* rather than silent --
+        so it now asserts the finding appears, and that it is the only one.
+        """
         rows = [record()]
         result = fill_records(rows, tempfile.mkdtemp())
         stats = fill_stats(rows, result.records, result)
-        self.assertEqual(stats["hard_findings_before"], stats["hard_findings_after"])
+        self.assertEqual(stats["hard_findings_before"], {})
+        self.assertEqual(
+            stats["hard_findings_after"], {"S006_SCHEMA_VERSION_MISMATCH": 1}
+        )
 
 
 if __name__ == "__main__":

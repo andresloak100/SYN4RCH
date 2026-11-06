@@ -63,7 +63,36 @@ _CONDITION_EVIDENCE = {
         "quote": "Synthetic quote: measured in ad libitum fed animals.",
         "rule": "synthetic",
     },
+    # D-060. `wild_type` is a POSITIVE, quoted establishment that the animals
+    # carry nothing beyond the recorded perturbation -- not an absence. It is
+    # set on good_record so that "fully specified" still means every slot,
+    # which is now five; a fixture that left it null would silently stop being
+    # the fully-specified record every replication test uses it as.
+    "background_genotype": {
+        "dimension": "background_genotype",
+        "value": "wild_type",
+        "source": "methods",
+        "locator": "Methods para 1",
+        "quote": (
+            "Synthetic quote: animals carried no genetic alteration beyond "
+            "the targeting allele."
+        ),
+        "rule": "synthetic",
+    },
 }
+
+
+def fully_specified_record(**overrides) -> TierARecord:
+    """A record stating EVERY condition slot, background genotype included.
+
+    Separate from :func:`good_record` because an *established* wild-type
+    background is rare (D-060): no paper in the corpus says "no additional
+    manipulation", so `good_record` leaves it null and anything needing full
+    specificity asks for it here, explicitly.
+    """
+    data = dict(background_genotype="wild_type")
+    data.update(overrides)
+    return good_record(**data)
 
 
 def condition_evidence_for(data) -> list:
@@ -148,6 +177,14 @@ def good_record(**overrides) -> TierARecord:
         # that condition_specificity(good_record()) == 4 and a test that cares
         # about a *missing* condition has to say so explicitly.
         challenge="ad_libitum",
+        # background_genotype is deliberately NOT set here (D-060). An
+        # *established* wild-type background is rare: no paper in the corpus
+        # states "no additional manipulation", so this value would start at
+        # zero records. good_record represents a well-reported record, and
+        # claiming wild_type by default would assert something the literature
+        # almost never says. A test that needs full specificity passes
+        # background_genotype="wild_type" explicitly, and
+        # condition_evidence_for then supplies its evidence.
         challenge_detail="fed ad libitum (fabricated)",
         # schema v0.3.0: every positive condition value carries its own
         # evidence entry, or the record earns W017. Filled in below from

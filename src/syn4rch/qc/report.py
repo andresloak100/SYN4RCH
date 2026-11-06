@@ -154,13 +154,17 @@ def run_qc(
 
 
 def _specificity_counts(records) -> Dict[str, int]:
-    """How many records know 0, 1, 2, 3 or 4 of their condition slots.
+    """How many records know 0, 1, ... or all of their condition slots.
 
     Reported because a conflict or a replication found between two records of
     specificity 0 matched on "both unknown", not on "both the same", and a
     report that prints one number for both is overclaiming (DECISIONS D-023).
+
+    The number of buckets is ``len(CONDITION_FIELDS) + 1``, never a literal:
+    it was ``range(5)`` for four slots until D-060 added a fifth, which left
+    the top bucket uncounted while the printed denominator said five.
     """
-    counts = {str(n): 0 for n in range(5)}
+    counts = {str(n): 0 for n in range(len(CONDITION_FIELDS) + 1)}
     for record in records:
         counts[str(condition_specificity(record))] += 1
     return counts
@@ -482,7 +486,10 @@ def render_text(report: QCReport, path=None, limit=None) -> str:
 
     specificity = report.stats.get("condition_specificity") or {}
     if specificity:
-        lines.append("Condition specificity (slots known of sex/diet/age/challenge)")
+        lines.append(
+            "Condition specificity (slots known of %s)"
+            % "/".join(CONDITION_FIELDS)
+        )
         lines.append("-" * 72)
         for slots in sorted(specificity):
             lines.append(

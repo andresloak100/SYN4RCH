@@ -39,6 +39,7 @@ import datetime
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+from ..qc.keys import CONDITION_FIELDS
 from . import gates as gates_mod
 from .coverage import (
     EXCLUSION_CODES,
@@ -707,12 +708,16 @@ def _specificity_block(report: "FeasibilityReport") -> List[str]:
         "### Every replication figure, by minimum condition specificity",
         "",
         "`condition_specificity` counts how many of the %d condition slots "
-        "(`sex`, `diet`, `age_group`, `challenge`) a record actually states. "
+        "(%s) a record actually states. "
         "The **minimum** over a cell's records is what qualifies the cell, "
         "because one record stating nothing is enough to make the whole match "
         "a match on `unknown`. A row at specificity 0 says the claim's records "
         "were grouped together partly because their conditions were not known, "
-        "not because they were the same." % N_CONDITION_SLOTS,
+        "not because they were the same."
+        % (
+            N_CONDITION_SLOTS,
+            ", ".join("`%s`" % f for f in CONDITION_FIELDS),
+        ),
         "",
     ]
     rows = []
@@ -756,7 +761,7 @@ def _specificity_block(report: "FeasibilityReport") -> List[str]:
     if all_cells.get(str(N_CONDITION_SLOTS), 0) == 0:
         lines.append(
             "No claim in this corpus reaches specificity %d of %d: not one "
-            "record states all four conditions. Every replication figure above "
+            "record states every condition. Every replication figure above "
             "is therefore qualified, and none of them describes two "
             "experiments known to have run under the same conditions."
             % (N_CONDITION_SLOTS, N_CONDITION_SLOTS)
@@ -895,8 +900,8 @@ def _section_gates(report: "FeasibilityReport") -> List[str]:
             + "."
         ),
         "",
-        "Verdicts are per claim-keyed task (the nine-component schema v0.2.0 "
-        "key) and then rolled up to the `(population, outcome)` pairs the "
+        "Verdicts are per claim-keyed task (the full claim key) and then "
+        "rolled up to the `(population, outcome)` pairs the "
         "Phase 2 question is phrased in; a pair is as feasible as its best "
         "claim and the rollup names which perturbation and which condition "
         "that was. No threshold in `gates.py` changed at v0.2.0 — only the "
@@ -1360,7 +1365,7 @@ def _section_splits(report: "FeasibilityReport") -> List[str]:
         "is checked rather than assumed: "
         "`tests/test_feasibility_splits.py` holds records that differ only in "
         "`perturbation_class`, `perturbation_polarity`, `target_id` and the "
-        "four conditions, and asserts the folds come out unchanged.",
+        "every condition, and asserts the folds come out unchanged.",
         "",
         "Grouping is also not the whole of leakage control. SCHEMA.md 5b: a "
         "split can keep a lab off both sides and still hand the model a test "

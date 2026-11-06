@@ -99,11 +99,21 @@ class ConditionKeyTest(unittest.TestCase):
         r = synthetic.good_record(
             sex="female", diet="high_fat", age_group="aged", challenge="fasted"
         )
+        # Five slots since D-060. The fifth reads UNKNOWN here because
+        # good_record states no background genotype, which is the correct
+        # reading: an unaddressed background is not an established wild type.
         self.assertEqual(
-            K.condition_key(r), ("female", "high_fat", "aged", "fasted")
+            K.condition_key(r),
+            ("female", "high_fat", "aged", "fasted", K.UNKNOWN),
         )
-        self.assertEqual(K.CONDITION_FIELDS,
-                         ("sex", "diet", "age_group", "challenge"))
+        self.assertEqual(
+            K.CONDITION_FIELDS,
+            ("sex", "diet", "age_group", "challenge", "background_genotype"),
+        )
+        # The arity is the declaration, not a literal. Asserted so that a
+        # sixth dimension fails here rather than in a caller that unpacked
+        # positionally -- which is what happened to extract_features (D-060).
+        self.assertEqual(len(K.condition_key(r)), len(K.CONDITION_FIELDS))
 
     def test_none_and_not_reported_both_read_unknown(self):
         absent = synthetic.good_record(sex=None)

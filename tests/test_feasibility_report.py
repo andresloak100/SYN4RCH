@@ -233,7 +233,7 @@ class TestTheReportShowsBeforeAndAfter(unittest.TestCase):
             ]
         )
         text = render_markdown(report)
-        self.assertIn("No claim in this corpus reaches specificity 4 of 4", text)
+        self.assertIn("No claim in this corpus reaches specificity 5 of 5", text)
 
     def test_the_splits_section_says_the_key_change_does_not_reach_it(self):
         self.assertIn("claim key change does not reach this table", self.text)

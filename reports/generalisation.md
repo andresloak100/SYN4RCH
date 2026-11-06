@@ -8,7 +8,7 @@ This does **not** reopen D-048. That pre-registration named leave-one-study-out 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-06T17:35:41Z |
+| generated (UTC) | 2026-11-06T20:42:51Z |
 | input | `/Users/andresarriaga/Documents/SYN4RCH/data/curated/records.jsonl` |
 | records read | 508 |
 | labellable examples | 507 |

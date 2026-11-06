@@ -249,9 +249,17 @@ class TestConditionFeaturesDistinguishUnknownFromAValue(unittest.TestCase):
     def test_the_convention_is_the_one_in_qc_keys(self):
         from syn4rch.qc.keys import UNKNOWN, condition_key
 
+        from syn4rch.qc.keys import CONDITION_FIELDS
+
         record = synthetic.good_record(sex=None, diet="high_fat", challenge=None)
         features = extract_features(record)
-        sex, diet, _age_group, challenge = condition_key(record)
+        # Read by name. This test did the same fixed four-tuple unpack that
+        # broke extract_features when D-060 added a fifth dimension, so it
+        # now demonstrates the pattern that survives another one.
+        condition = dict(zip(CONDITION_FIELDS, condition_key(record)))
+        sex = condition["sex"]
+        diet = condition["diet"]
+        challenge = condition["challenge"]
         self.assertEqual(UNKNOWN_CONDITION, UNKNOWN)
         self.assertEqual((features.sex, features.diet, features.challenge),
                          (sex, diet, challenge))
@@ -275,7 +283,7 @@ class TestConditionFeaturesDistinguishUnknownFromAValue(unittest.TestCase):
             ]
         )
         summary = dataset.describe()["conditions"]
-        self.assertEqual(summary["slots"], ["sex", "diet", "age_group", "challenge"])
+        self.assertEqual(summary["slots"], ["sex", "diet", "age_group", "challenge", "background_genotype"])
         self.assertEqual(summary["feature_slots"], list(CONDITION_FEATURE_FIELDS))
         self.assertEqual(summary["by_slots_known"]["0"], 1)
         self.assertEqual(summary["by_slots_known"]["4"], 1)
