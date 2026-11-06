@@ -3766,3 +3766,104 @@ evaluation runs **once**. This remains a Tier B feature over an external
 observational atlas, generalising a direction label that comes only from
 interventional experiments; D-065's mapping is `never_a_training_target: true`
 and nothing here alters that.
+
+## D-067 - The pre-registered similarity metric cannot rank: a 0.0051 margin, the tie guard that belongs here, and the last amendment before the run
+
+**Measured before any delta, and it is a property of the feature, not a result.**
+D-059 specifies cosine similarity between population mean-expression vectors.
+Built as specified over the gene set D-066 fixed, on the 9-population tier A
+primary pool, it is very nearly degenerate:
+
+| metric | min | median | max | spread | median top-1 margin |
+|---|---|---|---|---|---|
+| **cosine, raw (as pre-registered)** | 0.893 | 0.942 | 0.974 | 0.081 | **0.0051** |
+| Pearson across genes | 0.749 | 0.872 | 0.943 | 0.194 | 0.0097 |
+| cosine after centring each gene | −0.367 | −0.138 | 0.231 | 0.598 | **0.0605** |
+| cosine on z-scored genes | −0.375 | −0.127 | 0.173 | 0.549 | 0.0533 |
+
+Every pair of populations sits between 0.893 and 0.974, and **the gap between a
+row's first and second nearest neighbour is about half a percent.** With `k = 1`
+the whole prediction turns on that gap. This is the defect a second session
+first raised as a `tied` outcome, which I answered by saying `vmh_sf1`'s refusal
+had removed the only ranking it applied to. That was wrong — it applies here,
+to the similarity ranking, which is where a margin inside its own uncertainty
+actually decides something.
+
+The cause is arithmetic rather than biological: cosine between non-negative
+vectors that share a large component is always near 1. All these populations are
+neurons and share most of their transcriptome, so the shared part dominates the
+inner product. Centring each gene across populations removes it.
+
+### The gene set was suspected first, tested, and exonerated
+
+A second session argued the gene set is selected indirectly by well-represented
+regions, specifically that HypoMap underrepresents the VMH. **Measured, that
+premise is false.** At C465 the VMH holds 45 clusters and 33,694 cells, 8.8% of
+the atlas, effectively tied with the arcuate's 45 and 37,667 (9.8%). The thin
+region among populations carrying records is the **PVH**: 16 clusters, 8,710
+cells, 2.3%. This is worth more than a correction — `vmh_sf1` is refused for
+`Nr5a1` peaking at 0.391, and that cannot be blamed on sampling when the VMH is
+the second-best-sampled named region in the atlas. The cause is transcript
+abundance, which is exactly D-065's "a Cre line is not a marker".
+
+I then tested the obvious fix anyway, since the top genes by variance across all
+465 clusters are `Plp1`, `Mbp`, `Apoe` and `Cst3` — myelin and glial markers,
+i.e. the gene set was partly measuring the neuron/glia axis while every
+population under test is a neuron. Restricting variance to the 320 neuronal
+clusters changes the gene set completely (top genes become `Avp`, `Sst`, `Gad2`,
+`Dlk1`) and changes the similarity structure **not at all**: spread 0.081 →
+0.088, median 0.942 → 0.941, and eight of nine nearest neighbours identical.
+
+So **the gene set stands exactly as D-066 fixed it.** A pre-registered parameter
+that survives a genuine attempt to improve it is worth more than one quietly
+replaced, and recording the failed amendment is the point.
+
+### Two changes, both before any delta
+
+**1. The metric becomes cosine after centring each gene across the populations
+being compared.** Declared reason: an un-centred cosine over non-negative data
+is a known-degenerate choice, and D-066's own stated purpose for restricting the
+gene set — measure cell identity, not what is high in everything alike — is the
+same argument one level down. Gene centring is chosen over z-scoring because it
+removes the shared baseline without reweighting every gene by its variance
+across nine populations, which with nine points is itself noisy.
+
+The selection among the four rows above used **spread and top-1 margin only**.
+No direction label enters either quantity, so this cannot tilt the primary
+toward similarity working. It can only decide whether the feature is able to
+rank at all.
+
+**2. A per-row tie guard, which is what the `tied` proposal was for.** A row is
+predicted only if its nearest neighbour is **stable**: resampling the 2000 genes
+with replacement, B = 200, the same population must be nearest in **at least
+95%** of replicates. A row failing that is reported **unranked** — counted as
+unpredicted, exactly like D-066's overlap fallback, and never counted wrong.
+
+This is the mechanism for the standing requirement that this system be able to
+answer *"insufficient evidence to rank these interventions reliably."* Until now
+that requirement had no implementation in this experiment; a `k = 1` ranking on
+a 0.0051 margin would have asserted a neighbour it could not defend.
+
+### The stopping rule, which matters more than either change
+
+Counting D-059's three amendments, this is the fifth time this experiment has
+been re-specified before being run. Every one was forced by a measurement of the
+feature and none by a delta, which is the distinction that keeps them
+legitimate — but the pattern itself is the risk, because a sufficiently
+determined amender can reach any result without ever looking at one.
+
+**So: this is the last amendment. The evaluation runs next.** If the tie guard
+leaves too few ranked rows to measure, the finding is *"transcriptomic
+similarity cannot rank these populations reliably, and the experiment reports
+insufficient evidence"* — which is a real answer, is reported as the result, and
+is **not** grounds for a sixth re-specification. No further change to the gene
+set, the metric, `k`, the tie guard, the mapping, or the admitted tiers will be
+made before the primary is measured, and any change after it is a new experiment
+under a new number with the first result reported alongside.
+
+### Unchanged
+
+D-059's predictions 1 and 2 stand and are unmeasured. D-066's overlap
+disqualification, `k = 1`, the exploratory `k = 3` that cannot touch the primary,
+tier A admission, and every logged diagnostic stand as written. This remains a
+Tier B feature that is never a training target.
