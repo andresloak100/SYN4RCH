@@ -285,7 +285,20 @@ CONDITION_DIMENSIONS = (
     "age_group",
     "challenge",
     # D-060. Fifth and last: it enters claim_key and condition_key but neither
-    # RECORD_ID_FIELDS nor the model's feature set, following age_group.
+    # RECORD_ID_FIELDS nor the model's feature set.
+    #
+    # NOT "following age_group", which this comment claimed until a second
+    # session checked the tuple. `age_group` IS a RECORD_ID_FIELDS component,
+    # as are `sex`, `diet` and `challenge` -- all four pre-existing condition
+    # dimensions are hashed, so age_group is a precedent for INCLUSION here and
+    # supports only the feature-set half (it is correctly absent from
+    # CONDITION_FEATURE_FIELDS). The exclusion stands on its own grounds,
+    # argued in D-060: a fourth identity map is permanent debt on every
+    # external reference, and the one pooled-genotype record in the corpus is
+    # answered by the `mixed` value rather than by a split, so no permitted
+    # curation action needs the genotype in the hash. `syn4rch.curate.run`
+    # refuses a batch whose records collide, because that last clause holds
+    # only while something enforces it.
     "background_genotype",
 )
 

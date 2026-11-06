@@ -533,6 +533,41 @@ def cmd_gate(args) -> int:
         strict_locator_passage=(not args.lenient_passage),
     )
 
+    # Two admitted records sharing a record_id, WITHIN this batch. The check
+    # below against --out catches a collision with what is already stored; this
+    # one catches a batch that collides with itself, which that check cannot
+    # see because it only reads `existing`.
+    #
+    # The case is live rather than hypothetical (D-060). `background_genotype`
+    # is not a RECORD_ID_FIELDS component, so two records differing only in it
+    # hash to one id -- verified on `ad4a6ccfc070e39c`, whose quote reports one
+    # joint result for an NPY-intact and an NPY-null arm. D-060 answers that
+    # record with the `mixed` value rather than a split, so no permitted
+    # curation action reaches this error; it exists because "no permitted
+    # action reaches it" is only true while something enforces it. Without
+    # this, such a batch is admitted and raises much later in
+    # `TaskDataset.record_index`, at the wrong place for a curator to read.
+    by_id: Dict[str, List[TierARecord]] = {}
+    for record in admitted:
+        by_id.setdefault(record.record_id or "", []).append(record)
+    internal = {k: v for k, v in by_id.items() if len(v) > 1}
+    if internal:
+        sys.stderr.write(
+            "error: %d record_id(s) are shared by two or more records in this "
+            "batch. RECORD_ID_FIELDS does not separate them, so admitting both "
+            "would store two observations under one identity:\n"
+            % len(internal)
+        )
+        for rid, group in sorted(internal.items())[:5]:
+            sys.stderr.write("  %s  x%d  %s\n" % (rid, len(group), group[0].study_id))
+            for field in ("background_genotype", "source_locator", "outcome_raw"):
+                values = sorted({str(getattr(r, field, None)) for r in group})
+                if len(values) > 1:
+                    sys.stderr.write(
+                        "      differ in %s: %s\n" % (field, ", ".join(values))
+                    )
+        return 1
+
     # Non-blocking notes on admitted records, recomputed from the same gate so
     # the report cannot disagree with the verdict.
     from .verify import verify_support

@@ -222,3 +222,33 @@ class GateWillNotSilentlyReplaceADataset(unittest.TestCase):
         self.assertEqual(code, 1)
         with open(self.out, encoding="utf-8") as fh:
             self.assertEqual(len([l for l in fh if l.strip()]), 1)
+
+
+class WithinBatchIdCollisionTest(unittest.TestCase):
+    """D-060: two admitted records sharing a record_id must stop the gate.
+
+    `background_genotype` is not a RECORD_ID_FIELDS component, so two records
+    differing only in it hash to one id. The check against the existing file
+    cannot see a batch that collides with itself.
+    """
+
+    def test_two_records_differing_only_in_genotype_share_an_id(self):
+        from syn4rch.schema.record import TierARecord
+
+        base = synthetic.good_record().to_dict()
+        a = TierARecord.from_dict(
+            {**base, "record_id": None, "background_genotype": "wild_type"}
+        )
+        b = TierARecord.from_dict(
+            {
+                **base,
+                "record_id": None,
+                "background_genotype": "npy:loss_of_function:global",
+            }
+        )
+        self.assertEqual(
+            a.record_id,
+            b.record_id,
+            "if this ever differs, genotype has entered the hash and D-060's "
+            "no-id-map property is void",
+        )

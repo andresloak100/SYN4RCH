@@ -2855,10 +2855,53 @@ is rewritten.
 
 It enters `CONDITION_FIELDS` and therefore `claim_key` and `condition_key`. It
 does **not** enter `RECORD_ID_FIELDS` and does **not** enter
-`CONDITION_FEATURE_FIELDS`. That follows the `age_group` precedent exactly:
-`age_group` is in the condition key and in `condition_specificity` (4 slots) and
-is not a model feature (3 slots), and `task.py` already documents that both
-counts are printed "rather than one being quietly substituted for the other".
+`CONDITION_FEATURE_FIELDS`.
+
+> **Correction: the `age_group` precedent cited here was half wrong, and the
+> half that mattered pointed the other way.** A second session checked the
+> tuple. `age_group` **is** a `RECORD_ID_FIELDS` component — as are `sex`,
+> `diet` and `challenge`, so **all four pre-existing condition dimensions are
+> hashed**. The precedent supports excluding genotype from the model's feature
+> set, where `age_group` is correctly absent, and is an argument for
+> *inclusion* in the hash. The sentence below leaned on both halves and was
+> entitled to only one.
+>
+> **The decision does not change, and here is the argument that actually
+> carries it.** Three grounds, none of them a precedent:
+>
+> 1. A fourth identity map is permanent debt borne by every external reference
+>    to this dataset. Three already exist, one of them added two days ago by
+>    D-058.
+> 2. **The pooled-genotype record is answered by design, not by a split.** The
+>    live case is `ad4a6ccfc070e39c`, whose quote reports one joint result for
+>    an NPY-intact and an NPY-null arm: "a slight increase in locomotor
+>    activity in both hM3DGq-AgRP; NPY-wt/wt, as well as in ... NPY-Δ/Δ-mice".
+>    D-060 gives that record the `mixed` value. Splitting it would derive two
+>    observations from a sentence reporting one, which this project refuses
+>    everywhere else — D-044 makes a quote naming two states a refusal rather
+>    than a pick, and D-052 records exactly that refusal for `challenge` on two
+>    records of the same study.
+> 3. Therefore no curation action the schema permits requires the genotype in
+>    the hash. Where a paper reports the two arms separately, the records differ
+>    in `outcome_raw` or `source_locator` and no collision arises.
+>
+> **The collision is real, and ground 3 holds only while something enforces
+> it.** Verified: splitting `ad4a6ccfc070e39c` into its two arms yields the
+> identical id `ad4a6ccfc070e39c` for both halves, because they share all
+> twelve hash components. `syn4rch.curate.run` now refuses a batch in which two
+> admitted records share a `record_id`, printing which fields they differ in.
+> Its previous check compared admitted ids only against the existing file and
+> could not see a batch colliding with itself; such a batch was admitted and
+> raised much later in `TaskDataset.record_index`, at the wrong place and time
+> for a curator to read. `correct_conditions` already refused on collision
+> (`CorrectionCollision`); the curation gate now does too, and a test asserts
+> the two-records-one-id property directly so that genotype silently entering
+> the hash would fail loudly rather than void this entry.
+
+That the exclusion from the feature set follows `age_group` is sound: `age_group`
+is in the condition key and in `condition_specificity` (4 slots) and is not a
+model feature (3 slots), and `task.py` already documents that both counts are
+printed "rather than one being quietly substituted for the other".
 Genotype makes those 5 and 3. Comparability and prediction are different
 questions — D-036's finding — and this dimension is on the comparability side by
 construction.

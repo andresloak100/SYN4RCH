@@ -6,8 +6,8 @@ v0.4.0 adds one field, `background_genotype`, as the fifth condition dimension (
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-06T20:44:29Z |
-| input | `../../../../var/folders/_5/rynzp98n41x8_zqylycjclv80000gn/T/tmp8kcv97si/records.jsonl` |
+| generated (UTC) | 2026-11-06T20:48:03Z |
+| input | `../../../../var/folders/_5/rynzp98n41x8_zqylycjclv80000gn/T/tmp_ggiw9x8/records.jsonl` |
 | from / to | 0.3.0 -> 0.4.0 |
 | records | 1 |
 | versions in | 0.3.0 x1 |
