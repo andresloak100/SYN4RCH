@@ -1,0 +1,862 @@
+{
+ "schema": "population_cluster_mapping/1",
+ "decision": "D-065",
+ "tier": "B",
+ "never_a_training_target": true,
+ "atlas": {
+  "name": "HypoMap",
+  "doi": "10.1038/s42255-022-00657-y",
+  "organism": "NCBITaxon:10090",
+  "cells": 384925,
+  "genes": 51216,
+  "levels": [
+   "C66",
+   "C185",
+   "C286",
+   "C465"
+  ]
+ },
+ "rule": {
+  "min_region_share_percent": 50.0,
+  "marker_floor": 0.5,
+  "keep_fraction": 0.5,
+  "min_contrast_for_tier_A_or_B": 10.0,
+  "rank_good_enough_for_tier_B": 50,
+  "level_chosen_by": "greatest contrast among levels clearing the floor",
+  "contrast": "median(kept marker means) / median(excluded candidates)",
+  "declared_after_inspecting_the_atlas": true
+ },
+ "nesting": [
+  {
+   "a": "arc_kisspeptin",
+   "b": "arc_tbx3",
+   "relation": "subset"
+  }
+ ],
+ "entries": {
+  "arc_agrp": {
+   "population_id": "arc_agrp",
+   "outcome": "mapped",
+   "marker": "Agrp",
+   "declared_markers": [
+    "Agrp",
+    "Npy"
+   ],
+   "nucleus": "arc",
+   "atlas_regions": [
+    "Arcuate hypothalamic nucleus"
+   ],
+   "level": "C66",
+   "clusters": [
+    "C66-46: Agrp.GABA-4"
+   ],
+   "contrast": 27.04,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 1,
+   "total_clusters": 1,
+   "best_marker_rank": 5,
+   "cells": 5244,
+   "region_candidates_per_level": {
+    "C66": 12,
+    "C185": 26,
+    "C286": 29,
+    "C465": 45
+   }
+  },
+  "arc_ghrh": {
+   "population_id": "arc_ghrh",
+   "outcome": "mapped",
+   "marker": "Ghrh",
+   "declared_markers": [
+    "Ghrh"
+   ],
+   "nucleus": "arc",
+   "atlas_regions": [
+    "Arcuate hypothalamic nucleus"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-284: Slc10a4.Ghrh.GABA-3",
+    "C465-283: Slc18a3.Ghrh.GABA-3",
+    "C465-285: Gsx1.Ghrh.GABA-3"
+   ],
+   "contrast": 86.64,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 3,
+   "total_clusters": 3,
+   "best_marker_rank": 4,
+   "cells": 2511,
+   "region_candidates_per_level": {
+    "C66": 12,
+    "C185": 26,
+    "C286": 29,
+    "C465": 45
+   }
+  },
+  "arc_kisspeptin": {
+   "population_id": "arc_kisspeptin",
+   "outcome": "mapped",
+   "marker": "Kiss1",
+   "declared_markers": [
+    "Kiss1",
+    "Tac2",
+    "Pdyn"
+   ],
+   "nucleus": "arc",
+   "atlas_regions": [
+    "Arcuate hypothalamic nucleus"
+   ],
+   "level": "C185",
+   "clusters": [
+    "C185-51: Tac2.GLU-5"
+   ],
+   "contrast": 139.87,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 1,
+   "total_clusters": 1,
+   "best_marker_rank": 55,
+   "cells": 2284,
+   "region_candidates_per_level": {
+    "C66": 12,
+    "C185": 26,
+    "C286": 29,
+    "C465": 45
+   }
+  },
+  "arc_pomc": {
+   "population_id": "arc_pomc",
+   "outcome": "mapped",
+   "marker": "Pomc",
+   "declared_markers": [
+    "Pomc",
+    "Cartpt"
+   ],
+   "nucleus": "arc",
+   "atlas_regions": [
+    "Arcuate hypothalamic nucleus"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-123: Cartpt.Anxa2.Pomc.GLU-5",
+    "C465-126: Shisal2b.Ttr.Pomc.GLU-5",
+    "C465-122: Prdm12.Anxa2.Pomc.GLU-5",
+    "C465-125: Tbx3.Ttr.Pomc.GLU-5"
+   ],
+   "contrast": 16.92,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 4,
+   "total_clusters": 4,
+   "best_marker_rank": 1,
+   "cells": 3532,
+   "region_candidates_per_level": {
+    "C66": 12,
+    "C185": 26,
+    "C286": 29,
+    "C465": 45
+   }
+  },
+  "arc_sst": {
+   "population_id": "arc_sst",
+   "outcome": "mapped",
+   "marker": "Sst",
+   "declared_markers": [
+    "Sst"
+   ],
+   "nucleus": "arc",
+   "atlas_regions": [
+    "Arcuate hypothalamic nucleus"
+   ],
+   "level": "C286",
+   "clusters": [
+    "C286-183: Gpr101.Otp.Sst.GABA-4",
+    "C286-179: Ptprk.Npy.Sst.GABA-4",
+    "C286-181: Il1rapl2.Otp.Sst.GABA-4"
+   ],
+   "contrast": 16.82,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 3,
+   "total_clusters": 3,
+   "best_marker_rank": 1,
+   "cells": 3466,
+   "region_candidates_per_level": {
+    "C66": 12,
+    "C185": 26,
+    "C286": 29,
+    "C465": 45
+   }
+  },
+  "arc_tbx3": {
+   "population_id": "arc_tbx3",
+   "outcome": "mapped",
+   "marker": "Tbx3",
+   "declared_markers": [
+    "Tbx3"
+   ],
+   "nucleus": "arc",
+   "atlas_regions": [
+    "Arcuate hypothalamic nucleus"
+   ],
+   "level": "C185",
+   "clusters": [
+    "C185-50: Ttr.Pomc.GLU-5",
+    "C185-48: Anxa2.Pomc.GLU-5",
+    "C185-49: Glipr1.Pomc.GLU-5",
+    "C185-103: Vgll3.Tbx3.GABA-1",
+    "C185-104: Sytl4.Tbx3.GABA-1",
+    "C185-115: Npy.Agrp.GABA-4",
+    "C185-51: Tac2.GLU-5"
+   ],
+   "contrast": 36.04,
+   "contrast_is_infinite": false,
+   "tier": "B",
+   "named_clusters": 2,
+   "total_clusters": 7,
+   "best_marker_rank": 724,
+   "cells": 15994,
+   "region_candidates_per_level": {
+    "C66": 12,
+    "C185": 26,
+    "C286": 29,
+    "C465": 45
+   }
+  },
+  "arc_th": {
+   "population_id": "arc_th",
+   "outcome": "mapped",
+   "marker": "Th",
+   "declared_markers": [
+    "Th"
+   ],
+   "nucleus": "arc",
+   "atlas_regions": [
+    "Arcuate hypothalamic nucleus"
+   ],
+   "level": "C185",
+   "clusters": [
+    "C185-128: Slc6a3.Satb2.GABA-6",
+    "C185-114: Ghrh.GABA-3"
+   ],
+   "contrast": 76.28,
+   "contrast_is_infinite": false,
+   "tier": "C",
+   "named_clusters": 0,
+   "total_clusters": 2,
+   "best_marker_rank": 111,
+   "cells": 3762,
+   "region_candidates_per_level": {
+    "C66": 12,
+    "C185": 26,
+    "C286": 29,
+    "C465": 45
+   }
+  },
+  "avpv_kisspeptin": {
+   "population_id": "avpv_kisspeptin",
+   "outcome": "refused_below_floor",
+   "marker": "Kiss1",
+   "declared_markers": [
+    "Kiss1"
+   ],
+   "nucleus": "avpv",
+   "atlas_regions": [
+    "(Anterior/Preoptic)Periventricular region"
+   ],
+   "reason": "no level reaches the 0.50 floor (best 0.013 at C66, cluster C66-5: Tent5a.GLU-2)"
+  },
+  "dmh_bdnf": {
+   "population_id": "dmh_bdnf",
+   "outcome": "refused_below_floor",
+   "marker": "Bdnf",
+   "declared_markers": [
+    "Bdnf"
+   ],
+   "nucleus": "dmh",
+   "atlas_regions": [
+    "Dorsomedial nucleus of the hypothalamus"
+   ],
+   "reason": "no level reaches the 0.50 floor (best 0.289 at C465, cluster C465-96: Nexn.Tac1.Vcan.GLU-3)"
+  },
+  "dmh_lepr": {
+   "population_id": "dmh_lepr",
+   "outcome": "refused_below_floor",
+   "marker": "Lepr",
+   "declared_markers": [
+    "Lepr"
+   ],
+   "nucleus": "dmh",
+   "atlas_regions": [
+    "Dorsomedial nucleus of the hypothalamus"
+   ],
+   "reason": "no level reaches the 0.50 floor (best 0.074 at C465, cluster C465-237: Il1rapl2.Zfp804b.Hmcn1.GABA-1)"
+  },
+  "lha_mch": {
+   "population_id": "lha_mch",
+   "outcome": "mapped",
+   "marker": "Pmch",
+   "declared_markers": [
+    "Pmch"
+   ],
+   "nucleus": "lha",
+   "atlas_regions": [
+    "Lateral hypothalamic area"
+   ],
+   "level": "C66",
+   "clusters": [
+    "C66-24: Pmch.GLU-7"
+   ],
+   "contrast": 16.99,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 1,
+   "total_clusters": 1,
+   "best_marker_rank": 1,
+   "cells": 682,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 16,
+    "C286": 23,
+    "C465": 34
+   }
+  },
+  "lha_orexin": {
+   "population_id": "lha_orexin",
+   "outcome": "mapped",
+   "marker": "Hcrt",
+   "declared_markers": [
+    "Hcrt"
+   ],
+   "nucleus": "lha",
+   "atlas_regions": [
+    "Lateral hypothalamic area"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-121: Hcrt.Rfx4.GLU-4"
+   ],
+   "contrast": 19.43,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 1,
+   "total_clusters": 1,
+   "best_marker_rank": 1,
+   "cells": 682,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 16,
+    "C286": 23,
+    "C465": 34
+   }
+  },
+  "lha_vgat": {
+   "population_id": "lha_vgat",
+   "outcome": "mapped",
+   "marker": "Slc32a1",
+   "declared_markers": [
+    "Slc32a1"
+   ],
+   "nucleus": "lha",
+   "atlas_regions": [
+    "Lateral hypothalamic area"
+   ],
+   "level": "C286",
+   "clusters": [
+    "C286-155: Crhbp.Dlx1.Lhx6.GABA-1",
+    "C286-98: Pou6f2.Unassigned.Mixed.GABA-2",
+    "C286-166: Lhx6.Sox6.Lhx8.GABA-1",
+    "C286-172: Meis2.Nts.GABA-1",
+    "C286-147: Gal.Crh.GABA-1",
+    "C286-153: Piezo2.Lhx6.GABA-1",
+    "C286-120: Alx1.Pmfbp1.Onecut2.GABA-2",
+    "C286-148: Nts.Crh.GABA-1",
+    "C286-137: Fign.Lef1.GABA-1",
+    "C286-135: Npsr1.Tmem114.Lef1.GABA-1"
+   ],
+   "contrast": 13.78,
+   "contrast_is_infinite": false,
+   "tier": "C",
+   "named_clusters": 0,
+   "total_clusters": 10,
+   "best_marker_rank": 252,
+   "cells": 9308,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 16,
+    "C286": 23,
+    "C465": 34
+   }
+  },
+  "lha_vglut2": {
+   "population_id": "lha_vglut2",
+   "outcome": "mapped",
+   "marker": "Slc17a6",
+   "declared_markers": [
+    "Slc17a6"
+   ],
+   "nucleus": "lha",
+   "atlas_regions": [
+    "Lateral hypothalamic area"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-37: Mab21l2.Tbr1.Meis2.Samd3.GLU-2",
+    "C465-38: Tcf7l2.Tbr1.Meis2.Samd3.GLU-2",
+    "C465-36: Mab21l1.Tbr1.Meis2.Samd3.GLU-2",
+    "C465-29: Tac1.Syt2.Trh.GLU-2",
+    "C465-34: Tbr1.Gng8.Samd3.GLU-2",
+    "C465-35: Gpr151.Gng8.Samd3.GLU-2",
+    "C465-30: Pvalb.Syt2.Trh.GLU-2",
+    "C465-39: Ndnf.Meis2.Samd3.GLU-2",
+    "C465-13: Ebf3.Stk26.Nxph4.GLU-2",
+    "C465-28: Ebf2.Trh.GLU-2",
+    "C465-109: Ntng2.Lef1.Mixed.GLU-4",
+    "C465-115: Cped1.Mixed.GLU-4",
+    "C465-12: Col27a1.Stk26.Nxph4.GLU-2",
+    "C465-18: Adgrf5.Nxph4.GLU-2",
+    "C465-2: Otx1.GLU-1"
+   ],
+   "contrast": 20.2,
+   "contrast_is_infinite": false,
+   "tier": "C",
+   "named_clusters": 0,
+   "total_clusters": 15,
+   "best_marker_rank": 126,
+   "cells": 9042,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 16,
+    "C286": 23,
+    "C465": 34
+   }
+  },
+  "mbh_ikkb": {
+   "population_id": "mbh_ikkb",
+   "outcome": "refused_below_floor",
+   "marker": "Ikbkb",
+   "declared_markers": [
+    "Ikbkb",
+    "Nfkb1",
+    "Rela"
+   ],
+   "nucleus": "mbh",
+   "atlas_regions": [
+    "Arcuate hypothalamic nucleus",
+    "Ventromedial hypothalamic nucleus"
+   ],
+   "reason": "no level reaches the 0.50 floor (best 0.328 at C185, cluster C185-116: Lepr.Agrp.GABA-4)"
+  },
+  "poa_galanin": {
+   "population_id": "poa_galanin",
+   "outcome": "mapped",
+   "marker": "Gal",
+   "declared_markers": [
+    "Gal"
+   ],
+   "nucleus": "mpo",
+   "atlas_regions": [
+    "Medial preoptic area"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-270: Tac2.Hmx2.Gal.Nts.GABA-1",
+    "C465-268: Csta2.Hmx2.Gal.Nts.GABA-1",
+    "C465-273: Calcr.Dlx1.Gal.Nts.GABA-1",
+    "C465-269: Brs3.Hmx2.Gal.Nts.GABA-1"
+   ],
+   "contrast": 9.01,
+   "contrast_is_infinite": false,
+   "tier": "B",
+   "named_clusters": 4,
+   "total_clusters": 4,
+   "best_marker_rank": 6,
+   "cells": 2091,
+   "region_candidates_per_level": {
+    "C66": 1,
+    "C185": 4,
+    "C286": 9,
+    "C465": 17
+   }
+  },
+  "poa_warm_sensitive": {
+   "population_id": "poa_warm_sensitive",
+   "outcome": "refused_below_floor",
+   "marker": "Qrfp",
+   "declared_markers": [
+    "Qrfp",
+    "Adcyap1",
+    "Bdnf"
+   ],
+   "nucleus": "vmpo",
+   "atlas_regions": [
+    "Medial preoptic area"
+   ],
+   "reason": "no level reaches the 0.50 floor (best 0.003 at C465, cluster C465-269: Brs3.Hmx2.Gal.Nts.GABA-1)"
+  },
+  "pvh_avp": {
+   "population_id": "pvh_avp",
+   "outcome": "mapped",
+   "marker": "Avp",
+   "declared_markers": [
+    "Avp"
+   ],
+   "nucleus": "pvh",
+   "atlas_regions": [
+    "Paraventricular hypothalamic nucleus"
+   ],
+   "level": "C185",
+   "clusters": [
+    "C185-53: Ebf3.Caprin2.GLU-6"
+   ],
+   "contrast": 12.69,
+   "contrast_is_infinite": false,
+   "tier": "B",
+   "named_clusters": 0,
+   "total_clusters": 1,
+   "best_marker_rank": 1,
+   "cells": 1581,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 6,
+    "C286": 9,
+    "C465": 16
+   }
+  },
+  "pvh_crh": {
+   "population_id": "pvh_crh",
+   "outcome": "mapped",
+   "marker": "Crh",
+   "declared_markers": [
+    "Crh"
+   ],
+   "nucleus": "pvh",
+   "atlas_regions": [
+    "Paraventricular hypothalamic nucleus"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-33: Crh.Tent5a.GLU-2"
+   ],
+   "contrast": 102.62,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 1,
+   "total_clusters": 1,
+   "best_marker_rank": 544,
+   "cells": 286,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 6,
+    "C286": 9,
+    "C465": 16
+   }
+  },
+  "pvh_mc4r": {
+   "population_id": "pvh_mc4r",
+   "outcome": "refused_below_floor",
+   "marker": "Mc4r",
+   "declared_markers": [
+    "Mc4r"
+   ],
+   "nucleus": "pvh",
+   "atlas_regions": [
+    "Paraventricular hypothalamic nucleus"
+   ],
+   "reason": "no level reaches the 0.50 floor (best 0.055 at C185, cluster C185-15: Ucn3.Trh.GLU-2)"
+  },
+  "pvh_nos1": {
+   "population_id": "pvh_nos1",
+   "outcome": "mapped",
+   "marker": "Nos1",
+   "declared_markers": [
+    "Nos1"
+   ],
+   "nucleus": "pvh",
+   "atlas_regions": [
+    "Paraventricular hypothalamic nucleus"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-134: Oxt.Caprin2.GLU-6",
+    "C465-31: Ucn3.Trh.GLU-2"
+   ],
+   "contrast": 5.93,
+   "contrast_is_infinite": false,
+   "tier": "C",
+   "named_clusters": 0,
+   "total_clusters": 2,
+   "best_marker_rank": 728,
+   "cells": 587,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 6,
+    "C286": 9,
+    "C465": 16
+   }
+  },
+  "pvh_oxt": {
+   "population_id": "pvh_oxt",
+   "outcome": "mapped",
+   "marker": "Oxt",
+   "declared_markers": [
+    "Oxt"
+   ],
+   "nucleus": "pvh",
+   "atlas_regions": [
+    "Paraventricular hypothalamic nucleus"
+   ],
+   "level": "C286",
+   "clusters": [
+    "C286-82: Oxt.Caprin2.GLU-6"
+   ],
+   "contrast": 17.32,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 1,
+   "total_clusters": 1,
+   "best_marker_rank": 1,
+   "cells": 474,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 6,
+    "C286": 9,
+    "C465": 16
+   }
+  },
+  "pvh_sim1": {
+   "population_id": "pvh_sim1",
+   "outcome": "mapped",
+   "marker": "Sim1",
+   "declared_markers": [
+    "Sim1"
+   ],
+   "nucleus": "pvh",
+   "atlas_regions": [
+    "Paraventricular hypothalamic nucleus"
+   ],
+   "level": "C66",
+   "clusters": [
+    "C66-22: Caprin2.GLU-6",
+    "C66-4: Trh.GLU-2"
+   ],
+   "contrast": 102.7,
+   "contrast_is_infinite": false,
+   "tier": "C",
+   "named_clusters": 0,
+   "total_clusters": 2,
+   "best_marker_rank": 716,
+   "cells": 9086,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 6,
+    "C286": 9,
+    "C465": 16
+   }
+  },
+  "pvh_trh": {
+   "population_id": "pvh_trh",
+   "outcome": "mapped",
+   "marker": "Trh",
+   "declared_markers": [
+    "Trh"
+   ],
+   "nucleus": "pvh",
+   "atlas_regions": [
+    "Paraventricular hypothalamic nucleus"
+   ],
+   "level": "C185",
+   "clusters": [
+    "C185-11: Cbln2.Trh.GLU-2",
+    "C185-15: Ucn3.Trh.GLU-2"
+   ],
+   "contrast": 34.94,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 2,
+   "total_clusters": 2,
+   "best_marker_rank": 9,
+   "cells": 2151,
+   "region_candidates_per_level": {
+    "C66": 3,
+    "C185": 6,
+    "C286": 9,
+    "C465": 16
+   }
+  },
+  "scn_avp": {
+   "population_id": "scn_avp",
+   "outcome": "mapped",
+   "marker": "Avp",
+   "declared_markers": [
+    "Avp"
+   ],
+   "nucleus": "scn",
+   "atlas_regions": [
+    "Suprachiasmatic nucleus"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-187: Nms.Prok2.Fam122b.Vipr2.GABA-2",
+    "C465-188: Cebpa.Prok2.Fam122b.Vipr2.GABA-2",
+    "C465-185: C1ql3.Nms.Fam122b.Vipr2.GABA-2",
+    "C465-186: Cdc14a.Nms.Fam122b.Vipr2.GABA-2",
+    "C465-203: C1ql3.Cck.Unassigned.Lhx1.GABA-2",
+    "C465-180: Creb3l1.Chodl.Fam122b.Vipr2.GABA-2",
+    "C465-189: Chodl.Prr5l.Cck.Vipr2.GABA-2"
+   ],
+   "contrast": 3.45,
+   "contrast_is_infinite": false,
+   "tier": "C",
+   "named_clusters": 0,
+   "total_clusters": 7,
+   "best_marker_rank": 2,
+   "cells": 7876,
+   "region_candidates_per_level": {
+    "C66": 2,
+    "C185": 5,
+    "C286": 11,
+    "C465": 19
+   }
+  },
+  "scn_vip": {
+   "population_id": "scn_vip",
+   "outcome": "mapped",
+   "marker": "Vip",
+   "declared_markers": [
+    "Vip"
+   ],
+   "nucleus": "scn",
+   "atlas_regions": [
+    "Suprachiasmatic nucleus"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-206: Nms.Vip.Unassigned.Lhx1.GABA-2",
+    "C465-173: Prok2.Vip.Vipr2.GABA-2",
+    "C465-207: Grp.Cd24a.Lhx1.GABA-2",
+    "C465-172: Nms.Vip.Vipr2.GABA-2",
+    "C465-209: Rrad.Cd24a.Lhx1.GABA-2",
+    "C465-205: Grp.Vip.Unassigned.Lhx1.GABA-2"
+   ],
+   "contrast": 16.89,
+   "contrast_is_infinite": false,
+   "tier": "B",
+   "named_clusters": 4,
+   "total_clusters": 6,
+   "best_marker_rank": 8,
+   "cells": 7484,
+   "region_candidates_per_level": {
+    "C66": 2,
+    "C185": 5,
+    "C286": 11,
+    "C465": 19
+   }
+  },
+  "tmn_histamine": {
+   "population_id": "tmn_histamine",
+   "outcome": "mapped",
+   "marker": "Hdc",
+   "declared_markers": [
+    "Hdc"
+   ],
+   "nucleus": "tmn",
+   "atlas_regions": [
+    "(Pre)Mammillary region"
+   ],
+   "level": "C185",
+   "clusters": [
+    "C185-102: Hdc.GABA-1"
+   ],
+   "contrast": 118.05,
+   "contrast_is_infinite": false,
+   "tier": "A",
+   "named_clusters": 1,
+   "total_clusters": 1,
+   "best_marker_rank": 5,
+   "cells": 793,
+   "region_candidates_per_level": {
+    "C66": 6,
+    "C185": 13,
+    "C286": 18,
+    "C465": 31
+   }
+  },
+  "vmh_bdnf": {
+   "population_id": "vmh_bdnf",
+   "outcome": "mapped",
+   "marker": "Bdnf",
+   "declared_markers": [
+    "Bdnf"
+   ],
+   "nucleus": "vmh",
+   "atlas_regions": [
+    "Ventromedial hypothalamic nucleus"
+   ],
+   "level": "C465",
+   "clusters": [
+    "C465-54: Cenpf.Arhgap36.Fezf1.GLU-3",
+    "C465-51: Col24a1.Unassigned.Fezf1.GLU-3",
+    "C465-76: Rasl11a.Smim3.Iigp1.Cd40.GLU-3",
+    "C465-93: Nr5a2.C1ql2.Gpr149.GLU-3"
+   ],
+   "contrast": 2.8,
+   "contrast_is_infinite": false,
+   "tier": "C",
+   "named_clusters": 0,
+   "total_clusters": 4,
+   "best_marker_rank": 414,
+   "cells": 1704,
+   "region_candidates_per_level": {
+    "C66": 5,
+    "C185": 13,
+    "C286": 28,
+    "C465": 45
+   }
+  },
+  "vmh_sf1": {
+   "population_id": "vmh_sf1",
+   "outcome": "refused_below_floor",
+   "marker": "Nr5a1",
+   "declared_markers": [
+    "Nr5a1"
+   ],
+   "nucleus": "vmh",
+   "atlas_regions": [
+    "Ventromedial hypothalamic nucleus"
+   ],
+   "reason": "no level reaches the 0.50 floor (best 0.391 at C286, cluster C286-48: Hmcn2.Tcf7l2.Gpr149.GLU-3)"
+  },
+  "zi_gaba": {
+   "population_id": "zi_gaba",
+   "outcome": "mapped",
+   "marker": "Slc32a1",
+   "declared_markers": [
+    "Slc32a1"
+   ],
+   "nucleus": "zi",
+   "atlas_regions": [
+    "Zona incerta"
+   ],
+   "level": "C185",
+   "clusters": [
+    "C185-69: Pvalb.Mixed.GABA-2",
+    "C185-64: Meis2.Mixed.GABA-2"
+   ],
+   "contrast": 1.0,
+   "contrast_is_infinite": false,
+   "tier": "C",
+   "named_clusters": 0,
+   "total_clusters": 2,
+   "best_marker_rank": 145,
+   "cells": 2950,
+   "region_candidates_per_level": {
+    "C185": 2,
+    "C286": 4,
+    "C465": 7
+   }
+  }
+ }
+}
