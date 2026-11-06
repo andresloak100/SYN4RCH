@@ -2687,6 +2687,17 @@ thousands of genes are the only version of this that can carry signal.
 > underrepresented), `pvh_sim1` (Sim1 at 0.76), and `lha_vglut2` (`Slc17a6` is
 > pan-glutamatergic, so "top cluster" is not a meaningful question for it).
 >
+> > **Correction, D-068: "the VMH is underrepresented" is false, and it was my
+> > claim.** Measured at C465, the VMH holds 45 clusters and 33,694 cells, 8.8%
+> > of the atlas, against the arcuate's 45 and 37,667 (9.8%) — effectively tied.
+> > The thin region among populations carrying records is the **PVH**: 16
+> > clusters, 8,710 cells, 2.3%. I asserted it here without measuring it, a
+> > second session took the phrase from this entry and built an argument on it,
+> > and it stood for two days as the explanation for why `vmh_sf1` maps weakly.
+> > It is not the explanation. With sampling retired, that refusal rests on
+> > transcript abundance alone — which makes D-065's "a Cre line is not a
+> > marker" a stronger claim than it was while a confound was available.
+>
 > A threshold whose answer I already know is not a gate, and setting one now at a
 > level I know passes would be the goalpost move D-050 and D-056 both argue
 > against — in the most flattering direction available. So prediction 3 becomes a
@@ -3797,8 +3808,12 @@ inner product. Centring each gene across populations removes it.
 ### The gene set was suspected first, tested, and exonerated
 
 A second session argued the gene set is selected indirectly by well-represented
-regions, specifically that HypoMap underrepresents the VMH. **Measured, that
-premise is false.** At C465 the VMH holds 45 clusters and 33,694 cells, 8.8% of
+regions, citing the claim that HypoMap underrepresents the VMH. **Measured, that
+premise is false — and the premise was mine, not theirs.** They took the phrase
+verbatim from D-059, which is my entry and asserted it without measuring it, so
+the error originated here and propagated outward. Their argument from it was
+their own and was worth acting on; attributing the bad premise to them, as an
+earlier wording of this paragraph did, moved my error onto a peer. At C465 the VMH holds 45 clusters and 33,694 cells, 8.8% of
 the atlas, effectively tied with the arcuate's 45 and 37,667 (9.8%). The thin
 region among populations carrying records is the **PVH**: 16 clusters, 8,710
 cells, 2.3%. This is worth more than a correction — `vmh_sf1` is refused for
