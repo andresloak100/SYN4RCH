@@ -1976,3 +1976,48 @@ replication counts, and changing those while a pre-registered pass is half
 curated is how a result becomes unfalsifiable. The convention is fixed now so
 that the second thirty papers are curated against it; the existing six are
 corrected afterwards.
+
+---
+
+## D-054 - Readouts the circuit pass had to decline for want of an id, listed not added
+
+**Decision.** The Tier A outcome vocabulary is **not** extended during this pass.
+The readouts below were genuine interventional observations that three readers
+declined because `outcome_id` had nowhere to put them. They are recorded here so
+the next pass can extend the vocabulary deliberately, which is this project's
+rule for an unmappable value (SCHEMA.md 3.2 applies the same discipline to
+populations).
+
+**Physiological readouts with no Tier A id:**
+
+| readout | paper | note |
+|---|---|---|
+| bone mineral **content** | `molmet.2023.101790` | `bone_density` exists with density-only units. One sentence reports BMC up and BMD unchanged; mapping both to `bone_density` would put an increase and a no-change in one cell, so only the BMD null was recorded |
+| skeletal-muscle thermogenesis | `biom14070821` | `bat_thermogenesis` is BAT-specific |
+| serum CRH | `elife.90191` | `corticosterone` is not CRH |
+| leptin sensitivity | `neuron.2020.04.020` | `insulin_sensitivity` has no leptin analogue. Would also need a convention for *interaction* records: the finding is that a manipulation changes leptin's effect |
+| median eminence barrier permeability | `neuron.2020.04.020` | |
+| skin / back temperature, and the BAT-minus-back differential | `molmet.2023.101790` | the differential is that paper's primary thermogenesis statistic |
+| mineral apposition rate | `molmet.2023.101790` | |
+| progressive-ratio break point | `nature11270` | motivation to work for food |
+
+**Populations with no id**, kept unmapped with `population_raw` filled, as
+SCHEMA.md 3.2 requires: LPO Vgat (lateral preoptic — `region_id` resolves to
+`lpo`, there is no population entry), zebrafish Hcrt (the paper places them in
+the hypothalamus, but `lha_orexin` is an LHA population a zebrafish does not
+have), ARC GHR+ (the paper's own point is that GHR and GHRH neurons dissociate),
+and the intersectional Arc Lepr/Npy subsets.
+
+**Deliberate exclusions, not gaps.** Behavioural-affective readouts — anxiety,
+impulsivity, novelty-seeking, alcohol intake, flavour preference, operant lever
+pressing, open-field centre time — map to nothing because Tier A is systemic
+*physiology*. Listing them here stops the next reader proposing them as
+vocabulary gaps.
+
+**Why not just add the ids.** Each is a scope decision about what this dataset
+is for, and several carry a second question with them: BMC needs units and a
+relationship to BMD, leptin sensitivity needs an interaction convention the
+schema does not have, and the BAT-minus-back differential is a derived quantity
+rather than a measurement. Adding eight ids in the middle of a pre-registered
+pass, on the judgement of the agent doing the pass, is how a vocabulary becomes
+whatever the last curator wanted.
