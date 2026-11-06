@@ -2981,3 +2981,249 @@ is five edits, the fifth being to read those three features by name rather than
 positionally. Every number in the table above was measured with that fix applied;
 without it nothing runs at all.
 
+
+---
+
+## D-062 - The genotype fill: D-052's contradiction dissolves, and four of eight studies had no record in the arm
+
+**The curation pass D-060 designed.** Eight readers, one per study carrying an
+adversarially confirmed background genotype, each deciding every record of its
+study under the arm rule. 78 assignments, **zero positive values arriving
+without a verbatim quote**, 69 of 78 at high confidence.
+
+| | |
+|---|---|
+| filled | **77** |
+| left `null` (arm not establishable) | 1 |
+| refused | 0 |
+| evidence entries added | 51 |
+| record ids unchanged | **508 of 508** |
+| identity map required | no |
+
+### D-052 is resolved
+
+`QC_CONFLICT_OPPOSED` goes **1 → 0**. The pair was
+`['0c27e14215860fb0', 'ad4a6ccfc070e39c']` and it separates like this:
+
+| record | direction | `background_genotype` |
+|---|---|---|
+| Herzog `0c27e14215860fb0` | decrease | `npy:loss_of_function:cell_type_restricted` |
+| Brüning `ad4a6ccfc070e39c` | increase | **`mixed`** |
+
+Herzog deleted `Npy` only in AgRP neurons. Brüning's record reports a *joint*
+result across an NPY-intact and an NPY-null arm — "a slight increase in
+locomotor activity in both hM3DGq-AgRP; NPY-wt/wt, as well as in ...
+NPY-Δ/Δ-mice" — so it is comparable with neither of them. Two different claim
+cells, and the contradiction was never a contradiction.
+
+That `mixed` is doing the work here matters. D-060 invented it for exactly this
+record, and the alternative — splitting it into one record per genotype — would
+have derived two observations from a sentence reporting one, which D-044 refuses
+in general and which the `record_id` collision demonstrated concretely (both
+halves hash identically).
+
+### What else moved
+
+| | before | after |
+|---|---|---|
+| claim cells | 406 | **416** |
+| cross-study conflicts | 8 | **4** |
+| `QC_CONFLICT_OPPOSED` | 1 | **0** |
+| `QC_LOCATOR_COLLISION` | 53 | **52** |
+| records stating no condition at all | 139 | **117** |
+| total QC findings | 2723 | 2718 |
+
+The locator collision that resolved is a *correct* resolution and was not
+predicted. Collisions group on (study, locator, claim), so two records at one
+locator that differ only in genotype had been reported as one observation
+extracted twice. They are two experiments, and the finer key says so.
+
+**The established result is untouched**, as D-060 proved from the cell key
+rather than predicted: +0.208 [+0.089, +0.354], p=0.004, 154 rows / 35 studies,
+`established` — and identically under the corrected `lab` grouping. Zero model
+cells split, because `background_genotype` is not in
+`PERTURBATION_AXIS_CELL_BACKOFF`.
+
+**And the cost, which is real.** One `(population, outcome)` pair dropped from
+`marginal` to `insufficient`, because the dimension split its best claim in two
+and neither half clears a gate counting studies. The one `feasible` task
+survives. This is the same trade D-023 made for the other four conditions: a
+finer key buys comparability and spends replication.
+
+### Four of eight studies had no record in the carrying arm, which is the finding
+
+Four readers returned `is_really_background: false`, and **not one of them
+because the segment was bogus or was really the perturbation.** In every case
+the confirmed background genotype is genuine for that paper and no *curated
+record* comes from the arm that carries it:
+
+* `advs.202403245` — the A53T-SNCA background belongs to the alpha-synuclein
+  arm; the single curated record is from the MPTP cohort.
+* `cmet.2023.03.019` — the NPY-null arms are Figures 2 and 6B; all 8 curated
+  records are NPY-intact.
+* `s41467-017-02534-9` — the four Pdx1-driven segments sit in arms neither
+  curated record is from.
+* `nn.2739` — 2 of 7 records are in the A^y arm, 5 are not.
+
+So the genotype dimension is sparser than the survey implied for a reason that
+is about *which results were curated*, not about the papers. 31 records carry a
+segment, 15 an established `wild_type`, 5 `mixed`, 26 `not_reported`, and 431
+remain `null`. A reader must not take the four `false` flags as verdicts against
+the segments; the segments are confirmed, and the arms they belong to are
+mostly uncurated.
+
+### A refusal that was right, and a promotion I declined
+
+All 26 `not_reported` rows arrived **carrying a quote**, and the writer refused
+every one of them. It was right to. The quotes are *arm* evidence — "MPTP-induced
+weight loss", "we crossed our conditional Npy knockout line", "normoglycaemic
+POMC-cre mice" — and none of them asserts that nothing further was done to the
+animals. A009 and A011 forbid an evidence entry on a value that asserts an
+absence, and an absence cannot be quoted. The quotes are retained in the
+assignments table as `arm_evidence_quote` rather than dropped, because they are
+why the reader chose the arm and a reviewer needs them; they simply do not enter
+`condition_evidence`.
+
+**And 13 of those 26 are arguably `wild_type`, which I deliberately did not
+promote.** They come from `s41598-019-49295-7` and quote "normoglycaemic
+AgRP-ires-cre" or "normoglycaemic POMC-cre" mice in a paper whose other arm is
+`ob/ob` — naming the complete allele complement, which is the exact criterion
+another reader used to assign `wild_type` in `cmet.2023.03.019`. Promoting them
+would be the better-looking result: `wild_type` is a positive value that does
+not pool with `unknown`, so it buys comparability that `not_reported` does not.
+It would also be me overriding a curation judgement on my own reading of a
+truncated quote, which is the thing this project's whole structure exists to
+prevent. They stay at `not_reported`, flagged in the table for a later pass that
+can read the papers properly.
+
+### What the table is
+
+`data/curated/background_genotype_assignments.json`, tracked and reviewable in a
+diff, one row per record with its value, quote, locator, source, confidence and
+the reader's reasoning. `syn4rch.curate.fill_background_genotype` applies it and
+decides nothing: it fills only where the value is `null` (D-039 — overwriting is
+`correct_conditions`' job), validates every segment against
+`data/vocab/targets.json`, attaches a `ConditionEvidence` entry to every
+positive value and refuses one on an absence, re-checks every quote against the
+passage its locator names, and asserts per record that no `record_id` moved.
+
+
+---
+
+## D-061 - Europe PMC returned MeSH and affiliations all along; the parser discarded them
+
+**The defect.** `syn4rch.harvest.europepmc.search` has always requested
+`resultType=core` — the Europe PMC result type that carries `meshHeadingList`
+and author affiliations. `_norm_record` hardcoded `"mesh_terms": []` and
+`"last_author_affiliation": None`, the second under a comment asserting *"Europe
+PMC search does not return affiliations"*. Meanwhile `screen.py:197` joins MeSH
+into the text it matches against and `screen.py:302` stamps every candidate
+`screened_on: "title+abstract+mesh"`.
+
+So the screener was told it had read MeSH, and had not. Verified cross-tab over
+all 9,653 candidates:
+
+| source | MeSH present | MeSH empty |
+|---|---|---|
+| `pubmed` | 5,020 | 238 |
+| `europepmc_oa` | 325 | **2,519** |
+| `europepmc_abstract` | 321 | **1,230** |
+
+Same family as D-056: a check that cannot fire, whose silence reads as a result.
+
+**Both fields were already on disk, under names no reader guesses.** MeSH at
+`meshHeadingList.meshHeading[].descriptorName`; the affiliation per author at
+`authorList.author[].authorAffiliationDetailsList`, with a result-level
+`affiliation` as fallback. My own first probe missed the affiliation because it
+looked for a key called `affiliation` inside each author. Re-parsing the 137
+cached search responses — no network — takes MeSH coverage from 0% to **85%**
+and last-author affiliation from 0% to **91%**.
+
+Qualifiers are dropped on purpose: the screener matches descriptor names, and
+`Hypothalamus/metabolism` would match neither `Hypothalamus` nor `metabolism`.
+
+### The measurement, and the wrong version of it I ran first
+
+**Published because the first number was wrong and I quoted it before checking.**
+
+My first experiment rebuilt each candidate from the Europe PMC cache and
+compared its screen against the *stored* candidate. That measures the difference
+between two **sources**, not the difference the fix makes: a stored row merged
+from the PubMed path carries pubtypes and abstract text the Europe PMC row does
+not. It reported 64 changed decisions and 31 newly includable papers.
+
+`PMC7617324` is what exposed it — `exclude` → `include` with an empty
+gained-terms set, which is impossible if a new match caused it. Its stored row
+carries a **preprint** pubtype worth −8, so it scored 5 and stored as `exclude`;
+the Europe PMC row has no pubtype at all, scores 11, and screens as `include`.
+Nothing to do with MeSH. I had said at the time that "an unexplained transition
+in a 64-row result is the row that turns out to be the bug", and it was.
+
+**The correct experiment holds the record fixed and varies only the one field the
+fix populates** — screen each cached record twice, once with `mesh_terms`
+emptied exactly as the old parser produced it:
+
+| | |
+|---|---|
+| decisions changed by MeSH alone | **98** |
+| `uncertain` → `include` | 65 |
+| `exclude` → `uncertain` | 33 |
+| newly includable papers | **65** (25 open access, 36 with a PMCID) |
+| transitions with no gained term | **0** |
+
+Every change is in the permissive direction, which is what a missing matcher
+input predicts. The corrected figure is *larger* than the wrong one, so the
+error was not self-serving — but it was still wrong, and the entry carries both
+because a reader meeting 64/31 in this conversation's history needs to know
+which number survived.
+
+What MeSH contributes is mostly the **anatomical site**, which a title often
+omits: `hy` 22, `optogenetic_unspecified` 11, `gonadotropins` 9,
+`corticosterone` 9, `sleep` 8, `blood_glucose` 7, `food_intake` 6, `pvh` 5.
+
+### Two magnitudes, and which one means what
+
+"~3,750 candidates carried a provenance string asserting evidence never
+fetched" and "98 decisions and 65 papers changed" are both true and differ by a
+factor of forty. The first is the size of the **provenance defect** — rows whose
+`screened_on` lied. The second is the size of the **consequence**. Letting the
+first imply the second would be the mirror of D-058, where a replication count
+fell by one while the replication evidence improved; those read as opposites
+until you say which number measures what.
+
+### The boundary: this does not reach the curated dataset
+
+**Found by the session curating the genotype dimension, and verified here before
+being accepted.** Curated records do not get their affiliation from the search
+API at all. `curate/jats.py:748-767` sets `last_author_affiliation` from the
+full text, resolving the last author's `<xref ref-type="aff">` and falling back
+to the sole affiliation when the front matter lists exactly one — refusing rather
+than guessing when several are unlinked. Measured on the 508 records:
+
+| harvest path | affiliation present | missing |
+|---|---|---|
+| `europepmc_oa` | 350 | 17 |
+| `pubmed` | 141 | 0 |
+
+So the 17 gaps are papers whose JATS listed several unlinked affiliations and
+correctly got none, not papers the API failed. **D-056's 68 lab groups do not
+move**, and I withdraw the claim I made that the homonym check would gain
+affiliations on this path — it already had them.
+
+This fix therefore matters at the **candidate and screening stage** and nowhere
+else. Said plainly here so the entry cannot be read as a claim about the
+dataset.
+
+### What this does not do
+
+* The committed `data/interim/candidates.jsonl` still carries
+  `screened_on: "title+abstract+mesh"` on rows screened without it. The parser
+  fix makes future screens honest; those rows stay wrong until the harvest is
+  replayed. That file is untracked (D-016), so replaying is cheap, and it is a
+  separate decision from this one.
+* The 65 newly includable papers are **not curated**. 36 have a PMCID so their
+  full text is retrievable; none is in the corpus. Whether they are worth
+  curating is a question for the next selection pass, not an implication of this
+  entry.
+* Nothing here touches the schema, the keys, the vocabularies or the dataset.
+
