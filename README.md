@@ -57,25 +57,30 @@ resolved.
 The first milestone has a partial answer, and it is not the one this project
 started with.
 
-The dataset holds **362 Tier A records from 42 studies**, curated from a corpus
+The dataset holds **508 Tier A records from 75 studies**, curated from a corpus
 of 9,653 screened papers of which 974 full texts were retrievable. Every record
-carries a verbatim quote that was mechanically verified against the retrieved
-source; 100% of them are still `review_status: unreviewed`, which the reports
-state rather than hide.
+carries a verbatim quote that was mechanically verified to occur **in the passage
+its locator names**, not merely somewhere in the paper; 100% of them are still
+`review_status: unreviewed`, which the reports state rather than hide.
 
-**Direction of effect is predictable in one half of the corpus and not in the
-other.** Leave-one-study-out, frequency majority, two independent
-implementations agreeing:
+**Direction of effect is predictable on the circuit half, and that is now
+established rather than suggestive.** Leave-one-study-out, frequency majority,
+on the rows whose cell was populated in training:
 
 | subset | rows with evidence in their cell | studies | guess the mode | cell's modal direction |
 |---|---|---|---|---|
-| circuit manipulation (opto-/chemogenetic) | 116 | 20 | 0.397 | **0.517** |
+| circuit manipulation (opto-/chemogenetic) | 154 | 35 | 0.351 | **0.558** |
 | molecular manipulation (knockout / overexpression) | **0 of 170** | — | — | nothing to predict from |
 
-Pooled, nothing beats guessing, which is what every earlier benchmark here
-reported. Split, the circuit half gains 12 points (study-clustered bootstrap:
-95% interval [+0.008, +0.271]; row-level McNemar p=0.156, so suggestive rather
-than established).
++0.208 [+0.089, +0.354], row-level exact McNemar p=0.004. Verdict
+**established** — the study-clustered bootstrap and the paired row-level test
+agree, which they had never done before in this project. It took 60 more
+optogenetic and chemogenetic papers to get there; on the 362-record corpus the
+same code reports +0.097 [−0.019, +0.245], p=0.266, `no_difference`.
+
+Pooled across both halves, nothing beats guessing, which is what every earlier
+benchmark here reported. The molecular half is still not *bad* at prediction —
+it has nothing to predict from.
 
 The molecular half is not *bad* at prediction, it has nothing to predict from:
 with the manipulated gene in the cell key, not one of its 170 rows has its cell
@@ -84,8 +89,10 @@ populated in training, because each gene appears in exactly one study.
 The same schema change also cut the number of claims reported by more than one
 study from 39 to 11. That is not a loss of data; it is the discovery that most
 of the apparent replication here came from pooling a male cohort with a female
-one and one gene with another. This corpus holds eleven independently
-replicated claims.
+one and one gene with another. After the circuit pass the corpus holds **10
+independently replicated claims** under the strict key, out of 393 cells — more
+records, barely more replication, which is the same finding the secondary metric
+reported.
 
 Two things explain the predictability split, and both are now schema-level facts
 rather than suspicions:
@@ -163,16 +170,29 @@ The replication reach of the two halves, at the level of a
 | circuit | 170 | 26 | 56 | **17** |
 | molecular | 170 | 16 | 132 | **0** |
 
-290 uncurated circuit papers already have retrieved full text. The plan is to
-curate 60 of them and evaluate **once**: the circuit direction comparison must
-reach verdict `established` (today `suggestive`, +0.121 [+0.008, +0.271],
-McNemar p=0.156), and multi-lab circuit cells must rise from 17 to ≥40.
+60 of those papers were curated and the pre-registered evaluation was run
+**once**, at the stopping point (`docs/DECISIONS.md` D-048, D-055). The result
+is split:
 
-The target, the stopping point and the results that would abandon the plan are
-fixed in `docs/DECISIONS.md` D-048, committed before the first new paper is read,
-because a target chosen after seeing the data is not a target. **"Adding 60
-circuit papers did not make direction of effect predictable" is a result**, and
-reporting it is what this project is for.
+* **Primary: met.** The circuit direction comparison reaches `established` —
+  +0.208 [+0.089, +0.354], McNemar p=0.004.
+* **Secondary: missed.** Circuit cells spanning two or more laboratories went
+  17 → 26 against a target of 40. At the 30-paper checkpoint D-051 predicted
+  "near 29 … the secondary metric will miss", before the second half was read.
+
+Those are not in tension, and the reconciliation is the finding: **the signal did
+not come from broad cross-laboratory replication.** 26 cells carry all 154 rows
+the primary is measured on; the other 130 circuit cells hold one laboratory each.
+Sixty papers added depth in the few populations the field keeps returning to,
+and depth is what the direction model needed. So the result rests on a narrow
+base, and whether it generalises is the next question rather than a settled one.
+
+**And one task is now feasible**, where every previous run said none: `arc_agrp`
+/ circuit activation / `food_intake`, across 3 studies and 3 laboratories with
+agreement 1.00. It is also the most reproduced claim in this literature, so it is
+a sanity check on the pipeline rather than a discovery — and both of its variants
+matched on 0 or 1 of 4 stated conditions, which the report labels
+`CONDITIONS_ALL_UNKNOWN`.
 
 So "the evidence is insufficient" was an artifact of a missing field for half
 the corpus, and remains the right answer for the other half. What to curate next

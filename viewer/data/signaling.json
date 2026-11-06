@@ -1,22 +1,22 @@
 {
- "generated_at": "2026-11-04T21:39:32Z",
+ "generated_at": "2026-11-06T02:33:53Z",
  "generated_from": "data/curated/records.jsonl",
  "mode_label": "Measured signalling - evidence playback",
  "mode_note": "Recorded observations animated. Nothing is simulated: no equation is integrated and no unmeasured response is inferred.",
- "n_records_in": 458,
- "n_records_used": 354,
+ "n_records_in": 508,
+ "n_records_used": 380,
  "n_records_with_projection_target": 4,
  "excluded": {
-  "no resolved population_id (region-level record, not cell-type-specific)": 104
+  "no resolved population_id (region-level record, not cell-type-specific)": 128
  },
  "axis_source": "perturbation_polarity when the record carries it, otherwise valence",
  "axis_class_source": "perturbation_class when the record carries it, otherwise mapped from method",
  "edge_identity": "population_id x outcome_id x axis x axis_class",
  "axis_trap_note": "The axis describes the manipulation in the brain. The direction describes the bodily readout. From schema v0.2.0 both vocabularies use the words 'increase' and 'decrease', so the axis is always shown as a phrase (axis_phrase) and never as the bare value.",
  "directions_seen": {
-  "decrease": 89,
-  "increase": 106,
-  "no_change": 158,
+  "decrease": 97,
+  "increase": 122,
+  "no_change": 160,
   "non_monotonic": 1
  },
  "consensus_rule": "the modal direction; null when two or more directions tie for the most records",
@@ -59,8 +59,8 @@
     "Agrp",
     "Npy"
    ],
-   "n_records": 187,
-   "n_studies": 26,
+   "n_records": 189,
+   "n_studies": 28,
    "in_vocabulary": true
   },
   {
@@ -93,20 +93,6 @@
    "in_vocabulary": true
   },
   {
-   "id": "pvh_sim1",
-   "label": "PVH Sim1 neurons",
-   "region_id": "pvh",
-   "neurotransmitter": [
-    "glutamate"
-   ],
-   "marker_genes": [
-    "Sim1"
-   ],
-   "n_records": 13,
-   "n_studies": 2,
-   "in_vocabulary": true
-  },
-  {
    "id": "lha_orexin",
    "label": "LHA orexin/hypocretin neurons",
    "region_id": "lha",
@@ -117,8 +103,36 @@
    "marker_genes": [
     "Hcrt"
    ],
-   "n_records": 10,
-   "n_studies": 2,
+   "n_records": 17,
+   "n_studies": 5,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_sim1",
+   "label": "PVH Sim1 neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Sim1"
+   ],
+   "n_records": 15,
+   "n_studies": 3,
+   "in_vocabulary": true
+  },
+  {
+   "id": "pvh_trh",
+   "label": "PVH TRH neurons",
+   "region_id": "pvh",
+   "neurotransmitter": [
+    "peptidergic"
+   ],
+   "marker_genes": [
+    "Trh"
+   ],
+   "n_records": 8,
+   "n_studies": 1,
    "in_vocabulary": true
   },
   {
@@ -132,8 +146,36 @@
    "marker_genes": [
     "Crh"
    ],
-   "n_records": 4,
-   "n_studies": 1,
+   "n_records": 7,
+   "n_studies": 3,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lha_mch",
+   "label": "LHA MCH neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "unknown"
+   ],
+   "marker_genes": [
+    "Pmch"
+   ],
+   "n_records": 3,
+   "n_studies": 2,
+   "in_vocabulary": true
+  },
+  {
+   "id": "lha_vglut2",
+   "label": "LHA glutamatergic (Vglut2) neurons",
+   "region_id": "lha",
+   "neurotransmitter": [
+    "glutamate"
+   ],
+   "marker_genes": [
+    "Slc17a6"
+   ],
+   "n_records": 3,
+   "n_studies": 2,
    "in_vocabulary": true
   },
   {
@@ -168,20 +210,6 @@
    "in_vocabulary": true
   },
   {
-   "id": "lha_mch",
-   "label": "LHA MCH neurons",
-   "region_id": "lha",
-   "neurotransmitter": [
-    "unknown"
-   ],
-   "marker_genes": [
-    "Pmch"
-   ],
-   "n_records": 2,
-   "n_studies": 1,
-   "in_vocabulary": true
-  },
-  {
    "id": "arc_ghrh",
    "label": "ARC GHRH neurons",
    "region_id": "arc",
@@ -196,14 +224,14 @@
    "in_vocabulary": true
   },
   {
-   "id": "lha_vglut2",
-   "label": "LHA glutamatergic (Vglut2) neurons",
-   "region_id": "lha",
+   "id": "tmn_histamine",
+   "label": "TMN histaminergic neurons",
+   "region_id": "tmn",
    "neurotransmitter": [
-    "glutamate"
+    "histamine"
    ],
    "marker_genes": [
-    "Slc17a6"
+    "Hdc"
    ],
    "n_records": 1,
    "n_studies": 1,
@@ -412,20 +440,6 @@
    "in_vocabulary": true
   },
   {
-   "id": "pvh_trh",
-   "label": "PVH TRH neurons",
-   "region_id": "pvh",
-   "neurotransmitter": [
-    "peptidergic"
-   ],
-   "marker_genes": [
-    "Trh"
-   ],
-   "n_records": 0,
-   "n_studies": 0,
-   "in_vocabulary": true
-  },
-  {
    "id": "scn_avp",
    "label": "SCN AVP neurons",
    "region_id": "scn",
@@ -435,20 +449,6 @@
    ],
    "marker_genes": [
     "Avp"
-   ],
-   "n_records": 0,
-   "n_studies": 0,
-   "in_vocabulary": true
-  },
-  {
-   "id": "tmn_histamine",
-   "label": "TMN histaminergic neurons",
-   "region_id": "tmn",
-   "neurotransmitter": [
-    "histamine"
-   ],
-   "marker_genes": [
-    "Hdc"
    ],
    "n_records": 0,
    "n_studies": 0,
@@ -490,9 +490,9 @@
    "tier": "A",
    "modality": "behaviour",
    "system": "feeding",
-   "n_records": 116,
-   "n_studies": 36,
-   "n_records_excluded": 17,
+   "n_records": 122,
+   "n_studies": 41,
+   "n_records_excluded": 21,
    "in_vocabulary": true
   },
   {
@@ -501,8 +501,8 @@
    "tier": "A",
    "modality": "anthropometry",
    "system": "body_composition",
-   "n_records": 36,
-   "n_studies": 21,
+   "n_records": 37,
+   "n_studies": 22,
    "n_records_excluded": 9,
    "in_vocabulary": true
   },
@@ -545,9 +545,9 @@
    "tier": "A",
    "modality": "calorimetry",
    "system": "energy_expenditure",
-   "n_records": 25,
-   "n_studies": 13,
-   "n_records_excluded": 11,
+   "n_records": 27,
+   "n_studies": 14,
+   "n_records_excluded": 15,
    "in_vocabulary": true
   },
   {
@@ -556,9 +556,9 @@
    "tier": "A",
    "modality": "calorimetry",
    "system": "energy_expenditure",
-   "n_records": 15,
-   "n_studies": 8,
-   "n_records_excluded": 5,
+   "n_records": 16,
+   "n_studies": 9,
+   "n_records_excluded": 7,
    "in_vocabulary": true
   },
   {
@@ -657,7 +657,7 @@
    "system": "thermoregulation",
    "n_records": 11,
    "n_studies": 7,
-   "n_records_excluded": 11,
+   "n_records_excluded": 14,
    "in_vocabulary": true
   },
   {
@@ -666,9 +666,9 @@
    "tier": "A",
    "modality": "telemetry",
    "system": "thermoregulation",
-   "n_records": 3,
-   "n_studies": 3,
-   "n_records_excluded": 6,
+   "n_records": 5,
+   "n_studies": 4,
+   "n_records_excluded": 11,
    "in_vocabulary": true
   },
   {
@@ -732,6 +732,28 @@
    "tier": "A",
    "modality": "blood assay",
    "system": "endocrine",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_records_excluded": 2,
+   "in_vocabulary": true
+  },
+  {
+   "id": "il6",
+   "label": "Circulating IL-6",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "endocrine",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_records_excluded": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "tnf",
+   "label": "Circulating TNF",
+   "tier": "A",
+   "modality": "blood assay",
+   "system": "endocrine",
    "n_records": 1,
    "n_studies": 1,
    "n_records_excluded": 0,
@@ -765,8 +787,8 @@
    "tier": "A",
    "modality": "cytology",
    "system": "reproduction",
-   "n_records": 0,
-   "n_studies": 0,
+   "n_records": 1,
+   "n_studies": 1,
    "n_records_excluded": 1,
    "in_vocabulary": true
   },
@@ -776,9 +798,9 @@
    "tier": "A",
    "modality": "behaviour",
    "system": "behaviour",
-   "n_records": 24,
-   "n_studies": 10,
-   "n_records_excluded": 6,
+   "n_records": 27,
+   "n_studies": 13,
+   "n_records_excluded": 10,
    "in_vocabulary": true
   },
   {
@@ -787,8 +809,8 @@
    "tier": "A",
    "modality": "EEG/EMG",
    "system": "behaviour",
-   "n_records": 3,
-   "n_studies": 3,
+   "n_records": 10,
+   "n_studies": 6,
    "n_records_excluded": 0,
    "in_vocabulary": true
   }
@@ -800,15 +822,15 @@
    "axis": "increase",
    "axis_class": "circuit_activity",
    "axis_phrase": "more firing",
-   "n_records": 34,
-   "n_studies": 14,
-   "n_labs": 14,
+   "n_records": 36,
+   "n_studies": 16,
+   "n_labs": 16,
    "directions": {
-    "increase": 29,
+    "increase": 31,
     "no_change": 5
    },
    "consensus": "increase",
-   "agreement": 0.853,
+   "agreement": 0.861,
    "contested": false,
    "minority_replicated": true,
    "record_ids": [
@@ -1302,6 +1324,31 @@
     "f6960c0317043c02",
     "b45891b14274922d",
     "0be11f3915150ec0"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "sleep",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 5,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "decrease": 5
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "bd0fa9320548db4c",
+    "07b000c12c1322ea",
+    "88ffdff09f3437b1",
+    "75c57af3d1474438",
+    "19e2a8a1115e2cc7"
    ],
    "record_ids_truncated": false
   },
@@ -1840,6 +1887,29 @@
    "record_ids_truncated": false
   },
   {
+   "population_id": "pvh_sim1",
+   "outcome_id": "food_intake",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 3,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 3
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "0603c87086a50b2e",
+    "b7eba5145eebcdd6",
+    "b58608712b92dc86"
+   ],
+   "record_ids_truncated": false
+  },
+  {
    "population_id": "vmh_sf1",
    "outcome_id": "rer",
    "axis": "increase",
@@ -2294,6 +2364,28 @@
    "record_ids_truncated": false
   },
   {
+   "population_id": "lha_orexin",
+   "outcome_id": "sleep",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 2
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "73b1d5885d878f27",
+    "579aabb73fa8f4f5"
+   ],
+   "record_ids_truncated": false
+  },
+  {
    "population_id": "pvh_sim1",
    "outcome_id": "body_weight",
    "axis": "decrease",
@@ -2317,11 +2409,11 @@
    "record_ids_truncated": false
   },
   {
-   "population_id": "pvh_sim1",
-   "outcome_id": "food_intake",
-   "axis": "decrease",
+   "population_id": "pvh_trh",
+   "outcome_id": "core_temperature",
+   "axis": "increase",
    "axis_class": "circuit_activity",
-   "axis_phrase": "less firing",
+   "axis_phrase": "more firing",
    "n_records": 2,
    "n_studies": 1,
    "n_labs": 1,
@@ -2333,8 +2425,30 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "0603c87086a50b2e",
-    "b7eba5145eebcdd6"
+    "d62961ec3d0a1505",
+    "b5d4760617da03e7"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_trh",
+   "outcome_id": "energy_expenditure",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 2
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "ae94fec0cc74a990",
+    "3153cba4cd6be6d2"
    ],
    "record_ids_truncated": false
   },
@@ -3377,6 +3491,27 @@
    "record_ids_truncated": false
   },
   {
+   "population_id": "lha_mch",
+   "outcome_id": "body_weight",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "3aaaa6a3f0afc242"
+   ],
+   "record_ids_truncated": false
+  },
+  {
    "population_id": "lha_orexin",
    "outcome_id": "body_weight",
    "axis": "increase",
@@ -3568,21 +3703,21 @@
   {
    "population_id": "lha_orexin",
    "outcome_id": "sleep",
-   "axis": "increase",
-   "axis_class": "circuit_activity",
-   "axis_phrase": "more firing",
+   "axis": "remove",
+   "axis_class": "structural",
+   "axis_phrase": "population or gene product removed",
    "n_records": 1,
    "n_studies": 1,
    "n_labs": 1,
    "directions": {
-    "decrease": 1
+    "increase": 1
    },
-   "consensus": "decrease",
+   "consensus": "increase",
    "agreement": 1.0,
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "bd0fa9320548db4c"
+    "c9d907bbb8f604ea"
    ],
    "record_ids_truncated": false
   },
@@ -3604,6 +3739,48 @@
    "minority_replicated": false,
    "record_ids": [
     "386423688223bd69"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_vglut2",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "063402b475be2c0f"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_vglut2",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "b6f518e5d8776815"
    ],
    "record_ids_truncated": false
   },
@@ -3651,6 +3828,48 @@
   },
   {
    "population_id": "pvh_crh",
+   "outcome_id": "estrous_cyclicity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d321eff42a65e56e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_crh",
+   "outcome_id": "il6",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "b2cbae9cdb618624"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_crh",
    "outcome_id": "locomotor_activity",
    "axis": "decrease",
    "axis_class": "circuit_activity",
@@ -3688,6 +3907,27 @@
    "minority_replicated": false,
    "record_ids": [
     "96069bd1ae577139"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_crh",
+   "outcome_id": "tnf",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "4bea707ea04a1614"
    ],
    "record_ids_truncated": false
   },
@@ -3730,6 +3970,27 @@
    "minority_replicated": false,
    "record_ids": [
     "1bd37829cf966170"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_sim1",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "c10fa108bfa7c9e3"
    ],
    "record_ids_truncated": false
   },
@@ -3818,6 +4079,90 @@
    "record_ids_truncated": false
   },
   {
+   "population_id": "pvh_trh",
+   "outcome_id": "food_intake",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "11fe24771a4c469b"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_trh",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "44f0c68b83bbeaef"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_trh",
+   "outcome_id": "rer",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "779c1ff1eecc49dd"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "pvh_trh",
+   "outcome_id": "thyroid_hormone",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "c3b5cd6168231c1b"
+   ],
+   "record_ids_truncated": false
+  },
+  {
    "population_id": "scn_vip",
    "outcome_id": "locomotor_activity",
    "axis": "increase",
@@ -3835,6 +4180,27 @@
    "minority_replicated": false,
    "record_ids": [
     "e064035ee5976e89"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "tmn_histamine",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "no_change": 1
+   },
+   "consensus": "no_change",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "216b156e63327426"
    ],
    "record_ids_truncated": false
   },
@@ -3860,19 +4226,19 @@
    "record_ids_truncated": false
   }
  ],
- "n_edges": 133,
+ "n_edges": 149,
  "n_edges_contested": 30,
  "n_edges_minority_replicated": 1,
  "n_edges_unclear_axis": 8,
- "n_populations_with_records": 11,
+ "n_populations_with_records": 13,
  "_honesty": [
-  "Nothing on this page is predicted. Every arrow, pulse and number is a count of curated observations already published in 61 papers.",
+  "Nothing on this page is predicted. Every arrow, pulse and number is a count of curated observations already published in 75 papers.",
   "An arrow is a count of published observations, not a measurement of signal flow. It says that perturbing this population was followed by a measured change in this readout in N records; it does not say that a signal travels this way, and the animation's speed and timing carry no physiological units.",
-  "No neural projection is drawn. Only 4 of 458 curated records name a projection target, so this dataset cannot support a wiring diagram and none is shown: the right-hand nodes are bodily readouts, not brain regions.",
-  "104 of 458 records are region-level (no cell-type-specific population) and are excluded from this view entirely. They are real evidence about a nucleus; they just cannot be attached to a population.",
-  "8 of the 133 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
+  "No neural projection is drawn. Only 4 of 508 curated records name a projection target, so this dataset cannot support a wiring diagram and none is shown: the right-hand nodes are bodily readouts, not brain regions.",
+  "128 of 508 records are region-level (no cell-type-specific population) and are excluded from this view entirely. They are real evidence about a nucleus; they just cannot be attached to a population.",
+  "8 of the 149 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
   "The axis and the direction can read as the same two words and are not the same statement. The axis is what the experiment did inside the brain -- more firing, less of a gene product, the population removed. The direction is what the body did. Every axis on this page is therefore written out in words rather than left as its bare value.",
-  "30 of the 133 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 1 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
-  "19 of the 30 vocabulary populations carry no curated record at all. That is a statement about how far curation has got, not about what the literature contains."
+  "30 of the 149 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 1 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
+  "17 of the 30 vocabulary populations carry no curated record at all. That is a statement about how far curation has got, not about what the literature contains."
  ]
 }

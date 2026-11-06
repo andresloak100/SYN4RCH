@@ -177,6 +177,13 @@ OUTCOME_SYSTEM = {
     "sleep": "behaviour",
     "gut_motility": "autonomic",
     "bone_density": "body_composition",
+    # The second circuit batch brought the first inflammatory readouts: PVH CRH
+    # inhibition lowering IL-6 and TNF in an LPS model. `inflammatory_markers_other`
+    # is already placed; these two are the named cytokines.
+    "il6": "endocrine",
+    "tnf": "endocrine",
+    "inflammatory_markers_other": "endocrine",
+    "immune_cell_composition": "endocrine",
 }
 
 #: Order the systems are laid out in. Also presentational.

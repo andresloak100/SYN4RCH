@@ -1,17 +1,17 @@
 # Curation gate: rejections
 
-Generated 2026-11-04T21:36:18Z by `python3 -m syn4rch.curate.run gate`.
+Generated 2026-11-06T02:30:15Z by `python3 -m syn4rch.curate.run gate`.
 
 | input | value |
 |---|---|
-| proposals | `data/interim/proposals_circuit/all.jsonl` |
+| proposals | `data/interim/proposals_circuit/second_thirty.jsonl` |
 | retrieved full text | `/Users/andresarriaga/Documents/SYN4RCH/data/raw/fulltext` |
 | full-text files parsed | 974 |
 | of those, with parse warnings | 39 |
 | of those, yielding no passages | 0 |
-| proposals read | 96 |
+| proposals read | 50 |
 | proposal lines unreadable | 0 |
-| admitted | 96 |
+| admitted | 50 |
 | rejected | 0 |
 | locator-passage agreement | blocking (default) |
 

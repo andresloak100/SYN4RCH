@@ -2021,3 +2021,93 @@ schema does not have, and the BAT-minus-back differential is a derived quantity
 rather than a measurement. Adding eight ids in the middle of a pre-registered
 pass, on the judgement of the agent doing the pass, is how a vocabulary becomes
 whatever the last curator wanted.
+
+---
+
+## D-055 - The D-048 evaluation: primary established, secondary missed, and a baseline I should have re-measured
+
+**Run once, at 60 papers, as pre-registered.** 146 records admitted from the 60
+papers (96 from the first thirty, 50 from the second), 0 rejected by the gate.
+Corpus: **508 records, 75 studies**.
+
+### Primary: MET
+
+Circuit subset, `perturbation_axis_cell_majority` against `global_majority`,
+leave-one-study-out, rows whose cell was populated in training:
+
+| corpus | code | effect | accuracy | n / groups | McNemar | verdict |
+|---|---|---|---|---|---|---|
+| 362 records | pre-D-050 key | +0.121 [+0.008, +0.271] | 0.517 vs 0.397 | 116 / 20 | p=0.156 | suggestive |
+| 362 records | **final code** | +0.097 [−0.019, +0.245] | 0.504 vs 0.407 | 113 / 20 | p=0.266 | **no_difference** |
+| **508 records** | **final code** | **+0.208 [+0.089, +0.354]** | **0.558 vs 0.351** | **154 / 35** | **p=0.004** | **established** |
+
+The target was absolute — "reaches verdict `established`" — and it is reached:
+the study-clustered bootstrap excludes zero and the row-level exact McNemar test
+gives p=0.004, which is the first time those two have agreed on anything in this
+project.
+
+**And a mistake of mine, which the middle row exists to show.** D-050 claimed the
+projection-key fix "does not move the pre-registered target". I verified that for
+the *secondary* metric — 17 multi-lab cells before and after — and did not check
+the primary. The primary baseline did move, from `suggestive` to
+`no_difference`. So the figure D-048 recorded as the baseline was stale from the
+moment I fixed the key, and I did not notice for a day.
+
+It does not change whether the target was met, because the target names an
+absolute verdict rather than a difference from baseline. It does change the size
+of the claimed improvement, in my favour, which is exactly why it has to be in
+the table: a control that flatters the result is still a control, and the way to
+keep it honest is to publish it next to the number it flatters. Had I quoted
+"+0.121 → +0.208" without re-measuring, the comparison would have mixed two
+versions of the code.
+
+### Secondary: MISSED
+
+**26** circuit cells span two or more laboratories, against a target of **40**.
+The corpus went 59 cells / 17 multi-lab → 116 / 23 → **156 / 26**.
+
+**D-051 called this.** At the 30-paper checkpoint I wrote that the rate implied
+"near 29, against a target of 40" and that "on the evidence so far the secondary
+metric will miss". It landed at 26.
+
+### What the split result means, which is the part worth reading
+
+The primary improved substantially while the secondary missed badly, and those
+are not in tension once the two are stated precisely. **The signal did not come
+from broad cross-laboratory replication. It came from more rows landing in the
+few cells that already recur.** 26 cells carry the 154 rows the primary is
+measured on; the other 130 circuit cells hold one laboratory each.
+
+So the mechanism in D-048's hypothesis — "circuit manipulations recur across
+laboratories, so adding circuit papers adds replicated cells" — is only weakly
+supported. Adding 60 papers added 97 cells and 9 multi-laboratory ones. What it
+did add is *depth* in the handful of populations the field keeps returning to,
+and depth is what the direction model needed.
+
+**The result therefore rests on a narrow base and the next finding to chase is
+whether it generalises.** 0.558 on a three-way problem over 154 rows in 35
+studies is established, not accurate, and it is established on the subset where
+a cell was seen — a third of circuit rows still have no evidence in their cell
+at all.
+
+### Also, and separately: the first feasible task
+
+`syn4rch.feasibility` now reports **1 of 180 (population, outcome) tasks
+feasible**, where every previous run said none. It is `arc_agrp` / circuit
+activation / `food_intake`: 3 studies, 3 laboratories, agreement 1.00, clearing
+every gate.
+
+Two things keep that in proportion. It is the most reproduced result in this
+literature — AgRP activation makes a mouse eat — so finding it is a sanity check
+on the pipeline rather than a discovery. And both of its claim-keyed variants
+carry `CONDITIONS_ALL_UNKNOWN` or `CONDITIONS_PARTIALLY_UNKNOWN`: they matched on
+0 and 1 of 4 stated condition slots, so even the feasible task is a match on
+mutual ignorance about three of its four conditions.
+
+### No abandon condition fired
+
+D-048 named three. Multi-lab cells were not flat at 30 papers. The primary was
+not reached after the stopping point — it was reached at it. And the one that
+would have been damning, "the secondary reached while the primary is not", is the
+mirror image of what happened: the metric that would have said the signal was a
+116-row artefact is the one that came in strong.
