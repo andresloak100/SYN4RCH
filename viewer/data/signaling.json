@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-06T17:18:43Z",
+ "generated_at": "2026-11-06T17:35:41Z",
  "generated_from": "data/curated/records.jsonl",
  "mode_label": "Measured signalling - evidence playback",
  "mode_note": "Recorded observations animated. Nothing is simulated: no equation is integrated and no unmeasured response is inferred.",
@@ -837,7 +837,7 @@
     "d247141bef42765c",
     "2d45f698f9d5b39b",
     "e256eb5de8f78800",
-    "c1b98d981dba36bb",
+    "1068b48a9cf28019",
     "a4a4ea7bdf3524fc",
     "da287886ff4e4ceb",
     "ecce10a21025f1c5",
@@ -857,7 +857,7 @@
     "3c36f0983efa8f10",
     "d41d7c202b66a88e",
     "c8c738bcfccd2f20",
-    "fcea91b0669ad33f",
+    "bf6a25067c559d29",
     "83232f0b54034dfc"
    ],
    "record_ids_truncated": true
@@ -885,7 +885,7 @@
     "11fc1b6f1da98da1",
     "5a7cd0ddb4bf5899",
     "024964d7ff8507ce",
-    "087960c4021bf6f2",
+    "e527341d2a14a370",
     "d917ef48d5290e83",
     "db9602cc9ce203fe",
     "5025c4fb26c47438",
@@ -925,7 +925,7 @@
    "contested": true,
    "minority_replicated": true,
    "record_ids": [
-    "0397b7caf40ad06b",
+    "cf668711e4369657",
     "012b6ec29671aa1e",
     "895fedefc465356d",
     "cd974b418e5cd149",
@@ -991,7 +991,7 @@
     "f2baa98d1ba167ab",
     "8acc76b67ead9113",
     "0559bb1fec8be3ac",
-    "41fca07890c238c8",
+    "d206091ce714a8f6",
     "69254ebf1627707c",
     "3f1cf5b8ffff9fe7",
     "844bdf779ddbfc41",
@@ -1217,9 +1217,9 @@
    "record_ids": [
     "83917428c35a1087",
     "08f52418cff354b8",
-    "93c2e8f0c13a30ed",
+    "e1e102a40065cdef",
     "61e1b70b6013c1cd",
-    "fdb78695221a531e",
+    "3f9e8f6e7b671752",
     "b9c272e891a0e069"
    ],
    "record_ids_truncated": false

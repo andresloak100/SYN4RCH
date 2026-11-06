@@ -118,10 +118,12 @@ populated in training, because each gene appears in exactly one study.
 The same schema change also cut the number of claims reported by more than one
 study from 39 to 11. That is not a loss of data; it is the discovery that most
 of the apparent replication here came from pooling a male cohort with a female
-one and one gene with another. After the circuit pass the corpus holds **10
-independently replicated claims** under the strict key, out of 393 cells — more
+one and one gene with another. After the circuit pass the corpus holds **9
+independently replicated claims** under the strict key, out of 406 cells — more
 records, barely more replication, which is the same finding the secondary metric
-reported.
+reported. It was 10 until the D-053 corrections (D-058) removed one, and the one
+removed was spurious: two records that matched only because neither deserved the
+`fasted` label it carried.
 
 Two things explain the predictability split, and both are now schema-level facts
 rather than suspicions:
@@ -222,12 +224,14 @@ not one of them was a laboratory agreeing with itself, so the secondary metric
 missed under both definitions of a laboratory.
 
 **And one task is now feasible**, where every previous run said none: `arc_agrp`
-/ circuit activation / `food_intake`, across 3 studies and 3 laboratories with
-agreement 1.00 — still 3 laboratories after lab identity was corrected, so it is
-not an artefact of over-splitting. It is also the most reproduced claim in this
-literature, so it is a sanity check on the pipeline rather than a discovery — and
-both of its variants matched on 0 or 1 of 4 stated conditions, which the report
-labels `CONDITIONS_ALL_UNKNOWN`.
+/ circuit activation / `food_intake`, now across **4 studies and 4
+laboratories** with agreement 1.00 [0.51, 1.00] — 4 and not 3 after the D-053
+corrections (D-058) moved a record out of a spurious `fasted` cell and into this
+one, and 4 laboratories and not fewer after lab identity was corrected, so it is
+not an artefact of over-splitting either way. It is also the most reproduced
+claim in this literature, so it is a sanity check on the pipeline rather than a
+discovery — and it matched on 0 of 4 stated conditions, which the report labels
+`CONDITIONS_ALL_UNKNOWN`.
 
 So "the evidence is insufficient" was an artifact of a missing field for half
 the corpus, and remains the right answer for the other half. What to curate next

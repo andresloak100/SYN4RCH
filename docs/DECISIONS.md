@@ -1974,6 +1974,11 @@ re-identification, and `fill_conditions` fills what is missing — it has no
 corrector, by design, because overwriting a curated value is the thing it
 refuses to do (D-039). Building one is the follow-up.
 
+> **Built and applied in D-058.** All seven corrected, 0 refused. The
+> inconsistency turned out to be inventing a replication rather than hiding
+> one: the only claim that changed status was a two-study cell in which both
+> records carried a `fasted` label neither deserved.
+
 It is deliberately **not** done during the D-048 experiment. It does not touch
 that measurement — `cell_reach` keys on population, perturbation and outcome and
 carries no condition slot — but it does move the claim-key conflict and
@@ -2430,4 +2435,140 @@ standing still.
 One substantive change beyond the group counts: `neurotransmitter_sign` under
 `by_lab` falls from `established` to `suggestive`. It is *worse* than the floor
 by 0.162, and the corrected grouping makes that harm less certain, not more.
+
+
+---
+
+## D-058 - The D-053 corrections applied, and the inconsistency was inventing replication rather than hiding it
+
+**The follow-up D-053 deferred.** `fill_conditions` fills an empty condition
+dimension and refuses to overwrite one that is not empty (D-039), so the six
+records storing `fasted` for a fast-refeed intake test, and the one whose
+`challenge` came from a comparator, could not be fixed by any tool in the
+project. `syn4rch.curate.correct_conditions` is that tool.
+
+### The corrector decides nothing
+
+Every change is a row of `CORRECTIONS`: the record, the dimension, **the value
+that must currently be stored**, the value to put there, a fragment of the
+stored evidence quote that must match, the reason, and the decision that
+authorises it. A correction the table does not contain cannot be applied, and
+the table is reviewed in a diff rather than inferred at runtime.
+
+Two locks have to open, and the second one matters more than it looks:
+
+* `from_value` is not a wildcard. A corrector that overwrites whatever it finds
+  cannot be reviewed, and overwriting a curated value is precisely the thing
+  D-039 refuses to do casually.
+* `quote_contains` addresses the correction to the **evidence**, not only to the
+  record. A `record_id` hashes twelve fields and not the quote, so it survives
+  re-curation of the sentence behind a value; without this check a correction
+  written about one sentence could silently apply to another.
+
+After the corrections, every condition quote in the whole dataset is re-checked
+against the passage its locator names — the locator-strict check from the fill,
+not the weaker "occurs somewhere in the paper". Any failure, any refusal, or any
+hard schema violation blocks the write.
+
+A correction keeps its quote, locator and source: the same sentence is still the
+evidence, only how it is read has changed. Only the value moves, and `rule`
+becomes `corrected_by_decision_d053` so the entry says a convention decided it
+rather than claiming an extractor read it that way. Where a value is **removed**
+the evidence entry is deleted, because an entry asserting a value that is no
+longer stored is what A009 and A011 refuse in both directions.
+
+### What was applied
+
+7 of 7, 0 refused. `challenge` is a `RECORD_ID_FIELDS` component, so all seven
+were re-identified; the id map is complete over the input, `conflicts_with` was
+rewritten through it, and a collision would have refused the run.
+
+| old id | new id | from | to |
+|---|---|---|---|
+| `0397b7caf40ad06b` | `cf668711e4369657` | fasted | refed |
+| `087960c4021bf6f2` | `e527341d2a14a370` | fasted | refed |
+| `41fca07890c238c8` | `d206091ce714a8f6` | fasted | refed |
+| `fcea91b0669ad33f` | `bf6a25067c559d29` | fasted | refed |
+| `93c2e8f0c13a30ed` | `e1e102a40065cdef` | fasted | refed |
+| `fdb78695221a531e` | `3f9e8f6e7b671752` | fasted | refed |
+| `c1b98d981dba36bb` | `1068b48a9cf28019` | fasted | **null** |
+
+`challenge` goes `fasted` 28 → 21, `refed` 8 → 14, null 443 → 444. Diffing the
+whole dataset through the id map, the only fields that changed anywhere are
+`challenge` and `condition_evidence`, on exactly 7 records. No direction moved.
+
+### D-053's reasoning was right about the mechanism and wrong about its sign
+
+D-053 argued the inconsistency was "the condition dimension manufacturing
+non-comparability out of vocabulary rather than biology: a fast-refeed intake
+test from one laboratory will not match the same test from another because one
+curator wrote `fasted` and the other `refed`." The expectation was therefore that
+correcting it would **recover** matches.
+
+It did the opposite, and the opposite is the better outcome. Claims reported by
+more than one study go **10 → 9** and cross-study conflicts go **9 → 8** — and
+both are the *same pair of records*:
+
+| | direction | study | quote |
+|---|---|---|---|
+| `c1b98d981dba36bb` | increase | `molmet.2024.102021` | "voracious total food intake, **comparable to fasted mice**" |
+| `fcea91b0669ad33f` | no_change | `molmet.2022.101455` | "**food intake after a fast**" |
+
+Cell: `arc_agrp`, circuit activation, `food_intake`, `challenge: fasted`,
+everything else unknown. That cell was simultaneously counted as a replicated
+claim and reported as a cross-study disagreement — which is what a claim key
+does when two non-comparable experiments land in it. **Neither record deserved
+its `fasted` label.** One is a fast-refeed intake test; the other took the label
+from the comparator the effect was measured against. Correcting both dissolved a
+false replication and a false contradiction in one move, about the single most
+reproduced result in this literature.
+
+So in this corpus the vocabulary inconsistency was **inventing comparability**,
+not suppressing it. The mechanism D-053 named is real — a key too coarse or too
+loosely applied to tell two experiments apart (D-050, D-052) — and its sign here
+runs the other way.
+
+**The six `refed` corrections created no new matches at all.** Each landed in a
+cell with no cell-mates: there is no second laboratory in this corpus running the
+same fast-refeed intake test with the other three conditions matching. The
+convention is still worth having for the records curated after it (D-053 fixed it
+before the second thirty papers for that reason); it bought no replication here.
+
+### And the one feasible task got stronger
+
+The nulled record moved into the all-unknown `arc_agrp` / activation /
+`food_intake` cell, which is the feasible task of D-055. It goes from 4 records /
+3 studies / 3 labs to **5 records / 4 studies / 4 labs**, agreement still 1.00
+with the interval tightening from [0.44, 1.00] to [0.51, 1.00]. The spurious
+`fasted` variant — 2 studies, agreement 0.50, tied modal direction, carrying
+`QC_CONFLICT_EFFECT_VS_NULL` — is gone from the report entirely.
+
+That is the shape of this pass: the replication *count* fell by one and the
+replication *evidence* improved, because the thing removed was noise and the
+record removed from it went where it belonged.
+
+### What did not move, as D-053 predicted
+
+The direction-of-effect result is untouched: +0.208 [+0.089, +0.354], p=0.004,
+`established`, 154 rows in 35 studies, and identically under the corrected lab
+grouping. D-053 said so in advance — "it does not touch that measurement:
+`cell_reach` keys on population, perturbation and outcome and carries no
+condition slot" — and that prediction held exactly, which is why the corrections
+were safe to make after the pre-registered evaluation closed rather than before.
+
+The one benchmark number that did move is the condition-conditioned baseline,
+which is the only one that reads `challenge`: `perturbation_axis_condition_majority`
+against the floor goes from +0.361 on 61 rows to **+0.400 on 60 rows**, still
+`established`, and still `no_difference` against the unconditioned axis baseline.
+Conditioning continues to fragment more than it helps (D-036), on one row fewer.
+
+### The cost of this pass, stated
+
+A re-identification is not free. Seven ids in the published record are now
+superseded, and `data/curated/record_id_map_d053.json` is the third such map in
+the project's history (0.1.0 → 0.2.0, 0.2.0 → 0.3.0, and this one). Anything
+citing one of those seven ids — including QC output written before this pass —
+must be resolved through the map. The alternative was leaving seven records
+knowingly wrong, which is worse, but the map is a permanent obligation rather
+than a one-off.
 
