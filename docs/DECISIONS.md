@@ -2572,3 +2572,116 @@ must be resolved through the map. The alternative was leaving seven records
 knowingly wrong, which is worse, but the map is a permanent obligation rather
 than a one-off.
 
+
+---
+
+## D-059 - Pre-registration: can transcriptomic similarity predict an unseen population's direction?
+
+**Written before the atlas is opened**, and committed before the code that uses
+it. D-057 measured the sharpest failure this project has: under
+leave-one-population-out the headline candidate's delta against the floor is
+**exactly +0.0000** on every subset, because the population is a component of
+the cell key and holding it out empties the cell. The model's only mechanism is
+cell lookup, so on a population it has never seen it reduces to the global mode
+by construction. This entry fixes what "transcriptomic similarity fixes that"
+would have to mean.
+
+### The honest bar is not zero
+
+Beating +0.0000 would be trivial, and the benchmark already shows why. Under the
+same leave-one-population-out grouping, on the circuit subset:
+
+| comparison | delta | verdict |
+|---|---|---|
+| `perturbation_axis_cell_majority` vs `global_majority` | **+0.0000** | no_difference |
+| `perturbation_axis_majority` vs `global_majority` | +0.0543 | no_difference |
+| **`outcome_majority` vs `global_majority`** | **+0.0735** | **established** |
+
+`outcome_majority` ignores the population entirely and still generalises,
+because `outcome_id` is not what the grouping holds out: the base rate of a
+readout is portable. So any population-similarity model must beat **the baseline
+that does not look at the population at all**. That is the comparison this
+entry pre-registers, and choosing the weaker one would have manufactured a
+result.
+
+### The data, named before it is used
+
+**HypoMap** (Steuernagel et al., *Nature Metabolism* 2022,
+`doi:10.1038/s42255-022-00657-y`), the unified single-cell atlas of the murine
+hypothalamus: 384,925 cells, one 3.8 GB H5AD from CELLxGENE collection
+`d86517f0-fa7e-4266-b82e-a521350d6d36`. Downloaded to `data/raw/hypomap/`, which
+is untracked machine input (D-016).
+
+It is the right atlas because it is hypothalamus-specific, mouse, integrated
+across the same literature this corpus is drawn from, and its clusters are
+annotated with the marker genes our `data/vocab/populations.json` already uses.
+
+**Why the cheap version was abandoned, with the measurement that killed it.**
+The obvious first attempt is similarity from the marker genes already in the
+vocabulary. It cannot work: markers are *chosen* to be unique to a population.
+Across the 30 vocabulary entries there are 38 marker slots holding 33 distinct
+genes, and **6 of 435 population pairs share any marker at all** — `Kiss1` in
+ARC and AVPV, `Bdnf` in DMH/VMH/POA, `Avp` in PVH and SCN, `Slc32a1` in LHA and
+ZI. A similarity matrix built from them is the identity matrix, which carries no
+information about which populations resemble which. Real expression profiles over
+thousands of genes are the only version of this that can carry signal.
+
+### The feature, fixed now
+
+1. Per-cluster mean log-normalised expression from HypoMap, over a gene set
+   declared in code (not chosen after seeing results).
+2. A **mapping** from this project's `population_id` values to HypoMap clusters,
+   curated with the cluster's own annotation and marker genes as the evidence,
+   recorded as data and reviewable in a diff — the `CORRECTIONS`-table pattern
+   from D-058, for the same reason: a mapping inferred at runtime cannot be
+   reviewed.
+3. Cosine similarity between population mean-expression vectors.
+4. A new baseline, `population_similarity_majority`: for a test row whose own
+   `(population, axis, outcome)` cell is empty, take the modal direction of the
+   same `(axis, outcome)` cell in the **k transcriptionally nearest populations
+   that were seen in training**, weighted by similarity. Where no neighbour has
+   that cell, fall back exactly as the existing baselines do, so the comparison
+   isolates the similarity step and nothing else.
+
+### The predictions
+
+1. **Primary.** `population_similarity_majority` against **`outcome_majority`**,
+   grouping `population`, circuit subset, reaches delta > 0 with verdict
+   `established` — both the population-clustered bootstrap interval excluding
+   zero and the row-level exact McNemar test under 0.05.
+2. **Secondary.** It does not damage the result D-055 established: against
+   `global_majority` under leave-one-**study**-out on the cell-seen circuit
+   rows, it stays `established` and its delta stays at or above +0.15 (the
+   current figure is +0.208).
+3. **Mapping coverage.** At least **20** of the 44 `population_id` values in the
+   corpus map to a HypoMap cluster. Below that the experiment does not run, and
+   the finding is that this corpus's populations are not the atlas's.
+
+**My prediction, recorded so it can be wrong: the primary will miss.** I expect
+transcriptomic similarity to be a poor predictor of the *sign* of a systemic
+response. Two populations can be transcriptionally adjacent and physiologically
+opposed — ARC AgRP and ARC POMC neurons are neighbours in the same nucleus,
+share a great deal of their transcriptome, and drive food intake in opposite
+directions. If that is right, the result is a negative finding worth having:
+expression similarity does not transfer direction of effect, and the unseen-
+population failure is not fixable this way.
+
+### What would abandon it
+
+* fewer than 20 populations mapped (above);
+* the secondary violated — a model that generalises to new populations by
+  giving up the one established result is not an improvement;
+* any need to choose the gene set, `k`, or the mapping *after* seeing a
+  delta. All three are fixed in code before the first evaluation, and the
+  evaluation is run **once**.
+
+### What this is not
+
+It is not a claim that expression predicts physiology, and nothing here becomes
+a training target in the sense SCHEMA.md 6 forbids. It is a **feature** derived
+from an external observational atlas, used to generalise a direction label that
+still comes only from interventional experiments. If it works it is a
+computational hypothesis generator; if it fails that is a measurement of how far
+transcriptomic identity carries, and either way it is reported separately from
+the demonstrated relationships in the corpus.
+
