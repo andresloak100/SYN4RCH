@@ -32,6 +32,7 @@ import re
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 from ..vocab import load
+from ..vocab.core import meta
 
 # Publication types that cannot contain a primary perturbation experiment.
 EXCLUDED_PUBTYPES = {
@@ -158,6 +159,46 @@ def _outcome_terms() -> Dict[str, List[str]]:
         terms = [entry.get("label") or ""] + list(entry.get("synonyms") or [])
         out[oid] = [t for t in terms if t]
     return out
+
+
+#: Matcher over the readouts `outcomes.json` declares out of scope (D-063), so
+#: a passage mentioning one can be flagged rather than silently proposed under
+#: whatever in-scope id it also happens to mention.
+_OUT_OF_SCOPE: Optional[TermMatcher] = None
+
+
+def out_of_scope_matcher() -> TermMatcher:
+    """One matcher over every declared out-of-scope readout, by category."""
+    global _OUT_OF_SCOPE
+    if _OUT_OF_SCOPE is None:
+        block = meta("outcomes").get("out_of_scope_readouts") or {}
+        terms = {
+            category: list(values)
+            for category, values in block.items()
+            if not category.startswith("_") and isinstance(values, list)
+        }
+        _OUT_OF_SCOPE = TermMatcher("out_of_scope", terms)
+    return _OUT_OF_SCOPE
+
+
+def out_of_scope_readouts(raw_text: str) -> List[str]:
+    """Categories of out-of-scope readout this passage mentions.
+
+    D-063 put neural activity out of scope and `tests/test_vocab_scope.py`
+    guards the *vocabulary* -- no entry may list an out-of-scope term as a
+    synonym. Nothing guarded the *matcher*, and it did not need to: a sentence
+    reporting "EEG delta power during wakefulness increased" resolves to
+    `wakefulness` through an incidental word, so an out-of-scope readout
+    arrives under a legitimate id and no rule is broken on the way in. 142 of
+    946 proposed sleep units are in this state (D-070).
+
+    This does not suppress the id, because the passage may genuinely report
+    both an in-scope state and an out-of-scope measure in one sentence, and
+    deciding which the record is about is a reading judgement the vocabulary
+    refuses to make for a curator (D-021). It names what is there, so the
+    judgement is prompted rather than skipped.
+    """
+    return out_of_scope_matcher().match(raw_text, _norm_text(raw_text))
 
 
 _MATCHERS: Optional[Dict[str, TermMatcher]] = None

@@ -134,6 +134,7 @@ def normalise(raw: str) -> str:
 
 _CACHE: Dict[str, Dict[str, dict]] = {}
 _INDEX: Dict[str, Dict[str, str]] = {}
+_META: Dict[str, Dict[str, object]] = {}
 
 
 def _check_kind(kind: str) -> str:
@@ -203,6 +204,27 @@ def load(kind: str) -> Dict[str, dict]:
         _INDEX[kind] = _build_index(kind, entries)
         _CACHE[kind] = entries
     return _CACHE[kind]
+
+
+def meta(kind: str) -> Dict[str, object]:
+    """Return one vocabulary's ``_meta`` block. Cached; treat as read-only.
+
+    Added by D-069 so that a consumer needing a policy block --
+    ``out_of_scope_readouts``, ``scope_policy`` -- does not reimplement this
+    module's path resolution to read the same file a second way. ``load``
+    deliberately exposes only ``entries``, and a second reader of the same
+    JSON is how two views of one vocabulary come to disagree.
+    """
+    _check_kind(kind)
+    if kind not in _META:
+        path = os.path.join(vocab_dir(), "%s.json" % kind)
+        if not os.path.isfile(path):
+            raise VocabError("missing vocabulary file: %s" % path)
+        with open(path, "r", encoding="utf-8") as fh:
+            doc = json.load(fh)
+        block = doc.get("_meta")
+        _META[kind] = block if isinstance(block, dict) else {}
+    return _META[kind]
 
 
 def load_all() -> Dict[str, Dict[str, dict]]:

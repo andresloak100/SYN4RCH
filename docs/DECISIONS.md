@@ -4050,3 +4050,97 @@ Nothing here predicts the re-run will pass, and D-059's expectation that
 similarity fails to transfer the sign of an effect stands unmeasured. The three
 conditions make the question *askable*; they do not make the answer likely
 either way. D-065's mapping remains Tier B and never a training target.
+
+---
+
+## D-070 - The matcher lost half of every joint sleep statement, and my scope guard was narrower than the rule it guarded
+
+**Found while costing the EEG curation pass, by running the matcher over the
+passages it would actually be used on.** Not by a test, and not by inspection —
+both defects are invisible in the code and in the vocabulary, and appear only in
+the output.
+
+The session curating the genotype dimension flagged the prerequisite: all 946
+proposed sleep units carry `candidate_outcome_id: "sleep"` and predate D-064, so
+a curator accepting the candidate id on an NREM measurement would land it in the
+pooled cell and nothing would error, because `sleep` is a legitimate id. True,
+and regenerating the units was going to fix it. Then I ran the live matcher over
+those 946 passages.
+
+### Defect 1: each ordering silently lost its elided half
+
+`TermMatcher` is a word-boundary alternation over synonyms. So:
+
+| passage | matched | missed | units |
+|---|---|---|---|
+| "NREM and REM sleep both decreased" | `rem_sleep` | **`nrem_sleep`** | 47 |
+| "REM and NREM sleep were unchanged" | `nrem_sleep` | **`rem_sleep`** | 12 |
+
+Neither `NREM sleep` nor `non-REM sleep` occurs contiguously in the first, and
+`REM sleep` does not in the second. The commonest composite phrasing in this
+literature, and the elided half was dropped without trace.
+
+The fix is **data, not code**: `NREM` and `non-REM` added to `nrem_sleep`, `REM`
+to `rem_sleep`. It is reviewable in a diff, and it needed no change to the
+matcher — which matters, because a change to `_boundary_pattern` applies to
+every vocabulary in the project.
+
+**And I got this wrong once before getting it right.** I first withheld bare
+`REM`, reasoning that `\bREM\b` fires inside `non-REM sleep` and would claim
+every NREM passage. That was the wrong frame. This matcher **proposes
+candidates a curator accepts or rejects**, so a false candidate is reviewable by
+the person who sees it and a missed one is invisible to everybody. Withholding
+the synonym to avoid a false positive lost REM on 12 units outright.
+
+Then I measured the cost I had been avoiding: 25 units mention non-REM, and
+**all 25 also discuss REM in its own right**, so the spurious match never fires
+alone on this corpus. The precision cost is bounded and visible; the recall cost
+was neither. Left as a measured, pinned overlap rather than patched with a
+negative lookbehind — the D-049 pattern of annotating a trap instead of
+resolving it automatically.
+
+### Defect 2: an out-of-scope readout arrives under a legitimate id
+
+"EEG delta power during wakefulness increased" resolves to `wakefulness`,
+through an incidental word. **142 of 946 units are in this state.**
+
+D-063 put neural activity out of scope and `tests/test_vocab_scope.py` guards
+the *vocabulary*: no entry may list an out-of-scope term as a synonym of any
+kind. That guard could not catch this and was never going to. **No rule is
+broken on the way in** — the id is legitimate, the synonym is legitimate, and
+the passage simply contains both an in-scope state and an out-of-scope measure.
+My guard was narrower than the rule it was written for, and the gap is exactly
+one indirection wide.
+
+`syn4rch.harvest.screen.out_of_scope_readouts` now names the categories a
+passage mentions. It **does not suppress the id**, deliberately: a sentence can
+report both, and deciding which the record is about is a reading judgement the
+vocabulary refuses to make for a curator (D-021). It prompts the judgement
+rather than making it.
+
+### A third thing I reported as a defect and was wrong about
+
+I told the other session that 535 units resolving to a state id *and* still
+`sleep` was a defect, "the pooled id stays on the menu for exactly the passages
+it should not". That is backwards. Under D-064 a joint report *belongs* on
+`sleep`, and the proposer offering all three ids is what lets a reader follow
+that rule. Suppressing `sleep` would make the choice for them. Corrected here
+rather than left standing, because the count was quoted.
+
+### One change outside my own paths
+
+`syn4rch.vocab.core.meta(kind)` returns a vocabulary's `_meta` block. `load`
+deliberately exposes only `entries`, and the alternative was reimplementing this
+module's path resolution inside `harvest/` to read the same file a second way —
+which is how two views of one vocabulary come to disagree. `vocab/` is assigned
+to neither session under the current ownership split; flagged to the other
+session rather than taken silently.
+
+### What this does not claim
+
+* It does not re-propose anything. The units are regenerated against outcomes
+  0.5.1; no record changed, no direction moved, and the dataset is untouched.
+* It does not make the EEG pass safe on its own. The 142 out-of-scope passages
+  are now *flagged*, not excluded, and a curator still has to read them.
+* `outcomes.json` goes to 0.5.1 — a synonym addition, not a new id.
+

@@ -234,15 +234,15 @@ class SleepSplitTest(unittest.TestCase):
 class VersionTest(unittest.TestCase):
     def test_the_version_and_changelog_moved_together(self):
         meta = load()["_meta"]
-        self.assertEqual(meta["version"], "0.5.0")
+        self.assertEqual(meta["version"], "0.5.1")
         self.assertTrue(
-            any(entry.startswith("0.5.0:") for entry in meta["changelog"]),
+            any(entry.startswith("0.5.1:") for entry in meta["changelog"]),
             "a version bump with no changelog entry is an unexplained change",
         )
 
     def test_each_changelog_entry_cites_its_decision(self):
         changelog = load()["_meta"]["changelog"]
-        for version, decision in (("0.4.0", "D-063"), ("0.5.0", "D-064")):
+        for version, decision in (("0.4.0", "D-063"), ("0.5.0", "D-064"), ("0.5.1", "D-070")):
             entry = next(e for e in changelog if e.startswith(version + ":"))
             self.assertIn(decision, entry)
 

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "vocab": "outcomes",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "description": "Tier A physiological and Tier B aging/healthspan outcomes.",
     "higher_is_policy": [
       "higher_is encodes ONLY whether a higher measured value is unambiguously better or worse for the organism, independent of context, genotype, diet, ambient temperature and time of day.",
@@ -20,7 +20,8 @@
       "0.2.0: renamed `cognitive_decline` to `cognitive_performance` and moved its two signed synonyms to inverted_synonyms, adding `escape latency`. The old id named a quantity and its negation at once, which made `direction` ambiguous before a curator even read the paper. No curated record used the id, so the rename costs nothing. See docs/DECISIONS.md D-029.",
       "0.3.0: annotated 4 genuinely inverted synonyms -- `fat oxidation` and `lipid oxidation` under `rer`, `wakefulness` and `arousal` under `sleep` -- and moved `insomnia` and `sleep fragmentation` to `signed_synonyms` where they belong. Found when a curator hit the RER / fat oxidation trap in doi:10.1038/s41467-018-08239-x. Annotation only: no code reads these lists, no id changed, and no stored direction was rewritten. See docs/DECISIONS.md D-049.",
       "0.4.0: stated what a Tier A outcome IS (scope_policy) and what it is not (out_of_scope_readouts), and removed `EEG delta power` from `sleep`. Prompted by a reader asking whether EEG helps when it records the cortex rather than the hypothalamus -- a boundary the project had never written down, stated only as one clause of D-054. The rule is state-of-the-organism versus activity-of-neurons, not central versus peripheral, because `inflammatory_markers_other` deliberately admits central glial markers as a declared proxy for systemic inflammation and a central/peripheral rule would have retroactively invalidated it. One deletion, no id changed, no stored direction rewritten. See docs/DECISIONS.md D-063.",
-      "0.5.0: split `sleep` into the five vigilance-state quantities it had been pooling -- `nrem_sleep`, `rem_sleep`, `wakefulness`, `sleep_latency`, `sleep_fragmentation` -- and re-scoped `sleep` to the composite readout that does not resolve to one state. NREM and REM are not complements and move independently, so one id for both manufactured contradictions in the claim key, the same defect class as D-050 and D-052. `wakefulness` and `sleep latency` stop being inverted synonyms and become their own quantities, which removes a hand-flip from the curator. Bare `arousal` is deliberately a synonym of nothing: it names the waking state in one literature and a count of awakenings in the other. Prerequisite for curating the 334 admissible state-amount units in the EEG seam. See docs/DECISIONS.md D-064."
+      "0.5.0: split `sleep` into the five vigilance-state quantities it had been pooling -- `nrem_sleep`, `rem_sleep`, `wakefulness`, `sleep_latency`, `sleep_fragmentation` -- and re-scoped `sleep` to the composite readout that does not resolve to one state. NREM and REM are not complements and move independently, so one id for both manufactured contradictions in the claim key, the same defect class as D-050 and D-052. `wakefulness` and `sleep latency` stop being inverted synonyms and become their own quantities, which removes a hand-flip from the curator. Bare `arousal` is deliberately a synonym of nothing: it names the waking state in one literature and a count of awakenings in the other. Prerequisite for curating the 334 admissible state-amount units in the EEG seam. See docs/DECISIONS.md D-064.",
+      "0.5.1: added the elided forms `NREM` and `non-REM` to `nrem_sleep` and `REM` to `rem_sleep`. The matcher is a word-boundary alternation over synonyms, so \"NREM and REM sleep both decreased\" matched only `rem_sleep` (47 units) and \"REM and NREM sleep\" matched only `nrem_sleep` (12 units) -- each ordering silently lost its elided half. Bare `REM` also fires inside `non-REM sleep`; measured at 25 units, all of which discuss REM in their own right, so it never fires alone here. Accepted deliberately: a proposer's false candidate is reviewable, a missed one is not. See docs/DECISIONS.md D-070."
     ],
     "scope_policy": [
       "A Tier A outcome is a STATE OF THE ORGANISM, or a tissue measurement the literature uses as a declared proxy for one. It is not the ACTIVITY OF NEURONS (D-063).",
@@ -1211,10 +1212,12 @@
         "SWS",
         "NREM sleep time",
         "non-rapid eye movement sleep",
-        "NREM amount"
+        "NREM amount",
+        "NREM",
+        "non-REM"
       ],
       "higher_is": null,
-      "notes": "Amount of NREM sleep. Not a complement of `rem_sleep`: a manipulation can raise one and lower the other, which is why pooling them in a single `sleep` id manufactured contradictions (D-064). Slow-wave sleep is included as the same stage under its other name; slow-wave ACTIVITY is delta power and is out of scope (D-063)."
+      "notes": "Amount of NREM sleep. Not a complement of `rem_sleep`: a manipulation can raise one and lower the other, which is why pooling them in a single `sleep` id manufactured contradictions (D-064). Slow-wave sleep is included as the same stage under its other name; slow-wave ACTIVITY is delta power and is out of scope (D-063). `NREM` and `non-REM` are listed bare, which is what makes the matcher see the state in \"NREM and REM sleep decreased\" -- the commonest composite phrasing in this literature, where neither `NREM sleep` nor `non-REM sleep` occurs contiguously and the elided half was silently lost (D-070). Bare `REM` is listed on `rem_sleep` for the mirror reason, with its `non-REM` overlap measured and accepted; see that entry."
     },
     "rem_sleep": {
       "id": "rem_sleep",
@@ -1232,10 +1235,11 @@
         "REMS",
         "REM sleep time",
         "paradoxical sleep",
-        "REM amount"
+        "REM amount",
+        "REM"
       ],
       "higher_is": null,
-      "notes": "Amount of REM sleep. See `nrem_sleep`: the two are separate quantities and are deliberately separate ids (D-064)."
+      "notes": "Amount of REM sleep. See `nrem_sleep`: the two are separate quantities and are deliberately separate ids (D-064). `REM` is listed bare so the matcher sees the state in \"REM and NREM sleep\", where `REM sleep` is not contiguous -- 12 of 946 proposed sleep units, the mirror of the 47 in the other ordering (D-070). It is a word-boundary match, so it also fires inside `non-REM sleep`. That was measured before being accepted: of the 25 units mentioning non-REM, all 25 also discuss REM in its own right, so the spurious match never fires alone on this corpus. The trade is deliberate and follows from what this matcher is for -- it proposes candidates a curator accepts or rejects, so a false candidate is reviewable while a missed one is invisible. The precision cost is bounded and visible; the recall cost was neither."
     },
     "wakefulness": {
       "id": "wakefulness",
