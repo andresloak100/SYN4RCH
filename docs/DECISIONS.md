@@ -3286,7 +3286,7 @@ signal; cortical voltage is another part of the brain.
 `EEG delta power` comes out of `sleep.synonyms`. It invited a cortical spectral
 measure to be curated against an id whose units are `min/h` and `% of time` —
 putting a spectral quantity in the same claim cell as a sleep duration, which is
-worse than the NREM/REM pooling D-065 addresses, because those at least measure
+worse than the NREM/REM pooling D-064 addresses, because those at least measure
 the same kind of thing.
 
 `data/vocab/outcomes.json` goes to 0.4.0 with two new `_meta` blocks:
@@ -3329,10 +3329,177 @@ told the reader it was, which is a direct consequence of their question.
 ### What this entry does not do
 
 * It does not extend the vocabulary. The `sleep` id is still one id; splitting it
-  into state amounts is D-065, which this entry is the premise for.
+  into state amounts is D-064, which this entry is the premise for.
 * It does not settle the eight readouts D-054 declined for want of an id. Those
   are a different question — no home rather than out of scope — and D-054's rule
   stands: adding ids is a decision entry, never a curator's judgement mid-pass.
 * `out_of_scope_readouts` is not a licence. A readout absent from the list is not
   thereby in scope, and the policy says so in those words.
+
+
+---
+
+## D-064 - Splitting `sleep` into the five quantities it was pooling, and the row the primary metric correctly lost
+
+**The premise is D-063**, which fixed what a Tier A readout is. This entry acts
+on it. One `sleep` id held `NREM sleep`, `REM sleep`, `slow wave sleep`,
+`wakefulness`, `sleep latency` and `sleep fragmentation` as synonyms, with units
+`min/h`. NREM and REM are not complements and move independently under one
+manipulation, so a paper's NREM time and its wakefulness time landed in the same
+claim cell — the defect class of D-050 (projections) and D-052 (genotypes), a key
+too coarse to tell two experiments apart.
+
+`data/vocab/outcomes.json` goes to 0.5.0 with five new Tier A ids —
+`nrem_sleep`, `rem_sleep`, `wakefulness`, `sleep_latency`,
+`sleep_fragmentation` — and `sleep` re-scoped to the composite readout that does
+not resolve to one state.
+
+**The moves were forced, not stylistic.** `syn4rch.vocab.core.selfcheck` refuses
+a normalised string mapping to two ids in one file, so each state term had to
+leave `sleep` to live in its own entry. `wakefulness` and `sleep latency` stop
+being `inverted_synonyms` and become quantities in their own right, which takes
+a hand-flip away from the curator: `direction` on `wakefulness` now describes
+wakefulness, and more wake is `increase`.
+
+**Bare `arousal` is deliberately a synonym of nothing.** It names the waking
+state in one literature and a count of awakenings in the other. `arousal index`
+and `arousals` resolve to `sleep_fragmentation`; bare `arousal` resolves to
+nothing and forces a reading, which is what D-021 says this vocabulary does with
+a trap it cannot settle.
+
+### The curators had already found this defect, and declined data over it
+
+The strongest evidence for the split is not a measurement. It is three
+`extraction_notes` written during the circuit pass, each recording observations
+the reader **refused to curate** because the vocabulary could not hold them:
+
+> "The same paragraph reports a significant REM-sleep *decrease* and a longer REM
+> latency, which map to this same outcome_id in the opposite direction; they are
+> deliberately not proposed, because an increase and a decrease in one cell would
+> be a contradiction manufactured by the vocabulary having no NREM/REM
+> distinction."
+
+Five such observations across three records are now recordable: a REM decrease
+(`Results para 8`), a non-significant REM increase and a shorter NREM latency
+(`para 10`), and a REM decrease and a longer REM latency (`para 11`), all in
+`doi:10.1371/journal.pone.0020360`. **They are listed, not curated** — adding the
+slot and filling it are separate named passes, following D-060 and D-062.
+
+**And an independent confirmation from a different paper.** A trial curating five
+deposit-bearing EEG papers found `doi:10.7554/eLife.69909` reporting **seven**
+sleep readouts in one paragraph for one population, one perturbation and one
+condition: wakefulness +140%, NREM −81.6%, REM −94.5%, NREM in the following dark
+period unchanged, low delta power up, high delta power down, NREM power density
+unchanged. Under the old id that single cell takes `increase`, `decrease` and
+`no_change` simultaneously, and the conflicts detector cannot tell it from a real
+contradiction. Two of those seven are delta power, which D-063 had already put
+out of scope.
+
+### What moved, measured before and after
+
+D-023's standard: a finer key **buys comparability and spends replication**, and
+both halves are the result.
+
+| | before | after |
+|---|---|---|
+| sleep-family records | 10 | 10 (7 `sleep`, 3 `nrem_sleep`) |
+| claim cells they occupy | 7 | **8** |
+| cells with >=2 studies | 1 | 1 |
+| cells with >=2 labs | 1 | 1 |
+| conflicts involving them | 1 | 1 |
+| corpus claim cells | 416 | **417** |
+| corpus conflicts | 4 | 4 |
+
+**Only 3 of 10 records moved**, and the refusal rule is why: a record is moved
+only when its `outcome_raw` names one state *and* its stored direction is already
+correct under the new id. Flipping a direction is curation, not a vocabulary
+change, and needs the quote re-read. **Under-moving and saying so beats flipping
+a stored direction inside a vocabulary pass.**
+
+**The rule as I first wrote it was keyed on the wrong thing**, and the session
+curating the genotype dimension corrected it. I had said "refuse to move any
+record whose `outcome_raw` matches an inverted synonym". The right statement is
+"refuse to move any record whose stored direction was **derived by inversion**",
+and `c9d907bbb8f604ea` is why: its `outcome_raw` is "wakefulness and REM sleep
+time in the dark period", naming one inverted term and one plain one, and its
+`increase` is a synthesis of two raw measurements moving in opposite directions
+that happen to agree about sleep. A substring rule catches that record for the
+wrong reason; a rule keyed on the derivation catches it for the right one, and
+the record is irreducibly a `sleep` record that can move to no state id at all.
+
+Seven stayed: four because the quote names two states jointly or a whole-cycle
+composite (`sleep-wake amounts`), three because the direction was derived by
+inversion from a wakefulness or arousal measurement.
+
+**The three ambiguous ones were checked against their quotes before being frozen
+in place**, because a refusal rule applied to an already-wrong record preserves
+the error rather than preventing it. `19e2a8a1115e2cc7` — "the wakefulness time
+was significantly **longer**", stored `sleep: decrease`. `c9d907bbb8f604ea` —
+"wakefulness **decreased** accompanied by REM sleep **increasing**", stored
+`sleep: increase`, both halves agreeing. `bd0fa9320548db4c` — arousals terminate
+sleep, stored `sleep: decrease` per D-019. All three correctly inverted, with the
+reasoning already in `extraction_notes`. So D-049's finding — that every record
+whose `outcome_raw` matches an inverted synonym of its own `outcome_id` is
+correctly stored — now holds at 508 records, having been established at 362.
+
+That 7-of-10 figure is itself a finding: the existing sleep records are mostly
+composites *because* there was one id to aim at. A reader given `nrem_sleep` and
+`rem_sleep` records two observations where a reader given `sleep` records one.
+So the split's value is almost entirely prospective — the 334 admissible
+state-amount units in the EEG seam — and almost nothing retrospectively.
+
+`outcome_id` is not a `RECORD_ID_FIELDS` component, so **no record was
+re-identified**: 508 of 508 ids unchanged, and across the whole dataset the only
+fields that changed anywhere are `outcome_id` and `extraction_notes`, on those 3
+records.
+
+### The primary metric lost one row, and it was right to
+
+`reports/generalisation.md` moves from **+0.208 [+0.089, +0.354], 154 rows / 35
+studies, p=0.004** to **+0.203 [+0.086, +0.347], 153 rows / 35 studies,
+p=0.005**. Still `established` under both groupings, and still clear of D-059's
+secondary threshold of +0.15. But the D-055 and D-057 baseline is now +0.203, and
+that is this entry's doing, not the genotype pass's.
+
+The row is `75c57af3d1474438`, identified by diffing the cell-seen set against
+the pre-split dataset in git — exactly one left, none entered. Its old
+`lha_orexin` / circuit-activation / `sleep` cell had three members:
+
+| | direction | `outcome_raw` | lab |
+|---|---|---|---|
+| other study | decrease | NREM and REM sleep time (wakefulness time rose) | Niu J. |
+| own study | decrease | NREM sleep time | Sakurai |
+| own study | decrease | wakefulness time | Sakurai |
+
+So its only cross-study evidence was an **NREM+REM composite** standing in for an
+NREM-only measurement. After the split the composite stays on `sleep` and the
+NREM record moves to `nrem_sleep`, so the link is severed and the record's cell
+holds only its own study — which leave-one-study-out empties.
+
+**The row was comparable only because the id was too coarse.** The metric got
+smaller and more honest in the same move, and that is the shape of every key
+refinement in this project: D-050 removed manufactured replication, D-058 removed
+a false match and a false conflict in one pair, and this removes a cross-study
+link that was comparing two different quantities.
+
+### And the feasibility verdict paid the same price
+
+`1 of 181 tasks feasible (0 marginal, 180 insufficient)`, against
+`1 of 180 feasible (1 marginal, 178 insufficient)` before. The marginal task is
+gone and the task count rose by one, because the split created a new
+(population, outcome) pair and took records from an existing one. The genotype
+pass cost a marginal task the same way, which the session running it warned me
+about before I measured — so this is the second instance of a predicted cost
+arriving on schedule, and D-023's framing has now survived two tests.
+
+### What this entry does not do
+
+* It does not curate the five declined observations, nor the 334 EEG units. The
+  ids exist and are nearly empty by design, the way `background_genotype` was
+  added by D-060 and filled by D-062.
+* It does not move the seven records that stayed. Three of them need a direction
+  flipped under a new id, which is a correction pass needing the quotes re-read.
+* `atlas/signaling.py` needed five `OUTCOME_SYSTEM` entries to accept the new
+  ids, all mapping to `behaviour` as `sleep` already does. That file belongs to
+  another session this pass; it made the change rather than me.
 

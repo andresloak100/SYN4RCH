@@ -18,7 +18,11 @@ OUTCOMES = os.path.join(vocab.vocab_dir(), "outcomes.json")
 MUST_BE_INVERTED = {
     "insulin_sensitivity": {"insulin resistance", "HOMA-IR"},
     "glucose_tolerance": {"glucose excursion"},
-    "sleep": {"sleep latency"},
+    # `sleep` is absent on purpose since outcomes 0.5.0 (D-064). It listed
+    # `sleep latency` as inverted while it was the only sleep id; the split gave
+    # latency its own id, where it is the quantity rather than a synonym of
+    # something it runs against. Same shape as the cognitive_performance rename
+    # below: an annotation is only meaningful relative to the id it annotates.
     # Renamed from `cognitive_decline` at v0.2.0 (D-029). Its two synonyms were
     # classified as *signed* while the id named a quantity and its negation at
     # once; once the id names performance only, they are plainly inverted.

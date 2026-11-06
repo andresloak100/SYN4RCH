@@ -1,7 +1,7 @@
 {
   "_meta": {
     "vocab": "outcomes",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Tier A physiological and Tier B aging/healthspan outcomes.",
     "higher_is_policy": [
       "higher_is encodes ONLY whether a higher measured value is unambiguously better or worse for the organism, independent of context, genotype, diet, ambient temperature and time of day.",
@@ -19,7 +19,8 @@
     "changelog": [
       "0.2.0: renamed `cognitive_decline` to `cognitive_performance` and moved its two signed synonyms to inverted_synonyms, adding `escape latency`. The old id named a quantity and its negation at once, which made `direction` ambiguous before a curator even read the paper. No curated record used the id, so the rename costs nothing. See docs/DECISIONS.md D-029.",
       "0.3.0: annotated 4 genuinely inverted synonyms -- `fat oxidation` and `lipid oxidation` under `rer`, `wakefulness` and `arousal` under `sleep` -- and moved `insomnia` and `sleep fragmentation` to `signed_synonyms` where they belong. Found when a curator hit the RER / fat oxidation trap in doi:10.1038/s41467-018-08239-x. Annotation only: no code reads these lists, no id changed, and no stored direction was rewritten. See docs/DECISIONS.md D-049.",
-      "0.4.0: stated what a Tier A outcome IS (scope_policy) and what it is not (out_of_scope_readouts), and removed `EEG delta power` from `sleep`. Prompted by a reader asking whether EEG helps when it records the cortex rather than the hypothalamus -- a boundary the project had never written down, stated only as one clause of D-054. The rule is state-of-the-organism versus activity-of-neurons, not central versus peripheral, because `inflammatory_markers_other` deliberately admits central glial markers as a declared proxy for systemic inflammation and a central/peripheral rule would have retroactively invalidated it. One deletion, no id changed, no stored direction rewritten. See docs/DECISIONS.md D-063."
+      "0.4.0: stated what a Tier A outcome IS (scope_policy) and what it is not (out_of_scope_readouts), and removed `EEG delta power` from `sleep`. Prompted by a reader asking whether EEG helps when it records the cortex rather than the hypothalamus -- a boundary the project had never written down, stated only as one clause of D-054. The rule is state-of-the-organism versus activity-of-neurons, not central versus peripheral, because `inflammatory_markers_other` deliberately admits central glial markers as a declared proxy for systemic inflammation and a central/peripheral rule would have retroactively invalidated it. One deletion, no id changed, no stored direction rewritten. See docs/DECISIONS.md D-063.",
+      "0.5.0: split `sleep` into the five vigilance-state quantities it had been pooling -- `nrem_sleep`, `rem_sleep`, `wakefulness`, `sleep_latency`, `sleep_fragmentation` -- and re-scoped `sleep` to the composite readout that does not resolve to one state. NREM and REM are not complements and move independently, so one id for both manufactured contradictions in the claim key, the same defect class as D-050 and D-052. `wakefulness` and `sleep latency` stop being inverted synonyms and become their own quantities, which removes a hand-flip from the curator. Bare `arousal` is deliberately a synonym of nothing: it names the waking state in one literature and a count of awakenings in the other. Prerequisite for curating the 334 admissible state-amount units in the EEG seam. See docs/DECISIONS.md D-064."
     ],
     "scope_policy": [
       "A Tier A outcome is a STATE OF THE ORGANISM, or a tissue measurement the literature uses as a declared proxy for one. It is not the ACTIVITY OF NEURONS (D-063).",
@@ -868,40 +869,30 @@
     },
     "sleep": {
       "id": "sleep",
-      "label": "Sleep amount and architecture",
+      "label": "Total or composite sleep-wake amount",
       "tier": "A",
       "units": [
         "min/h",
         "% of time",
-        "bouts/h"
+        "min/24h"
       ],
       "modality": "EEG/EMG",
       "synonyms": [
         "sleep",
-        "NREM sleep",
-        "REM sleep",
-        "slow wave sleep",
-        "sleep architecture",
-        "wakefulness",
-        "sleep latency",
-        "sleep fragmentation",
-        "arousal",
-        "sleep-wake cycle",
         "total sleep time",
+        "sleep architecture",
+        "sleep-wake cycle",
+        "sleep-wake amounts",
+        "sleep-wake states",
+        "vigilance states",
         "insomnia",
         "cataplexy",
         "narcolepsy"
       ],
       "higher_is": null,
-      "inverted_synonyms": [
-        "arousal",
-        "sleep latency",
-        "wakefulness"
-      ],
-      "notes": "An arousal is a count of awakenings and `wakefulness` is sleep's complement: both name a different quantity that moves opposite to sleep, so both are inverted (D-049). `insomnia` and `sleep fragmentation` name a state and carry their own direction, so they are signed, not inverted. `sleep latency` was already annotated inverted. `EEG delta power` was a synonym here until 0.4.0 and is now out of scope entirely (D-063): it is a measure of cortical activity, not of how much the animal slept, and curating it against this id put a spectral quantity in the same claim cell as a sleep duration.",
+      "notes": "The id for a readout that does NOT resolve to one vigilance state: a total, a composite ('sleep-wake amounts'), or a sentence reporting two states jointly ('NREM and REM sleep increased'). Where the paper names one state, the specific id wins -- `nrem_sleep`, `rem_sleep`, `wakefulness`, `sleep_latency`, `sleep_fragmentation` (D-019 step 1, D-064). Until 0.5.0 this was the ONLY sleep id, and NREM, REM, wakefulness, latency, fragmentation and EEG delta power were all synonyms of it, so a paper's NREM time and its wakefulness time landed in one claim cell although they are different quantities that can move independently (D-064). `cataplexy` and `narcolepsy` stay here: they name a state of the whole sleep-wake system rather than an amount of one stage. `EEG delta power` was removed at 0.4.0 as out of scope entirely (D-063): cortical activity is not a state of the organism.",
       "signed_synonyms": [
-        "insomnia",
-        "sleep fragmentation"
+        "insomnia"
       ]
     },
     "locomotor_activity": {
@@ -1201,6 +1192,119 @@
       ],
       "higher_is": null,
       "notes": "Higher senescent burden is usually described as deleterious, but these markers are also induced by transient stress and by beneficial remodelling (e.g. wound healing), and the panels are not interchangeable. Left null deliberately."
+    },
+    "nrem_sleep": {
+      "id": "nrem_sleep",
+      "label": "NREM sleep amount",
+      "tier": "A",
+      "units": [
+        "min/h",
+        "% of time",
+        "min/24h"
+      ],
+      "modality": "EEG/EMG",
+      "synonyms": [
+        "NREM sleep",
+        "non-REM sleep",
+        "NREMS",
+        "slow wave sleep",
+        "SWS",
+        "NREM sleep time",
+        "non-rapid eye movement sleep",
+        "NREM amount"
+      ],
+      "higher_is": null,
+      "notes": "Amount of NREM sleep. Not a complement of `rem_sleep`: a manipulation can raise one and lower the other, which is why pooling them in a single `sleep` id manufactured contradictions (D-064). Slow-wave sleep is included as the same stage under its other name; slow-wave ACTIVITY is delta power and is out of scope (D-063)."
+    },
+    "rem_sleep": {
+      "id": "rem_sleep",
+      "label": "REM sleep amount",
+      "tier": "A",
+      "units": [
+        "min/h",
+        "% of time",
+        "min/24h"
+      ],
+      "modality": "EEG/EMG",
+      "synonyms": [
+        "REM sleep",
+        "rapid eye movement sleep",
+        "REMS",
+        "REM sleep time",
+        "paradoxical sleep",
+        "REM amount"
+      ],
+      "higher_is": null,
+      "notes": "Amount of REM sleep. See `nrem_sleep`: the two are separate quantities and are deliberately separate ids (D-064)."
+    },
+    "wakefulness": {
+      "id": "wakefulness",
+      "label": "Wakefulness amount",
+      "tier": "A",
+      "units": [
+        "min/h",
+        "% of time",
+        "min/24h"
+      ],
+      "modality": "EEG/EMG",
+      "synonyms": [
+        "wakefulness",
+        "wake time",
+        "wake amount",
+        "time awake",
+        "waking",
+        "wake duration"
+      ],
+      "higher_is": null,
+      "notes": "Amount of time awake. A quantity in its own right since 0.5.0; it was an `inverted_synonym` of `sleep` before that, which required every curator to flip a direction by hand and left the flip visible only in extraction_notes (D-049, D-064). `direction` here describes the change in WAKEFULNESS: more wake is `increase`. Bare `arousal` is deliberately NOT a synonym of this id or of `sleep_fragmentation`: it names the waking state in one literature and a count of awakenings in the other, and the vocabulary annotates traps rather than resolving them (D-021). A paper saying `arousal` must be read."
+    },
+    "sleep_latency": {
+      "id": "sleep_latency",
+      "label": "Sleep onset latency",
+      "tier": "A",
+      "units": [
+        "min",
+        "s"
+      ],
+      "modality": "EEG/EMG",
+      "synonyms": [
+        "sleep latency",
+        "sleep onset latency",
+        "latency to sleep",
+        "latency to NREM",
+        "latency to REM",
+        "NREM latency",
+        "REM latency",
+        "sleep onset"
+      ],
+      "higher_is": null,
+      "notes": "Time to fall asleep, or to a named stage. A quantity in its own right since 0.5.0; it was an `inverted_synonym` of `sleep` before that (longer latency is less sleep). `direction` here describes the change in LATENCY: a longer latency is `increase`."
+    },
+    "sleep_fragmentation": {
+      "id": "sleep_fragmentation",
+      "label": "Sleep fragmentation / continuity",
+      "tier": "A",
+      "units": [
+        "bouts/h",
+        "mean bout duration (min)",
+        "arousals/h",
+        "transitions/h"
+      ],
+      "modality": "EEG/EMG",
+      "synonyms": [
+        "sleep fragmentation",
+        "sleep bouts",
+        "bout duration",
+        "mean bout duration",
+        "arousal index",
+        "arousals",
+        "awakenings",
+        "sleep continuity",
+        "state transitions",
+        "sleep bout length"
+      ],
+      "higher_is": null,
+      "notes": "How broken up sleep is, however the paper quantifies it -- bout count, bout duration, arousal index, transitions. A quantity in its own right since 0.5.0; `sleep fragmentation` was a `signed_synonym` of `sleep` before that. `direction` describes the change in FRAGMENTATION: more broken sleep is `increase`, so a longer mean bout duration is `decrease` and extraction_notes must say which statistic was reported, because bout count and bout duration move in opposite directions for the same underlying change. Bare `arousal` is excluded: see `wakefulness`."
     }
   }
 }

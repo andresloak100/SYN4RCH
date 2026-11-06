@@ -94,11 +94,20 @@ class OutOfScopeTest(unittest.TestCase):
             self.assertNotIn("EEG delta power", sleep.get(field) or [])
         self.assertIn("eeg delta power", out_of_scope_terms(load()))
 
-    def test_the_state_readouts_sleep_keeps_are_still_there(self):
-        """D-063 removes a spectral measure, not the sleep states themselves."""
-        sleep = load()["entries"]["sleep"]
-        everything = {
-            t.lower() for field in SYNONYM_FIELDS for t in (sleep.get(field) or [])
+    def test_the_state_readouts_are_still_in_the_vocabulary_somewhere(self):
+        """D-063 removed a spectral measure, not the sleep states themselves.
+
+        Asserted across the whole file rather than against `sleep`, because
+        D-064 then moved each state to an id of its own. The invariant that
+        matters is that no state readout was lost between the two passes --
+        excluding a cortical measure and relocating a vigilance state are
+        different operations and only one of them happened here.
+        """
+        reachable = {
+            term.lower()
+            for entry in load()["entries"].values()
+            for field in SYNONYM_FIELDS
+            for term in (entry.get(field) or [])
         }
         for kept in (
             "nrem sleep",
@@ -109,7 +118,7 @@ class OutOfScopeTest(unittest.TestCase):
             "sleep fragmentation",
             "total sleep time",
         ):
-            self.assertIn(kept, everything, kept)
+            self.assertIn(kept, reachable, kept)
 
     def test_the_behavioural_refusals_of_d054_are_listed_not_remembered(self):
         banned = out_of_scope_terms(load())
@@ -137,20 +146,105 @@ class GlialExceptionTest(unittest.TestCase):
         self.assertIn("systemic", notes)
 
 
+class SleepSplitTest(unittest.TestCase):
+    """The split D-064 made, and the pooling it ended.
+
+    One `sleep` id held NREM, REM, wakefulness, latency and fragmentation as
+    synonyms. NREM and REM are not complements and move independently, so a
+    paper's NREM time and its wakefulness time landed in one claim cell -- the
+    D-050 / D-052 defect class, a key too coarse to tell two experiments apart.
+    """
+
+    STATE_IDS = (
+        "nrem_sleep",
+        "rem_sleep",
+        "wakefulness",
+        "sleep_latency",
+        "sleep_fragmentation",
+    )
+
+    def test_the_five_state_ids_exist_and_are_tier_a(self):
+        entries = load()["entries"]
+        for outcome_id in self.STATE_IDS:
+            self.assertIn(outcome_id, entries)
+            self.assertEqual(entries[outcome_id]["tier"], "A", outcome_id)
+
+    def test_sleep_no_longer_claims_the_states_it_pooled(self):
+        """Mandatory, not stylistic: vocab selfcheck forbids one normalised
+        string mapping to two ids, so a term in both would fail to load."""
+        sleep = load()["entries"]["sleep"]
+        everything = {
+            t.lower() for field in SYNONYM_FIELDS for t in (sleep.get(field) or [])
+        }
+        for moved in (
+            "nrem sleep",
+            "rem sleep",
+            "slow wave sleep",
+            "wakefulness",
+            "sleep latency",
+            "sleep fragmentation",
+        ):
+            self.assertNotIn(moved, everything, moved)
+
+    def test_sleep_keeps_the_composite_readouts(self):
+        """A sentence reporting two states jointly cannot be assigned to one."""
+        sleep = load()["entries"]["sleep"]
+        synonyms = {s.lower() for s in sleep["synonyms"]}
+        for kept in ("sleep", "total sleep time", "sleep architecture", "sleep-wake amounts"):
+            self.assertIn(kept, synonyms, kept)
+
+    def test_bare_arousal_is_a_synonym_of_nothing(self):
+        """Ambiguous between the waking state and a count of awakenings.
+
+        The vocabulary annotates traps rather than resolving them (D-021), so an
+        ambiguous term resolves to no id and forces a reading.
+        """
+        for entry in load()["entries"].values():
+            for field in SYNONYM_FIELDS:
+                self.assertNotIn(
+                    "arousal",
+                    [t.lower() for t in (entry.get(field) or [])],
+                    entry["id"],
+                )
+
+    def test_the_unambiguous_arousal_senses_do_resolve(self):
+        fragmentation = load()["entries"]["sleep_fragmentation"]
+        synonyms = {s.lower() for s in fragmentation["synonyms"]}
+        self.assertIn("arousal index", synonyms)
+        self.assertIn("arousals", synonyms)
+
+    def test_each_new_id_states_which_way_its_direction_runs(self):
+        """These are the ids a curator will flip a sign on if left unstated."""
+        entries = load()["entries"]
+        for outcome_id in ("wakefulness", "sleep_latency", "sleep_fragmentation"):
+            notes = (entries[outcome_id].get("notes") or "").lower()
+            self.assertIn("direction", notes, outcome_id)
+            self.assertIn("increase", notes, outcome_id)
+
+    def test_fragmentation_warns_that_its_statistics_run_opposite_ways(self):
+        """Bout count and bout duration move opposite ways for one change."""
+        notes = load()["entries"]["sleep_fragmentation"]["notes"].lower()
+        self.assertIn("opposite", notes)
+
+    def test_nrem_and_rem_are_declared_non_complementary(self):
+        notes = load()["entries"]["nrem_sleep"]["notes"].lower()
+        self.assertIn("not a complement", notes)
+
+
 class VersionTest(unittest.TestCase):
     def test_the_version_and_changelog_moved_together(self):
         meta = load()["_meta"]
-        self.assertEqual(meta["version"], "0.4.0")
+        self.assertEqual(meta["version"], "0.5.0")
         self.assertTrue(
-            any(entry.startswith("0.4.0:") for entry in meta["changelog"]),
+            any(entry.startswith("0.5.0:") for entry in meta["changelog"]),
             "a version bump with no changelog entry is an unexplained change",
         )
 
-    def test_the_changelog_entry_cites_its_decision(self):
-        entry = next(
-            e for e in load()["_meta"]["changelog"] if e.startswith("0.4.0:")
-        )
-        self.assertIn("D-063", entry)
+    def test_each_changelog_entry_cites_its_decision(self):
+        changelog = load()["_meta"]["changelog"]
+        for version, decision in (("0.4.0", "D-063"), ("0.5.0", "D-064")):
+            entry = next(e for e in changelog if e.startswith(version + ":"))
+            self.assertIn(decision, entry)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -8,7 +8,7 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-06T21:08:40Z |
+| generated (UTC) | 2026-11-06T21:24:30Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
 | scope | all records read |
@@ -44,7 +44,7 @@ Groupings are `syn4rch.models.task.GROUPINGS`, reused rather than restated: SCHE
 |---|---|---|---|---|---|---|---|
 | `lab` | no | 68 | 502 | 170 | 33.9% | 6 | 0 |
 | `population` | no | 44 | 502 | 122 | 24.3% | 6 | 0 |
-| `population_outcome` | no | 182 | 502 | 0 | 0.0% | 6 | 0 |
+| `population_outcome` | no | 183 | 502 | 0 | 0.0% | 6 | 0 |
 | `record` | yes | 508 | 502 | 0 | 0.0% | 6 | 0 |
 | `study_id` | no | 75 | 502 | 170 | 33.9% | 6 | 0 |
 
@@ -106,7 +106,7 @@ One table below is 0 by construction and is printed anyway. A cell contains the 
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 156 | 26 | 17% |
+| `circuit_activity` | 314 | 157 | 26 | 17% |
 | `molecular` | 170 | 132 | 0 | 0% |
 | `pharmacological` | 5 | 3 | 0 | 0% |
 | `structural` | 18 | 13 | 0 | 0% |
@@ -116,7 +116,7 @@ One table below is 0 by construction and is printed anyway. A cell contains the 
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 156 | 0 | 0% |
+| `circuit_activity` | 314 | 157 | 0 | 0% |
 | `molecular` | 170 | 132 | 0 | 0% |
 | `pharmacological` | 5 | 3 | 0 | 0% |
 | `structural` | 18 | 13 | 0 | 0% |
@@ -126,7 +126,7 @@ One table below is 0 by construction and is printed anyway. A cell contains the 
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 156 | 0 | 0% |
+| `circuit_activity` | 314 | 157 | 0 | 0% |
 | `molecular` | 170 | 132 | 0 | 0% |
 | `pharmacological` | 5 | 3 | 0 | 0% |
 | `structural` | 18 | 13 | 0 | 0% |
@@ -136,7 +136,7 @@ One table below is 0 by construction and is printed anyway. A cell contains the 
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 156 | 49 | 31% |
+| `circuit_activity` | 314 | 157 | 49 | 31% |
 | `molecular` | 170 | 132 | 30 | 23% |
 | `pharmacological` | 5 | 3 | 1 | 33% |
 | `structural` | 18 | 13 | 3 | 23% |
@@ -146,7 +146,7 @@ One table below is 0 by construction and is printed anyway. A cell contains the 
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 156 | 26 | 17% |
+| `circuit_activity` | 314 | 157 | 26 | 17% |
 | `molecular` | 170 | 132 | 0 | 0% |
 | `pharmacological` | 5 | 3 | 0 | 0% |
 | `structural` | 18 | 13 | 0 | 0% |
