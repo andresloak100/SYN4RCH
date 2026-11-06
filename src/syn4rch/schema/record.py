@@ -72,7 +72,7 @@ __all__ = [
 #: ``record_id`` is unaffected by that change, but the curation pass that filled
 #: ``sex``, ``diet``, ``age_group`` and ``challenge`` re-identified every record
 #: it touched, because all four are hash components. See D-037 .. D-041.
-SCHEMA_VERSION = "0.3.0"
+SCHEMA_VERSION = "0.4.0"
 
 #: Length (hex characters) of ``record_id``. 16 hex chars = 64 bits; with a
 #: corpus of ~10^5 records the collision probability is ~3e-10.
@@ -279,7 +279,15 @@ _STR_LIST_FIELDS = ("marker_genes", "conflicts_with")
 #: evidence entry, because a record's sex is typically stated in Methods while
 #: its acute state, when stated at all, is stated by the passage the record was
 #: read from.
-CONDITION_DIMENSIONS = ("sex", "diet", "age_group", "challenge")
+CONDITION_DIMENSIONS = (
+    "sex",
+    "diet",
+    "age_group",
+    "challenge",
+    # D-060. Fifth and last: it enters claim_key and condition_key but neither
+    # RECORD_ID_FIELDS nor the model's feature set, following age_group.
+    "background_genotype",
+)
 
 #: The fields a condition evidence entry may describe: the same four.
 #:
@@ -418,6 +426,12 @@ class TierARecord:
     species: Optional[Species] = None
     strain: Optional[str] = None
     genetic_background: Optional[str] = None
+    #: The resolved half of ``genetic_background`` (D-060): controlled
+    #: ``gene_id:effect:scope`` segments joined by ``+`` and sorted, or one of
+    #: the sentinels ``not_reported`` / ``wild_type`` / ``mixed``. The prose
+    #: field above is the RAW half and keeps the paper's own wording, exactly as
+    #: ``population_raw`` stands beside ``population_id``.
+    background_genotype: Optional[str] = None
     sex: Optional[Sex] = None
     age_value: Optional[float] = None
     age_unit: Optional[AgeUnit] = None

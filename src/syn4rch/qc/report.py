@@ -23,7 +23,7 @@ from ..schema.validate import unevidenced_conditions, validate
 from .comparability import comparability_coverage, find_missing_comparability_fields, unclear_valence_count
 from .conflicts import annotate_conflicts, find_conflicts, key_comparison
 from .duplicates import run_duplicate_checks
-from .keys import NULL, condition_specificity, lab_key
+from .keys import CONDITION_FIELDS, NULL, condition_specificity, lab_key
 from .findings import QCFinding, QCSeverity
 from .units import check_units
 
@@ -485,7 +485,10 @@ def render_text(report: QCReport, path=None, limit=None) -> str:
         lines.append("Condition specificity (slots known of sex/diet/age/challenge)")
         lines.append("-" * 72)
         for slots in sorted(specificity):
-            lines.append("  %s of 4 known   %4d records" % (slots, specificity[slots]))
+            lines.append(
+                "  %s of %d known   %4d records"
+                % (slots, len(CONDITION_FIELDS), specificity[slots])
+            )
         blind = specificity.get("0", 0)
         if blind:
             lines.append(

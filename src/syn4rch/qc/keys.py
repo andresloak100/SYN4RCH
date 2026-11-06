@@ -80,7 +80,13 @@ UNKNOWN = "unknown"
 NULL = "<null>"
 
 #: The condition dimension, in the order :func:`condition_key` returns it.
-CONDITION_FIELDS: Tuple[str, ...] = ("sex", "diet", "age_group", "challenge")
+CONDITION_FIELDS: Tuple[str, ...] = (
+    "sex",
+    "diet",
+    "age_group",
+    "challenge",
+    "background_genotype",  # D-060
+)
 
 #: Component names of :func:`claim_key`, in order, for labelling reports.
 CLAIM_KEY_FIELDS: Tuple[str, ...] = (
@@ -204,8 +210,14 @@ def perturbation_key(record) -> Tuple[str, str, str]:
     )
 
 
-def condition_key(record) -> Tuple[str, str, str, str]:
-    """``(sex, diet, age_group, challenge)`` -- the condition the work ran under.
+def condition_key(record) -> Tuple[str, ...]:
+    """One slot per :data:`CONDITION_FIELDS` -- the condition the work ran under.
+
+    Five slots since D-060 added ``background_genotype``. The arity is
+    :data:`CONDITION_FIELDS`, never a literal: a caller that unpacks this
+    positionally into a fixed number of names breaks the next time a dimension
+    is added, which is exactly what happened to
+    ``syn4rch.models.task.extract_features`` when this grew from four.
 
     Any slot that is not known reads :data:`UNKNOWN`. Two records whose
     condition keys differ are **not comparable**: they may disagree because the

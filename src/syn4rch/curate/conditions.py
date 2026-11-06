@@ -206,9 +206,16 @@ __all__ = [
 ]
 
 
-#: The dimensions this module reads. Same tuple, same order, as
-#: :data:`syn4rch.schema.record.CONDITION_DIMENSIONS`; restated here only so
-#: that iteration order is fixed locally.
+#: The dimensions this module reads, in a locally fixed iteration order.
+#:
+#: A **subset** of :data:`syn4rch.schema.record.CONDITION_DIMENSIONS` since
+#: D-060, which added ``background_genotype``. This module is the paper-reading
+#: extractor for the four conditions a Methods section states about a cohort;
+#: a background genotype is curated by its own pass, because deciding whether
+#: an allele is the recorded perturbation or the substrate it was applied to is
+#: a per-record judgement this module has no way to make (D-060). The comment
+#: here used to claim this was the same tuple as CONDITION_DIMENSIONS, and a
+#: test now asserts the weaker and true relation instead.
 DIMENSIONS = ("sex", "diet", "age_group", "challenge")
 
 #: The three verdicts a dimension can earn. See the module docstring.

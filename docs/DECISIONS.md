@@ -2657,6 +2657,52 @@ thousands of genes are the only version of this that can carry signal.
    corpus map to a HypoMap cluster. Below that the experiment does not run, and
    the finding is that this corpus's populations are not the atlas's.
 
+> **Prediction 3 was void as written, and is withdrawn as a gate rather than
+> repaired into one (amended before the primary was measured; the amendment was
+> raised independently by a second session reading this entry).**
+>
+> There are not 44 `population_id` values. 44 is the count of `population_key`s,
+> which is a different thing: 32 soma keys (13 resolved, 19 `raw:`) plus 12
+> projection keys (8 on a resolved soma, 4 on a `raw:` one). The corpus holds
+> **13 distinct `population_id` values**, on 380 of 508 records. The other 128
+> records carry no id at all, so their 23 keys have nothing to map *from*
+> (D-010) — they are a stated ceiling on coverage, not a shortfall. Mapping all
+> 13 would therefore still leave 13 < 20 and the experiment could never have run
+> by its own terms. (An earlier breakdown of mine in this session said
+> "13 + 12 + 23" of 44, which sums to 48: that classifier double-counted the 4
+> keys that are both projection-targeted and unresolved. The split above does
+> not.)
+>
+> **Why it is withdrawn instead of re-set.** The honest denominator is the 13
+> resolved ids — and all 13 carry circuit records, so the circuit-subset
+> denominator the primary needs is also 13. But I had already measured coverage
+> against them while validating the atlas ingest, before noticing the error.
+> **13 of 13 markers are present in HypoMap**, and at the C185 level 10 of 13
+> have a cluster whose own name corroborates the marker (`arc_agrp` ->
+> `Npy.Agrp.GABA-4`, `arc_pomc` -> `Anxa2.Pomc.GLU-5`, `lha_orexin` ->
+> `Hcrt.Rfx4.GLU-4`, `scn_vip` -> `Vip.Vipr2.GABA-2`, `lha_mch` -> `Pmch.GLU-7`,
+> plus `pvh_trh`, `pvh_crh`, `arc_kisspeptin`, `arc_ghrh`, `tmn_histamine`).
+> Three are weak and need curated judgement rather than name matching:
+> `vmh_sf1` (Nr5a1 peaks at 0.34; HypoMap is ARC/PVH/LHA-weighted and the VMH is
+> underrepresented), `pvh_sim1` (Sim1 at 0.76), and `lha_vglut2` (`Slc17a6` is
+> pan-glutamatergic, so "top cluster" is not a meaningful question for it).
+>
+> A threshold whose answer I already know is not a gate, and setting one now at a
+> level I know passes would be the goalpost move D-050 and D-056 both argue
+> against — in the most flattering direction available. So prediction 3 becomes a
+> **reported measurement**: coverage is 13/13 on markers and 10/13 on
+> name-corroborated clusters, the mapping proceeds, and the honest statement of
+> its limit is that **a quarter of the corpus (128 records, 23 keys) is
+> unmappable by construction**. Zebrafish Hcrt, which D-054 lists as
+> deliberately unmapped and which could not map to a murine atlas in any case,
+> has `population_id: None` and is already outside the 13 — no explicit
+> exclusion is needed.
+>
+> **Predictions 1 and 2 are untouched and still unmeasured.** The primary
+> (similarity against `outcome_majority`, not against the floor) and the
+> secondary (the established leave-one-study-out result must survive) are the
+> ones that carry the experiment, and neither has been looked at.
+
 **My prediction, recorded so it can be wrong: the primary will miss.** I expect
 transcriptomic similarity to be a poor predictor of the *sign* of a systemic
 response. Two populations can be transcriptionally adjacent and physiologically

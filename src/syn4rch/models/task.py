@@ -552,7 +552,15 @@ def extract_features(record) -> Features:
     record carries a polarity with no class.
     """
     cls, polarity, target = perturbation_key(record)
-    sex, diet, _age_group, challenge = condition_key(record)
+    # Read by name, not by unpacking condition_key positionally. This was
+    # `sex, diet, _age_group, challenge = condition_key(record)` until D-060
+    # added a fifth condition dimension, at which point it raised ValueError
+    # and took the whole model layer with it. CONDITION_FEATURE_FIELDS is the
+    # declaration of which conditions are features; this follows it.
+    _condition = dict(zip(CONDITION_FIELDS, condition_key(record)))
+    sex = _condition["sex"]
+    diet = _condition["diet"]
+    challenge = _condition["challenge"]
     return Features(
         population_id=(record.population_id or None),
         population_key=population_key(record),
@@ -1064,7 +1072,7 @@ def build_dataset(
 #:   record and a 0.3.0 record are the same observation. Listing it is what
 #:   lets the conditioning verdict of D-036 be re-measured against the filled
 #:   corpus on one task rather than two.
-_FEATURE_EQUIVALENT_VERSIONS: Tuple[str, ...] = ("0.2.0", "0.1.0")
+_FEATURE_EQUIVALENT_VERSIONS: Tuple[str, ...] = ("0.3.0", "0.2.0", "0.1.0")
 
 
 def _accepted_schema_versions() -> Tuple[str, ...]:

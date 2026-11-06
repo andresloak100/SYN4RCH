@@ -62,6 +62,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from ..qc.keys import (
+    CONDITION_FIELDS,
     condition_specificity,
     lab_key,
     norm,
@@ -112,7 +113,10 @@ KEY_VERSIONS: Tuple[str, ...] = (KEY_VERSION_POOLED, KEY_VERSION_CURRENT)
 
 #: Condition slots a fully specified record fills, from
 #: :func:`syn4rch.qc.keys.condition_key`.
-N_CONDITION_SLOTS = 4
+#: Derived from :data:`syn4rch.qc.keys.CONDITION_FIELDS`, not a literal: it
+#: was `4` until D-060 added a fifth dimension, and a hardcoded count is how a
+#: report comes to print "1/4" for a five-slot key.
+N_CONDITION_SLOTS = len(CONDITION_FIELDS)
 
 #: Every reason a record can be held out of the feasibility matrix, with the
 #: one-line explanation printed in the report. Order is the order checked.
