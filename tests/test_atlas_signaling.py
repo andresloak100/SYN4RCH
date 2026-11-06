@@ -266,6 +266,53 @@ class SignalingTest(unittest.TestCase):
         for oid in sorted(i for i in ids if i):
             self.assertIn(signaling.system_of(oid), signaling.SYSTEM_ORDER, oid)
 
+    def test_the_real_dataset_has_no_unclassified_outcome(self):
+        """The protection the hard assert used to give, as a reported number.
+
+        This replaced an `assert` with a declared `unclassified` bucket plus
+        this list, because OUTCOME_SYSTEM is a presentational layout aid and a
+        missing entry costs an outcome sitting in the wrong place on a page,
+        not a build. The gap is still caught here; it just arrives as a number.
+        """
+        g = signaling.build_graph(REAL_RECORDS, POPS, OUTCOMES)
+        self.assertEqual(g["outcomes_without_a_declared_system"], [])
+
+    def test_an_unmapped_outcome_is_reported_rather_than_fatal(self):
+        """The behaviour change itself. This used to raise AssertionError.
+
+        It fired twice in two days as the vocabulary grew -- on `nrem_sleep`
+        from the sleep split, and in the same shape as `condition_key` going to
+        five slots and taking models/task.py:555 with it. A hardcoded map that
+        must track a growing vocabulary will keep doing that.
+        """
+        with open(REAL_RECORDS, encoding="utf-8") as fh:
+            rows = [json.loads(l) for l in fh if l.strip()]
+        rows[0]["outcome_id"] = "a_readout_the_layout_has_never_heard_of"
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "records.jsonl")
+            with open(path, "w", encoding="utf-8") as fh:
+                for row in rows:
+                    fh.write(json.dumps(row) + "\n")
+            g = signaling.build_graph(path, POPS, OUTCOMES)
+        self.assertIn(
+            "a_readout_the_layout_has_never_heard_of",
+            g["outcomes_without_a_declared_system"],
+        )
+        self.assertTrue(g["edges"], "the graph must still build")
+
+    def test_unclassified_is_a_legal_layout_slot(self):
+        self.assertIn(signaling.UNCLASSIFIED_SYSTEM, signaling.SYSTEM_ORDER)
+        self.assertEqual(signaling.SYSTEM_ORDER[-1], signaling.UNCLASSIFIED_SYSTEM)
+
+    def test_the_whole_sleep_family_shares_one_system(self):
+        """The split must change no edge's classification."""
+        family = [
+            "sleep", "nrem_sleep", "rem_sleep", "wakefulness",
+            "sleep_latency", "sleep_fragmentation",
+        ]
+        systems = {signaling.system_of(o) for o in family}
+        self.assertEqual(systems, {"behaviour"}, systems)
+
     def test_every_mapped_system_is_in_the_layout_order(self):
         for oid, system in signaling.OUTCOME_SYSTEM.items():
             self.assertIn(system, signaling.SYSTEM_ORDER, oid)

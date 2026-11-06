@@ -175,6 +175,17 @@ OUTCOME_SYSTEM = {
     # new outcome fails the suite rather than quietly vanishing from the atlas --
     # which is the guard working, not a bug in the pass.
     "sleep": "behaviour",
+    # The sleep family, all in the same system as the composite id so the split
+    # changes no edge's classification. `sleep` is now the composite
+    # rather than a retired id. `sleep_fragmentation` is arguably a
+    # quality-of-state measure rather than a behaviour, and is kept here
+    # anyway: inventing a system for one id is worse than a slightly loose fit,
+    # and this map is presentational.
+    "nrem_sleep": "behaviour",
+    "rem_sleep": "behaviour",
+    "wakefulness": "behaviour",
+    "sleep_latency": "behaviour",
+    "sleep_fragmentation": "behaviour",
     "gut_motility": "autonomic",
     "bone_density": "body_composition",
     # The second circuit batch brought the first inflammatory readouts: PVH CRH
@@ -185,6 +196,11 @@ OUTCOME_SYSTEM = {
     "inflammatory_markers_other": "endocrine",
     "immune_cell_composition": "endocrine",
 }
+
+#: Where an outcome with no declared system is laid out. Last, because it is a
+#: gap rather than a group: a reader should see it at the bottom of the page and
+#: know the vocabulary has moved ahead of this layout aid.
+UNCLASSIFIED_SYSTEM = "unclassified"
 
 #: Order the systems are laid out in. Also presentational.
 SYSTEM_ORDER = [
@@ -197,6 +213,7 @@ SYSTEM_ORDER = [
     "endocrine",
     "reproduction",
     "behaviour",
+    UNCLASSIFIED_SYSTEM,
 ]
 
 SYSTEM_LABEL = {
@@ -432,9 +449,23 @@ def build_graph(records_path: str, populations_path: str, outcomes_path: str) ->
         if rid and len(e["record_ids"]) < RECORD_IDS_CAP:
             e["record_ids"].append(rid)
 
-    # Every outcome that reached the graph must have a system.
-    missing = sorted(o for o in seen_outcomes if system_of(o) is None)
-    assert not missing, "outcome(s) with no system in OUTCOME_SYSTEM: %s" % ", ".join(missing)
+    # Outcomes that reached the graph with no declared system. This was a hard
+    # `assert` in an earlier revision, and the assert was disproportionate: OUTCOME_SYSTEM
+    # is documented three screens up as "presentational grouping ONLY ... a
+    # layout aid for the viewer and nothing else", so the cost of a missing
+    # entry is an outcome sitting in the wrong place on a page, and the cost of
+    # the assert was the whole build failing.
+    #
+    # It fired twice in two days as the vocabulary grew -- on `nrem_sleep` from
+    # a sleep-split outcome id, and the same shape as `condition_key` going to five
+    # slots and taking `models/task.py:555` with it. A hardcoded map that must
+    # track a growing vocabulary will keep doing that, so the gap is now
+    # reported rather than fatal: the ids land in UNCLASSIFIED_SYSTEM and are
+    # listed in the graph, which is this project's usual move for an unmappable
+    # value (D-054 lists readouts it cannot map; W017 counts unevidenced
+    # conditions). A test still asserts the real dataset's list is empty, so a
+    # gap is caught -- it just arrives as a reported number instead of a crash.
+    unclassified = sorted(o for o in seen_outcomes if system_of(o) is None)
 
     # Populations: every vocabulary population is listed so the viewer can say
     # "no curated record yet" from this file rather than from nothing. The
@@ -463,7 +494,13 @@ def build_graph(records_path: str, populations_path: str, outcomes_path: str) ->
             "label": v.get("label") or oid,
             "tier": v.get("tier"),
             "modality": v.get("modality"),
-            "system": system_of(oid),
+            # The fallback is applied HERE and not in system_of, which keeps
+            # its truthful contract of returning None for an id it does not
+            # place. Reporting the gap without also placing the ids left
+            # `system: None` to reach SYSTEM_ORDER.index() below and raise
+            # ValueError -- the gap was reported and the build still died,
+            # which is the bug the replaced assert was supposed to stop being.
+            "system": system_of(oid) or UNCLASSIFIED_SYSTEM,
             "n_records": out_acc[oid]["records"],
             "n_studies": len(out_acc[oid]["studies"]),
             "n_records_excluded": out_acc[oid]["excluded"],
@@ -566,6 +603,14 @@ def build_graph(records_path: str, populations_path: str, outcomes_path: str) ->
                            "'increase' and 'decrease', so the axis is always "
                            "shown as a phrase (axis_phrase) and never as the "
                            "bare value."),
+        "outcomes_without_a_declared_system": unclassified,
+        "outcomes_without_a_declared_system_note": (
+            "Outcome ids present in the dataset that OUTCOME_SYSTEM does not "
+            "place. They are laid out under '%s' and are otherwise complete: "
+            "the grouping is presentational and nothing about an edge depends "
+            "on it. A non-empty list means the outcome vocabulary has moved "
+            "ahead of this layout aid." % UNCLASSIFIED_SYSTEM
+        ),
         "directions_seen": dict(sorted(dir_seen.items())),
         "consensus_rule": ("the modal direction; null when two or more "
                            "directions tie for the most records"),
