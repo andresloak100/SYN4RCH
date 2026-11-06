@@ -3975,3 +3975,78 @@ alongside its own.
 
 The mapping of D-065 stands and remains Tier B, never a training target. Nothing
 here is evidence that any intervention does anything.
+
+## D-069 - The re-run trigger, declared while no EEG record exists and the answer cannot be known
+
+**The user has approved the EEG curation pass, conditional on the matcher fixes
+landing.** That pass is projected to add 150–170 records across `lha_orexin`,
+`pvh_crh`, `lha_mch`, `tmn_histamine` and `pvh_oxt` — the five populations whose
+thinness made D-068's primary unevaluable.
+
+D-068 said the experiment re-runs "when the pool can support a clustered
+interval" and **did not define what that means.** That is an undefined threshold
+that would otherwise be judged after the records exist, by someone who can see
+whether the experiment would pass — the exact failure D-048, D-050 and D-056 were
+each written about. So it is defined here, now, while the pass has produced
+nothing and the answer is unknowable. A second session made this argument about
+the overlap rule in D-066 and it was right: a decision taken while it provably
+cannot affect the result is the cheapest this project can buy, and it is
+unavailable afterwards at any price.
+
+### The trigger
+
+The similarity experiment re-runs **once**, under a new number, only when all
+three hold on the circuit subset:
+
+1. **At least 8 populations rankable** under D-067's tie guard — nearest
+   neighbour stable in ≥95% of 200 gene-resampled replicates, fold-wise centred.
+2. **No single population holds more than 50% of ranked rows.** D-068's deeper
+   defect was not the count but the concentration: `arc_agrp` carried 123 of 213
+   records and had a coin-flip neighbour, so the primary was close to a test of
+   one pair whatever the statistics said.
+3. **At least 5 rankable populations hold ≥5 records each**, so the clustered
+   interval rests on several populations that can each move it rather than on
+   one that cannot.
+
+Checked on the pool and the feature only. No delta is computed until all three
+pass.
+
+### What a near-miss means, stated before one can happen
+
+**A near-miss is not grounds for relaxing any of the three.** If the pass
+delivers 7 rankable populations, or 8 with one holding 55% of rows, the finding
+is that the corpus still cannot support the experiment — reported in those
+words, with the numbers, as D-068 was. Loosening a threshold to admit a pool
+that just failed it is the goalpost move, and it is more tempting after a
+multi-day curation effort than it was before one, which is precisely why the
+threshold is fixed while nobody has spent that effort yet.
+
+Everything D-066 and D-067 fixed carries over unchanged: the 2000-gene set,
+gene-centred cosine, `k = 1`, the exploratory `k = 3` that cannot touch the
+primary, tier A admission, overlap disqualification, the tie guard and all logged
+diagnostics. A change to any of them makes it a different experiment under a
+different number, not a re-run of this one.
+
+### A leakage control the approval creates
+
+The curation that follows is **sampling, not labelling** — choosing which papers
+to read is not choosing what they say, and the records remain traceable to
+verbatim quotes under the existing discipline. But a session now knows which
+populations need records for the experiment to become evaluable, and knows the
+similarity structure, because I sent them the nearest-neighbour table.
+
+So: **curation for this pass must not consult the similarity matrix, the
+nearest-neighbour table, or the stability figures.** Direction labels come from
+the passage and nothing else. The populations to target are chosen by record
+count, which is public and has no bearing on what any record says; which
+direction a record reports must never be informed by what the feature expects.
+Recorded because the opportunity for this particular leak did not exist before
+today, and the person best placed to avoid it is the one who can no longer
+un-know the table.
+
+### What this does not promise
+
+Nothing here predicts the re-run will pass, and D-059's expectation that
+similarity fails to transfer the sign of an effect stands unmeasured. The three
+conditions make the question *askable*; they do not make the answer likely
+either way. D-065's mapping remains Tier B and never a training target.
