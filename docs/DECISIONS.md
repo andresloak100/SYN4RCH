@@ -2685,3 +2685,164 @@ computational hypothesis generator; if it fails that is a measurement of how far
 transcriptomic identity carries, and either way it is reported separately from
 the demonstrated relationships in the corpus.
 
+
+---
+
+## D-060 - The genotype dimension: a fifth condition, not a population suffix, and the two risks were the wrong way round
+
+**A measured design decision, not a pre-registration.** The quantity that
+decides between the options — what each one costs the established result — was
+*measured* for both before choosing, which is the standard D-050 set: "a key
+change that moved the baseline would have been goalpost-moving however well
+argued, and the way to tell the difference is to measure both and publish the
+pair." Nothing is predicted here. D-052 declined this fix because D-048 was open;
+D-048 closed at D-055, so the reason no longer binds.
+
+### What the corpus actually contains
+
+Seventy-five of 75 papers read for genetic manipulations beyond the Cre driver
+and the actuator, every entry carrying a verbatim quote and a locator. Then every
+claimed *background* genotype re-checked by an independent skeptic instructed to
+refute it.
+
+| | n |
+|---|---|
+| manipulations found, all roles | 665 |
+| claimed as background (not the recorded perturbation) | 26 |
+| **CONFIRMED on adversarial re-check** | **12** |
+| refuted | 13 |
+| uncertain | 1 |
+| **quote failures** | **0** |
+
+Zero quote failures: every surveyed quote was verbatim at the passage its locator
+named. The survey's *citation* was perfect and its *judgement* over-reported
+background by 50%. Three of the thirteen refutations, to show they are
+substantive rather than pedantic:
+
+* `Sh2b1` — the gene that paper is *testing*. Its "global knockout" appears
+  experimentally in exactly one place, as an **antibody negative control**; the
+  quoted sentence itself contains the words "(negative control)".
+* `Prkce` — likewise the tested gene. The claimed "PKCεfl/Δ background" is the
+  allelic configuration *of the perturbation*, plus a germline-deletion breeding
+  artefact. The skeptic also found that paper's Methods and Results contradicting
+  each other on the experimental genotype.
+* `Lepr` (db/db) — a separately purchased cohort carrying no Cre and no Sirt1
+  allele, used for one descriptive NAD+ readout. "Recording it as background
+  would tell an auditor that some Sirt1-overexpression arm was run on a
+  leptin-receptor-null background, which the paper never did."
+
+**And the survey asked the question at the wrong granularity, which is the
+finding that settles the design.** `is_the_recorded_perturbation` was asked once
+per *paper*. Herzog `doi:10.1016/j.molmet.2022.101455`, 23 records, splits exactly
+along it:
+
+| records | method | class | `target_raw` | `population_raw` |
+|---|---|---|---|---|
+| 7 | `conditional_knockout` | molecular | **`Npy`** | "AGRP neurons" |
+| 16 | `chemogenetic` | circuit_activity | `null` | **"Npy-depleted AGRP neurons"** / "AGRP neurons that lack Npy" |
+
+Within one study the same allele is the recorded perturbation for 7 records and
+unrecorded background for 16. Having nowhere to put the background, the curator
+put it in `population_raw` as free text — which `population_key` then discards,
+which is precisely how D-052's contradiction was manufactured. So the dimension
+must be **per record**, and it must distinguish "perturbation on gene X" from
+"background carrying gene X". The establishable set is **71 records in 8
+studies**, not the 157 in 16 the raw survey implied.
+
+### The decision
+
+A **fifth condition dimension**, `background_genotype`, a controlled scalar
+holding `gene_id:effect:scope` segments joined by `+` and sorted, resolved
+against `data/vocab/targets.json` — whose `id_policy` already demands the
+lowercased official MGI symbol ("trp53 rather than p53, rptor rather than raptor,
+kiss1r rather than gpr54") and already resolves 18 of the 48 surveyed genes. The
+existing free-text `genetic_background` field becomes the declared RAW half and
+the new field the RESOLVED half, the pattern this schema already uses for
+`population_raw`/`population_id` and `target_raw`/`target_id`. No existing value
+is rewritten.
+
+It enters `CONDITION_FIELDS` and therefore `claim_key` and `condition_key`. It
+does **not** enter `RECORD_ID_FIELDS` and does **not** enter
+`CONDITION_FEATURE_FIELDS`. That follows the `age_group` precedent exactly:
+`age_group` is in the condition key and in `condition_specificity` (4 slots) and
+is not a model feature (3 slots), and `task.py` already documents that both
+counts are printed "rather than one being quietly substituted for the other".
+Genotype makes those 5 and 3. Comparability and prediction are different
+questions — D-036's finding — and this dimension is on the comparability side by
+construction.
+
+Absence is fail-closed per D-044, in five states. `None` (the curator has not
+addressed it; all 508 records start here), `not_reported` (the paper was read and
+states none), `wild_type` (a *positive, quoted* establishment that the animals
+carry nothing beyond the recorded perturbation), `mixed` (a positive value for a
+record whose own quote reports two genotypes jointly — Brüning's case, which is a
+fact about the record rather than an absence), and one or more segments.
+`condition_key` pools `None` with `not_reported` into `unknown`, inheriting D-023
+with no code change, and does **not** pool `wild_type` with `unknown`. An
+unstated background and an established wild-type background therefore never share
+a cell. `strain: C57BL/6J`, populated on 8 records, is **not** sufficient to
+write `wild_type`: a strain says what the animals are, not that nothing further
+was done to them.
+
+### The two risks were the wrong way round, and both options were measured
+
+| | (a) condition dimension, unhashed | (b) `population_key` suffix |
+|---|---|---|
+| `record_id`s re-identified | **0** | 0 |
+| model primary cells | 305 → **305** | 305 → 314 |
+| cell strings whose identity changes | **none** | **all 305** |
+| circuit records in a splitting cell | **0** | **77** |
+| the 154-row established slice | **untouched** | perturbed |
+
+Option (b) — the cheap-looking one, and the one the task framed as safe because
+it re-identifies nothing — is safe for `record_id` and **unsafe for the
+pre-registered baseline**, moving 77 of 314 circuit records in exactly the slice
+the established +0.208 is measured on. Option (a) threatens `record_id` only if
+it is hashed, which this design does not do. The panel scored (b) last on every
+lens, 14 of 30.
+
+### Measured consequences of the decision, on the 71 establishable records
+
+| | before | after |
+|---|---|---|
+| claim cells | 406 | **413** |
+| model primary cells | 305 | **305** |
+| singleton model cells | 223 | **223** |
+| cross-study conflicts | 8 | **4** |
+| `QC_CONFLICT_OPPOSED` | **1** | **0** |
+
+**D-052's opposed pair dissolves.** It was exactly
+`['0c27e14215860fb0', 'ad4a6ccfc070e39c']` — Herzog decrease against Brüning
+increase. They separate because Herzog deleted `Npy` only in AgRP neurons
+(`cell_type_restricted`) while Brüning used a whole-animal knockout (`global`),
+and those are genuinely different experiments. Three of the seven effect-vs-null
+conflicts go with it. Zero model cells split, so the direction result cannot
+move — that is a proof from the cell key, not a prediction.
+
+### Two corrections to the process that produced this
+
+**The judges' labels could not be trusted, and the tally they implied was
+inverted.** Three judges scored four proposals on separate lenses. All three
+described the proposals correctly and two of three **swapped the numbers of
+proposals 3 and 4**, so aggregating on the number gave 25/30 to the wrong design.
+Re-aggregating on the descriptions gives the arm-scoped design 25/30 with two
+judge wins, and the scalar variant 18. Had the numeric tally been trusted, the
+wrong design would have been built. Corroboration that the arm-scoped winner is
+right came from the verification, independently: **all 12 confirmed background
+genotypes returned `applies_to_all_animals: false`** — only some arms — so arm
+scoping is what the data demands rather than a refinement.
+
+**The winning design's central engineering claim was false, and checking it took
+one command.** It claimed the whole change was "four tuple appends" with
+`models/task.py` untouched. But `src/syn4rch/models/task.py:555` reads
+
+```python
+sex, diet, _age_group, challenge = condition_key(record)
+```
+
+a fixed four-tuple unpack. A fifth condition field raises `ValueError: too many
+values to unpack` there and takes the entire model layer with it. The real change
+is five edits, the fifth being to read those three features by name rather than
+positionally. Every number in the table above was measured with that fix applied;
+without it nothing runs at all.
+
