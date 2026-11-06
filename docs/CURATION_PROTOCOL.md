@@ -182,6 +182,20 @@ readings are forbidden outright:
   that `outcome_id` does not already separate, while raising the apparent
   coverage. See D-041.
 
+**`fasted` or `refed`: the state at the moment of measurement decides** (D-053).
+An animal whose *food intake* is being measured has food, so a deprive-return-measure
+test is `refed` however the paper words it — "food intake after a fast", "feeding
+after an overnight fast" and "fasted-induced hyperphagia" are all `refed`.
+`fasted` is for a measurement taken while the animal is still without food:
+fasting glucose, fasting-induced lipolysis, energy expenditure in the fasted
+state. The corpus was inconsistent about this before the convention existed, and
+six records still need correcting; curate against the rule above, not against
+them.
+
+Watch for a fasted *comparator*. "Stimulation led to voracious food intake,
+comparable to fasted mice" measures fed animals and names fasted ones as the
+yardstick — the condition there is `null`, not `fasted`.
+
 What `challenge` is *for* is the measurement whose assay does not fix its state:
 food intake, body weight, energy expenditure, blood glucose. "Food intake in the
 fed state" and "food intake after a fast" are two different experiments, and

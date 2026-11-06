@@ -1917,3 +1917,62 @@ naming two states triggers
 `refused_quote_names_more_than_one_state` rather than picking one (D-044). The
 fix is a human reading those two records, and the refusal is what makes the
 small set findable.
+
+---
+
+## D-053 - A fast-refeed intake test is `refed`, and six records disagree
+
+**The convention, decided here because the corpus has been inconsistent about it
+since the condition fill.** `challenge` is the acute physiological state **at the
+moment of measurement** (SCHEMA.md 3.3b). So:
+
+* `fasted` — the measurement was taken while the animal was still without food:
+  fasting glucose, fasting-induced lipolysis, energy expenditure in the fasted
+  state, plasma hormones in a fasted animal.
+* `refed` — food was returned and the measurement is of what happened next. **A
+  food-intake measurement after a fast is this**, whatever the paper calls it:
+  the animal is eating, and "the state at the moment of measurement" is
+  refeeding.
+
+**Why it needed deciding.** A curator asked, and the corpus answered both ways.
+Eleven food-intake records carry `fasted` or `refed`, and the same design —
+deprive, return food, measure intake — appears under both labels:
+
+| labelled `fasted` | labelled `refed` |
+|---|---|
+| "food intake following an overnight fast" | "food intake upon refeeding" |
+| "food intake after a fast" | "subsequent food intake ... in a refeeding paradigm" |
+| "feeding after a fast" | "food intake", detail "concurrent with re-feeding after a 24 h fast" |
+| "fasted-induced hyperphagia" | |
+| "Stimulation of Arc POMC neurons in fasted mice ... reduction in food intake" | |
+| "activation of SF1 neurons in fasted mice suppressed feeding" | |
+
+Those last two read as "measured in a fasted animal", but an animal whose food
+intake is being measured has food. They are the same fast-refeed test as the
+right-hand column.
+
+**The cost of leaving it.** This is the condition dimension manufacturing
+non-comparability out of vocabulary rather than biology: a fast-refeed intake
+test from one laboratory will not match the same test from another because one
+curator wrote `fasted` and the other `refed`. That is the exact failure the
+dimension was added to prevent (D-023), arriving by the back door.
+
+**One probable misread found in the same pass**, recorded rather than quietly
+fixed: `c1b98d981dba36bb` carries `challenge: fasted` from "AgRP chemogenetic
+stimulation led to voracious total food intake, **comparable to fasted mice**".
+"Fasted mice" there is the comparator the effect is measured against, not the
+state of the animals measured. The condition should probably be null.
+
+**Deferred, and why.** Six records need `fasted` changed to `refed` and one
+needs a condition removed. `challenge` is a `record_id` component, so this is a
+re-identification, and `fill_conditions` fills what is missing — it has no
+corrector, by design, because overwriting a curated value is the thing it
+refuses to do (D-039). Building one is the follow-up.
+
+It is deliberately **not** done during the D-048 experiment. It does not touch
+that measurement — `cell_reach` keys on population, perturbation and outcome and
+carries no condition slot — but it does move the claim-key conflict and
+replication counts, and changing those while a pre-registered pass is half
+curated is how a result becomes unfalsifiable. The convention is fixed now so
+that the second thirty papers are curated against it; the existing six are
+corrected afterwards.
