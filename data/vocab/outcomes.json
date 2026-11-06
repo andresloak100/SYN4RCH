@@ -1,7 +1,7 @@
 {
   "_meta": {
     "vocab": "outcomes",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Tier A physiological and Tier B aging/healthspan outcomes.",
     "higher_is_policy": [
       "higher_is encodes ONLY whether a higher measured value is unambiguously better or worse for the organism, independent of context, genotype, diet, ambient temperature and time of day.",
@@ -18,8 +18,62 @@
     ],
     "changelog": [
       "0.2.0: renamed `cognitive_decline` to `cognitive_performance` and moved its two signed synonyms to inverted_synonyms, adding `escape latency`. The old id named a quantity and its negation at once, which made `direction` ambiguous before a curator even read the paper. No curated record used the id, so the rename costs nothing. See docs/DECISIONS.md D-029.",
-      "0.3.0: annotated 4 genuinely inverted synonyms -- `fat oxidation` and `lipid oxidation` under `rer`, `wakefulness` and `arousal` under `sleep` -- and moved `insomnia` and `sleep fragmentation` to `signed_synonyms` where they belong. Found when a curator hit the RER / fat oxidation trap in doi:10.1038/s41467-018-08239-x. Annotation only: no code reads these lists, no id changed, and no stored direction was rewritten. See docs/DECISIONS.md D-049."
-    ]
+      "0.3.0: annotated 4 genuinely inverted synonyms -- `fat oxidation` and `lipid oxidation` under `rer`, `wakefulness` and `arousal` under `sleep` -- and moved `insomnia` and `sleep fragmentation` to `signed_synonyms` where they belong. Found when a curator hit the RER / fat oxidation trap in doi:10.1038/s41467-018-08239-x. Annotation only: no code reads these lists, no id changed, and no stored direction was rewritten. See docs/DECISIONS.md D-049.",
+      "0.4.0: stated what a Tier A outcome IS (scope_policy) and what it is not (out_of_scope_readouts), and removed `EEG delta power` from `sleep`. Prompted by a reader asking whether EEG helps when it records the cortex rather than the hypothalamus -- a boundary the project had never written down, stated only as one clause of D-054. The rule is state-of-the-organism versus activity-of-neurons, not central versus peripheral, because `inflammatory_markers_other` deliberately admits central glial markers as a declared proxy for systemic inflammation and a central/peripheral rule would have retroactively invalidated it. One deletion, no id changed, no stored direction rewritten. See docs/DECISIONS.md D-063."
+    ],
+    "scope_policy": [
+      "A Tier A outcome is a STATE OF THE ORGANISM, or a tissue measurement the literature uses as a declared proxy for one. It is not the ACTIVITY OF NEURONS (D-063).",
+      "SCHEMA.md 1 makes the unit (population) x (perturbation) x (physiological readout). Neural activity sits on the perturbation side of that product: it is how a manipulation is verified to have worked, not what the manipulation did to the animal. Recording it as an outcome would put the same quantity on both sides of the record.",
+      "The instrument is not the test. `sleep` is measured with EEG/EMG and is in scope, because what it reports is minutes per hour of a whole-animal state; the electrodes are no more the readout than a calorimeter is.",
+      "A central measurement CAN be in scope when the field reports it as the systemic readout, and `inflammatory_markers_other` is the standing example: it admits microglial activation, Iba1, GFAP and gliosis, and its notes say why. The requirement is that the proxy be stated, not that the tissue be peripheral.",
+      "out_of_scope_readouts lists what this rule excludes. The list is not exhaustive and is not a licence: a readout absent from it is not thereby in scope. Extending the vocabulary is a decision entry, never a curator's judgement mid-pass (D-054)."
+    ],
+    "out_of_scope_readouts": {
+      "neural_activity": [
+        "EEG delta power",
+        "EEG theta power",
+        "EEG gamma power",
+        "EEG spectral power",
+        "power spectral density",
+        "sleep spindles",
+        "slow oscillations",
+        "cortical oscillations",
+        "local field potential",
+        "LFP",
+        "firing rate",
+        "spike rate",
+        "unit activity",
+        "multiunit activity",
+        "calcium imaging",
+        "calcium transients",
+        "GCaMP fluorescence",
+        "c-Fos",
+        "cFos",
+        "Fos expression",
+        "patch clamp",
+        "membrane potential",
+        "EPSC",
+        "IPSC",
+        "synaptic current",
+        "coherence",
+        "phase-amplitude coupling"
+      ],
+      "behavioural_affective": [
+        "anxiety",
+        "anxiety-like behaviour",
+        "impulsivity",
+        "novelty seeking",
+        "alcohol intake",
+        "flavour preference",
+        "operant lever pressing",
+        "open field centre time",
+        "elevated plus maze",
+        "social interaction time",
+        "progressive ratio break point",
+        "conditioned place preference"
+      ],
+      "_note": "neural_activity is excluded by the scope policy above. behavioural_affective was already excluded by D-054, which declined these readouts during the circuit pass because Tier A is systemic physiology; listing them here makes that refusal checkable instead of remembered."
+    }
   },
   "entries": {
     "blood_glucose": {
@@ -831,7 +885,6 @@
         "wakefulness",
         "sleep latency",
         "sleep fragmentation",
-        "EEG delta power",
         "arousal",
         "sleep-wake cycle",
         "total sleep time",
@@ -845,7 +898,7 @@
         "sleep latency",
         "wakefulness"
       ],
-      "notes": "An arousal is a count of awakenings and `wakefulness` is sleep's complement: both name a different quantity that moves opposite to sleep, so both are inverted (D-049). `insomnia` and `sleep fragmentation` name a state and carry their own direction, so they are signed, not inverted. `sleep latency` was already annotated inverted.",
+      "notes": "An arousal is a count of awakenings and `wakefulness` is sleep's complement: both name a different quantity that moves opposite to sleep, so both are inverted (D-049). `insomnia` and `sleep fragmentation` name a state and carry their own direction, so they are signed, not inverted. `sleep latency` was already annotated inverted. `EEG delta power` was a synonym here until 0.4.0 and is now out of scope entirely (D-063): it is a measure of cortical activity, not of how much the animal slept, and curating it against this id put a spectral quantity in the same claim cell as a sleep duration.",
       "signed_synonyms": [
         "insomnia",
         "sleep fragmentation"

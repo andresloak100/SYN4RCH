@@ -3227,3 +3227,112 @@ dataset.
   entry.
 * Nothing here touches the schema, the keys, the vocabularies or the dataset.
 
+
+---
+
+## D-063 - What a Tier A readout is: a state of the organism, not the activity of neurons
+
+**Prompted by a reader asking the right question.** Told that 91 uncurated EEG
+papers in the retrieved corpus were the largest available seam, they asked
+whether EEG scans help *"as they are on the cortex"*. The project had never
+written down an answer. The rule existed as a single clause of D-054 — "Tier A
+is systemic physiology" — invoked to decline anxiety, impulsivity and operant
+lever-pressing, and nowhere else.
+
+**The boundary matters because this is a hypothalamic dataset measured in the
+cortex.** Stimulate AgRP neurons, record EEG, and the electrode is reporting
+cortical activity, not what the animal's body did. Whether that is an outcome at
+all decides how much of the EEG seam is admissible, and the answer turned out to
+be about half of it.
+
+### The rule I first proposed was wrong
+
+I had been saying "Tier A readouts measure the body, so cortical measures are
+out". Reading the vocabulary properly kills that. `inflammatory_markers_other`
+deliberately admits `microglial activation`, `Iba1`, `GFAP`, `gliosis` and
+`neuroinflammation`, and its notes say why: the hypothalamic-inflammation
+literature reports them *as* the systemic-inflammation readout. A
+central-versus-peripheral rule would have retroactively invalidated an entry
+that was argued for, which is the kind of tidy rule that is worse than no rule.
+
+### The rule, stated against the schema rather than against taste
+
+**A Tier A outcome is a state of the organism, or a tissue measurement the
+literature uses as a declared proxy for one. It is not the activity of neurons.**
+
+The basis is the unit of record. SCHEMA.md 1 makes it
+`(population) x (perturbation) x (physiological readout)`. Neural activity sits
+on the **perturbation** side of that product: it is how a manipulation is
+verified to have worked, not what the manipulation did to the animal. Curating
+it as an outcome would put the same quantity on both sides of one record.
+
+That line sorts every case cleanly:
+
+| readout | verdict | why |
+|---|---|---|
+| `sleep` (min/h of NREM, REM, wake) | **in** | a whole-animal state; EEG is the instrument, no more the readout than a calorimeter is |
+| glial markers under `inflammatory_markers_other` | **in** | a tissue state the field reports as the systemic one, with the proxy stated |
+| EEG delta/theta power, spindles, oscillations | **out** | cortical activity |
+| c-Fos, firing rate, LFP, calcium imaging, patch clamp | **out** | neural activity, and usually the manipulation's own verification |
+
+**The instrument is not the test.** This is the part the question exposed: all 36
+Tier A outcomes measure the body, and two of them — `sympathetic_nerve_activity`
+and `parasympathetic_tone` — *are* electrophysiology. Electrodes were never
+disqualifying. Peripheral efferent outflow is the body's autonomic command
+signal; cortical voltage is another part of the brain.
+
+### What changed, which is one deletion
+
+`EEG delta power` comes out of `sleep.synonyms`. It invited a cortical spectral
+measure to be curated against an id whose units are `min/h` and `% of time` —
+putting a spectral quantity in the same claim cell as a sleep duration, which is
+worse than the NREM/REM pooling D-065 addresses, because those at least measure
+the same kind of thing.
+
+`data/vocab/outcomes.json` goes to 0.4.0 with two new `_meta` blocks:
+`scope_policy`, the rule above, and `out_of_scope_readouts`, 39 declared terms in
+two categories — `neural_activity`, excluded by this entry, and
+`behavioural_affective`, which D-054 had already declined and which was until now
+only remembered.
+
+`tests/test_vocab_scope.py` asserts no entry claims any of those 39 as a synonym
+of **any** kind, because a readout smuggled in as an `inverted_synonym` would be
+curated just as readily as a plain one. It also pins the glial exception *and its
+justifying note*, so a later scope sweep cannot quietly delete the documented
+case and leave a tidier rule behind.
+
+### Preventive, not corrective
+
+**No curated record violates this.** Zero of 508 records have an `outcome_raw`
+that is an out-of-scope readout, and zero even contain `delta power`,
+`spectral`, `firing rate`, `c-Fos`, `LFP` or `calcium`. Nothing was rewritten and
+no direction changed — the same shape as D-049, where thirteen polarity traps
+were annotated and all eight records at risk turned out already correct. Saying
+so matters: a scope pass that silently dropped records would be
+indistinguishable in the diff from one that corrupted them.
+
+### What it costs, measured
+
+Of the 638 proposed extraction units in the EEG seam that map to `sleep`:
+
+| | units | |
+|---|---|---|
+| state amounts only | **334** (52%) | admissible |
+| cortical/spectral only | 31 (5%) | excluded by this entry |
+| both in one passage | 151 (24%) | a curator must separate the sentence |
+| neither | 122 (19%) | methods and introduction passages |
+
+So the rule removes 5% of that seam outright and complicates another quarter.
+The seam remains the best thing available and is about half the size I first
+told the reader it was, which is a direct consequence of their question.
+
+### What this entry does not do
+
+* It does not extend the vocabulary. The `sleep` id is still one id; splitting it
+  into state amounts is D-065, which this entry is the premise for.
+* It does not settle the eight readouts D-054 declined for want of an id. Those
+  are a different question — no home rather than out of scope — and D-054's rule
+  stands: adding ids is a decision entry, never a curator's judgement mid-pass.
+* `out_of_scope_readouts` is not a licence. A readout absent from the list is not
+  thereby in scope, and the policy says so in those words.
+
