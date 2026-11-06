@@ -3746,6 +3746,19 @@ is reported in the same table, not separately. Should it pass while those rows
 miss, the pass rests on populations contributing one to three records each and
 must be reported in those words.
 
+### The rule is pre-registered, not the list
+
+The figures above are computed against the mapping committed at `91b3a28`, and
+an adversarial pass over the eleven tier A claims was in flight when this was
+written. If it refutes one, that population leaves the primary pool **by the
+rule already stated here**, not by a new decision — which is the reason this
+entry fixes "tier A is admitted" rather than naming nine populations. The pool
+table is therefore a measurement as of that commit, and the run must print its
+own pool alongside the result so the two can be compared.
+
+A refutation moving a population out is not an amendment and needs none. A
+change to *which tiers are admitted* would be, and is foreclosed.
+
 ### Unchanged
 
 Predictions 1 and 2 of D-059 stand as written and are still unmeasured. The
