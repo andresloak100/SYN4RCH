@@ -2703,6 +2703,52 @@ thousands of genes are the only version of this that can carry signal.
 > secondary (the established leave-one-study-out result must survive) are the
 > ones that carry the experiment, and neither has been looked at.
 
+> **Second amendment, also before the primary is measured: two per-row
+> diagnostics are now REQUIRED, because without them a miss is uninterpretable.**
+> Raised by a second session, and it is right. The run must log, for every test
+> row, (a) how many mapped neighbour populations were available to it and
+> (b) the identity and cosine similarity of the nearest neighbour that actually
+> supplied its prediction. Neither is recoverable after the fact.
+>
+> The reason is the shape of the corpus, measured now rather than discovered
+> later. Of the 314 circuit records, 245 carry a resolved `population_id`, and
+> they are extremely unevenly weighted:
+>
+> | population | circuit records |
+> |---|---|
+> | `arc_agrp` | 123 |
+> | `arc_pomc` | 52 |
+> | `vmh_sf1` | 22 |
+> | `lha_orexin` | 16 |
+> | `pvh_trh` | 8 |
+> | `pvh_crh` | 7 |
+> | `pvh_sim1` | 4 |
+> | `lha_vglut2`, `scn_vip`, `lha_mch` | 3 each |
+> | `arc_kisspeptin` | 2 |
+> | `arc_ghrh`, `tmn_histamine` | 1 each |
+>
+> **175 of those 245 — 71% — are `arc_agrp` plus `arc_pomc`**, and 6 of the 13
+> ids contribute three circuit records or fewer. Three of the 13 map weakly
+> (`vmh_sf1` at a 0.34 Nr5a1 peak, and it is the third-largest circuit
+> population; `pvh_sim1` at 0.76; `lha_vglut2`, whose `Slc17a6` is
+> pan-glutamatergic so a top-cluster question is ill-posed). So about 10
+> populations map cleanly, and under leave-one-population-out a held-out
+> population has **at most 9 neighbours**, several of them contributing one to
+> three records.
+>
+> Without the two diagnostics, a miss cannot be separated from "there were never
+> enough mapped populations to tell" — and that ambiguity would make the whole
+> experiment unfalsifiable in the direction it is most likely to go.
+>
+> **It also sharpens the prediction, in a way that makes it easier to refute.**
+> For a held-out `arc_agrp` the nearest mapped neighbour is almost certainly
+> `arc_pomc`: same nucleus, large shared transcriptome, and opposite effects on
+> food intake. That is the exact pair this entry already names as the reason
+> expression similarity should fail to transfer a sign. So the primary is, in
+> large part, a test of that single pair, and the per-row log will show whether
+> the misses are concentrated there. If the AgRP/POMC rows miss while the rest
+> hold, the finding is specific and mechanistic rather than a flat negative.
+
 **My prediction, recorded so it can be wrong: the primary will miss.** I expect
 transcriptomic similarity to be a poor predictor of the *sign* of a systemic
 response. Two populations can be transcriptionally adjacent and physiologically
