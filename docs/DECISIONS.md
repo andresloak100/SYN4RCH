@@ -2111,3 +2111,123 @@ not reached after the stopping point — it was reached at it. And the one that
 would have been damning, "the secondary reached while the primary is not", is the
 mirror image of what happened: the metric that would have said the signal was a
 116-row artefact is the one that came in strong.
+
+---
+
+## D-056 - Pre-registration: does the established direction result generalise, and a lab identity that has never worked
+
+**Written before any of it is measured**, and committed before the code that
+measures it, for the same reason D-048 was: D-055 ends by saying the result
+"rests on a narrow base and the next finding to chase is whether it
+generalises", and a generalisation test designed after seeing its own answer is
+not a test.
+
+**This does not reopen D-048.** That pre-registration named leave-one-study-out
+and is closed; its primary was met and stays reported as met. What follows is a
+*harder* question asked of the same result, and nothing here can retroactively
+change whether D-048's target was reached.
+
+### The defect found while setting the test up
+
+`lab_key` is `(last_author, last_author_affiliation)`. Affiliation is free text
+harvested from PubMed, and the same laboratory writes it differently in every
+paper. The corpus has **75 studies and 75 "labs"**, so leave-one-lab-out has
+been numerically identical to leave-one-study-out in every report this project
+has published — and SCHEMA.md 5 item 2, which names lab identity "the largest
+leakage risk in this corpus", has therefore never been controlled for.
+
+Four last authors contributed more than one study. All four are unmistakably one
+laboratory each:
+
+| last author | studies | what splits them |
+|---|---|---|
+| Brüning JC. | 5 | "max planck institute for metabolism research, department of neuronal control of metabolism, gleueler str. 50" / "...gleueler strasse 50" / department and institute in the other order / email appended / "neuronal control of metabolism group" |
+| Herzog H. | 2 | "neuroscience division, garvan institute of medical research, st vincent's hospital, darlinghurst, nsw 2010" vs "garvan institute of medical research, nsw" |
+| Sweeney P. | 2 | field order, and one carries `sweenp@illinois.edu` |
+| Withers DJ. | 2 | "mrc london institute of medical sciences; institute of clinical sciences, imperial college london" vs "institute of clinical sciences, imperial college" |
+
+Every difference is typographic. **121 of the 314 circuit records — 39% — belong
+to those four laboratories**, which is precisely the fraction on which the
+leakage control was supposed to bite.
+
+### The correction: a laboratory is a person
+
+`lab_key` becomes the normalised `last_author` alone. The affiliation adds no
+discrimination that can be trusted and in this corpus it only ever splits a lab
+into pieces, never joins two.
+
+The failure mode of the looser key is a **homonym**: two unrelated researchers
+whose normalised surname and initials coincide would merge into one lab, which
+costs test rows and manufactures a replication. That is made detectable rather
+than assumed away — a new warning fires when one last author appears under
+affiliations sharing no substantive token. All four labs above share a strong
+token (`max planck institute for metabolism research`, `garvan institute of
+medical research`, `university of illinois urbana-champaign`,
+`institute of clinical sciences`), so the warning is silent on this corpus and
+would fire on a genuine collision.
+
+`record_id` does not hash the author or the affiliation (`RECORD_ID_FIELDS`), so
+this re-identifies nothing.
+
+### The six predictions
+
+Each is a number, written now:
+
+1. **Grouping.** Lab groups fall 75 → **68**, with 0 records ungroupable.
+2. **The primary, cross-lab.** The headline comparison
+   (`perturbation_axis_cell_majority` vs `global_majority`, circuit subset, rows
+   whose cell was populated in training) under the **corrected `lab` grouping**
+   keeps verdict `established`, with delta ≥ **+0.10** — at least half of the
+   +0.208 it shows under leave-one-study-out.
+   *If it comes in below `established`, D-055's primary is in part one
+   laboratory agreeing with itself, and the README headline and D-055 must say
+   so.*
+3. **The secondary, corrected.** Circuit cells spanning ≥2 laboratories fall
+   from 26 to somewhere in **20–25**. D-048's secondary metric was already
+   missed at 26 against a target of 40; the corrected figure is the one to
+   quote, and it can only be worse.
+4. **The one feasible task survives.** `arc_agrp` / circuit activation /
+   `food_intake` is reported feasible on 3 studies and 3 laboratories. Predict
+   its three studies have three distinct last authors and it stays feasible.
+   *If two of them are one lab, the first feasible task this project ever found
+   was an artefact of lab over-splitting, and feasibility returns to 0 of 180.*
+5. **Depth.** Among cell-seen circuit rows, split by how many distinct
+   laboratories contributed training rows to the test row's own cell: exactly 1,
+   or 2 and above. Predict the delta is larger at ≥2 laboratories than at 1, and
+   **positive at both**. If depth 1 is flat, the model needs a cell to have been
+   *replicated*, not merely observed once, and that is a sharper statement of
+   what it can do than the headline is.
+6. **The verdict rule is calibrated.** Permuting labels **within** study
+   clusters (preserving each study's label multiset, destroying the association
+   between a cell and a direction across studies) and re-running the whole
+   comparison 200 times reaches `established` in **fewer than 5%** of
+   permutations.
+   *If it reaches it more often, the "clustered interval and McNemar agree" rule
+   manufactures significance at n=154 in 35 clusters, and every `established`
+   verdict in this project is suspect — including D-055's.*
+
+### Three things already measured, read out rather than re-run
+
+These are in the committed `reports/baseline_benchmark.json` as of c21ce6d and
+are **not** predictions. They are the existing answer to "does it generalise",
+and they are unflattering:
+
+* **Unseen population: nothing.** Under leave-one-population-out the headline
+  candidate's delta against the floor is exactly **0.000** on every subset, and
+  the cell-seen slice holds **0 rows**. Holding out a population empties the
+  cell key of which it is a component, so the model reduces *exactly* to the
+  global mode. Its only mechanism is cell lookup.
+* **No transfer to the molecular half.** Under leave-one-study-out the molecular
+  subset has **0** cell-seen rows and delta exactly 0.000: every molecular cell
+  is a single study, so holding that study out empties it (D-027, D-048).
+* **43% of the cell-seen set is within-study.** Row-level cross-validation gives
+  268 cell-seen circuit rows; leave-one-study-out gives 154. The other 114 rows
+  are cell-seen only via other records of their *own* study.
+
+### What a reader should take from the shape of this entry
+
+The generalisation question has a known negative answer on two of its three
+faces before anything new is run. The open face is whether the within-cell
+signal is cross-laboratory, and the reason that face was open is a key that has
+silently agreed with `study_id` for the life of the project.
+
