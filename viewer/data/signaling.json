@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-06T21:09:53Z",
+ "generated_at": "2026-11-06T21:41:08Z",
  "generated_from": "data/curated/records.jsonl",
  "mode_label": "Measured signalling - evidence playback",
  "mode_note": "Recorded observations animated. Nothing is simulated: no equation is integrated and no unmeasured response is inferred.",
@@ -13,6 +13,8 @@
  "axis_class_source": "perturbation_class when the record carries it, otherwise mapped from method",
  "edge_identity": "population_id x outcome_id x axis x axis_class",
  "axis_trap_note": "The axis describes the manipulation in the brain. The direction describes the bodily readout. From schema v0.2.0 both vocabularies use the words 'increase' and 'decrease', so the axis is always shown as a phrase (axis_phrase) and never as the bare value.",
+ "outcomes_without_a_declared_system": [],
+ "outcomes_without_a_declared_system_note": "Outcome ids present in the dataset that OUTCOME_SYSTEM does not place. They are laid out under 'unclassified' and are otherwise complete: the grouping is presentational and nothing about an edge depends on it. A non-empty list means the outcome vocabulary has moved ahead of this layout aid.",
  "directions_seen": {
   "decrease": 97,
   "increase": 122,
@@ -33,7 +35,8 @@
   "autonomic",
   "endocrine",
   "reproduction",
-  "behaviour"
+  "behaviour",
+  "unclassified"
  ],
  "system_labels": {
   "feeding": "Feeding",
@@ -805,12 +808,23 @@
   },
   {
    "id": "sleep",
-   "label": "Sleep amount and architecture",
+   "label": "Total or composite sleep-wake amount",
    "tier": "A",
    "modality": "EEG/EMG",
    "system": "behaviour",
-   "n_records": 10,
+   "n_records": 7,
    "n_studies": 6,
+   "n_records_excluded": 0,
+   "in_vocabulary": true
+  },
+  {
+   "id": "nrem_sleep",
+   "label": "NREM sleep amount",
+   "tier": "A",
+   "modality": "EEG/EMG",
+   "system": "behaviour",
+   "n_records": 3,
+   "n_studies": 1,
    "n_records_excluded": 0,
    "in_vocabulary": true
   }
@@ -1328,31 +1342,6 @@
    "record_ids_truncated": false
   },
   {
-   "population_id": "lha_orexin",
-   "outcome_id": "sleep",
-   "axis": "increase",
-   "axis_class": "circuit_activity",
-   "axis_phrase": "more firing",
-   "n_records": 5,
-   "n_studies": 3,
-   "n_labs": 3,
-   "directions": {
-    "decrease": 5
-   },
-   "consensus": "decrease",
-   "agreement": 1.0,
-   "contested": false,
-   "minority_replicated": false,
-   "record_ids": [
-    "bd0fa9320548db4c",
-    "07b000c12c1322ea",
-    "88ffdff09f3437b1",
-    "75c57af3d1474438",
-    "19e2a8a1115e2cc7"
-   ],
-   "record_ids_truncated": false
-  },
-  {
    "population_id": "arc_agrp",
    "outcome_id": "bat_thermogenesis",
    "axis": "decrease",
@@ -1525,6 +1514,30 @@
     "571dd95f50bd2830",
     "6c6cbd9a4eb476b7",
     "eae0d7c93ff82ca1"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
+   "outcome_id": "sleep",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 4,
+   "n_studies": 3,
+   "n_labs": 3,
+   "directions": {
+    "decrease": 4
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "bd0fa9320548db4c",
+    "07b000c12c1322ea",
+    "88ffdff09f3437b1",
+    "19e2a8a1115e2cc7"
    ],
    "record_ids_truncated": false
   },
@@ -2365,7 +2378,7 @@
   },
   {
    "population_id": "lha_orexin",
-   "outcome_id": "sleep",
+   "outcome_id": "nrem_sleep",
    "axis": "decrease",
    "axis_class": "circuit_activity",
    "axis_phrase": "less firing",
@@ -3702,6 +3715,27 @@
   },
   {
    "population_id": "lha_orexin",
+   "outcome_id": "nrem_sleep",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "75c57af3d1474438"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
    "outcome_id": "sleep",
    "axis": "remove",
    "axis_class": "structural",
@@ -4226,7 +4260,7 @@
    "record_ids_truncated": false
   }
  ],
- "n_edges": 149,
+ "n_edges": 150,
  "n_edges_contested": 30,
  "n_edges_minority_replicated": 1,
  "n_edges_unclear_axis": 8,
@@ -4236,9 +4270,9 @@
   "An arrow is a count of published observations, not a measurement of signal flow. It says that perturbing this population was followed by a measured change in this readout in N records; it does not say that a signal travels this way, and the animation's speed and timing carry no physiological units.",
   "No neural projection is drawn. Only 4 of 508 curated records name a projection target, so this dataset cannot support a wiring diagram and none is shown: the right-hand nodes are bodily readouts, not brain regions.",
   "128 of 508 records are region-level (no cell-type-specific population) and are excluded from this view entirely. They are real evidence about a nucleus; they just cannot be attached to a population.",
-  "8 of the 149 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
+  "8 of the 150 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
   "The axis and the direction can read as the same two words and are not the same statement. The axis is what the experiment did inside the brain -- more firing, less of a gene product, the population removed. The direction is what the body did. Every axis on this page is therefore written out in words rather than left as its bare value.",
-  "30 of the 149 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 1 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
+  "30 of the 150 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 1 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
   "17 of the 30 vocabulary populations carry no curated record at all. That is a statement about how far curation has got, not about what the literature contains."
  ]
 }
