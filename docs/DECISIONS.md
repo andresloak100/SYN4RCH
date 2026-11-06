@@ -3608,3 +3608,148 @@ The third proposal — assert region composition sums to ~100% — passes on all
 1002 clusters. The composition data was always sound; the truncation that
 manufactured one of the three refutations was in the consumer, which kept only
 the top region per cluster and discarded a 44% PVH share.
+
+## D-066 - Third amendment to D-059, written while it provably cannot change the answer: the free parameters close, and overlapping populations are disqualified rather than diagnosed
+
+**D-059 says the gene set, `k` and the mapping must all be fixed in code before
+the first evaluation.** D-065 fixed the mapping. This entry fixes the other two,
+plus two questions D-065 raised and could not settle alone. Nothing here has
+been measured against an outcome; the primary and secondary of D-059 remain
+unmeasured.
+
+### Why this amendment is legitimate, stated as a checkable fact
+
+D-065 found one surviving nesting: `arc_kisspeptin` is a subset of `arc_tbx3`.
+Two populations sharing clusters have expression vectors correlated **by
+construction**, so a similarity ranking could rediscover this mapping's own
+input as a finding.
+
+**`arc_tbx3` holds zero records.** It can neither lend a direction as a training
+neighbour nor appear as a test row, so the overlapping pair cannot arise in this
+evaluation at all. That is what makes now the only moment this rule is free: a
+decision taken while it provably cannot affect the result costs nothing, and
+after the run it is unavailable at any price. The second session raised this and
+it is the right reading — changing a pre-registration before running is still a
+change, and doing it for a pair that cannot occur buys nothing while spending
+the protocol's integrity.
+
+### Overlapping populations are disqualified, not merely logged
+
+**The rule: if a test row's nearest training neighbour shares one or more
+clusters with the held-out population, that neighbour is skipped and the next
+nearest is used. If every available neighbour overlaps, the row falls back
+exactly as the existing baselines do and is counted as unpredicted, not wrong.**
+
+The argument is not biological — the nesting is real and the similarity genuine.
+It is about which choice leaves the primary interpretable **whichever way it
+lands**:
+
+* Admit overlapping pairs and the primary passes, and you must then ask whether
+  it passed only on them. If it did, you need a re-run excluding them — a second
+  look at a pre-registered metric, which D-048 forbids. That branch has no
+  honest exit.
+* Disqualify them and a pass is a pass on the clean set, which is the claim
+  worth making. A failure is a failure on the clean set, and whatever the
+  overlapping pairs would have contributed becomes a labelled secondary.
+
+Both branches of the second are interpretable; one branch of the first is not.
+
+**The diagnostic is additive and logged regardless.** For every test row the run
+records the cluster-set Jaccard overlap between the held-out population and the
+neighbour that supplied its prediction, alongside the two diagnostics D-059's
+second amendment already requires. On this corpus the figure will be 0.0 on
+every row, which is the point: it is unrecoverable afterwards, and it goes live
+the moment any curation gives `arc_tbx3` a record.
+
+### The gene set, fixed
+
+The **2000 genes with the highest variance of per-cluster mean across all 465
+C465 clusters**, excluding mitochondrial (`mt-`) and ribosomal (`Rps`, `Rpl`)
+genes as technical covariates rather than identity.
+
+Chosen this way because it depends only on the atlas — not on which populations
+carry records, not on the mapping, and not on any delta. Cosine similarity over
+all 51,216 genes would be dominated by what is high in every cluster alike:
+`Malat1`, `Meg3` and `Snhg11` are the top genes of nearly every cluster in this
+atlas, so an unrestricted cosine measures library composition rather than cell
+identity.
+
+A **population's vector** is the cell-count-weighted mean of its assigned
+clusters' means — the pseudobulk mean over exactly the cells the mapping
+assigns. This is level-independent on purpose, because D-065 assigns different
+populations at different levels (C66 through C465) and the vectors must be
+comparable.
+
+### `k = 1`, and no other `k` can touch the primary
+
+With at most eight neighbours available, several contributing one to three
+records, a larger `k` would average over populations that have no record in the
+relevant cell in any case. `k = 1` also makes the per-row nearest-neighbour log
+*identical to the cause of the prediction*, which is what makes a miss
+diagnosable rather than merely disappointing.
+
+`k = 3` with similarity weighting will be computed and reported as an
+exploratory figure, **labelled as such, and it cannot change the primary
+verdict.** Recorded here so that reporting the better of the two afterwards is
+foreclosed.
+
+### The primary runs on tier A only, and that choice costs something
+
+Mapping tier (D-065) gates admission: **the primary admits tier A mappings
+only**, because D-065 states in terms that tier C mappings must not be treated
+as established, and `lha_vglut2`'s pan-glutamatergic `Slc17a6` makes its vector
+a blur over most excitatory neurons rather than a population.
+
+| | circuit records | populations | neighbours available |
+|---|---|---|---|
+| resolved `population_id` | 245 | 13 | — |
+| **primary (tier A)** | **213** | **9** | **at most 8** |
+| secondary (tier A+B+C) | 245 | 12 | at most 11 |
+
+Excluded from the primary: `vmh_sf1` 22 records (refused — `Nr5a1` peaks at
+0.391 and never clears the marker floor), `pvh_sim1` 4 (tier C), `lha_vglut2` 3
+(tier C), `scn_vip` 3 (tier B, and the known ~44% coverage gap).
+
+**The cost, stated rather than buried: purity makes the pool *more* dominated by
+one pair, not less.** `arc_agrp` (123) plus `arc_pomc` (52) are 175 of 245
+resolved circuit records, 71% — but 175 of 213 in the tier A primary, **82%**.
+Six of the nine admitted populations contribute three records or fewer. So the
+primary is, in large part, a test of a single pair, exactly as D-059's second
+amendment already warned; restricting to tier A sharpens that rather than
+relieving it. The tier A+B+C secondary is reported **regardless of the primary's
+outcome**, so the information in B and C is neither lost nor available to rescue
+a failed primary.
+
+### What each outcome means, pre-committed so none of them is unfalsifiable
+
+D-059 records the prediction that the primary will miss, and the mechanism:
+ARC AgRP and ARC POMC neurons are transcriptionally adjacent and drive food
+intake in opposite directions. The per-row log separates two failures that would
+otherwise look alike:
+
+* **Uninformative.** Delta ≈ 0 and the nearest-neighbour log shows neighbours
+  effectively unrelated to the held-out population, or most rows falling back
+  for want of a neighbour with the cell. The finding is that the pool was too
+  small to tell, not that similarity fails.
+* **Actively misleading.** Delta ≤ 0 with the misses concentrated on the
+  `arc_agrp`/`arc_pomc` rows, each naming the other as its nearest neighbour at
+  high cosine similarity. The finding is specific and mechanistic: expression
+  similarity transfers identity but not the sign of a systemic response.
+
+The second is the more valuable result, and it is the one that serves the
+standing requirement that this system be able to answer "insufficient evidence
+to rank these interventions reliably" — a feature that is confidently wrong in a
+nameable way is worse than no feature, and this is how we would know.
+
+**If the primary passes**, the per-row breakdown for `arc_agrp` and `arc_pomc`
+is reported in the same table, not separately. Should it pass while those rows
+miss, the pass rests on populations contributing one to three records each and
+must be reported in those words.
+
+### Unchanged
+
+Predictions 1 and 2 of D-059 stand as written and are still unmeasured. The
+evaluation runs **once**. This remains a Tier B feature over an external
+observational atlas, generalising a direction label that comes only from
+interventional experiments; D-065's mapping is `never_a_training_target: true`
+and nothing here alters that.
