@@ -3867,3 +3867,96 @@ D-059's predictions 1 and 2 stand and are unmeasured. D-066's overlap
 disqualification, `k = 1`, the exploratory `k = 3` that cannot touch the primary,
 tier A admission, and every logged diagnostic stand as written. This remains a
 Tier B feature that is never a training target.
+
+## D-068 - The result: transcriptomic similarity cannot rank these populations, and D-059's primary is unevaluable by its own criterion
+
+**This is the outcome D-067's stopping rule named in advance, and it is
+reported as the result rather than re-specified.** No delta was computed.
+
+### The measurement
+
+Under leave-one-population-out on the 9-population tier A pool, with genes
+centred on the training fold alone, each held-out population's nearest
+non-overlapping neighbour was tested for stability against resampling the 2000
+genes (B = 200, seed 20670, threshold 95%):
+
+| held out | circuit records | nearest | stability | rankable |
+|---|---|---|---|---|
+| `arc_agrp` | 123 | `arc_pomc` | **52.0%** | no |
+| `arc_pomc` | 52 | `arc_ghrh` | 78.0% | no |
+| `lha_orexin` | 16 | `pvh_trh` | 79.0% | no |
+| `pvh_trh` | 8 | `pvh_crh` | **99.5%** | yes |
+| `pvh_crh` | 7 | `pvh_trh` | **100.0%** | yes |
+| `lha_mch` | 3 | `lha_orexin` | 79.5% | no |
+| `arc_kisspeptin` | 2 | `arc_agrp` | 38.0% | no |
+| `arc_ghrh` | 1 | `arc_pomc` | 83.5% | no |
+| `tmn_histamine` | 1 | `arc_pomc` | 68.0% | no |
+
+**2 of 9 populations are rankable, holding 15 of 213 circuit records.** The
+population carrying 123 of those 213 records has a nearest neighbour that
+survives resampling barely half the time.
+
+The figures above use fold-wise centring. An earlier pass centred genes across
+all nine populations including the held-out one — no label leakage, since atlas
+expression is not the label, but the wrong protocol for leave-one-population-out.
+Correcting it moves individual stabilities (`lha_mch` 93.0% → 79.5%,
+`lha_orexin` 51.5% → 79.0%) and **changes the verdict not at all**: 2 of 9
+either way. The conclusion does not rest on the error.
+
+### Why the primary is unevaluable rather than failed
+
+D-059's prediction 1 requires **both** a population-clustered bootstrap interval
+excluding zero **and** a row-level exact McNemar test under 0.05. Two populations
+supply every ranked row, and a clustered bootstrap over two clusters admits
+three distinct resamples; the interval cannot be formed. So the primary is not a
+miss, a null, or a delta near zero — **it cannot be computed by the criterion
+that was pre-registered for it**, and reporting any delta from 15 rows across
+two mutually-nearest populations would assert a measurement this design
+explicitly forbids.
+
+Calling that a failure would be as wrong as calling it a pass. D-059 expected a
+miss and recorded the mechanism; this is a third outcome neither entry
+anticipated, and the honest name for it is the one the standing requirement
+already had: **insufficient evidence to rank these reliably.**
+
+### What was nevertheless learned, and it is not nothing
+
+**The feature carries anatomical signal and no usable subtype signal.** Both
+stable pairs are same-nucleus and mutually nearest: `pvh_trh` ↔ `pvh_crh` at
+99.5/100%. The near-misses are also same-nucleus — `lha_mch` → `lha_orexin` at
+79.5%. Every cross-nucleus choice is unstable. So population mean expression
+locates a nucleus reliably and distinguishes cell types within and between them
+too weakly to act on, which is the same boundary D-065 found from the other
+side: anatomy identifies a nucleus, not a cell type.
+
+**D-059's mechanistic prediction is corroborated as a tendency while being too
+weak to test.** It predicted in writing that a held-out `arc_agrp`'s nearest
+neighbour would be `arc_pomc` — same nucleus, shared transcriptome, opposite
+effects on food intake. It is, in 52% of replicates, the modal choice. But 52%
+is a coin flip, so whether similarity transfers the *sign* of an effect remains
+untested. The predicted pair is real; the ranking that would have let us
+interrogate it is not stable enough to use.
+
+**The negative result is about this corpus, not about the idea.** Nine
+populations, six of them contributing three records or fewer, cannot support a
+nearest-neighbour experiment whatever the metric. The binding constraint is
+curation depth, not the atlas: HypoMap supplied usable vectors for all 23 mapped
+populations (1460–1679 live genes of 2000, median 1640), and the diagnostic a
+second session asked for found no population with a thin vector. What is missing
+is records, in populations other than `arc_agrp` and `arc_pomc`.
+
+### What this forecloses, and what it does not
+
+D-059's prediction 2 — that the similarity model must not damage the leave-one-
+study-out result D-055 established — is **vacuously satisfied and therefore not
+evidence of anything**: a model that declines to rank 93% of rows cannot damage
+a result, and it is recorded as vacuous rather than passed.
+
+Per D-067, no sixth re-specification follows. The route forward is **more
+curated records in under-represented populations**, not a different metric: the
+next version of this experiment is a new entry under a new number, run only when
+the pool can support a clustered interval, and it must report this result
+alongside its own.
+
+The mapping of D-065 stands and remains Tier B, never a training target. Nothing
+here is evidence that any intervention does anything.
