@@ -24,6 +24,80 @@ SOURCE = "europepmc"
 POST_THRESHOLD = 1800
 
 
+def _mesh_terms(item: Dict) -> List[str]:
+    """MeSH descriptors from a ``resultType=core`` result.
+
+    The parser returned ``[]`` here until D-061, while :func:`search` had always
+    asked for ``resultType=core`` -- the result type that carries
+    ``meshHeadingList``. So every Europe PMC candidate was screened on title and
+    abstract alone while :mod:`syn4rch.harvest.screen` stamped it
+    ``screened_on: "title+abstract+mesh"``, a provenance string asserting
+    evidence that was never parsed. Qualifiers are deliberately dropped: the
+    screener matches against descriptor names, and "Neurons/metabolism" would
+    match neither "Neurons" nor "metabolism".
+    """
+    heading_list = item.get("meshHeadingList")
+    if not isinstance(heading_list, dict):
+        return []
+    headings = heading_list.get("meshHeading")
+    if isinstance(headings, dict):
+        headings = [headings]
+    if not isinstance(headings, list):
+        return []
+    out: List[str] = []
+    for heading in headings:
+        if not isinstance(heading, dict):
+            continue
+        name = heading.get("descriptorName")
+        if isinstance(name, str) and name.strip() and name not in out:
+            out.append(name.strip())
+    return out
+
+
+def _last_author_affiliation(item: Dict) -> Optional[str]:
+    """Affiliation of the last author, or the article's own, or ``None``.
+
+    Also hardcoded ``None`` until D-061, under a comment claiming Europe PMC
+    search does not return affiliations. It does under ``resultType=core``, in
+    two places and under neither of the names a reader would guess: per author
+    as ``authorList.author[].authorAffiliationDetailsList``, and once for the
+    article as a top-level ``affiliation``. The per-author value is preferred
+    because :func:`syn4rch.qc.keys.lab_key` is about the last author; the
+    article-level string is the fallback, and is usually the first author's.
+
+    This is a second-order cause of D-056: lab identity was
+    ``(last_author, affiliation)``, and on this path there was no affiliation to
+    key on at all.
+    """
+    authors = item.get("authorList")
+    if isinstance(authors, dict):
+        author_list = authors.get("author")
+        if isinstance(author_list, dict):
+            author_list = [author_list]
+        if isinstance(author_list, list) and author_list:
+            last = author_list[-1]
+            if isinstance(last, dict):
+                details = last.get("authorAffiliationDetailsList")
+                if isinstance(details, dict):
+                    entries = details.get("authorAffiliation")
+                    if isinstance(entries, dict):
+                        entries = [entries]
+                    if isinstance(entries, list):
+                        names = [
+                            e.get("affiliation").strip()
+                            for e in entries
+                            if isinstance(e, dict)
+                            and isinstance(e.get("affiliation"), str)
+                            and e.get("affiliation").strip()
+                        ]
+                        if names:
+                            return "; ".join(dict.fromkeys(names))
+    article = item.get("affiliation")
+    if isinstance(article, str) and article.strip():
+        return article.strip()
+    return None
+
+
 def _norm_record(item: Dict) -> Dict:
     doi = item.get("doi")
     pmcid = item.get("pmcid")
@@ -50,9 +124,9 @@ def _norm_record(item: Dict) -> Dict:
         "year": year_i,
         "first_author": authors[0] if authors else None,
         "last_author": authors[-1] if authors else None,
-        "last_author_affiliation": None,  # Europe PMC search does not return affiliations
+        "last_author_affiliation": _last_author_affiliation(item),
         "publication_types": [p for p in pub_types if p],
-        "mesh_terms": [],
+        "mesh_terms": _mesh_terms(item),
         "n_authors": len(authors),
         "is_open_access": is_oa,
         "in_epmc": in_epmc,
