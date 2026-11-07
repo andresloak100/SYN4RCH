@@ -309,6 +309,15 @@ class PaperConditions:
     verdicts: Dict[str, str]
     #: dimension -> Extracted, only for dimensions whose verdict is "constant"
     constants: Dict[str, "Extracted"]
+    #: dimension -> the refusal names recorded while reading it (D-079).
+    #:
+    #: Attribution is by *which reader was called*, never by parsing a refusal
+    #: name. `REFUSALS` is a flat tuple with no dimension in it, and two names
+    #: were already missing from it, so a hand-authored name->dimension map
+    #: would be one more declared thing that drifts from the thing it
+    #: describes. The caller already knows the dimension; this records what it
+    #: knew.
+    refusals: Dict[str, List[str]] = field(default_factory=dict)
     #: what the Methods said about the animals, for the age rule
     species: Optional[str] = None
     age_value: Optional[float] = None
@@ -2017,11 +2026,25 @@ def read_paper_conditions(
             "and each age statement was judged by its own sentence."
         )
 
-    _read_sex(units, verdicts, constants, notes)
-    _read_diet(units, verdicts, constants, notes)
-    age_value, age_unit = _read_age(units, verdicts, constants, notes, species)
-    _read_challenge(units, verdicts, constants, notes)
-    _read_genotype(units, verdicts, notes)
+    # Each reader is given its own notes list so that whatever it records is
+    # attributed to the dimension it was called for. Nothing is parsed.
+    refusals: Dict[str, List[str]] = {}
+
+    def _run(dimension, reader, *args):
+        own: List[str] = []
+        result = reader(units, verdicts, constants, own, *args) if reader is not _read_genotype \
+            else reader(units, verdicts, own)
+        recorded = [n.split(":", 1)[0] for n in own if n.split(":", 1)[0] in REFUSALS]
+        if recorded:
+            refusals[dimension] = recorded
+        notes.extend(own)
+        return result
+
+    _run("sex", _read_sex)
+    _run("diet", _read_diet)
+    age_value, age_unit = _run("age_group", _read_age, species)
+    _run("challenge", _read_challenge)
+    _run("background_genotype", _read_genotype)
 
     # The verbatim gate. Mechanical, and applied to every extraction however
     # it was produced: a buggy rule above cannot emit a sentence the paper
@@ -2040,6 +2063,7 @@ def read_paper_conditions(
             "retrieved text, so it was dropped."
             % (dimension, extracted.rule, extracted.locator)
         )
+        refusals.setdefault(dimension, []).append("dropped_quote_not_verbatim")
         if dimension == "age_group":
             age_value, age_unit = None, None
 
@@ -2048,6 +2072,7 @@ def read_paper_conditions(
         pmcid=pmcid,
         verdicts=verdicts,
         constants=constants,
+        refusals=refusals,
         species=species,
         age_value=age_value,
         age_unit=age_unit,
@@ -2096,6 +2121,20 @@ def _sentence_carrying(text: str, position: int) -> str:
             return sentence
         cursor = found + len(sentence)
     return text.strip()
+
+
+#: Refusals that do not unsettle a `constant` on the same dimension.
+#:
+#: These two ARE the demotion -- they are recorded when a prior refusal already
+#: forced the verdict away from `constant`, so a verdict that is still
+#: `constant` cannot have been produced by them. Treating them as blocking
+#: would refuse every paper whose reader did its job.
+_REFUSALS_THAT_DO_NOT_UNSETTLE = frozenset(
+    {
+        "refused_sex_not_constant_after_a_refusal",
+        "refused_age_not_constant_after_a_refusal",
+    }
+)
 
 
 def inadmissible_methods_conditions(record, paper: "PaperConditions"):
@@ -2147,6 +2186,23 @@ def inadmissible_methods_conditions(record, paper: "PaperConditions"):
         verdict = (paper.verdicts or {}).get(dimension)
         if verdict != "constant":
             out.append((dimension, getattr(value, "value", value), verdict))
+            continue
+        # D-079: `constant` is not enough. The verdict claims no second value
+        # exists; a refusal on the same dimension is the reader saying it could
+        # not establish that. D-044 asks for a value that was ESTABLISHED, and
+        # a constant standing beside its own dimension's refusal was merely
+        # undetected -- the ten defects of D-077/D-078 were all that state.
+        # The demotion already exists for sex and age
+        # (`refused_sex_not_constant_after_a_refusal`) and fires only when a
+        # refusal was *detected*, so this is the backstop for the next
+        # detector gap rather than a second copy of the same rule.
+        recorded = (getattr(paper, "refusals", None) or {}).get(dimension) or []
+        blocking = [name for name in recorded if name not in _REFUSALS_THAT_DO_NOT_UNSETTLE]
+        if blocking:
+            out.append(
+                (dimension, getattr(value, "value", value),
+                 "constant beside %s" % ", ".join(sorted(set(blocking))))
+            )
     return out
 
 

@@ -1688,3 +1688,122 @@ class InadmissibleMethodsConditionTest(unittest.TestCase):
         self.assertTrue(blocking, "a reported-only version would not have helped")
         self.assertIn("3b", message)
         self.assertIn("D-038", message)
+
+
+class ConstantBesideItsOwnRefusalTest(unittest.TestCase):
+    """C009 requires a verdict that SURVIVED, not one merely labelled constant.
+
+    FABRICATED TEST DATA - NEVER EVIDENCE.
+
+    D-077/D-078 found ten papers whose `constant` verdict was contradicted by
+    the very sentence stored as its evidence -- "Male mice ... whereas mice of
+    either sex ..." among them. Every one was `constant` because no refusal
+    fired, which is what the module's own docstring forbids: a constant is a
+    claim that no second value exists, and it must be ESTABLISHED, never merely
+    undetected (D-044).
+
+    The detectors are fixed. This is the backstop for the next gap in them, and
+    it changes nothing today: measured over the 102 papers holding records, 0 of
+    95 constants stand beside a refusal on their own dimension.
+
+    Attribution is by which reader was called, never by parsing a refusal name.
+    `REFUSALS` is a flat tuple with no dimension in it, and names have gone
+    missing from it before, so a hand-authored map would be one more declared
+    thing that drifts.
+    """
+
+    def _record(self, dimension, value):
+        from syn4rch.schema.record import TierARecord
+
+        return TierARecord.from_dict(
+            {
+                "study_id": STUDY, "pmcid": PMCID,
+                "population_raw": "invented neurons", "outcome_raw": "invented readout",
+                "outcome_id": "food_intake", "direction": "increase",
+                "method": "chemogenetic", "valence": "activation",
+                "support_quote": "Invented result sentence.",
+                "source_locator": "Results para 1",
+                "evidence_class": "causal_interventional",
+                dimension: value,
+                "condition_evidence": [{
+                    "dimension": dimension, "value": value, "source": "methods",
+                    "locator": "Methods para 1", "quote": "Invented methods sentence.",
+                    "rule": "invented_rule",
+                }],
+            },
+            strict=True,
+        )
+
+    def test_a_constant_with_no_refusal_on_its_dimension_is_admissible(self):
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID, verdicts={"sex": "constant"},
+            constants={}, refusals={},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(self._record("sex", "male"), paper), []
+        )
+
+    def test_a_constant_beside_a_refusal_on_its_own_dimension_is_not(self):
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID, verdicts={"sex": "constant"},
+            constants={},
+            refusals={"sex": ["refused_disjunctive_sex_is_unresolved"]},
+        )
+        offences = C.inadmissible_methods_conditions(self._record("sex", "male"), paper)
+        self.assertEqual(len(offences), 1)
+        self.assertIn("refused_disjunctive_sex_is_unresolved", offences[0][2])
+
+    def test_a_refusal_on_a_DIFFERENT_dimension_does_not_block(self):
+        """Per-dimension, or one unreadable dimension would veto the others."""
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID, verdicts={"sex": "constant"},
+            constants={},
+            refusals={"diet": ["refused_unrecognised_diet_term"]},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(self._record("sex", "male"), paper), []
+        )
+
+    def test_the_two_demotion_refusals_do_not_block(self):
+        """These ARE the demotion, so a still-constant verdict cannot be theirs.
+
+        `refused_sex_not_constant_after_a_refusal` is recorded when a prior
+        refusal already forced the verdict off `constant`. Treating it as
+        blocking would refuse every paper whose reader did its job.
+        """
+        for name in (
+            "refused_sex_not_constant_after_a_refusal",
+            "refused_age_not_constant_after_a_refusal",
+        ):
+            self.assertIn(name, C._REFUSALS_THAT_DO_NOT_UNSETTLE, name)
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID, verdicts={"sex": "constant"},
+            constants={},
+            refusals={"sex": ["refused_sex_not_constant_after_a_refusal"]},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(self._record("sex", "male"), paper), []
+        )
+
+    def test_refusals_are_attributed_by_reader_and_not_by_name(self):
+        """The real classifier records them under the dimension that produced them."""
+        paper = C.read_paper_conditions(
+            parse_jats(jats([
+                "Male mice were used for the imaging experiments.",
+                "Mice received either chow or a high-fat diet.",
+            ])), STUDY, PMCID,
+        )
+        self.assertIsInstance(paper.refusals, dict)
+        for dimension, names in paper.refusals.items():
+            self.assertIn(dimension, C.DIMENSIONS, dimension)
+            for name in names:
+                self.assertIn(name, C.REFUSALS, name)
+
+    def test_every_recorded_name_is_a_declared_refusal(self):
+        """A name outside REFUSALS would be a fifth undeclared thing."""
+        paper = C.read_paper_conditions(
+            parse_jats(jats(["Adult mice of both sexes, aged 2-5 months, were used."])),
+            STUDY, PMCID,
+        )
+        for names in paper.refusals.values():
+            self.assertTrue(set(names) <= set(C.REFUSALS))
