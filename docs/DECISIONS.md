@@ -3979,8 +3979,18 @@ here is evidence that any intervention does anything.
 > **Sensitivity, measured after the fact: the conclusion is robust and the table
 > is not.** A second session's finding in D-070 — that for a tool which
 > *proposes* candidates, a false one is reviewable while a missed one is
-> invisible — applies to D-065's own keep threshold, which records what it kept
-> and nothing about what it nearly kept. Audited, 7 of 23 mapped populations have
+> invisible — prompted an audit of D-065's keep threshold, which records what it
+> kept and nothing about what it nearly kept.
+>
+> > **The asymmetry does not transfer, and this paragraph first said it did.**
+> > That argument holds because a curator reads every unit a matcher proposes.
+> > Nothing reads this mapping before it becomes a mean-expression vector, so
+> > here a wrong **inclusion** is the expensive error and a near-miss exclusion
+> > the cheap one — the reverse. Stated as it was, it argues for loosening this
+> > threshold, which would be wrong. The session that supplied the asymmetry
+> > corrected its direction for this module, and the general form is: **prefer
+> > the error a reviewer will see, and that depends on whether a reviewer
+> > exists.** See D-073, which acts on it. Audited, 7 of 23 mapped populations have
 > a region candidate within 0.35–0.50 of their best, now recorded as
 > `near_miss_excluded` in the artefact. One of them bears directly on this entry.
 >
@@ -4407,3 +4417,97 @@ D-023's trade appearing a second time at a larger scale.
   records — and rankability is a property of the mapping and the tie guard, not
   of record counts. This pass moves one input of three.
 
+
+
+## D-073 - A tier that cannot survive a 0.058 shift: the threshold-stability veto, and the result it would have given from the start
+
+**D-067 forecloses changing the mapping or the admitted tiers, and says any
+change after the primary is measured is a new experiment under a new number with
+the first result reported alongside.** This is that entry. D-068's conclusion is
+unchanged; its table is superseded.
+
+### What was wrong
+
+`pvh_trh` held tier A while excluding `C185-12: Ebf1.Trh.GLU-2` — Trh-named,
+100% PVH, 3034 cells — at 0.442 of its best against a 0.50 cut. D-068's
+sensitivity note already recorded that adding that one cluster takes the result
+from 2 of 9 rankable to 0 of 9. **A tier whose membership cannot survive a 0.058
+shift in an arbitrary cut was never load-bearing**, and recording the near miss
+fixed the reporting while leaving the tier intact.
+
+A second session measured the exposure and it is concentrated rather than
+diffuse: of 19 near misses, 14 sit on tier C populations and 4 on tier B — **one
+is on tier A**, and it is the one that collapses the table. They also noted that
+0.442 is sixth of nineteen in a band running 0.361 to 0.491, so it is mid-pack:
+if 0.442 is "nearly in", so are five others.
+
+### The rule
+
+**Tier A additionally requires the kept set to be invariant to `keep_fraction`
+across a declared band, `[0.40, 0.60]`.** Stability is a veto on tier A, not
+another axis of support: a mapping whose very membership depends on where the
+cut falls is not established, whatever its names and contrast say. It cannot
+push a population below B.
+
+Both directions count, and the second matters more. A candidate that would
+**enter** at the low end is a cluster the vector may be wrongly missing. A member
+that would **leave** at the high end is one the vector may be wrongly carrying —
+and that is the expensive error here, because nothing reviews this mapping before
+it becomes a mean. This is the corrected asymmetry: prefer the error a reviewer
+will see, and there is no reviewer in this path.
+
+The band is declared rather than fitted. A threshold chosen to capture 0.442
+would be calibrated to the case under discussion; a stability requirement over a
+band is the same discipline as D-067's tie guard one level up, and it does not
+fire on a single case: **7 of 23 mapped populations are threshold-unstable.**
+
+### What it changes
+
+| | |
+|---|---|
+| `arc_ghrh` | A → B, destabilised by `C465-285: Gsx1.Ghrh.GABA-3` at 0.583 (would leave) |
+| `pvh_trh` | A → B, destabilised by `C185-12: Ebf1.Trh.GLU-2` at 0.442 (would enter) |
+
+Tiers are now A 9, B 6, C 8, refused 7. **`arc_ghrh` was caught by the rule and
+not by anyone's attention** — the near-miss audit only looked at the inclusion
+direction, so a symmetric rule found a second tier A failure that no one had
+named. Both mappings are unchanged and both survived D-071's adversarial pass;
+only the tier label moves.
+
+### Re-measured, and the conclusion strengthens
+
+The primary pool falls from 9 populations and 213 circuit records to **7 and
+204**. Re-running D-067's tie guard on it, with D-071's cell-level overlap test:
+
+**0 of 7 rankable. Not one population has a stable nearest neighbour.**
+
+| held out | records | nearest | stability |
+|---|---|---|---|
+| `arc_agrp` | 123 | `arc_pomc` | 58.0% |
+| `arc_pomc` | 52 | `arc_agrp` | 55.5% |
+| `lha_orexin` | 16 | `pvh_crh` | 58.5% |
+| `pvh_crh` | 7 | `arc_kisspeptin` | 48.0% |
+| `lha_mch` | 3 | `lha_orexin` | 64.5% |
+| `arc_kisspeptin` | 2 | `arc_pomc` | 57.0% |
+| `tmn_histamine` | 1 | `arc_pomc` | 70.0% |
+
+D-068 reported 2 of 9 and "insufficient evidence to rank". The corrected answer
+is the same finding with nothing left to qualify it: there is no clustered
+interval to form because there is no ranked row at all. The other session
+predicted exactly this — that the honest table was 1 of 9 or 0 of 9 from the
+start — before it was computed.
+
+**One thing is sharper than before.** `arc_agrp` and `arc_pomc` now name each
+other reciprocally, at 58.0% and 55.5%. D-059 predicted in writing that this
+pair would be mutually nearest and that their opposite effects on food intake
+were the reason expression similarity should fail to transfer a sign. The pairing
+is confirmed in both directions and is a coin flip in both, so the mechanism is
+corroborated and remains untestable for want of a stable ranking.
+
+### Scope
+
+No parameter of D-066 or D-067 moves: gene set, centred cosine, `k = 1`, the
+exploratory `k = 3`, tier A admission, overlap disqualification and every logged
+diagnostic stand. D-069's re-run trigger stands and now reads against corrected
+tiers, which is why this had to land before the EEG pass produces a record
+rather than after. Tier B, never a training target.

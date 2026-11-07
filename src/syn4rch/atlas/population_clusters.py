@@ -69,6 +69,22 @@ MIN_CONTRAST = 10.0
 #: Marker rank good enough to earn tier B without any name support.
 GOOD_RANK = 50
 
+#: Tier A additionally requires the kept set to be INVARIANT to `keep_fraction`
+#: across this band. A mapping whose membership changes under a small shift in
+#: an arbitrary cut is not established, which is D-044's shape and the same
+#: discipline as D-067's tie guard one level up.
+#:
+#: Both directions count. A candidate that would enter at the low end is a
+#: cluster the vector may be wrongly missing; a kept cluster that would leave at
+#: the high end is one the vector may be wrongly carrying. The second is the
+#: expensive error here, because -- unlike a matcher proposing units to a
+#: curator -- **nothing reads this mapping before it becomes a mean-expression
+#: vector.** There is no reviewer, so a wrong inclusion corrupts the vector
+#: silently. A second session supplied the asymmetry and then corrected its
+#: direction for this module, which is the correction that matters: prefer the
+#: error a reviewer will see, and that depends on whether a reviewer exists.
+KEEP_FRACTION_BAND = (0.40, 0.60)
+
 OUTCOMES = (
     "mapped",
     "refused_no_marker_in_atlas",
@@ -102,6 +118,12 @@ class Assignment:
     marker: Optional[str] = None
     level: Optional[str] = None
     clusters: Tuple[str, ...] = ()
+    #: False when the kept set changes anywhere in `KEEP_FRACTION_BAND`, which
+    #: caps the tier at B however good the names and contrast are.
+    threshold_stable: bool = True
+    #: Candidates that would enter, or members that would leave, inside the
+    #: band -- recorded so the instability is reviewable rather than implied.
+    destabilising: Tuple[Tuple[str, float], ...] = ()
     #: The finest-level clusters these `clusters` resolve to, read off the
     #: atlas's own per-cell labels. Required to see overlap between populations
     #: mapped at DIFFERENT levels, which share cells without sharing a name --
@@ -150,7 +172,8 @@ def _contrast(kept: Sequence[float], excluded: Sequence[float]) -> float:
     return _median(kept) / below
 
 
-def _tier(named: int, total: int, contrast: float, best_rank: int) -> str:
+def _tier(named: int, total: int, contrast: float, best_rank: int,
+          threshold_stable: bool = True) -> str:
     """Combine two independent lines of support; do not let either gate the other.
 
     Name support and contrast are different kinds of evidence: one is the atlas
@@ -166,7 +189,7 @@ def _tier(named: int, total: int, contrast: float, best_rank: int) -> str:
     `contrast` and `named_clusters` rather than the letter.
     """
     full_names = bool(total) and named == total
-    if full_names and contrast >= MIN_CONTRAST:
+    if full_names and contrast >= MIN_CONTRAST and threshold_stable:
         return "A"
     if full_names:
         return "B"                      # independent corroboration on its own
@@ -225,12 +248,25 @@ def assign_population(
     keep = sorted(keep, key=lambda c: -c.marker_mean)
     named = sum(1 for c in keep if c.name_carries_marker)
     best_rank = min(c.marker_rank_in_cluster for c in keep)
+    lo, hi = KEEP_FRACTION_BAND
+    kept_names = {c.cluster for c in keep}
+    shaky = []
+    for c in group:
+        frac = (c.marker_mean / top) if top > 0 else 0.0
+        if c.cluster not in kept_names and lo <= frac < keep_fraction:
+            shaky.append((c.cluster, frac))          # would enter
+        elif c.cluster in kept_names and keep_fraction <= frac < hi:
+            shaky.append((c.cluster, frac))          # would leave
+    shaky.sort(key=lambda pair: -pair[1])
+    stable = not shaky
     return Assignment(
         population_id, "mapped", marker=marker, level=level,
         clusters=tuple(c.cluster for c in keep),
         contrast=contrast,
-        tier=_tier(named, len(keep), contrast, best_rank),
-        named_clusters=named, best_marker_rank=best_rank)
+        tier=_tier(named, len(keep), contrast, best_rank, stable),
+        named_clusters=named, best_marker_rank=best_rank,
+        threshold_stable=stable,
+        destabilising=tuple((n, round(f, 3)) for n, f in shaky))
 
 
 def nesting(assignments: Iterable[Assignment]) -> Tuple[Tuple[str, str, str], ...]:

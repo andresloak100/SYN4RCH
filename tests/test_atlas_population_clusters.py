@@ -9,6 +9,7 @@ import unittest
 
 from syn4rch.atlas.population_clusters import (
     GOOD_RANK,
+    KEEP_FRACTION_BAND,
     MARKER_FLOOR,
     MIN_CONTRAST,
     MIN_REGION_SHARE,
@@ -269,6 +270,79 @@ class TierTest(unittest.TestCase):
         self.assertIn(assign_population(
             "p", "Gene", [cand("C66", "Gene.x", 3.0), cand("C66", "y", 0.1),
                           cand("C66", "z", 0.1)]).tier, TIERS)
+
+
+class ThresholdStabilityTest(unittest.TestCase):
+    """Tier A requires the kept set not to depend on where the cut falls.
+
+    `pvh_trh` held tier A while excluding a Trh-named, 100%-PVH, 3034-cell
+    cluster by 0.058 -- and adding that one cluster took D-068 from 2 of 9
+    rankable to 0 of 9. A tier that cannot survive a 0.058 shift was never
+    load-bearing, so stability vetoes tier A rather than being averaged in.
+    """
+
+    def test_a_candidate_that_would_enter_inside_the_band_vetoes_tier_A(self):
+        a = assign_population("pvh_trh", "Trh", [
+            cand("C185", "Gene.a", 2.788, named=True),
+            cand("C185", "Gene.b", 2.766, named=True),
+            cand("C185", "nearly_in", 1.234, named=False),   # 0.442 of top
+            cand("C185", "out", 0.05, named=False)])
+        self.assertFalse(a.threshold_stable)
+        self.assertEqual(a.tier, "B")
+        self.assertIn("nearly_in", [c for c, _f in a.destabilising])
+
+    def test_a_member_that_would_leave_inside_the_band_also_vetoes_it(self):
+        """`arc_ghrh`: its third cluster sits at 0.583 and drops out at 0.60.
+
+        That cluster is already inside the vector, which is the expensive
+        direction -- nothing reviews this mapping before it becomes a mean.
+        """
+        a = assign_population("arc_ghrh", "Ghrh", [
+            cand("C465", "Gene.a", 3.385, named=True),
+            cand("C465", "Gene.b", 3.128, named=True),
+            cand("C465", "Gene.c", 1.973, named=True),       # 0.583 of top
+            cand("C465", "out", 0.02, named=False)])
+        self.assertFalse(a.threshold_stable)
+        self.assertEqual(a.tier, "B")
+
+    def test_a_clean_mapping_is_stable_and_keeps_tier_A(self):
+        a = assign_population("p", "Gene", [
+            cand("C66", "Gene.x", 3.0, named=True),
+            cand("C66", "far_out", 0.1, named=False),
+            cand("C66", "far_out_2", 0.1, named=False)])
+        self.assertTrue(a.threshold_stable)
+        self.assertEqual(a.destabilising, ())
+        self.assertEqual(a.tier, "A")
+
+    def test_instability_cannot_push_below_B_on_its_own(self):
+        """A veto on A, not an extra penalty: full name support and good
+        contrast still describe a well-evidenced mapping."""
+        a = assign_population("p", "Gene", [
+            cand("C66", "Gene.a", 2.0, named=True),
+            cand("C66", "nearly", 0.9, named=False),
+            cand("C66", "out", 0.02, named=False)])
+        self.assertFalse(a.threshold_stable)
+        self.assertEqual(a.tier, "B")
+
+    def test_a_candidate_below_the_band_does_not_destabilise(self):
+        """0.30 is outside [0.40, 0.60], so no shift in the band reaches it.
+
+        The extra silent candidates keep the median of the excluded set low, so
+        contrast stays above `MIN_CONTRAST` and this test isolates stability
+        rather than accidentally measuring contrast.
+        """
+        a = assign_population("p", "Gene", [
+            cand("C66", "Gene.a", 1.0, named=True),
+            cand("C66", "well_below", 0.30, named=False),    # 0.30 < 0.40
+            cand("C66", "out", 0.001, named=False),
+            cand("C66", "out_2", 0.001, named=False),
+            cand("C66", "out_3", 0.001, named=False)])
+        self.assertTrue(a.threshold_stable)
+        self.assertGreaterEqual(a.contrast, MIN_CONTRAST)
+        self.assertEqual(a.tier, "A")
+
+    def test_the_band_is_the_declared_one(self):
+        self.assertEqual(KEEP_FRACTION_BAND, (0.40, 0.60))
 
 
 class NestingTest(unittest.TestCase):

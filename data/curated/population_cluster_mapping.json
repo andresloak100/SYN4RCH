@@ -24,7 +24,11 @@
   "rank_good_enough_for_tier_B": 50,
   "level_chosen_by": "greatest contrast among levels clearing the floor",
   "contrast": "median(kept marker means) / median(excluded candidates)",
-  "declared_after_inspecting_the_atlas": true
+  "declared_after_inspecting_the_atlas": true,
+  "keep_fraction_band_for_tier_A": [
+   0.4,
+   0.6
+  ]
  },
  "nesting": [
   {
@@ -120,7 +124,9 @@
     "C465-289: Acvr1c.Serpina3n.Npy.Agrp.GABA-4",
     "C465-290: Lepr.Agrp.GABA-4"
    ],
-   "n_leaf_clusters": 5
+   "n_leaf_clusters": 5,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "arc_ghrh": {
    "population_id": "arc_ghrh",
@@ -141,7 +147,7 @@
    ],
    "contrast": 86.64,
    "contrast_is_infinite": false,
-   "tier": "A",
+   "tier": "B",
    "named_clusters": 3,
    "total_clusters": 3,
    "best_marker_rank": 4,
@@ -157,7 +163,14 @@
     "C465-284: Slc10a4.Ghrh.GABA-3",
     "C465-285: Gsx1.Ghrh.GABA-3"
    ],
-   "n_leaf_clusters": 3
+   "n_leaf_clusters": 3,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C465-285: Gsx1.Ghrh.GABA-3",
+     "fraction_of_best": 0.583
+    }
+   ]
   },
   "arc_kisspeptin": {
    "population_id": "arc_kisspeptin",
@@ -193,7 +206,9 @@
     "C465-127: Slc38a3.Tac2.GLU-5",
     "C465-128: Rxfp1.Tac2.GLU-5"
    ],
-   "n_leaf_clusters": 2
+   "n_leaf_clusters": 2,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "arc_pomc": {
    "population_id": "arc_pomc",
@@ -233,7 +248,9 @@
     "C465-125: Tbx3.Ttr.Pomc.GLU-5",
     "C465-126: Shisal2b.Ttr.Pomc.GLU-5"
    ],
-   "n_leaf_clusters": 4
+   "n_leaf_clusters": 4,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "arc_sst": {
    "population_id": "arc_sst",
@@ -271,7 +288,9 @@
     "C465-294: Il1rapl2.Otp.Sst.GABA-4",
     "C465-296: Gpr101.Otp.Sst.GABA-4"
    ],
-   "n_leaf_clusters": 4
+   "n_leaf_clusters": 4,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "arc_tbx3": {
    "population_id": "arc_tbx3",
@@ -337,7 +356,14 @@
     "C465-288: Acvr1c.Npy.Agrp.GABA-4",
     "C465-289: Acvr1c.Serpina3n.Npy.Agrp.GABA-4"
    ],
-   "n_leaf_clusters": 14
+   "n_leaf_clusters": 14,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C185-116: Lepr.Agrp.GABA-4",
+     "fraction_of_best": 0.421
+    }
+   ]
   },
   "arc_th": {
    "population_id": "arc_th",
@@ -375,7 +401,14 @@
     "C465-318: Th.Slc6a3.Satb2.GABA-6",
     "C465-319: Ndnf.Slc6a3.Satb2.GABA-6"
    ],
-   "n_leaf_clusters": 5
+   "n_leaf_clusters": 5,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C185-114: Ghrh.GABA-3",
+     "fraction_of_best": 0.519
+    }
+   ]
   },
   "avpv_kisspeptin": {
    "population_id": "avpv_kisspeptin",
@@ -448,7 +481,9 @@
     "C465-137: Parpbp.Pmch.GLU-7",
     "C465-138: Tacr3.Pmch.GLU-7"
    ],
-   "n_leaf_clusters": 2
+   "n_leaf_clusters": 2,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "lha_orexin": {
    "population_id": "lha_orexin",
@@ -481,7 +516,9 @@
    "leaf_clusters": [
     "C465-121: Hcrt.Rfx4.GLU-4"
    ],
-   "n_leaf_clusters": 1
+   "n_leaf_clusters": 1,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "lha_vgat": {
    "population_id": "lha_vgat",
@@ -545,7 +582,14 @@
     "C465-267: Lhx6.Sox6.Lhx8.GABA-1",
     "C465-279: Meis2.Nts.GABA-1"
    ],
-   "n_leaf_clusters": 15
+   "n_leaf_clusters": 15,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C286-173: Ebf1.Nkx2-4.GABA-3",
+     "fraction_of_best": 0.439
+    }
+   ]
   },
   "lha_vglut2": {
    "population_id": "lha_vglut2",
@@ -614,7 +658,30 @@
     "C465-109: Ntng2.Lef1.Mixed.GLU-4",
     "C465-115: Cped1.Mixed.GLU-4"
    ],
-   "n_leaf_clusters": 15
+   "n_leaf_clusters": 15,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C465-115: Cped1.Mixed.GLU-4",
+     "fraction_of_best": 0.58
+    },
+    {
+     "cluster": "C465-12: Col27a1.Stk26.Nxph4.GLU-2",
+     "fraction_of_best": 0.55
+    },
+    {
+     "cluster": "C465-18: Adgrf5.Nxph4.GLU-2",
+     "fraction_of_best": 0.521
+    },
+    {
+     "cluster": "C465-2: Otx1.GLU-1",
+     "fraction_of_best": 0.509
+    },
+    {
+     "cluster": "C465-121: Hcrt.Rfx4.GLU-4",
+     "fraction_of_best": 0.431
+    }
+   ]
   },
   "mbh_ikkb": {
    "population_id": "mbh_ikkb",
@@ -683,7 +750,26 @@
     "C465-270: Tac2.Hmx2.Gal.Nts.GABA-1",
     "C465-273: Calcr.Dlx1.Gal.Nts.GABA-1"
    ],
-   "n_leaf_clusters": 4
+   "n_leaf_clusters": 4,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C465-273: Calcr.Dlx1.Gal.Nts.GABA-1",
+     "fraction_of_best": 0.589
+    },
+    {
+     "cluster": "C465-269: Brs3.Hmx2.Gal.Nts.GABA-1",
+     "fraction_of_best": 0.57
+    },
+    {
+     "cluster": "C465-275: Slc18a2.Dlx1.Gal.Nts.GABA-1",
+     "fraction_of_best": 0.461
+    },
+    {
+     "cluster": "C465-274: Tac2.Dlx1.Gal.Nts.GABA-1",
+     "fraction_of_best": 0.402
+    }
+   ]
   },
   "poa_warm_sensitive": {
    "population_id": "poa_warm_sensitive",
@@ -733,7 +819,9 @@
     "C465-132: Th.Ebf3.Caprin2.GLU-6",
     "C465-133: Oxt.Ebf3.Caprin2.GLU-6"
    ],
-   "n_leaf_clusters": 3
+   "n_leaf_clusters": 3,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "pvh_crh": {
    "population_id": "pvh_crh",
@@ -766,7 +854,9 @@
    "leaf_clusters": [
     "C465-33: Crh.Tent5a.GLU-2"
    ],
-   "n_leaf_clusters": 1
+   "n_leaf_clusters": 1,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "pvh_mc4r": {
    "population_id": "pvh_mc4r",
@@ -814,7 +904,9 @@
     "C465-31: Ucn3.Trh.GLU-2",
     "C465-134: Oxt.Caprin2.GLU-6"
    ],
-   "n_leaf_clusters": 2
+   "n_leaf_clusters": 2,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "pvh_oxt": {
    "population_id": "pvh_oxt",
@@ -847,7 +939,9 @@
    "leaf_clusters": [
     "C465-134: Oxt.Caprin2.GLU-6"
    ],
-   "n_leaf_clusters": 1
+   "n_leaf_clusters": 1,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "pvh_sim1": {
    "population_id": "pvh_sim1",
@@ -897,7 +991,14 @@
     "C465-133: Oxt.Ebf3.Caprin2.GLU-6",
     "C465-134: Oxt.Caprin2.GLU-6"
    ],
-   "n_leaf_clusters": 17
+   "n_leaf_clusters": 17,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C66-4: Trh.GLU-2",
+     "fraction_of_best": 0.557
+    }
+   ]
   },
   "pvh_trh": {
    "population_id": "pvh_trh",
@@ -917,7 +1018,7 @@
    ],
    "contrast": 34.94,
    "contrast_is_infinite": false,
-   "tier": "A",
+   "tier": "B",
    "named_clusters": 2,
    "total_clusters": 2,
    "best_marker_rank": 9,
@@ -944,7 +1045,14 @@
     "C465-23: Ebf1.Igfbpl1.Cbln2.Trh.GLU-2",
     "C465-31: Ucn3.Trh.GLU-2"
    ],
-   "n_leaf_clusters": 6
+   "n_leaf_clusters": 6,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C185-12: Ebf1.Trh.GLU-2",
+     "fraction_of_best": 0.442
+    }
+   ]
   },
   "scn_avp": {
    "population_id": "scn_avp",
@@ -997,7 +1105,26 @@
     "C465-189: Chodl.Prr5l.Cck.Vipr2.GABA-2",
     "C465-203: C1ql3.Cck.Unassigned.Lhx1.GABA-2"
    ],
-   "n_leaf_clusters": 7
+   "n_leaf_clusters": 7,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C465-203: C1ql3.Cck.Unassigned.Lhx1.GABA-2",
+     "fraction_of_best": 0.596
+    },
+    {
+     "cluster": "C465-180: Creb3l1.Chodl.Fam122b.Vipr2.GABA-2",
+     "fraction_of_best": 0.57
+    },
+    {
+     "cluster": "C465-189: Chodl.Prr5l.Cck.Vipr2.GABA-2",
+     "fraction_of_best": 0.541
+    },
+    {
+     "cluster": "C465-191: Prokr2.Cdkn1c.Cck.Vipr2.GABA-2",
+     "fraction_of_best": 0.414
+    }
+   ]
   },
   "scn_vip": {
    "population_id": "scn_vip",
@@ -1040,7 +1167,14 @@
     "C465-207: Grp.Cd24a.Lhx1.GABA-2",
     "C465-209: Rrad.Cd24a.Lhx1.GABA-2"
    ],
-   "n_leaf_clusters": 6
+   "n_leaf_clusters": 6,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C465-205: Grp.Vip.Unassigned.Lhx1.GABA-2",
+     "fraction_of_best": 0.506
+    }
+   ]
   },
   "tmn_histamine": {
    "population_id": "tmn_histamine",
@@ -1073,7 +1207,9 @@
    "leaf_clusters": [
     "C465-253: Hdc.GABA-1"
    ],
-   "n_leaf_clusters": 1
+   "n_leaf_clusters": 1,
+   "threshold_stable": true,
+   "destabilising": []
   },
   "vmh_bdnf": {
    "population_id": "vmh_bdnf",
@@ -1180,7 +1316,38 @@
     "C465-76: Rasl11a.Smim3.Iigp1.Cd40.GLU-3",
     "C465-93: Nr5a2.C1ql2.Gpr149.GLU-3"
    ],
-   "n_leaf_clusters": 4
+   "n_leaf_clusters": 4,
+   "threshold_stable": false,
+   "destabilising": [
+    {
+     "cluster": "C465-69: Col12a1.Gldn.Cbln4.Cd40.GLU-3",
+     "fraction_of_best": 0.491
+    },
+    {
+     "cluster": "C465-75: Samd9l.Smim3.Iigp1.Cd40.GLU-3",
+     "fraction_of_best": 0.458
+    },
+    {
+     "cluster": "C465-108: Prlh.Tac1.Lef1.Mixed.GLU-4",
+     "fraction_of_best": 0.458
+    },
+    {
+     "cluster": "C465-73: Pou6f2.Esr1.Iigp1.Cd40.GLU-3",
+     "fraction_of_best": 0.451
+    },
+    {
+     "cluster": "C465-72: Necab1.Cbln4.Cd40.GLU-3",
+     "fraction_of_best": 0.414
+    },
+    {
+     "cluster": "C465-105: Pdyn.Adcyap1.GLU-3",
+     "fraction_of_best": 0.41
+    },
+    {
+     "cluster": "C465-106: Nxph4.Adcyap1.GLU-3",
+     "fraction_of_best": 0.407
+    }
+   ]
   },
   "vmh_sf1": {
    "population_id": "vmh_sf1",
@@ -1229,7 +1396,9 @@
     "C465-155: Th.Meis2.Mixed.GABA-2",
     "C465-170: Pvalb.Mixed.GABA-2"
    ],
-   "n_leaf_clusters": 4
+   "n_leaf_clusters": 4,
+   "threshold_stable": true,
+   "destabilising": []
   }
  },
  "near_miss_note": "Region candidates excluded by `keep_fraction` that came within 0.35-0.50 of the best candidate. Recorded because a wrongly INCLUDED cluster is visible in `clusters` and reviewable, while a wrongly EXCLUDED one would be recorded nowhere -- the asymmetry a second session measured on its own matcher (D-070). These are NOT members; the mapping is unchanged.",
