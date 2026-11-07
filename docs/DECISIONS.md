@@ -6327,3 +6327,52 @@ it, that would have been evidence the finding was leaking through the cell key.
   report, and left exactly as curated for a human.
 * `correct_conditions`' false idempotency claim (D-084) is unfixed, and the
   next run of it meets 62 stale refusals rather than 7.
+
+
+## D-086 - The ceiling I called structural was a property of the unfilled corpus, and my own fill moved it
+
+D-080's amendment refuted its own conclusion on four grounds. Ground 2 read:
+*"No record states more than 3 of 5, and because the condition is part of the
+claim key a cell can never exceed its own records, so no cell in any reachable
+state of this data can be matched on fully stated conditions. The sentence is
+true of every possible corpus."*
+
+**D-085's fill reached a state that sentence said was unreachable.** Measured
+now:
+
+| | before the fill | after |
+|---|---|---|
+| ceiling on a record | 3 of 5 | **4 of 5** |
+| ceiling on a cell | 3 of 5 | **4 of 5** |
+| cells matched on all five | 0 | 0 |
+
+`45bffee4b93d2531` (`PMC5754347`) states `sex=both, diet=chow,
+challenge=refed, background_genotype=wild_type` and is missing only
+`age_group`. The D-078 session flagged this against its own argument before I
+noticed it.
+
+**What is false and what is not.** The premise is false: "no record states more
+than 3 of 5" was true of the corpus I measured and not of the corpus, and
+"every possible corpus" was an invention. The conclusion survives — no record
+states all five, so no cell can be matched on all five, and the count is still
+0 and still ceiling-bound. So ground 2 weakens from *structural* to *currently
+true*, which is a smaller correction than the premise's failure suggests, and
+grounds 1 (the 96.9% base rate), 3 (3 of 12 cells match on a stated value) and
+4 (D-023 ruled, the other way) do not depend on it at all. **D-080's conclusion
+stays withdrawn.**
+
+**And the ceiling is now one value from lifting.** One `age_group` on one record
+would produce a five-stated record and make "0 cells matched on fully stated
+conditions" falsifiable for the first time. That is a better statement of the
+corpus's condition coverage than either the old ceiling or the new one, because
+it says how far the claim is from being testable rather than asserting it
+cannot be.
+
+**The lesson is the base-rate rule's twin and I had just written the base-rate
+rule.** I wrote "a statistic about a subgroup does not enter an entry until the
+same statistic has been computed over the whole" — and then, in the same
+amendment, called a maximum over the current data a property of every reachable
+state. A measured extremum is not an invariant. The rule that would have caught
+it: **a bound does not enter an entry as structural unless something prevents
+it from moving** — and here the thing that moved it was a pass I was holding at
+the time, named in the same entry.
