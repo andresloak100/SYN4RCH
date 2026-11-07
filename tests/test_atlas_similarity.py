@@ -17,6 +17,7 @@ from syn4rch.atlas.similarity import (
     bootstrap_gene_draws,
     centre_genes,
     is_rankable,
+    counts_toward_trigger,
     nearest_stability,
     EXCLUDED_PREFIXES,
     gene_variances,
@@ -151,6 +152,53 @@ class StabilityTest(unittest.TestCase):
             return {"a": None}
         self.assertEqual(nearest_stability(["a"], nearest, 5, replicates=10)["a"],
                          0.0)
+
+
+class OverlapForcedTest(unittest.TestCase):
+    """A stability figure means two different things; D-069 counts only one.
+
+    On the full 12-population pool four rows cleared the 95% guard and three of
+    them only after a neighbour was disqualified -- all three at exactly 100%,
+    because the skipping is deterministic. Counting those turns 1 of 12 into
+    4 of 12.
+    """
+
+    def test_a_choice_made_without_any_skip_is_not_overlap_forced(self):
+        held = vec("held", [1.0, 0.0], leaves=["L1"])
+        near = vec("near", [0.9, 0.1], leaves=["L2"])
+        c = choose_neighbour(held, [near], {("held", "near"): 0.9})
+        self.assertFalse(c.overlap_forced)
+        self.assertTrue(counts_toward_trigger(c, 1.0))
+
+    def test_a_choice_after_a_skip_is_overlap_forced_and_does_not_count(self):
+        held = vec("held", [1.0, 0.0], leaves=["L1", "L2"])
+        overlapping = vec("overlap", [1.0, 0.0], leaves=["L1"])
+        other = vec("other", [0.5, 0.5], leaves=["L9"])
+        c = choose_neighbour(held, [overlapping, other],
+                             {("held", "overlap"): 0.99, ("held", "other"): 0.4})
+        self.assertEqual(c.chosen, "other")
+        self.assertTrue(c.overlap_forced)
+        self.assertTrue(is_rankable(1.0))
+        self.assertFalse(counts_toward_trigger(c, 1.0),
+                         "a perfectly reproducible fallback is not a ranking")
+
+    def test_an_unstable_row_never_counts_however_clean(self):
+        held = vec("held", [1.0, 0.0], leaves=["L1"])
+        near = vec("near", [0.9, 0.1], leaves=["L2"])
+        c = choose_neighbour(held, [near], {("held", "near"): 0.9})
+        self.assertFalse(counts_toward_trigger(c, 0.5))
+
+    def test_the_clarification_can_only_tighten_the_trigger(self):
+        """It must never admit a row that `is_rankable` would have refused."""
+        held = vec("held", [1.0, 0.0], leaves=["L1", "L2"])
+        over = vec("over", [1.0, 0.0], leaves=["L1"])
+        other = vec("other", [0.5, 0.5], leaves=["L9"])
+        for sims in ({("held", "over"): 0.99, ("held", "other"): 0.4},
+                     {("held", "other"): 0.9}):
+            c = choose_neighbour(held, [over, other], sims)
+            for st in (0.0, 0.5, 0.949, 0.95, 1.0):
+                if counts_toward_trigger(c, st):
+                    self.assertTrue(is_rankable(st))
 
 
 class RankabilityTest(unittest.TestCase):

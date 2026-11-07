@@ -137,6 +137,23 @@ class NeighbourChoice:
     fell_back: bool = False
     ranked: List[Tuple[str, float]] = field(default_factory=list)
 
+    @property
+    def overlap_forced(self) -> bool:
+        """True when D-066's disqualification narrowed the field first.
+
+        A stability figure means two different things, and this separates them.
+        With no neighbour disqualified, a stable choice means **the similarity
+        decided**. After disqualification removed the top candidates, the
+        remaining choice can be perfectly reproducible because *the skipping is
+        deterministic* -- which is not a confident ranking and must not be read
+        as one.
+
+        Measured on the full 12-population pool: four rows cleared the 95%
+        guard, three of them only after a skip, and all three at exactly
+        100.0%. Counting them as ranked turns 1 of 12 into 4 of 12.
+        """
+        return bool(self.skipped_for_overlap)
+
 
 def select_from_variance(
     variances: Sequence[float],
@@ -339,3 +356,20 @@ def is_rankable(stability: float, *, minimum: float = STABILITY_MIN) -> bool:
     not a neighbour the feature cannot defend.
     """
     return stability >= minimum
+
+
+def counts_toward_trigger(
+    choice: NeighbourChoice,
+    stability: float,
+    *,
+    minimum: float = STABILITY_MIN,
+) -> bool:
+    """Rankable **and** not an artefact of overlap disqualification (D-069).
+
+    D-069's re-run trigger counts rankable populations. Without this, a pool
+    whose members mostly overlap could satisfy the trigger on reproducible
+    fallbacks rather than on a feature that discriminates. The clarification
+    can only make the trigger harder to satisfy, never easier, which is why it
+    is safe to state after the trigger was written.
+    """
+    return is_rankable(stability, minimum=minimum) and not choice.overlap_forced

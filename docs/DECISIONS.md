@@ -4085,6 +4085,54 @@ Recorded because the opportunity for this particular leak did not exist before
 today, and the person best placed to avoid it is the one who can no longer
 un-know the table.
 
+> **Amendment, before the pass has read a paper: two tier-independent
+> companions, and a defect in how I would have counted the trigger.**
+>
+> A second session generalised a catch of mine into a principle that indicts
+> this entry: **any pre-registered threshold that reads a value from another
+> session's artefact needs a companion that does not, or neither session can
+> tell whose result moved.** Their criterion depended on my tier labels, which
+> have moved three times in a day (D-065, D-071, D-073). Conditions 1 and 3
+> above have the same flaw in the same place — "rankable" reads a tier
+> assignment I own and keep correcting.
+>
+> **Companion 1b.** Populations with a stable nearest neighbour, over every
+> mapped population holding records rather than tier A alone. **Today: 1 of 12**
+> (tier A alone, per D-073: 0 of 7).
+>
+> **Companion 3b.** Populations holding 5+ circuit records regardless of tier.
+> **Today: 6** — `arc_agrp` 123, `arc_pomc` 52, `vmh_sf1` 22, `lha_orexin` 16,
+> `pvh_trh` 8, `pvh_crh` 7. `vmh_sf1` is *refused* and still qualifies, which is
+> the point: 3b measures what curation produced, 1–3 measure what it produced
+> *through* my mapping, so a miss is attributable to one or the other rather
+> than to neither. This is the same figure the other session adopted, computed
+> independently and agreeing exactly.
+>
+> **Both are diagnostic and neither licenses a run.** The trigger is conditions
+> 1–3 unchanged. A companion can explain a miss; it can never substitute for a
+> condition.
+>
+> **And computing 1b found a defect in the trigger as written.** Counted
+> naively, 1b is **4 of 12** — and three of those four cleared the 95% guard
+> only *after* D-066's overlap disqualification removed their nearest
+> neighbours, each at exactly 100.0%. `pvh_trh` → `lha_vglut2`, `pvh_sim1` →
+> `tmn_histamine`, `lha_vglut2` → `pvh_trh`. Their stability is perfect because
+> **the skipping is deterministic**, not because the similarity decided
+> anything. A stability figure conflates those two claims, and I would have
+> counted the artefacts toward the trigger.
+>
+> So: **a rankable row whose neighbour was chosen after any disqualification
+> does not count toward conditions 1 or 3.** Enforced by
+> `similarity.counts_toward_trigger`, not left in prose. This clarification can
+> only make the trigger *harder* to satisfy and never easier, which is what
+> makes it safe to state after the trigger was written — a loosening at this
+> point would not be.
+>
+> No published result is affected: D-068 and D-073 ran on a tier A pool that is
+> cell-level disjoint, so no row in either took a skip and every logged overlap
+> was 0.00. The artefact only appears once lower tiers are admitted, which is
+> the D-066 secondary that has not been run.
+
 ### What this does not promise
 
 Nothing here predicts the re-run will pass, and D-059's expectation that
