@@ -1512,6 +1512,140 @@ class ScopeAndStimulusTest(unittest.TestCase):
             )
 
 
+class ClaimScopeTest(unittest.TestCase):
+    """D-082: the Methods' scope is not the paper's.
+
+    FABRICATED TEST DATA - NEVER EVIDENCE, except the real-paper checks at the
+    end, which read committed files and are named as such.
+
+    A `constant` verdict claims no second value exists. The reader was given
+    only the Methods, so six papers in this corpus report a measurement in the
+    other sex while their Methods name one cohort cleanly -- a defect no quote
+    screen can find, because the Methods sentence is clean.
+    """
+
+    def test_a_second_sex_in_the_results_demotes_a_clean_methods_constant(self):
+        result = read(
+            ["Male C57BL/6J mice were used."],
+            results=[
+                "Male knockout mice showed a lean phenotype, whereas female "
+                "knockout mice tended toward increased body weight.",
+            ],
+        )
+        self.assertEqual(result.verdicts["sex"], "varies")
+        self.assertNotIn("sex", result.constants)
+        self.assertTrue(
+            has_note(result, "refused_second_sex_reported_outside_the_methods")
+        )
+
+    def test_the_refusal_is_attributed_to_sex_so_C009_sees_it(self):
+        """D-079 keys refusals by dimension; this one must land there."""
+        result = read(
+            ["Male C57BL/6J mice were used."],
+            results=["Female mice gained more weight than controls."],
+        )
+        self.assertIn(
+            "refused_second_sex_reported_outside_the_methods",
+            (result.refusals or {}).get("sex") or [],
+        )
+
+    def test_a_same_sex_results_section_changes_nothing(self):
+        """The regression test for the bug this nearly shipped with.
+
+        `Extracted.value` is a plain `str` and `Sex` is a str-enum, so
+        `value in (Sex.male, Sex.female)` is True while `value is Sex.male` is
+        False. Written with `is`, the check selected the pattern for the SAME
+        sex and fired on every single-sex paper in the corpus.
+        """
+        result = read(
+            ["Male C57BL/6J mice were used."],
+            results=[
+                "Male mice injected with AAV showed increased food intake "
+                "relative to male controls.",
+            ],
+        )
+        self.assertEqual(result.verdicts["sex"], "constant")
+        self.assertEqual(result.constants["sex"].value, C.Sex.male)
+
+    def test_a_breeding_cue_in_the_results_is_exculpated(self):
+        """The one false-positive shape section scope cannot reach: a dam
+        reported in the Results. `_BREEDING_CUE` has caught it all along, so
+        this needs no new vocabulary."""
+        result = read(
+            ["Female C57BL/6J mice were used."],
+            results=[
+                "Pregnancy outcomes were assessed after mating with male "
+                "stud mice of the same background.",
+            ],
+        )
+        self.assertEqual(result.verdicts["sex"], "constant")
+        self.assertEqual(result.constants["sex"].value, C.Sex.female)
+
+    def test_both_cannot_be_contradicted_by_a_second_value(self):
+        """`both` already names both sexes, so no claim sentence adds one."""
+        self.assertIsNone(
+            C._second_sex_in_claims(
+                [("Female mice gained weight.", "Results para 1")], C.Sex.both
+            )
+        )
+
+    def test_a_null_value_is_not_probed(self):
+        self.assertIsNone(C._second_sex_in_claims([("Female mice.", "x")], None))
+
+    # --- the scope itself, on committed papers -------------------------- #
+
+    def _paper(self, pmcid):
+        import os
+        from syn4rch.curate.jats import parse_jats_file
+
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(root, "data", "raw", "fulltext", "%s.xml" % pmcid)
+        if not os.path.exists(path):  # pragma: no cover
+            self.skipTest("%s not retrieved" % pmcid)
+        return parse_jats_file(path)
+
+    def test_the_discussion_is_never_in_claim_scope(self):
+        """The whole design. Every shape this check must not catch -- a
+        citation, a limitation, future work -- lives in the Discussion, and
+        excluding it is what buys 0 false positives with no lexicon."""
+        for pmcid in ("PMC12794213", "PMC9650057"):
+            for _, locator in C._claim_units(self._paper(pmcid)):
+                self.assertFalse(
+                    locator.startswith("Discussion"),
+                    "%s: %s is in claim scope" % (pmcid, locator),
+                )
+
+    def test_captions_are_in_claim_scope(self):
+        """A figure legend reports a measurement, so it counts."""
+        locators = {loc for _, loc in C._claim_units(self._paper("PMC3940852"))}
+        self.assertTrue(
+            any(not loc.startswith("Results") for loc in locators),
+            "no caption reached claim scope: %s" % sorted(locators)[:6],
+        )
+
+    def test_the_limitation_sentence_does_not_demote_its_paper(self):
+        """PMC12794213's Discussion says "the absence of female cohorts may
+        limit the generalizability". 7 records turn on its constant."""
+        from syn4rch.curate.conditions import read_paper_conditions
+
+        result = read_paper_conditions(
+            self._paper("PMC12794213"), "", "PMC12794213"
+        )
+        self.assertEqual(result.verdicts["sex"], "constant")
+
+    def test_the_dimorphic_paper_is_demoted(self):
+        """PMC3940852: Methods "C57Bl/6, db/+ and db/db male mice were
+        purchased from CLEA Japan"; Results report a female cohort. 18 records,
+        16 of them carrying that Methods quote as their sex evidence -- and the
+        corpus already holds two `female` records from the same paper."""
+        from syn4rch.curate.conditions import read_paper_conditions
+
+        result = read_paper_conditions(
+            self._paper("PMC3940852"), "", "PMC3940852"
+        )
+        self.assertEqual(result.verdicts["sex"], "varies")
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
 

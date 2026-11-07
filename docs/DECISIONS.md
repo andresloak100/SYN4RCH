@@ -4019,6 +4019,37 @@ here is evidence that any intervention does anything.
 
 ## D-069 - The re-run trigger, declared while no EEG record exists and the answer cannot be known
 
+> **Amended: the trigger is NOT exposed to D-080's `unknown == unknown`
+> finding, and two of its inline figures are stale.**
+>
+> D-080 lists this trigger among three things that "have all been counting
+> [an `unknown == unknown` match] as agreement". Two of the three check out;
+> **this one does not, and there is no connection to sever.** Conditions 1 and
+> 1b resolve to `similarity.counts_toward_trigger`, whose only inputs are
+> bootstrap-resampled gene indices and atlas leaf-cluster Jaccard;
+> `atlas/similarity.py` imports nothing but `dataclasses`, `math`, `random`
+> and `typing`, so there is no path to `qc.keys` or `feasibility`. Conditions
+> 2, 3 and 3b are per-population **record** counts, not cell counts.
+>
+> Proved rather than argued: with every condition dimension mutated to a
+> unique per-record value, leaving zero `unknown` slots anywhere, the
+> per-population circuit record counts came back byte-identical while
+> multi-lab cells went 12 -> 0 in the same run.
+>
+> **The figures have moved, as designed.** Companion 3b reads "Today: 6"; it
+> is now **10** -- `arc_agrp` 123, `arc_pomc` 52, `lha_orexin` 50, `lha_mch`
+> 42, `vmh_sf1` 22, `pvh_crh` 15, `pvh_trh` 8, `lha_vgat` 7, `pvh_oxt` 5,
+> `poa_galanin` 5. That is the D-074 EEG pass landing records, which is exactly
+> what 3b was written to measure. **Condition 2 now passes** as well: the
+> largest population holds 35.7% of circuit records, against the 58% that
+> motivated it.
+>
+> **The trigger is still not met,** and not nearly: condition 1 needs 8
+> rankable populations and there is 1 of 12 (0 of 7 on tier A). An inline
+> "Today" figure in a pre-registered entry keeps reading as current, which is
+> the hazard this amendment exists to remove.
+
+
 **The user has approved the EEG curation pass, conditional on the matcher fixes
 landing.** That pass is projected to add 150–170 records across `lha_orexin`,
 `pvh_crh`, `lha_mch`, `tmn_histamine` and `pvh_oxt` — the five populations whose
@@ -5820,3 +5851,137 @@ satisfy and what the next accepted version will be checked against.
 
 Found by another session reading the published artefact rather than the code,
 which is the only place this was visible: the filenames were right.
+
+## D-082 - The Methods' scope is not the paper's, and the replication finding it arrived with does not survive its own base rate
+
+Two results, from the same verification pass. One is a defect in my module that
+no quote screen could have found. The other is a conclusion of D-080's that
+four independent checks refute.
+
+### 1. `constant` claimed the paper and read the Methods
+
+`read_paper_conditions` reads `paper.section("Methods")`. Its verdict was
+documented as a claim that **no second value exists in the paper**. Those
+scopes differ, and six papers holding records exploit the difference:
+
+PMC3940852's stored sex evidence is *"C57Bl/6, db/+ and db/db male mice were
+purchased from CLEA Japan."* -- clean, unqualified, no second-cohort language,
+and D-078's quote screen passes it by construction. Its Results read *"Male
+Agrp-Cre; Rosa26 Sirt1-WT mice (Agrp-Sw) showed a lean phenotype, whereas
+female Agrp-Cre; Rosa26 Sirt1-H355Y mice (Agrp-Sh) tended toward increased body
+weight"*. The paper is explicitly dimorphic.
+
+**The contradiction is already inside the corpus, which is the part worth
+keeping.** PMC3940852 contributes 18 records: 16 carry that Methods quote as
+the evidence for `sex = male`, and **two carry `sex = female` with no evidence
+entry at all, quoting Results para 8**. The dataset asserts a female outcome
+from the same paper whose male records cite a sentence claiming no second sex
+exists. No XML needed to see it.
+
+Six papers, 55 Methods-sourced `sex` entries across 58 records: PMC11699438
+(22), PMC3940852 (18), PMC11584794 (9), PMC12248387 (7), PMC6920260 (1),
+PMC6934207 (1).
+
+#### The fix is a scope, not a lexicon
+
+The four shapes a second-cohort check must not catch are a citation of another
+lab's study, a limitation ("the absence of female cohorts may limit the
+generalizability"), a breeding partner, and future work. Measured over the 42
+record-holding single-sex papers:
+
+| scope | real | false positives | entries lost |
+|---|---|---|---|
+| **Results + captions** | **6/6** | **0** | **55** |
+| + Discussion | 6/6 | 3 | 63 |
+| whole paper | 6/6 | 3 | 63 |
+
+Three of the four shapes live in the Discussion, so **section scope disposes of
+them and no lexicon is needed**. The fourth -- a pregnant dam reported in the
+Results -- is caught by `_BREEDING_CUE`, which this module has had all along.
+Whole-paper and Results+Discussion+captions are identical here: for sex the
+Abstract and Introduction contribute nothing.
+
+`constant` does **not** become unreachable: 501 of the 545 sex constants
+survive, and the 44 demoted papers include only 6 that hold records. The
+docstring now says "no second value exists in the paper's **retrieved text**",
+because a cohort reported only in a supplement is beyond this repository.
+
+**Why this is fixable where `background_genotype` was not.** D-075 retired the
+Methods rule for genotype because genetic background is an open vocabulary, so
+absence can never be established. Widening the *haystack* from one section to
+the claim text does not widen the *vocabulary* -- sex still has two tokens. The
+distinction D-075 drew is what makes a detector the right instrument here and
+the wrong one there.
+
+#### The bug this nearly shipped with
+
+`Extracted.value` is a plain `str` and `Sex` is a str-enum, so
+`value in (Sex.male, Sex.female)` is True while `value is Sex.male` is False.
+Written with `is`, the check selected the pattern for the **same** sex and
+fired on every single-sex paper in the corpus. It was caught by the four papers
+whose constants the check had to preserve -- without that half of the fixture
+it would have passed review as a working fix.
+
+#### Not done: the 55, and a second defect inside the Methods
+
+C009 gates admission, not the corpus (`inadmissible_methods_conditions` has one
+call site, in `cmd_gate`), so this changes which future records are admissible
+and fails nothing today. But on the day it lands the corpus holds 55 records
+its own gate would refuse, and **nothing automatic will ever notice them**:
+all 55 are `sex = male`, all `extraction_method = llm` / `review_status =
+unreviewed`, none in batch 1; 52 are silent in their own passage, 1 is
+re-sourceable, and 2 name both sexes in the dimorphic comparison. `sex` is a
+`RECORD_ID_FIELDS` component, so nulling it re-identifies all 55 (checked: 55
+distinct new ids, 0 collisions). The disposition has to be chosen; it will not
+happen by itself.
+
+Separately: **11 of the 23 papers holding Methods-sourced sex entries have more
+than one sex-voting Methods sentence, carrying 95 of 174 entries.** `_read_sex`
+already refuses when those sentences disagree, so the *verdict* is sound -- but
+where they agree it stores `votes[0]`, the first by position, and PMC3940852's
+is a vendor sentence about `db/db` mice attached to AgRP-Cre;Rosa26-Sirt1
+records. The stored quote can describe different animals than the record. That
+is an evidence-quality defect, not a verdict defect, and it is unfixed.
+
+### 2. D-080's conclusion does not survive four checks
+
+> "this corpus has no condition-matched cross-lab replication at all ...
+> incompleteness was *manufacturing* the replication"
+
+**The arithmetic reproduces exactly.** 12 multi-lab cells; unknown-slot
+histogram {3:1, 4:2, 5:9}; "all 12 at >=3 of 5" true; "9 of 12 at all five"
+true. The conclusion still fails:
+
+* **Base rate.** Over all 517 strict cells the histogram is {2:16, 3:172,
+  4:137, 5:192}, so ">=3 of 5 unknown" holds for **501 of 517 = 96.9%** of
+  every cell in the corpus, replicating or not. 12 of 12 against 96.9%
+  distinguishes nothing.
+* **Ceiling.** The maximum condition specificity of any single record is
+  **3 of 5** (per-dimension stated rates: diet 37%, sex 34%, challenge 14%,
+  genotype 8%, age 6%). Because the condition is part of the key, no cell can
+  exceed its records, so **0 of 517 cells can ever be "matched on fully stated
+  conditions"**. "0 of the 7 survivors are" is unfalsifiable.
+* **It is false as stated.** 3 of the 12 match on a *stated* value shared
+  across labs, and two of those three are also unanimous in direction.
+* **D-023 already ruled, the other way.** It writes: "A cell matched on 'both
+  unknown' is weaker evidence than one matched on a known sex and diet" --
+  weaker, not void -- and on this exact question: "That discards real
+  information: two labs independently reporting that AgRP activation raises
+  food intake is replication, whether or not either states the diet." Its
+  remedy is disclosure, and the code implements it: `Agreement.__post_init__`
+  raises `SpecificityMissing` rather than print the fraction bare, and
+  `specificity_label` appends "(matched on 'both unknown', not on 'both the
+  same')". The feasibility report already prints the 12 disaggregated by
+  specificity three lines under the headline.
+
+D-044 does not support the inference either: its scope is the extractor, and
+two records sharing an unstated dimension assert no absence and write nothing.
+
+**What does survive** is that the headline count is a weak number printed
+beside a strong-sounding word, and that D-072's criterion 4 and the feasibility
+replication line both inherit it. Both are affected. **D-069's trigger is
+not** -- see its amendment; proved by perturbation rather than argued.
+
+One figure to retire: the feasibility report prints "12 of 517" and the corpus
+now gives 12 of 540. The report predates the current `records.jsonl` by 39
+minutes and should be re-run before either number is quoted.

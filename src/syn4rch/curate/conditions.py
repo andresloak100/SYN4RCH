@@ -253,6 +253,7 @@ REFUSALS = (
     "refused_methods_cannot_state_a_measurement_state",
     "refused_figure_scoped_cohort_sentence",
     "refused_disjunctive_sex_is_unresolved",
+    "refused_second_sex_reported_outside_the_methods",
     "refused_ambiguous_sex_sentence",
     "refused_unrecognised_diet_term",
     "refused_disjunctive_diet_is_two_arms",
@@ -1515,6 +1516,67 @@ def _methods_units(paper: ParsedPaper) -> List[Tuple[str, str]]:
     return out
 
 
+def _claim_units(paper: ParsedPaper) -> List[Tuple[str, str]]:
+    """``(sentence, locator)`` for the text where a paper reports its own
+    measurements: the Results section, and the figure and table captions.
+
+    **Not the Discussion**, and that is the whole design (D-082). Every shape a
+    second-cohort check must not catch lives there -- a citation of another
+    lab's female study, a limitation ("the absence of female cohorts may limit
+    the generalizability"), and future work. Measured over the 42 papers in
+    this corpus holding a single-sex ``constant``: Results and captions give
+    6 real defects and **0** false positives; adding the Discussion keeps the
+    6, adds 3 false positives and costs 8 further entries. Whole-paper is
+    identical to Results + Discussion + captions here, because the Abstract and
+    Introduction contribute nothing for sex.
+
+    So the exculpation is section scope, not a lexicon. The one false positive
+    scope cannot reach -- a pregnant dam reported in the Results -- is already
+    caught by :data:`_BREEDING_CUE`, which this module has had all along.
+    """
+    out: List[Tuple[str, str]] = []
+    section = paper.section("Results")
+    if section is not None:
+        for index, paragraph in enumerate(section.paragraphs, start=1):
+            locator = "Results para %d" % index
+            for sentence in sentences(paragraph):
+                out.append((sentence, locator))
+    for caption in list(paper.figures or []) + list(paper.tables or []):
+        locator = caption.label or ("%s %d" % (caption.kind, caption.ordinal))
+        for sentence in sentences(caption.text or ""):
+            out.append((sentence, locator))
+    return out
+
+
+def _second_sex_in_claims(claims, value):
+    """The first claim sentence reporting a sex other than ``value``.
+
+    ``(sentence, locator)`` or ``None``. Only ``male`` and ``female`` can be
+    contradicted this way: ``both`` already names both, so there is no second
+    value for a claim sentence to add.
+
+    This is the one dimension where widening the haystack does not widen the
+    *vocabulary*, which is why it is fixable at all. D-075 retired the Methods
+    rule for ``background_genotype`` because genetic background is an open set
+    and absence can never be established; sex has two tokens, so scanning more
+    text still exhausts the vocabulary.
+    """
+    if value not in (Sex.male, Sex.female):
+        return None
+    # `==`, not `is`. `Extracted.value` is a plain `str`, and `Sex` is a
+    # str-enum, so `value in (Sex.male, Sex.female)` is True while
+    # `value is Sex.male` is False -- which selected the pattern for the SAME
+    # sex and fired on every single-sex paper. Caught by the four papers whose
+    # constants this check had to preserve; without them it would have shipped.
+    other = _FEMALE if value == Sex.male else _MALE
+    for sentence, locator in claims:
+        if _BREEDING_CUE.search(sentence):
+            continue
+        if other.search(sentence):
+            return sentence, locator
+    return None
+
+
 def _methods_species(units: List[Tuple[str, str]]) -> Tuple[Optional[str], bool, bool]:
     """``(species, has_mouse_cue, has_rat_cue)`` from the Methods animal cues.
 
@@ -1991,8 +2053,8 @@ def read_paper_conditions(
     :func:`inadmissible_methods_conditions` can say so.
 
     **A ``constant`` verdict is a claim that no second value exists in the
-    paper**, so it is returned only when the absence of a second value was
-    established -- never when a second value merely was not detected. Every
+    paper's retrieved text**, so it is returned only when the absence of a
+    second value was established -- never when a second value merely was not detected. Every
     refusal, every set-aside sentence and every unrecognised token is a reason
     to decline the dimension, not a reason to trust what is left. Three
     defects in this module's first version were all this one mistake: a rat
@@ -2045,6 +2107,34 @@ def read_paper_conditions(
     age_value, age_unit = _run("age_group", _read_age, species)
     _run("challenge", _read_challenge)
     _run("background_genotype", _read_genotype)
+
+    # D-082. The Methods' scope is not the paper's. `constant` claims that no
+    # second value exists; a Methods section can name one cohort cleanly while
+    # the Results report the other, and six papers in this corpus do exactly
+    # that. PMC3940852's stored evidence is "C57Bl/6, db/+ and db/db male mice
+    # were purchased from CLEA Japan" while its Results read "Male ... mice
+    # showed a lean phenotype, whereas female ... mice tended toward increased
+    # body weight". No quote screen can find that, because the Methods sentence
+    # is clean.
+    if verdicts.get("sex") == "constant":
+        found = _second_sex_in_claims(
+            _claim_units(paper), getattr(constants.get("sex"), "value", None)
+        )
+        if found is not None:
+            sentence, locator = found
+            constants.pop("sex", None)
+            verdicts["sex"] = "varies"
+            notes.append(
+                "refused_second_sex_reported_outside_the_methods: the Methods "
+                "name one sex, but this paper reports a measurement in the "
+                "other at %s -- %r. A `constant` verdict claims no second "
+                "value exists in the retrieved text, and the Methods cannot "
+                "establish that about the Results."
+                % (locator, sentence[:160])
+            )
+            refusals.setdefault("sex", []).append(
+                "refused_second_sex_reported_outside_the_methods"
+            )
 
     # The verbatim gate. Mechanical, and applied to every extraction however
     # it was produced: a buggy rule above cannot emit a sentence the paper
