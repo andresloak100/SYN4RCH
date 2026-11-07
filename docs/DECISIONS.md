@@ -6246,3 +6246,84 @@ so the generalisation is exercised rather than merely written.
 records: they are passage-sourced with no evidence entry, were never part of the
 55, and `C009` does not inspect them because it reads only
 `source == "methods"`.
+
+
+## D-085 - The condition fill, applied: 300 values, and what it did to the replication figure
+
+Run after D-084's 55 removals, in that order, because both rewrite `record_id`
+and doing them separately would have rewritten 219 ids twice. The order also
+mattered to the result.
+
+| dimension | filled | corrected | confirmed | conflicted |
+|---|---|---|---|---|
+| `sex` | 169 | 0 | 121 | **0** |
+| `diet` | 85 | 0 | 104 | 0 |
+| `age_group` | 45 | 0 | 36 | 0 |
+| `challenge` | 1 | 1 | 29 | 6 |
+| `background_genotype` | **0** | 0 | 0 | 0 |
+
+219 ids changed, 490 unchanged. `background_genotype` fills nothing, as D-075
+guarantees by making `constant` unreachable for it — the one prediction of
+D-076's four that held, and it held for a reason rather than by luck.
+
+**The gate is unmoved: 703 admitted, 6 rejected, before and after.** Every one
+of the 300 written values passes both conditions D-079 made C009 ask — the
+dimension's verdict is `constant` *and* no refusal was recorded on it. That is
+the strongest statement available about the fill's output: not that the values
+are true, but that they are admissible by the project's own standard, which they
+were not before D-082 and D-083 fixed the classifier.
+
+**Zero `sex` conflicts, where the uncorrected corpus had 2.** Both were
+`PMC3940852`, and they are the two records whose `sex=female` was read from
+Results para 8. D-084 removed the 16 male values from that paper, so the
+disagreement the fill would have reported no longer exists — the paper's two
+curated female records are now the only sex it asserts.
+
+### What it did to replication, with the specificity beside it
+
+Because D-023 requires it: these cannot be printed as one number.
+
+| | before both operations | after |
+|---|---|---|
+| circuit cells | 362 | 364 |
+| multi-lab cells | 12 | **10** |
+| cells with all five dimensions unknown | 177 | **77** |
+| cells with all five **stated** | 0 | 0 |
+| records stating nothing | 262 | **132** |
+| records stating three | 17 | **63** |
+| records stating four | 0 | **1** |
+
+The feasibility report now reads **10 of 519**.
+
+**The order the fill ran in changed the answer.** Filling without D-084 first
+gave **7** multi-lab cells, measured on a copy in D-080. Removing the 55 wrong
+`sex=male` values first and then filling gives **10**. Those 55 values were
+splitting cells from records that are now `null`, and a null matches another
+null. By D-023's ruling that is weaker evidence rather than better evidence, so
+this is not three cells recovered — it is three cells whose match is now
+honestly labelled as resting on an unstated dimension instead of on a value the
+paper contradicts.
+
+**And the ceiling moved for the first time.** D-023 recorded that no record knew
+all four condition slots. One record now states **four of five**, where the
+maximum across the corpus had been three. 0 cells are matched on all five, which
+remains unfalsifiable in the sense D-080's amendment established, and is no
+longer unfalsifiable *by construction* at four.
+
+**The direction-of-effect result is untouched by either operation.** `lab`
++0.167 (p=0.007), `study_id` +0.151 (p=0.016), both established, permutation
+null 0.0300. 219 record_ids and 300 condition values changed underneath it and
+it did not move, which is the right outcome: D-057's finding is about
+perturbation and readout, and if rewriting the condition dimension had shifted
+it, that would have been evidence the finding was leaking through the cell key.
+
+### Open, and not hidden by this run
+
+* The 6 `background_genotype` records C009 still refuses are the D-075
+  session's, with per-paper dispositions it has described.
+* `23fe1e3dc459a0e4`'s `sex=male` is re-sourceable from its own passage and is
+  deferred, per D-084.
+* The 6 `challenge` conflicts the fill reports are pre-existing, listed in the
+  report, and left exactly as curated for a human.
+* `correct_conditions`' false idempotency claim (D-084) is unfixed, and the
+  next run of it meets 62 stale refusals rather than 7.
