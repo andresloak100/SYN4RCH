@@ -264,3 +264,92 @@ class WithinBatchIdCollisionTest(unittest.TestCase):
             "if this ever differs, genotype has entered the hash and D-060's "
             "no-id-map property is void",
         )
+
+
+class C009LookupTest(unittest.TestCase):
+    """C009's paper lookup must be the lookup that admitted the record.
+
+    FABRICATED TEST DATA - NEVER EVIDENCE.
+
+    The first version of the C009 wiring (D-074) resolved the paper with its own
+    loop over ``(pmcid, doi, pmid, study_id)`` looked up VERBATIM, while
+    ``verify._probe_keys`` -- the lookup that decides a record is admissible at
+    all -- additionally probes the prefix-stripped form. So a schema-legal
+    record could resolve for the quote check and miss here, and because
+    ``offences`` was initialised to ``()`` and assigned only inside
+    ``if paper is not None``, the miss ADMITTED the record with a blocking check
+    never run. Failing open on a lookup divergence is the worst available
+    behaviour for a check whose whole job is to reject.
+
+    ``study_id`` is only required to be non-blank (``A004``), no prefix pattern
+    is enforced, and pmcid/doi/pmid are all optional -- so reaching this needs
+    no malformed record, just a harvester that writes ``europepmc:PMC...``.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.ft = os.path.join(self.tmp, "fulltext")
+        os.makedirs(self.ft)
+        shutil.copy(
+            os.path.join(FIX, "synthetic_complete.xml"),
+            os.path.join(self.ft, "PMC0000001.xml"),
+        )
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_probe_keys_strips_a_prefix_and_the_gate_uses_the_same_keys(self):
+        """The divergence itself, pinned at the function level."""
+        from syn4rch.curate.verify import _probe_keys
+
+        record = synthetic.good_record(
+            study_id="europepmc:PMC0000001", pmcid=None, doi=None, pmid=None,
+        )
+        keys = _probe_keys(record)
+        self.assertIn("europepmc:pmc0000001", keys)
+        self.assertIn(
+            "pmc0000001",
+            keys,
+            "the stripped form is what the verbatim gate matches on; a second "
+            "lookup that omits it will disagree with the one that admitted",
+        )
+
+    def test_an_unregistered_study_id_prefix_does_not_skip_the_check(self):
+        """End to end: the record must be rejected, not admitted unchecked.
+
+        synthetic_complete.xml has no Methods section, so every dimension's
+        verdict is `absent` and a Methods-sourced condition on it is
+        inadmissible. The point is not which verdict comes back -- it is that
+        one comes back at all rather than the check being skipped.
+        """
+        record = synthetic.good_record(
+            study_id="europepmc:PMC0000001", pmcid=None, doi=None, pmid=None,
+            source_locator="Results para 1",
+            support_quote="Chemogenetic activation of Agrp neurons increased food intake (n = 8 mice, p < 0.01)",
+        )
+        proposals = os.path.join(self.tmp, "p.jsonl")
+        write_jsonl(proposals, [record])
+        report = os.path.join(self.tmp, "r.md")
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            main(["gate", proposals, "--fulltext-dir", self.ft,
+                  "--out", os.path.join(self.tmp, "o.jsonl"), "--report", report])
+        text = out.getvalue() + open(report).read()
+        self.assertIn("C009_CONDITION_NOT_CONSTANT_IN_PAPER", text)
+        self.assertIn("rejected", text)
+
+    def test_a_methods_condition_with_no_resolvable_paper_fails_closed(self):
+        """Not asked must not read as passed.
+
+        In practice C001_TEXT_NOT_RETRIEVED catches an unresolvable paper first,
+        so this path is a backstop. It is here because the ordering of those two
+        checks is not something C009 should depend on.
+        """
+        from syn4rch.curate.conditions import PaperConditions, inadmissible_methods_conditions
+
+        record = synthetic.good_record()
+        empty = PaperConditions(study_id="s", pmcid="p", verdicts={}, constants={})
+        self.assertTrue(
+            inadmissible_methods_conditions(record, empty),
+            "a dimension with no verdict must be refused, not waved through",
+        )

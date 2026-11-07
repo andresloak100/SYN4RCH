@@ -542,30 +542,62 @@ def cmd_gate(args) -> int:
     # The classifier is asked once per paper, not once per record: it re-reads
     # the Methods and is the expensive part of this command.
     from .conditions import inadmissible_methods_conditions, read_paper_conditions
+    from .verify import _probe_keys
 
     paper_by_key = {}
     for paper in papers:
         for key in paper.study_keys():
             paper_by_key.setdefault(str(key).strip().lower(), paper)
 
+    # The lookup is `verify._probe_keys`, the one that decided this record was
+    # admissible, rather than a second one written here. The first version of
+    # this block probed (pmcid, doi, pmid, study_id) VERBATIM while
+    # `_probe_keys` also probes the prefix-stripped form, so the two could
+    # disagree on a schema-legal record: `study_id="europepmc:PMC10173804"`
+    # with pmcid/doi/pmid null resolved for the quote check and missed here,
+    # and because `offences` was initialised to `()` and assigned only inside
+    # `if paper is not None`, the miss ADMITTED the record with the blocking
+    # check never run. Verified: those two records gate as `rejected 2` as
+    # stored and `admitted 2` on that one spelling change.
+    #
+    # So the check now fails CLOSED. A record carrying a Methods-sourced
+    # condition whose paper cannot be resolved is rejected, because the
+    # question C009 asks cannot be answered without the paper and "not asked"
+    # must not read as "passed". That is the same reasoning as the missing
+    # verdict in `inadmissible_methods_conditions`: silence is not `constant`.
     by_study: Dict[str, object] = {}
     still_admitted: List[TierARecord] = []
     for record in admitted:
         offences = ()
-        if record.condition_evidence:
-            paper = None
-            for probe in (record.pmcid, record.doi, record.pmid, record.study_id):
-                if probe:
-                    paper = paper_by_key.get(str(probe).strip().lower())
-                    if paper is not None:
-                        break
-            if paper is not None:
-                key = record.study_id or record.pmcid or ""
-                if key not in by_study:
-                    by_study[key] = read_paper_conditions(
+        methods_sourced = [
+            entry
+            for entry in (record.condition_evidence or ())
+            if str(
+                getattr(
+                    entry.get("source") if isinstance(entry, dict) else getattr(entry, "source", None),
+                    "value",
+                    entry.get("source") if isinstance(entry, dict) else getattr(entry, "source", None),
+                )
+            )
+            == "methods"
+        ]
+        if methods_sourced:
+            paper, matched = None, None
+            for key in _probe_keys(record):
+                paper = paper_by_key.get(key)
+                if paper is not None:
+                    matched = key
+                    break
+            if paper is None:
+                offences = (("(paper unresolved)", "-", "no retrieved paper"),)
+            else:
+                if matched not in by_study:
+                    by_study[matched] = read_paper_conditions(
                         paper, record.study_id or "", record.pmcid or ""
                     )
-                offences = tuple(inadmissible_methods_conditions(record, by_study[key]))
+                offences = tuple(
+                    inadmissible_methods_conditions(record, by_study[matched])
+                )
         if offences:
             rejections.append(
                 Rejection(
