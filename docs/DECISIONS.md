@@ -5683,3 +5683,113 @@ state all ten defects were in before D-078. Only a better detector or a human
 reading the quote catches that. The circularity named in D-077 stands: C009 asks
 the classifier about the classifier's own output, and this makes the question
 harder to pass without making it a different question.
+
+
+## D-080 - The replication this corpus reports is `unknown` matching `unknown`, and D-076's prediction failed in the opposite direction
+
+The fill was run on a **copy** and the corpus is untouched. Three of D-076's four
+predictions failed, and not narrowly: they failed in the direction opposite to
+the one the entry argued for.
+
+| D-076's prediction | result | |
+|---|---|---|
+| 1. multi-lab circuit cells **rise** from 12 | **7** | missed |
+| 2. they reach at least 16 | 7 | missed |
+| 3. `background_genotype` gains least | **0 filled** | met |
+| 4. total circuit cells **fall** from 362 | **367** | missed |
+
+The fill wrote 301 condition values: sex 170, diet 85, age_group 45,
+challenge 1, and background_genotype 0. 219 record_ids changed. Filling the
+conditions made replication **worse** and created cells rather than merging
+them.
+
+### Why, and it invalidates the reasoning in both D-074 and D-076
+
+**All 12 pre-fill multi-lab cells matched on `unknown`** in at least three of
+the five condition dimensions. Nine of the twelve matched on all five. Not one
+was a cell where two laboratories agreed on *stated* conditions.
+
+| condition dimensions at `unknown` | cells, before the fill |
+|---|---|
+| three | 1 |
+| four | 2 |
+| **five** | **9** |
+
+And after filling: 7 multi-lab cells, of which **0 are matched on fully stated
+conditions**. Every surviving one still rests on at least two dimensions being
+unstated in both records.
+
+**So this corpus contains no condition-matched cross-lab replication at all.**
+Not little. None. Every multi-lab cell it has ever reported exists because
+nobody had curated the conditions of either record.
+
+That reverses what I wrote twice:
+
+* D-074 said the condition dimensions "cost this corpus 23 of 35 multi-lab
+  cells". The arithmetic holds and the reading was backwards. Dropping
+  conditions from the claim key does not recover suppressed replication; it
+  counts cells that exist only while the dimension is ignored.
+* D-076 said "most of the replication cost is curation incompleteness in the
+  costume of an experimental contrast". **Exactly inverted.** Curation
+  incompleteness was *manufacturing* the replication. The costume was on the
+  other side, and filling the conditions took it off.
+
+**The project already had the doctrine for this and never applied it here.**
+D-044: a verdict must be *established*, never merely undetected. An
+`unknown == unknown` match is replication that was never established either --
+two records agree because neither was read. D-072's criterion 4, D-069's re-run
+trigger and the feasibility report's "replicated across two or more labs" all
+count these cells. They were measuring curation incompleteness and reporting it
+as agreement.
+
+**Criterion 4 therefore failed for a third reason**, after the two in D-074 and
+the amendment: not the sleep split, not the condition dimension suppressing real
+matches, but that the baseline it was measured against was itself composed of
+unknown-matches. A criterion whose numerator is spurious cannot be met by
+curating more.
+
+### And a new defect class, found by the fill rather than by a screen
+
+`read_paper_conditions` reads the Methods. A `constant` verdict claims **no
+second value exists in the paper**. Those two scopes are not the same, and where
+they disagree no screen of the Methods or of the stored quote can tell:
+
+`PMC3940852` returns `sex = constant/male` on "C57Bl/6, db/+ and db/db male mice
+were purchased from CLEA Japan." The quote carries no second-cohort language of
+any kind, so D-078's sweep could not see it. The paper says `female` 21 times,
+in the Results: "Male Agrp-Sw mice showed a lean phenotype, **whereas female**
+Agrp-Sh mice tended toward increased body weight" -- an explicitly sexually
+dimorphic result.
+
+Screened across the 42 papers holding records with a single-sex `constant`
+verdict: 10 flagged, and **reading all ten gives 6 real and 4 false positives**
+of my own screen. The four: one cites other laboratories' female studies in its
+Discussion; one states "the absence of female cohorts may limit the
+generalizability"; one's males are mating partners rather than subjects (the
+same trap D-078 had already found in `PMC5099903`); one says females are future
+work. Each needed reading, not counting -- the sixth time today that mattered.
+
+The six real ones: `PMC11699438` (22 records), `PMC3940852` (18),
+`PMC11584794` (9), `PMC12248387` (7), `PMC6920260` (1), `PMC6934207` (1).
+
+**The exposure is small and the implication is not.** Only **1** of those 58
+records has `sex` null, so the fill would write exactly one wrong value. But
+**55 of them already carry a Methods-sourced `sex` entry**, and if those six
+papers returned the correct `varies`, **C009 would reject all 55**. The wrong
+verdict is precisely what keeps those records admissible: the defect is hiding
+behind itself, and fixing the classifier makes 55 admitted records
+inadmissible.
+
+### What is and is not done
+
+* **The fill is not applied.** Not because of the replication result -- a fill
+  that reveals spurious replication is doing its job, and honest conditions beat
+  null ones -- but because one known-wrong value would go in, and because fixing
+  the scope class first changes which records are admissible at all. Applying
+  it and then correcting would mean rewriting 219 record_ids twice.
+* The copy, its id map and its report are in the scratchpad. `data/curated/`
+  md5 is unchanged and was verified after every run.
+* Nothing here is a reason to drop a condition dimension from the claim key.
+  The key must be right for the corpus the project is going to have; what has
+  changed is that the project now knows its replication count was never
+  measuring replication.
