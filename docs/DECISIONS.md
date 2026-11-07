@@ -4188,3 +4188,87 @@ session rather than taken silently.
   are now *flagged*, not excluded, and a curator still has to read them.
 * `outcomes.json` goes to 0.5.1 — a synonym addition, not a new id.
 
+
+## D-071 - Adversarial verification refuted none of the eleven tier A mappings, and found a bug in the tooling doing the verifying
+
+**44 agents, three independent lenses per claim then an adversarial judge
+defaulting to REFUTED: 11 of 11 judged, 0 refuted, 0 tier A name claims false,
+11 carrying caveats.** No mapping was confirmed clean, and none fell.
+
+That is worth stating against the baseline: an earlier pass over the
+**hand-made** mapping refuted 3 of 13. The same attack on mappings produced by
+D-065's declared rule refuted nothing. The rule is the difference, not the
+attacker.
+
+### The finding that matters is about my code, not the mappings
+
+`nesting()` compared **cluster name strings**. Two populations mapped at
+different levels share cells without sharing a name, so it was structurally
+blind to them. Recomputed from the atlas's own per-cell labels, with cell counts
+reconciling exactly for all 23 mapped populations:
+
+**11 cell-level overlapping pairs. One declared. Ten invisible, and all ten
+share no cluster name at all.**
+
+`arc_agrp` (C66) and `arc_tbx3` (C185) overlap on **4663 of `arc_agrp`'s 5244
+cells — 88.9%** — and intersect on nothing a string comparison can see.
+`arc_ghrh` is wholly inside `arc_th`; `pvh_trh` wholly inside `pvh_sim1`.
+
+The docstring of the broken function said downstream similarity ranking "has to
+be able to see the overlap rather than rediscover it as a finding". It could
+not. **My own tests passed throughout** — `test_no_unrecorded_overlap_exists`
+compared names too, so it asserted the same blindness it was written to prevent.
+An adversarial agent found this by resolving every mapping to its finest-level
+leaves and reconciling cell counts, which is a check I never wrote.
+
+### D-068 survives, and that is luck rather than design
+
+D-066 disqualifies an overlapping neighbour, and D-068's run logged a Jaccard of
+0.00 on every row. Those zeros were **correct**: the nine tier A populations
+holding records are cell-level disjoint, verified. So the published result stands
+unchanged and needs no re-run.
+
+But the mechanism protecting it was not working, and it would have failed on the
+tier A+B+C secondary D-066 requires reported regardless of the primary:
+**`pvh_trh` lies entirely inside `pvh_sim1`** — 2151 cells, 100% of `pvh_trh` —
+and `pvh_trh` is one of the only two rankable populations. With tier C admitted,
+a name-based test would have let a population supply a prediction for a
+population it wholly contains. That secondary has not been run, so the fix lands
+before the defect could reach a result.
+
+### The fix
+
+`Assignment` and `PopulationVector` carry `leaf_clusters`, the finest-level
+clusters a mapping resolves to; `nesting()` and D-066's disqualification compare
+those. Names remain the fallback for same-level comparisons, where names and
+cells agree. The artefact now records `leaf_clusters` per entry and declares all
+**11** pairs. Tests assert the cross-level case explicitly, and the fixture is
+required to share no cluster name — otherwise it would stop demonstrating what
+name matching missed.
+
+### Two things the judges got right that their own examiners got wrong
+
+Recorded because it is evidence the panel's structure did work:
+
+* Two lenses reported that the ARC Npy+/Agrp− branch was "silently dropped".
+  The judge checked and it is not: `C286-179: Ptprk.Npy.Sst.GABA-4` (1433 cells,
+  100% ARC, Sst 4.37 against Agrp 0.18) is mapped as `arc_sst`, descends from
+  `C66-47` and not `C66-46`, and shares zero cells with `arc_agrp`. The real
+  issue is narrower — `Npy`-resolved evidence in the ARC is ambiguous between
+  two entries, and neither records it.
+* Two lenses called `best_marker_rank: 5` wrong because `Npy` ranks 2. The judge
+  read the module: it is the best rank of **the chosen marker across kept
+  clusters**, not across declared markers. Not a defect.
+
+### A caveat with no fix available here
+
+`arc_agrp`'s mapped cluster is chemically heterogeneous: `C465-290:
+Lepr.Agrp.GABA-4`, 581 of 5244 cells (11.1%), has summed mitochondrial mean
+**3.60** against 18.29/18.45/21.25/21.62 for its four siblings and an atlas
+median of 20.72 — a single-nucleus prep among whole-cell ones. It is still 100%
+ARC with Agrp 2.23, so these are AgRP neurons on different chemistry, but the
+headline mean of 3.4254 is a blend across library preparations. Recorded rather
+than corrected: dropping the cluster would change the mapping after the primary
+was measured, which D-067 forecloses.
+
+The mapping is otherwise unchanged. Tier B, never a training target.

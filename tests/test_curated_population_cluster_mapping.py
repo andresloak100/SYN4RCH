@@ -222,18 +222,43 @@ class NestingTest(unittest.TestCase):
             self.assertIn(pair["a"], doc["entries"])
             self.assertIn(pair["b"], doc["entries"])
 
-    def test_every_recorded_nesting_really_shares_a_cluster(self):
+    def test_every_recorded_nesting_really_shares_cells(self):
         doc = mapping()
         for pair in doc["nesting"]:
-            a = set(doc["entries"][pair["a"]].get("clusters") or [])
-            b = set(doc["entries"][pair["b"]].get("clusters") or [])
-            self.assertTrue(a & b, "%s/%s share nothing" % (pair["a"], pair["b"]))
+            a = set(doc["entries"][pair["a"]].get("leaf_clusters") or [])
+            b = set(doc["entries"][pair["b"]].get("leaf_clusters") or [])
+            self.assertTrue(a & b, "%s/%s share no cells" % (pair["a"], pair["b"]))
+
+    def test_every_mapped_entry_carries_its_leaf_clusters(self):
+        """Without them the overlap test silently degrades to name matching."""
+        for pid, row in mapping()["entries"].items():
+            if row["outcome"] != "mapped":
+                continue
+            self.assertTrue(row.get("leaf_clusters"), pid)
+            self.assertEqual(row["n_leaf_clusters"], len(row["leaf_clusters"]), pid)
+            for leaf in row["leaf_clusters"]:
+                self.assertTrue(leaf.startswith("C465-"), "%s: %s" % (pid, leaf))
+
+    def test_the_cross_level_overlap_that_name_matching_missed_is_declared(self):
+        doc = mapping()
+        listed = {frozenset((p["a"], p["b"])) for p in doc["nesting"]}
+        self.assertIn(frozenset(("arc_agrp", "arc_tbx3")), listed)
+        a = set(doc["entries"]["arc_agrp"]["clusters"])
+        b = set(doc["entries"]["arc_tbx3"]["clusters"])
+        self.assertEqual(a & b, set(),
+                         "this pair must share no cluster name, or it no longer "
+                         "demonstrates what name matching missed")
 
     def test_no_unrecorded_overlap_exists(self):
-        """The invariant that matters: a pair sharing clusters and *not* listed
-        would be invisible to anything downstream."""
+        """The invariant that matters: a pair sharing CELLS and not listed
+        would be invisible to anything downstream.
+
+        Compared on `leaf_clusters`, because an earlier version of this test
+        compared cluster names and passed while ten of eleven overlapping pairs
+        went unrecorded -- every pair mapped at two different levels.
+        """
         doc = mapping()
-        sets = {pid: set(row["clusters"])
+        sets = {pid: set(row["leaf_clusters"])
                 for pid, row in doc["entries"].items()
                 if row["outcome"] == "mapped"}
         listed = {frozenset((p["a"], p["b"])) for p in doc["nesting"]}

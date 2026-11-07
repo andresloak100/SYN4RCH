@@ -272,6 +272,41 @@ class TierTest(unittest.TestCase):
 
 
 class NestingTest(unittest.TestCase):
+    def test_overlap_across_LEVELS_is_seen_though_no_name_is_shared(self):
+        """The bug an adversarial pass found and these tests had not.
+
+        `nesting` compared cluster NAME strings, so two populations mapped at
+        different levels were invisible to it however many cells they shared.
+        In the real mapping it reported 1 of 11 cell-level overlapping pairs;
+        `arc_agrp` (C66) and `arc_tbx3` (C185) share 4663 of `arc_agrp`'s 5244
+        cells -- 88.9% -- and not one cluster name.
+        """
+        coarse = Assignment("arc_agrp", "mapped", level="C66",
+                            clusters=("C66-46: Agrp.GABA-4",),
+                            leaf_clusters=("C465-286", "C465-287", "C465-288"))
+        finer = Assignment("arc_tbx3", "mapped", level="C185",
+                           clusters=("C185-115: Npy.Agrp.GABA-4",),
+                           leaf_clusters=("C465-287", "C465-288", "C465-999"))
+        self.assertEqual(
+            {c.split(": ")[0] for c in coarse.clusters}
+            & {c.split(": ")[0] for c in finer.clusters},
+            set(), "the fixture must share no cluster name, or it proves nothing")
+        self.assertEqual(nesting([coarse, finer]),
+                         (("arc_agrp", "arc_tbx3", "partial"),))
+
+    def test_leaves_are_preferred_over_names_when_both_are_present(self):
+        """Names can agree while cells do not, at different levels."""
+        a = Assignment("a", "mapped", clusters=("shared-name",),
+                       leaf_clusters=("leaf-1",))
+        b = Assignment("b", "mapped", clusters=("shared-name",),
+                       leaf_clusters=("leaf-2",))
+        self.assertEqual(nesting([a, b]), ())
+
+    def test_names_are_still_used_when_no_leaves_are_supplied(self):
+        a = Assignment("a", "mapped", clusters=("x", "y"))
+        b = Assignment("b", "mapped", clusters=("y",))
+        self.assertEqual(nesting([a, b]), (("a", "b", "superset"),))
+
     def test_a_subset_relation_is_reported_in_both_directions_once(self):
         """`arc_pomc` inside `arc_tbx3` is the biology, not a bug -- but two
         populations sharing clusters have expression vectors correlated by

@@ -37,10 +37,11 @@ from syn4rch.atlas.similarity import (
 )
 
 
-def vec(pid, values, clusters=("c1",), tier="A", cells=100):
+def vec(pid, values, clusters=("c1",), tier="A", cells=100, leaves=None):
     return PopulationVector(population_id=pid, tier=tier,
                             values=tuple(values), clusters=tuple(clusters),
-                            n_cells=cells)
+                            n_cells=cells,
+                            leaf_clusters=tuple(leaves or ()))
 
 
 class PreRegisteredConstantsTest(unittest.TestCase):
@@ -324,6 +325,25 @@ class NeighbourChoiceTest(unittest.TestCase):
         self.assertTrue(gated.fell_back)
         self.assertEqual(ungated.chosen, "overlap")
         self.assertAlmostEqual(ungated.jaccard_with_chosen, 0.5)
+
+    def test_disqualification_sees_overlap_across_levels(self):
+        """D-066 disqualifies an overlapping neighbour, and before this fix it
+        could only see overlap that shared a cluster NAME -- so two populations
+        mapped at different levels sharing most of their cells passed the test.
+        """
+        held = vec("held", [1.0, 0.0], clusters=["C66-46"], leaves=["L1", "L2"])
+        same_cells = vec("other", [0.9, 0.1], clusters=["C185-115"],
+                         leaves=["L1", "L3"])
+        sims = {("held", "other"): 0.99}
+        c = choose_neighbour(held, [same_cells], sims)
+        self.assertTrue(c.fell_back, "overlap across levels was not detected")
+        self.assertEqual(c.skipped_for_overlap, ("other",))
+
+    def test_overlap_key_falls_back_to_names_without_leaves(self):
+        held = vec("held", [1.0], clusters=["shared"])
+        self.assertEqual(held.overlap_key, ("shared",))
+        withleaves = vec("h2", [1.0], clusters=["shared"], leaves=["L1"])
+        self.assertEqual(withleaves.overlap_key, ("L1",))
 
     def test_every_diagnostic_d059_and_d066_require_is_populated(self):
         near = vec("near", [0.9, 0.1, 0.0], clusters=["elsewhere"])

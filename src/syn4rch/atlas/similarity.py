@@ -102,6 +102,16 @@ class PopulationVector:
     values: Tuple[float, ...]
     clusters: Tuple[str, ...]
     n_cells: int
+    #: Finest-level clusters, for the overlap test. Two populations mapped at
+    #: different levels share cells without sharing a cluster name, so a
+    #: name-based disqualification is blind to them (see
+    #: `population_clusters.nesting`). D-066 disqualifies an overlapping
+    #: neighbour, and it can only do that on what this field carries.
+    leaf_clusters: Tuple[str, ...] = ()
+
+    @property
+    def overlap_key(self) -> Tuple[str, ...]:
+        return self.leaf_clusters or self.clusters
 
     @property
     def live_genes(self) -> int:
@@ -244,7 +254,7 @@ def choose_neighbour(
     )
     skipped = []
     for cand, sim in ranked:
-        overlap = jaccard(held_out.clusters, cand.clusters)
+        overlap = jaccard(held_out.overlap_key, cand.overlap_key)
         if disqualify_overlap and overlap > 0.0:
             skipped.append(cand.population_id)
             continue

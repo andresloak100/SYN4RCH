@@ -102,6 +102,13 @@ class Assignment:
     marker: Optional[str] = None
     level: Optional[str] = None
     clusters: Tuple[str, ...] = ()
+    #: The finest-level clusters these `clusters` resolve to, read off the
+    #: atlas's own per-cell labels. Required to see overlap between populations
+    #: mapped at DIFFERENT levels, which share cells without sharing a name --
+    #: `arc_agrp` at C66 and `arc_tbx3` at C185 share 88.9% of `arc_agrp`'s
+    #: cells and not one cluster name. The caller fills it, because resolving
+    #: leaves needs the atlas and this module stays pure.
+    leaf_clusters: Tuple[str, ...] = ()
     contrast: Optional[float] = None
     tier: Optional[str] = None
     named_clusters: int = 0
@@ -227,15 +234,26 @@ def assign_population(
 
 
 def nesting(assignments: Iterable[Assignment]) -> Tuple[Tuple[str, str, str], ...]:
-    """Pairs of populations whose cluster sets intersect.
+    """Pairs of populations whose cluster sets intersect, by CELLS not names.
 
     Nesting is reported, not forbidden: `arc_pomc` inside `arc_tbx3` is the
     biology -- Tbx3 is expressed in POMC neurons. But two populations sharing
-    clusters will have expression vectors correlated **by construction**, so
+    cells will have expression vectors correlated **by construction**, so
     anything downstream that ranks populations by transcriptomic similarity has
     to be able to see the overlap rather than rediscover it as a finding.
+
+    Compared on `leaf_clusters` where they are present. An earlier version
+    intersected cluster NAME strings and was therefore blind to every pair
+    mapped at different levels: of 11 cell-level overlapping pairs in the real
+    mapping it reported **one**, and the ten it missed share no name at all.
+    `arc_agrp` (C66) and `arc_tbx3` (C185) overlap on 4663 of `arc_agrp`'s 5244
+    cells -- 88.9% -- and intersect on nothing a string comparison can see.
+    An adversarial verification pass found this; it was not caught by a test.
+
+    Falling back to `clusters` when a caller supplies no leaves keeps the old
+    behaviour for same-level comparisons, where names and cells agree.
     """
-    sets = {a.population_id: frozenset(a.clusters)
+    sets = {a.population_id: frozenset(a.leaf_clusters or a.clusters)
             for a in assignments if not a.refused}
     out = []
     for a in sorted(sets):
