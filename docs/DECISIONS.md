@@ -5538,3 +5538,78 @@ be the enforcement point, which is the other half of what the review caught.
   nothing.
 * The remaining 203 screened verdicts on papers without records were not read
   individually.
+
+### Amendment to D-077: "the exposure is entirely prospective" is wrong, and the field list was wrong twice
+
+The D-078 session fixed the detectors, swept all 974 papers rather than the
+five I had, and found **ten** defects of this class. Its five, all in the 508:
+`PMC5746599` sex=both on "...for **most** experiments, **except for**
+optogenetic experiments that used **males only**" (13 records); `PMC3416931`
+sex=male on "**In most cases**, behavioural experiments were with male mice"
+(6); `PMC6978463` on "**For chemogenetic experiments**, only male mice were
+used" (10); `PMC7468160` (1); `PMC9592589` (1).
+
+**So the correction, which matters more than the count.** I wrote that the
+committed corpus is sound and the exposure entirely prospective, on the strength
+of 0 self-refuting quotes in 314 classifier-written entries. That check answers
+*"are the writes that exist defective?"* and I used the answer for *"are these
+papers safe to fill?"* Those are different questions, and the gap between them
+is every record the fill has not reached yet:
+
+| | records with no Methods-sourced entry on any dimension |
+|---|---|
+| all 709 | **470** |
+| the 508 | **269** |
+| batch 1 | 201 of 201 |
+
+Their 31 records sit in that gap: all five papers are in the 508, all 31 carry
+no `sex` evidence entry and 29 have `sex` null. My check could not see them
+because there was nothing written to read. **The 508 is clean as stored and was
+never safe as a fill target** -- clean because the fill never reached those
+records, not because the papers are clean. Unvisited, not sound. And the
+lockout D-075 removed is what had been keeping them that way.
+
+A re-run would therefore have written a defective value onto **70 records: 31
+in the 508 and 39 in batch 1.** My instruction "do not run the fill" was right
+and under-scoped: it extends to the whole corpus, not to batch 1.
+
+**And the asymmetry worth carrying forward.** D-075 could leave its genotype
+guard modest because both reachable verdicts refused, so detector quality
+changed only the explanation a curator reads. Here a missed assay class leaves
+a wrong `constant` standing, so the lexicon must be generous and generous costs
+real values: 922 constants to 890, of which 10 are the defects and 25 are this
+project's own demotion doctrine working -- a different sentence now reads as
+scoped and `refused_sex_not_constant_after_a_refusal` declines. None of the 25
+touches a record. The whole cost falls on papers the corpus does not use.
+
+**The membership field list was wrong in both directions.**
+
+* `tissue_id` is **not** vocabulary-keyed. No file in `data/vocab/` owns it --
+  the directory holds methods, outcomes, populations, regions, targets -- and 0
+  of 709 records populate it. My own probe printed `(no tissues)` for its
+  declared count and I reported it as a field with a gap anyway.
+* `background_genotype` **is** keyed, to `targets.json`'s id space, which that
+  file's `_meta.description` states outright: "Since v0.2.0 the same id space
+  also serves the BACKGROUND genotype dimension (D-060)". I left it out. It is
+  also the only such field carrying **composite** ids
+  (`npy:loss_of_function:cell_type_restricted`), so a membership check must
+  parse rather than look up.
+
+**And a membership check does exist.** `qc/units.py:172` emits
+`QC_OUTCOME_ID_NOT_IN_VOCAB` -- at `WARNING`, and `QCReport.ok` is
+`not self.hard and not self.load_errors`, so it blocks nothing. My claim was
+that no such check exists anywhere. It exists and does nothing, **which is the
+exact shape I documented in D-074 hours earlier**, where `W009` fired on 67 of
+67 `age_group` records and blocked none. Having named that defect class I then
+asserted the stronger and wrong version of it in the same category. The right
+statement is: one membership check exists, at a severity that cannot reject,
+outside both `validate` and the gate -- and the corpus is clean on all six
+fields, so making it blocking still rejects nothing.
+
+**What is cleared and what is not.** Verified after `f1519a3`: all ten papers
+now return `varies` or `absent`, `_sex_vote` on the PMC5910424 sentence returns
+`(None, 'refused_disjunctive_sex_is_unresolved')`, and 1362 tests pass. The
+detector blocker is gone. The fill is still not run, because the precondition I
+set for myself in D-077 -- C009 requiring a verdict that survived with **no
+refusal recorded on its dimension**, not merely the word `constant` -- is mine
+and is now unblocked rather than done.
