@@ -177,6 +177,40 @@ class RefusalTest(unittest.TestCase):
                 self.assertIn("cluster", row["reason"], pid)
 
 
+class NearMissTest(unittest.TestCase):
+    """D-070's asymmetry, applied to this artefact.
+
+    A wrongly included cluster sits in `clusters` where a reader will see it.
+    A wrongly excluded one would be recorded nowhere, so the near-misses are
+    written down -- and held to not being members.
+    """
+
+    def test_a_near_miss_is_never_also_a_member(self):
+        for pid, row in mapping()["entries"].items():
+            members = set(row.get("clusters") or [])
+            for nm in row.get("near_miss_excluded") or []:
+                self.assertNotIn(nm["cluster"], members, pid)
+
+    def test_every_near_miss_is_below_the_keep_threshold(self):
+        """If one were at or above it, the rule would have kept it, and the
+        artefact would be inconsistent with the code that built it."""
+        for pid, row in mapping()["entries"].items():
+            for nm in row.get("near_miss_excluded") or []:
+                self.assertLess(nm["fraction_of_best"], KEEP_FRACTION, pid)
+
+    def test_the_note_says_they_are_not_members(self):
+        self.assertIn("NOT members", mapping()["near_miss_note"])
+
+    def test_the_pvh_trh_near_miss_that_moves_the_result_is_recorded(self):
+        """D-068's sensitivity note turns on this one: a Trh-named, 100%-PVH
+        cluster excluded by 0.058, in one of only two rankable populations.
+        Adding it takes the result from 2 of 9 rankable to 0 of 9."""
+        rows = mapping()["entries"]["pvh_trh"].get("near_miss_excluded") or []
+        got = {r["cluster"]: r["fraction_of_best"] for r in rows}
+        self.assertIn("C185-12: Ebf1.Trh.GLU-2", got)
+        self.assertAlmostEqual(got["C185-12: Ebf1.Trh.GLU-2"], 0.442, places=3)
+
+
 class NestingTest(unittest.TestCase):
     def test_nesting_is_recorded_so_a_similarity_experiment_can_see_it(self):
         """Two populations sharing clusters have correlated vectors by

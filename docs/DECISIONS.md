@@ -3976,6 +3976,37 @@ alongside its own.
 The mapping of D-065 stands and remains Tier B, never a training target. Nothing
 here is evidence that any intervention does anything.
 
+> **Sensitivity, measured after the fact: the conclusion is robust and the table
+> is not.** A second session's finding in D-070 — that for a tool which
+> *proposes* candidates, a false one is reviewable while a missed one is
+> invisible — applies to D-065's own keep threshold, which records what it kept
+> and nothing about what it nearly kept. Audited, 7 of 23 mapped populations have
+> a region candidate within 0.35–0.50 of their best, now recorded as
+> `near_miss_excluded` in the artefact. One of them bears directly on this entry.
+>
+> `pvh_trh` excluded **`C185-12: Ebf1.Trh.GLU-2`** — Trh-named, 100% PVH, mean
+> 1.234 — at 0.442 of its best against a 0.50 cut, missing by 0.058. And
+> `pvh_trh` is one of the only two rankable populations above.
+>
+> Adding that single cluster to `pvh_trh` takes the result from **2 of 9 rankable
+> to 0 of 9**: `pvh_trh` → `pvh_crh` falls from 99.5% to 88.0% and `pvh_crh` →
+> `pvh_trh` from 100% to 77.0%, so the one stable pair dissolves and no
+> population clears the guard.
+>
+> **So "2 of 9" rests on a threshold decision, and it is fragile in one
+> direction only — toward zero.** The finding this entry reports, that
+> transcriptomic similarity cannot rank these populations reliably, holds under
+> both: at 2 of 9 the clustered interval cannot be formed, and at 0 of 9 there is
+> nothing to form it from. The conclusion survives; the specific table should not
+> be quoted without this note. It also means the `pvh_crh` caveat I flagged
+> elsewhere was understated — a refutation is not needed to reach zero, a 0.058
+> shift in one threshold does it.
+>
+> The mapping is **not** changed. D-067 forecloses altering it after the primary
+> is measured, and a revision would be a new experiment under a new number
+> reporting this result alongside. This is a robustness note, not a
+> re-specification.
+
 ## D-069 - The re-run trigger, declared while no EEG record exists and the answer cannot be known
 
 **The user has approved the EEG curation pass, conditional on the matcher fixes
