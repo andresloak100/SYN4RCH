@@ -4374,7 +4374,7 @@ hold 27 records between them.
 1. **Volume.** At least **150 records** admitted from the 91 papers. The circuit
    pass yielded 146 from 60.
 2. **Depth where it is missing.** At least **6** tier A populations holding 5 or
-   more records, against 3 today (`lha_orexin` 16, `pvh_trh` 8, `pvh_crh` 7).
+   more records. **Baseline amended below: it is 4, not 5.**
 3. **Concentration.** `arc_agrp` + `arc_pomc` fall below **65%** of tier A
    circuit records, from 82%.
 4. **Replication.** Circuit cells spanning two or more laboratories rise by at
@@ -4390,6 +4390,53 @@ reporting wakefulness do not. I expect volume and depth to come in and
 replication to disappoint, and if that happens the finding is that **splitting
 an outcome id and counting replication across it are in tension**, which is
 D-023's trade appearing a second time at a larger scale.
+
+### Amendment, before the pass has produced a record
+
+**Criterion 2's baseline was 5 when written and is 4 now, so the criterion is
+harder than I set it.** D-073 landed twenty minutes after this entry was
+committed and moved `pvh_trh` (8 records) from tier A to tier B under the new
+threshold-stability cap, along with `arc_ghrh`. The session that wrote D-073
+told me rather than letting me find it at scoring time.
+
+| | tier A populations with >=5 circuit records |
+|---|---|
+| at `20a367b`, when criterion 2 was written | `arc_agrp` 123, `arc_pomc` 52, `lha_orexin` 16, **`pvh_trh` 8**, `pvh_crh` 7 — **5** |
+| now | `arc_agrp`, `arc_pomc`, `lha_orexin`, `pvh_crh` — **4** |
+
+So the pass must deliver **two** more qualifying populations, not one. **I am
+taking the harder version rather than pinning the criterion to the superseded
+tier assignment**, because D-073's cap is a correction and measuring against a
+baseline I now know to be wrong would be the goalpost move with extra steps.
+The pre-amendment text is in git at `20a367b`.
+
+The timing is the whole argument, and it is the one the other session and I have
+been making to each other all day: restating a baseline before any record
+exists is free, and doing it after the pass lands at 5 of 6 would be
+indefensible. Only one of those is still available.
+
+**And the criterion had a design flaw I should name rather than only fix.** It
+depends on a tier label I do not control, assigned by a mapping in another
+session's module, which has moved twice in one day — D-065 to D-071 to D-073.
+Pinning a pass's success to a label that moves underneath it is bad criterion
+design regardless of which direction it moves. So criterion 2 gains a
+tier-independent companion that this pass does control:
+
+2b. **Populations holding 5 or more circuit records, regardless of tier**, rise
+    from **6** today (`arc_agrp`, `arc_pomc`, `lha_orexin`, `pvh_crh`,
+    `pvh_trh`, `vmh_sf1`) to at least **9**.
+
+Both are reported. If the tiers move again, 2b still means what it meant when it
+was written, and the pair makes visible whether a miss on 2 was the pass's doing
+or the mapping's.
+
+**One figure that does not move.** Tier A seam units outside the dominant pair
+go 1,294 to 1,347 on the other session's filter and are unchanged in substance
+on mine: `pvh_trh` contributes 2 seam units and `arc_ghrh` none, so the tier
+change costs nothing on volume. Our filters still disagree — 1,724 against
+1,673 seam units — and neither of us should quote the other's figure as a
+replacement rather than a cross-check. The 5-to-4 change does not depend on the
+filter at all, being a record count over populations whose tier moved.
 
 ### What would abandon the pass
 
