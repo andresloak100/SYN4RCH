@@ -209,15 +209,20 @@ __all__ = [
 
 #: The dimensions this module reads, in a locally fixed iteration order.
 #:
-#: A **subset** of :data:`syn4rch.schema.record.CONDITION_DIMENSIONS` since
-#: D-060, which added ``background_genotype``. This module is the paper-reading
-#: extractor for the four conditions a Methods section states about a cohort;
-#: a background genotype is curated by its own pass, because deciding whether
-#: an allele is the recorded perturbation or the substrate it was applied to is
-#: a per-record judgement this module has no way to make (D-060). The comment
-#: here used to claim this was the same tuple as CONDITION_DIMENSIONS, and a
-#: test now asserts the weaker and true relation instead.
-DIMENSIONS = ("sex", "diet", "age_group", "challenge")
+#: Equal to :data:`syn4rch.schema.record.CONDITION_DIMENSIONS` (D-075).
+#:
+#: It was a **subset** from D-060 until D-075, excluding ``background_genotype``
+#: on the argument that deciding whether an allele is the recorded perturbation
+#: or the substrate it was applied to is a per-record judgement this module
+#: cannot make. That argument is sound and it is about **extraction**. Being out
+#: of this tuple also took the dimension out of the **verdict**, and so out of
+#: :func:`inadmissible_methods_conditions` -- which needs only the verdict. One
+#: tuple was carrying two decisions, and the second one was never argued.
+#:
+#: So genotype is in, with no Methods extraction rule, exactly as ``challenge``
+#: is (see :func:`_read_genotype`). A dimension this module cannot extract is
+#: still a dimension it can refuse, and refusing is the whole of what 3b asks.
+DIMENSIONS = ("sex", "diet", "age_group", "challenge", "background_genotype")
 
 #: The three verdicts a dimension can earn. See the module docstring.
 VERDICTS = ("constant", "varies", "absent")
@@ -1775,6 +1780,73 @@ def _read_challenge(units, verdicts, constants, notes) -> None:
     verdicts["challenge"] = "varies" if measured else "absent"
 
 
+#: Strain and background vocabulary, used only to *describe* a refusal.
+#:
+#: Deliberately not a classifier of genetic background: see
+#: :func:`_read_genotype` for why no detector here can change an outcome.
+_BACKGROUND_TOKEN = re.compile(
+    r"\b(?:"
+    r"C57BL/6[A-Z]?|BALB/?c|129[A-Za-z/]*|FVB(?:/[A-Za-z]+)?|DBA/\d"
+    r"|CD\s?-?\s?1\b|ICR\b|Swiss\s+Webster|NOD\b|NMRI\b"
+    r")",
+    re.IGNORECASE,
+)
+
+
+def _read_genotype(units, verdicts, notes) -> None:
+    """Record what the Methods say about genetic background, and refuse it all.
+
+    There is no extraction path here and no rule name, as for ``challenge``.
+    ``constant`` is unreachable, and for a stronger reason than challenge's.
+    The module docstring's standing rule is that ``constant`` is "a claim that
+    no second value exists in the paper", returned only when the absence of a
+    second value was *established*. Sex has two tokens and diet has a handful,
+    so their absence can be established by exhausting the vocabulary. Genetic
+    background has no closed vocabulary -- strain names, alleles, floxed lines
+    and Cre drivers are open sets -- so a second value can never be shown
+    absent, and promoting the only one detected is exactly the failure that
+    cost this module three defects (see the module docstring).
+
+    **Both verdicts this function can return refuse.** ``varies`` and
+    ``absent`` are equally inadmissible under 3b, so how well the tokens below
+    match changes the *explanation* a curator reads and never the decision.
+    That is what makes an open-vocabulary dimension safe to gate: the gate does
+    not depend on recognising the vocabulary.
+
+    The verdicts are therefore each a true statement rather than a guess:
+    ``varies`` where two or more distinct backgrounds are named, which the
+    paper itself has then established; ``absent`` otherwise, meaning this
+    module read nothing it can act on -- not that the paper is uniform.
+    """
+    seen: Dict[str, str] = {}
+    for sentence, locator in units:
+        for match in _BACKGROUND_TOKEN.finditer(sentence):
+            token = match.group(0)
+            seen.setdefault(token.upper().replace(" ", ""), token)
+
+    if len(seen) >= 2:
+        notes.append(
+            "refused_methods_name_more_than_one_background: the Methods name "
+            "%s. The paper itself has established that a second background "
+            "exists, so no Methods sentence says which one any given record's "
+            "animals carried. background_genotype is read only from a "
+            "record's own passage, under the arm rule (D-060)."
+            % ", ".join(sorted(seen.values()))
+        )
+        verdicts["background_genotype"] = "varies"
+        return
+
+    notes.append(
+        "refused_methods_cannot_establish_one_background: genetic background "
+        "has no closed vocabulary, so this module cannot show that a second "
+        "background is absent, and a single detected background is not a "
+        "paper-wide one%s. 'constant' is unreachable for this dimension; the "
+        "value belongs to the record's own passage under the arm rule (D-060)."
+        % ("" if not seen else " (detected: %s)" % ", ".join(sorted(seen.values())))
+    )
+    verdicts["background_genotype"] = "absent"
+
+
 def read_paper_conditions(
     paper: ParsedPaper, study_id: str, pmcid: str
 ) -> PaperConditions:
@@ -1788,8 +1860,10 @@ def read_paper_conditions(
     has an entry in ``constants``, and no entry in ``constants`` carries a
     quote this paper does not contain.
 
-    ``verdicts["challenge"]`` is never ``"constant"``: there is no Methods
-    rule for it.
+    ``verdicts["challenge"]`` and ``verdicts["background_genotype"]`` are
+    never ``"constant"``: there is no Methods rule for either. Both are read
+    from a record's own passage instead, and both are refused here so that
+    :func:`inadmissible_methods_conditions` can say so.
 
     **A ``constant`` verdict is a claim that no second value exists in the
     paper**, so it is returned only when the absence of a second value was
@@ -1831,6 +1905,7 @@ def read_paper_conditions(
     _read_diet(units, verdicts, constants, notes)
     age_value, age_unit = _read_age(units, verdicts, constants, notes, species)
     _read_challenge(units, verdicts, constants, notes)
+    _read_genotype(units, verdicts, notes)
 
     # The verbatim gate. Mechanical, and applied to every extraction however
     # it was produced: a buggy rule above cannot emit a sentence the paper
@@ -1932,10 +2007,17 @@ def inadmissible_methods_conditions(record, paper: "PaperConditions"):
     produced 272 Methods-sourced entries of which **115 were on dimensions this
     classifier refuses**. See D-074.
 
-    Dimensions outside :data:`DIMENSIONS` are skipped rather than failed.
-    ``background_genotype`` is a declared condition dimension with no Methods
-    rule behind it, so there is no verdict to check and refusing it would
-    punish a curator for the vocabulary's gap rather than for a reading.
+    Dimensions outside :data:`DIMENSIONS` are skipped rather than failed,
+    because a dimension with no verdict has nothing to check.
+
+    ``background_genotype`` was such a dimension until D-075, and the six
+    Methods-sourced genotype entries in the corpus went unexamined in both
+    directions as a result. It is now in :data:`DIMENSIONS` with no Methods
+    rule, so its verdict is never ``constant`` and every Methods-sourced
+    genotype entry is refused. That is a reading and not a gap: the refusal
+    says the Methods cannot pin a record to one arm, which is the same thing
+    ``challenge``'s refusal says, and the stored quotes bear it out -- each of
+    the six names two cohorts.
     """
     out = []
     for entry in getattr(record, "condition_evidence", None) or []:

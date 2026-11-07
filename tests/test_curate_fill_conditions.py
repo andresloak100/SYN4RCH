@@ -268,6 +268,68 @@ class TestReportAndStats(unittest.TestCase):
         )
 
 
+class OutputVersionTest(unittest.TestCase):
+    """D-075: a top-up never changes ``schema_version``. Only the migration does.
+
+    This module is two passes in one file, and they were sharing an output
+    version. ``ACCEPTED_INPUT_VERSIONS`` omitted ``0.4.0``, which read as a
+    missing tuple entry and was really a guard doing its job: the top-up wrote
+    :data:`TO_VERSION`, so reading a 0.4.0 file would have written the corpus
+    back out as 0.3.0. Refusing was right; the welded output version was the
+    defect, and it cost the project the only mechanical implementation of
+    PROTOCOL 3b for as long as the schema ran ahead of 0.3.0.
+    """
+
+    def _row(self):
+        return [record(outcome_raw="synthetic readout %d" % i) for i in range(2)]
+
+    def test_the_current_schema_version_is_accepted(self):
+        from syn4rch.schema.record import SCHEMA_VERSION
+        from syn4rch.curate.fill_conditions import ACCEPTED_INPUT_VERSIONS
+
+        self.assertIn(
+            SCHEMA_VERSION, ACCEPTED_INPUT_VERSIONS,
+            "the pass that implements 3b cannot be locked out by a schema bump",
+        )
+
+    def test_a_top_up_writes_the_version_it_read(self):
+        result = fill_records(self._row(), tempfile.mkdtemp(), out_version="0.4.0")
+        self.assertTrue(result.records)
+        for record in result.records:
+            self.assertEqual(record.schema_version, "0.4.0")
+
+    def test_the_migrations_target_does_not_follow_the_schema(self):
+        """D-046: pinned, so the report it published stays recomputable.
+
+        That the migration writes it is asserted by
+        ``TestFillRecordsOverADataset.test_every_record_is_rewritten_to_the_new_version``.
+        What is asserted here is that it must not be made to track
+        ``SCHEMA_VERSION`` -- which is the shortcut that would have "fixed" the
+        0.4.0 lockout by silently re-targeting a finished migration.
+        """
+        from syn4rch.schema.record import SCHEMA_VERSION
+
+        self.assertEqual(TO_VERSION, "0.3.0")
+        self.assertNotEqual(TO_VERSION, SCHEMA_VERSION)
+
+    def test_every_accepted_version_can_be_written_back_unchanged(self):
+        """The invariant stated as a loop, so a fourth accepted version
+        cannot be added without this passing for it too."""
+        from syn4rch.curate.fill_conditions import (
+            ACCEPTED_INPUT_VERSIONS,
+            FROM_VERSION,
+        )
+
+        for version in ACCEPTED_INPUT_VERSIONS:
+            if version == FROM_VERSION:
+                continue  # the migration, which moves the version by design
+            result = fill_records(
+                self._row(), tempfile.mkdtemp(), out_version=version
+            )
+            for record in result.records:
+                self.assertEqual(record.schema_version, version, version)
+
+
 if __name__ == "__main__":
     unittest.main()
 

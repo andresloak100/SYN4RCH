@@ -123,8 +123,10 @@ reporting no result yields none.
 
 ## 3b. Stage 6: the condition dimension
 
-The condition dimension is `(sex, diet, age_group, challenge)` and it is the
-one place where a value may come from outside the record's own passage.
+The condition dimension is
+`(sex, diet, age_group, challenge, background_genotype)` and it is the one place
+where a value may come from outside the record's own passage. It read as four
+dimensions here until D-075, three versions after D-060 added the fifth.
 
 Papers put the result in Results and the sex and diet in Methods. Reading the
 passage alone therefore guaranteed the gap this version exists to close: 197 of
@@ -201,6 +203,24 @@ food intake, body weight, energy expenditure, blood glucose. "Food intake in the
 fed state" and "food intake after a fast" are two different experiments, and
 telling them apart is the entire value of the field. Those come from the
 record's own passage, where the paper says it.
+
+**`background_genotype` is never a Methods value** (D-075). It is the genetic
+substrate the perturbation was applied *to*, decided per record by the arm rule
+(D-060), and a Methods section that describes a knockout line and its littermate
+controls has told you both genotypes exist and nothing about which arm Figure 3C
+reports. The classifier refuses it outright: unlike sex or diet, genetic
+background has no closed vocabulary -- strains, alleles, floxed lines and Cre
+drivers are open sets -- so "the Methods name only one background" can never be
+*established*, only failed to be contradicted. `constant` is therefore
+unreachable and every Methods-sourced genotype is refused (`C009`).
+
+This is not a theoretical guard. Six committed records took the Methods route
+before it was gated, five of them from a paper whose own Methods state three
+separate genetic backgrounds. The cost is real in both directions: one of the
+six carries a value that is *correct*, from a paper that genuinely is constant,
+and it is refused too, because establishing that took two sentences and the
+knowledge of which allele was the substrate. Fill it from the record's own
+passage, or leave it `null`.
 
 **Honest labelling.** `extraction_method` records what actually happened:
 `llm` for an unreviewed model proposal, `llm_human_reviewed` only once a human

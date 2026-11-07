@@ -95,31 +95,28 @@ class Record:
 
 
 class TestModuleVocabulary(unittest.TestCase):
-    def test_dimensions_are_a_subset_of_the_schema(self):
-        """D-060: a SUBSET, and deliberately so.
+    def test_dimensions_cover_every_schema_dimension(self):
+        """D-075: equality, and the exclusion moved to where it belongs.
 
-        This asserted equality until D-060 added ``background_genotype``. This
-        module is the paper-reading extractor for the conditions a Methods
-        section states about a cohort; deciding whether an allele is the
-        recorded perturbation or the substrate it was applied to is a
-        per-record judgement it cannot make, so genotype is curated by its own
-        pass. The subset relation is the true claim, and it is asserted rather
-        than left as a comment so a dimension cannot silently go unextracted
-        without this test naming it.
+        This asserted a SUBSET from D-060 to D-075, with ``background_genotype``
+        the one dimension outside the tuple. The reason given was sound and was
+        about *extraction*: deciding whether an allele is the recorded
+        perturbation or the substrate it was applied to is a per-record
+        judgement this module cannot make.
+
+        What the reason did not cover is that the same tuple decides which
+        dimensions get a **verdict**, and so which ones
+        ``inadmissible_methods_conditions`` can refuse -- and refusing needs
+        only the verdict, never an extraction. One tuple carried two decisions
+        and the second was never argued, so genotype was ungated: a reader
+        could source it from any Methods section at all and nothing looked.
+
+        The extraction exclusion is still real and is now asserted where it
+        lives, in :data:`RULES` -- see the two ``no_methods_rule`` tests.
         """
         from syn4rch.schema.record import CONDITION_DIMENSIONS
 
-        self.assertTrue(set(C.DIMENSIONS) <= set(CONDITION_DIMENSIONS))
-        self.assertEqual(
-            tuple(d for d in CONDITION_DIMENSIONS if d in set(C.DIMENSIONS)),
-            C.DIMENSIONS,
-            "the extractor's order must follow the schema's",
-        )
-        self.assertEqual(
-            sorted(set(CONDITION_DIMENSIONS) - set(C.DIMENSIONS)),
-            ["background_genotype"],
-            "only background_genotype is extracted by another pass (D-060)",
-        )
+        self.assertEqual(C.DIMENSIONS, CONDITION_DIMENSIONS)
 
     def test_every_rule_name_is_declared(self):
         # No rule may be emitted that RULES does not name: a value whose rule
@@ -130,6 +127,18 @@ class TestModuleVocabulary(unittest.TestCase):
 
     def test_no_methods_rule_for_challenge(self):
         self.assertFalse(any(rule.endswith("_challenge") for rule in C.RULES))
+
+    def test_no_methods_rule_for_background_genotype(self):
+        """D-075: in DIMENSIONS to be refused, never to be extracted.
+
+        This is where D-060's argument now lives. A rule name here would mean
+        the module had extracted a genotype from a Methods section, which is
+        the per-record judgement it cannot make.
+        """
+        self.assertIn("background_genotype", C.DIMENSIONS)
+        self.assertFalse(
+            any(rule.endswith(("_genotype", "_background")) for rule in C.RULES)
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -1216,6 +1225,99 @@ class TestPaperConditionsShape(unittest.TestCase):
             self.assertEqual(reference.number, 2)
 
 
+class GenotypeVerdictTest(unittest.TestCase):
+    """D-075: the Methods may describe a background; they may never settle one.
+
+    FABRICATED TEST DATA - NEVER EVIDENCE, except where a quote is named as
+    coming from a committed record.
+
+    The module's standing rule is that ``constant`` is a claim that no second
+    value exists, returned only when the absence of a second value was
+    *established*. Sex has two tokens and diet a handful, so exhausting the
+    vocabulary establishes it. Genetic background is an open set -- strains,
+    alleles, floxed lines, Cre drivers -- so nothing here can establish it, and
+    three of this module's early defects were all the same mistake of promoting
+    the only value detected.
+    """
+
+    def test_a_single_named_background_is_not_constant(self):
+        result = read(["Male C57BL/6J mice were used for all experiments."])
+        self.assertEqual(result.verdicts["background_genotype"], "absent")
+        self.assertTrue(
+            has_note(result, "refused_methods_cannot_establish_one_background")
+        )
+
+    def test_two_named_backgrounds_are_varies(self):
+        """PMC10173804's shape, which is why the six entries are inadmissible.
+
+        That paper's own Methods say the lines were "maintained in house on a
+        C57BL/6N background", that "Whole body NPY-deficient mice were on a
+        129sv background", and that the aging studies used C57BL/6J -- three
+        backgrounds, stated by the paper. Five committed records nonetheless
+        carry a Methods-sourced genotype from it.
+        """
+        result = read([
+            "All the mouse lines were maintained on a C57BL/6N background.",
+            "Whole body NPY-deficient mice were on a 129sv background.",
+        ])
+        self.assertEqual(result.verdicts["background_genotype"], "varies")
+        self.assertTrue(
+            has_note(result, "refused_methods_name_more_than_one_background")
+        )
+
+    def test_no_named_background_is_absent(self):
+        result = read(["Mice were group housed with ad libitum access to chow."])
+        self.assertEqual(result.verdicts["background_genotype"], "absent")
+
+    def test_constant_is_unreachable_whatever_the_methods_say(self):
+        """The property the gate rests on, asserted over every shape at once."""
+        for methods in (
+            ["Male C57BL/6J mice were used."],
+            ["All animals were C57BL/6J throughout the study."],
+            ["Mice were backcrossed onto a C57BL/6N background for ten generations."],
+            ["AgRP-IRES-Cre mice were crossed to ChR2fl/fl mice."],
+            ["Wild-type littermates served as controls."],
+            [],
+        ):
+            result = read(methods or ["Nothing relevant was stated."])
+            self.assertNotEqual(
+                result.verdicts["background_genotype"], "constant", methods
+            )
+            self.assertNotIn("background_genotype", result.constants, methods)
+
+    def test_the_detector_cannot_change_an_outcome_only_the_message(self):
+        """Why an open vocabulary is safe to gate here.
+
+        ``varies`` and ``absent`` are both inadmissible, so a token the regex
+        misses costs a worse explanation and never a wrong admission. If this
+        ever stops holding, the gate has started depending on recognising a
+        vocabulary it cannot enumerate.
+        """
+        record = _GenotypeRecord()
+        for verdict in ("varies", "absent"):
+            paper = C.PaperConditions(
+                study_id=STUDY, pmcid=PMCID,
+                verdicts={"background_genotype": verdict}, constants={},
+            )
+            self.assertTrue(C.inadmissible_methods_conditions(record, paper))
+
+
+class _GenotypeRecord:
+    """A record carrying one Methods-sourced genotype entry, and nothing else."""
+
+    record_id = "synthetic:rec-genotype"
+    condition_evidence = (
+        {
+            "dimension": "background_genotype",
+            "value": "wild_type",
+            "source": "methods",
+            "locator": "Methods para 1",
+            "quote": "Invented methods sentence.",
+            "rule": "invented_rule",
+        },
+    )
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
 
@@ -1320,21 +1422,48 @@ class InadmissibleMethodsConditionTest(unittest.TestCase):
             [],
         )
 
-    def test_background_genotype_is_skipped_rather_than_failed(self):
-        """A declared condition dimension with no Methods rule behind it.
+    def test_a_methods_sourced_background_genotype_is_refused(self):
+        """D-075, and the inverse of what this test asserted under D-074.
 
-        `background_genotype` is in schema CONDITION_DIMENSIONS and not in this
-        module's DIMENSIONS, so there is no verdict to check. Failing it would
-        punish a curator for the gap; the gap itself is named in D-074.
+        It read ``test_background_genotype_is_skipped_rather_than_failed``, on
+        the argument that a dimension with no Methods rule has no verdict to
+        check and that refusing it would punish a curator for the vocabulary's
+        gap. The first half is true of the code as it stood. The second half
+        was wrong, and the corpus said so: all six Methods-sourced genotype
+        entries carry a quote naming **two** cohorts -- one of them a paper
+        that states three separate genetic backgrounds in its own Methods. The
+        refusal is a reading, not a gap.
         """
-        self.assertIn("background_genotype", self._schema_dimensions())
-        self.assertNotIn("background_genotype", C.DIMENSIONS)
+        self.assertIn("background_genotype", C.DIMENSIONS)
+        for verdict in ("varies", "absent", None):
+            paper = C.PaperConditions(
+                study_id=STUDY, pmcid=PMCID,
+                verdicts=({} if verdict is None
+                          else {"background_genotype": verdict}),
+                constants={},
+            )
+            self.assertEqual(
+                C.inadmissible_methods_conditions(
+                    self._record("background_genotype", "mixed"), paper
+                ),
+                [("background_genotype", "mixed", verdict)],
+                "verdict %r must refuse" % verdict,
+            )
+
+    def test_a_passage_sourced_background_genotype_is_untouched(self):
+        """The route D-060 built stays open; 3b only ever spoke to Methods.
+
+        50 of the 56 genotype entries in the corpus come this way, and nothing
+        here may disturb them.
+        """
         paper = C.PaperConditions(
-            study_id=STUDY, pmcid=PMCID, verdicts={}, constants={},
+            study_id=STUDY, pmcid=PMCID,
+            verdicts={"background_genotype": "varies"}, constants={},
         )
         self.assertEqual(
             C.inadmissible_methods_conditions(
-                self._record("background_genotype", "mixed"), paper
+                self._record("background_genotype", "mixed", source="passage"),
+                paper,
             ),
             [],
         )

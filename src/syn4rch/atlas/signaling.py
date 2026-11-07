@@ -186,6 +186,14 @@ OUTCOME_SYSTEM = {
     "wakefulness": "behaviour",
     "sleep_latency": "behaviour",
     "sleep_fragmentation": "behaviour",
+    # The third firing of this map's gap in three days (after `nrem_sleep` from
+    # the sleep split, then this). `water_intake` is "Water intake / thirst",
+    # and it goes under `behaviour` rather than `feeding`: drinking is an
+    # ingestive behaviour but thirst is not the feeding system, and the atlas
+    # would mislabel it. Fluid homeostasis is now split across two buckets --
+    # `osmolality_avp` sits in `endocrine` -- so a `fluid_balance` system is the
+    # real fix if a third such readout arrives. One id does not earn a bucket.
+    "water_intake": "behaviour",
     "gut_motility": "autonomic",
     "bone_density": "body_composition",
     # The second circuit batch brought the first inflammatory readouts: PVH CRH

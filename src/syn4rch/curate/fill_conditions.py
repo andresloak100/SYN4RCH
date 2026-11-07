@@ -109,7 +109,20 @@ TO_VERSION = "0.3.0"
 #: Running it twice over the same file is close to a no-op by construction:
 #: everything it filled the first time comes back `confirmed`, which attaches
 #: no second evidence entry and changes no ``record_id``.
-ACCEPTED_INPUT_VERSIONS = ("0.2.0", "0.3.0")
+#:
+#: ``0.4.0`` was added by D-075, and the reason it was missing is worth keeping.
+#: This module is two passes in one file: a one-shot ``0.2.0 -> 0.3.0``
+#: migration, and a version-agnostic top-up. Only the migration has a target
+#: version, pinned by D-046 so its published report stays recomputable -- but
+#: the top-up wrote :data:`TO_VERSION` too, so letting it read a ``0.4.0`` file
+#: would have *downgraded* the corpus to ``0.3.0``. Refusing was correct for
+#: the code as written; the defect was the welded output version, and it cost
+#: the project its only mechanical implementation of PROTOCOL 3b for as long as
+#: the schema was ahead of ``0.3.0``.
+#:
+#: So the invariant, enforced in :func:`fill_records` and tested: **a top-up
+#: never changes ``schema_version``.** Only the migration does.
+ACCEPTED_INPUT_VERSIONS = ("0.2.0", "0.3.0", "0.4.0")
 
 FILLED = "filled"
 CORRECTED = "corrected"
@@ -446,13 +459,20 @@ def _paper_path(record: TierARecord, fulltext_dir: str) -> Optional[str]:
 
 
 def fill_records(
-    records: Sequence[TierARecord], fulltext_dir: str
+    records: Sequence[TierARecord],
+    fulltext_dir: str,
+    out_version: str = TO_VERSION,
 ) -> FillResult:
     """Apply the pass to a whole dataset, in memory.
 
-    Every record is rewritten to :data:`TO_VERSION` whether or not its values
+    Every record is rewritten to ``out_version`` whether or not its values
     changed, because the file is one dataset at one schema version and a mixed
     file is what the version check exists to refuse.
+
+    ``out_version`` defaults to :data:`TO_VERSION`, which is the migration's
+    target. A top-up passes its own input version instead: it fills conditions
+    and must not move the corpus between schemas, least of all backwards (see
+    :data:`ACCEPTED_INPUT_VERSIONS`).
     """
     result = FillResult()
 
@@ -484,7 +504,7 @@ def fill_records(
 
         data = record.to_dict()
         data.update(plan.updates)
-        data["schema_version"] = TO_VERSION
+        data["schema_version"] = out_version
         existing = list(record.condition_evidence or [])
         data["condition_evidence"] = [
             e.to_dict() for e in existing + plan.evidence
@@ -1046,7 +1066,13 @@ def cmd_run(args) -> int:
             file=sys.stderr,
         )
         return 1
-    top_up = input_version == TO_VERSION
+    # Anything that is not the one-shot migration is a top-up. This read
+    # ``== TO_VERSION`` until D-075, which was the same conflation as the
+    # output version: it made "top-up" mean "at 0.3.0" rather than "not
+    # migrating", so a 0.4.0 input could not have been a top-up even once it
+    # was accepted.
+    top_up = input_version != FROM_VERSION
+    out_version = input_version if top_up else TO_VERSION
 
     stale = [r.record_id for r in records if not r.id_is_consistent()]
     if stale:
@@ -1060,7 +1086,7 @@ def cmd_run(args) -> int:
         return 1
 
     before = list(records)
-    result = fill_records(records, args.fulltext_dir)
+    result = fill_records(records, args.fulltext_dir, out_version=out_version)
 
     if result.collisions and not args.allow_collisions:
         print(
@@ -1114,10 +1140,12 @@ def cmd_run(args) -> int:
         "data", "curated", "record_id_map_%s_to_%s.json" % (FROM_VERSION, TO_VERSION)
     ) and top_up:
         args.id_map = _default(
-            "data", "curated", "record_id_map_%s_top_up.json" % TO_VERSION
+            "data", "curated", "record_id_map_%s_top_up.json" % out_version
         )
     if top_up and args.report == _default("reports", "condition_fill_0.3.0.md"):
-        args.report = _default("reports", "condition_fill_0.3.0_top_up.md")
+        args.report = _default(
+            "reports", "condition_fill_%s_top_up.md" % out_version
+        )
 
     if os.path.exists(args.backup) and not args.force:
         print(
@@ -1137,7 +1165,7 @@ def cmd_run(args) -> int:
     if args.json:
         _write_json(args.json, stats)
 
-    print("wrote %s (%d records at %s)" % (records_path, len(result.records), TO_VERSION))
+    print("wrote %s (%d records at %s)" % (records_path, len(result.records), out_version))
     print("backup %s" % args.backup)
     print("id map %s" % args.id_map)
     print("report %s" % args.report)

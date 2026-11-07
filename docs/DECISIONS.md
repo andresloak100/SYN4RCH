@@ -4857,3 +4857,136 @@ making all eight inadmissible -- is correct and is corrected above.
   patched.
 * D-072's abandon condition -- fewer than 60 records from the first 30 papers
   -- is not met at 201, so the pass continues.
+
+## D-075 - One tuple carrying two decisions, and one module carrying two passes: closing C009 over genotype, and unlocking the pass that implements 3b
+
+Two defects, found by following up D-074's handover rather than by a test. They
+are the same shape: a decision that was argued once, correctly, and left
+governing a second thing nobody argued.
+
+### 1. `conditions.DIMENSIONS` decided both what is extracted and what is gated
+
+D-060 added `background_genotype` to the schema and deliberately left it out of
+`conditions.DIMENSIONS`, on this argument:
+
+> deciding whether an allele is the recorded perturbation or the substrate it
+> was applied to is a per-record judgement this module has no way to make
+
+That argument is sound. It is about **extraction**. But the same tuple decides
+which dimensions `read_paper_conditions` returns a **verdict** for, and
+`inadmissible_methods_conditions` -- C009, D-074 -- needs only the verdict. So
+the dimension was not merely unextracted, it was **ungated**: a curator could
+source a genotype from any Methods section in any paper and nothing would look.
+
+D-074 reached the opposite conclusion and said so plainly, which is why this was
+findable: *"Failing it would punish a curator for a gap in the vocabulary rather
+than for a reading."* Correct about the general shape, and reversed by this
+corpus. The six Methods-sourced genotype entries are:
+
+| paper | n | value | what the stored quote says |
+|---|---|---|---|
+| PMC10173804 | 5 | `wild_type` | names **two** cohorts: `ChR2AgRP` experimental animals, `ChR2WT` littermate controls |
+| PMC6338802 | 1 | `trpv1:loss_of_function:global` | names **two** cohorts: capsaicin-injected and vehicle-injected |
+
+PMC10173804 is worse than its quote. Its own Methods state **three** genetic
+backgrounds -- *"all the mouse lines generated in the paper were maintained in
+house on a C57BL/6N background"*, *"Whole body NPY-deficient mice were on a
+129sv background"*, and aging studies *"on C57BL/6J male mice"* -- and the
+stored quote is about ChR2 breeding, which is the perturbation, not the
+substrate. Five records carry a paper-wide genotype from a paper that says in
+its own Methods that it has no paper-wide genotype.
+
+So the refusal is a reading and not a gap, and it was available in the stored
+quotes the whole time.
+
+**`constant` is unreachable for this dimension, and for a stronger reason than
+`challenge`'s.** This module's standing rule is that `constant` is *"a claim
+that no second value exists in the paper"*, returned only where the absence of a
+second value was **established**. Sex has two tokens and diet a handful, so
+exhausting the vocabulary establishes it. Genetic background is an open set --
+strains, alleles, floxed lines, Cre drivers -- so a second value can never be
+shown absent. Promoting the only one detected is precisely the mistake behind
+three of this module's early defects.
+
+**What makes an open-vocabulary dimension safe to gate: both verdicts refuse.**
+`varies` and `absent` are equally inadmissible under 3b, so how well
+`_read_genotype`'s token list matches changes the *explanation* a curator reads
+and never the decision. The gate does not depend on recognising a vocabulary it
+cannot enumerate. A test asserts this, because the day it stops holding the gate
+has quietly acquired a dependency it cannot meet.
+
+#### The cost, stated rather than waved past
+
+PMC6338802's value is probably **right**. Its Methods say the line was
+*"backcrossed to a Trpv1KO background"* and that *"all mice were littermates
+(Agrp neuron activated and controls)"* -- both arms on that background, the
+paper constant, the stored value correct. The rule refuses it anyway, because
+establishing that took two sentences and the knowledge that `Trpv1KO` is the
+substrate while `AgrpCre` and `Rosa26LSL-Trpv1` are tools. That is the per-record
+judgement D-060 said this module cannot make, and it is still true.
+
+A rule that refuses a correct value has a real cost. It is taken because the
+alternative is a rule that admits an incorrect one, and the asymmetry decides
+it: a wrongly refused record is visible to the curator who is told why, and a
+wrongly admitted one is invisible for as long as the corpus exists.
+
+### 2. `fill_conditions` was locked out by its own output version, not by a tuple
+
+D-074 reported that `ACCEPTED_INPUT_VERSIONS` is `('0.2.0','0.3.0')` against a
+0.4.0 schema, so the only mechanical implementation of 3b could not run. True,
+and the obvious fix is wrong.
+
+The module is **two passes in one file**: a one-shot `0.2.0 -> 0.3.0` migration,
+and a version-agnostic top-up. Only the migration has a target version, pinned
+to `0.3.0` by D-046 so the report it published stays recomputable. But the
+top-up wrote `TO_VERSION` too, and `top_up` was defined as `input_version ==
+TO_VERSION`. So adding `'0.4.0'` to the tuple alone would have read a 0.4.0
+corpus and **written it back out as 0.3.0** -- a silent downgrade, far worse than
+the refusal. The refusal was correct behaviour for the code as written.
+
+The defect is the welded output version. Fixed as a stated invariant:
+
+> **A top-up never changes `schema_version`. Only the migration does.**
+
+`out_version` is now a parameter; `top_up` means *not migrating* rather than
+*at 0.3.0*; the backup, id-map and report names follow the version actually
+written. A test loops over every accepted version so a fourth cannot be added
+without the invariant holding for it. Another test asserts `TO_VERSION` is
+**not** `SCHEMA_VERSION`, because re-targeting the finished migration is the
+shortcut that would have made the lockout go away while breaking D-046.
+
+### 3. `water_intake`, and a map firing for the third time in three days
+
+`main` was already red before any of the above: batch 1 of the D-072 pass
+brought `water_intake`, and `atlas/signaling.py`'s `OUTCOME_SYSTEM` had no entry
+for it. My module, their vocabulary entry, so the gap is mine. Classified under
+`behaviour` rather than `feeding`: drinking is an ingestive behaviour but thirst
+is not the feeding system.
+
+This is the third firing in three days, after `nrem_sleep` from the sleep split.
+The test that catches it says in its own docstring that a missing entry *"costs
+an outcome sitting in the wrong place on a page, not a build"* -- and a sibling
+test then asserts the reported list is empty, which makes it a build failure
+after all. Two tests in one file disagreeing about whether this is fatal is the
+real defect, and **it is not fixed here.** Loosening a strict test while it is
+red against my own module is a goalpost move; the argument for making it
+non-blocking has to be made when nothing turns on it.
+
+### Not done
+
+* **The six records are not corrected.** The disposition differs per paper --
+  removal for PMC10173804's five (paper varies on three backgrounds, support
+  inadmissible), re-sourcing for PMC6338802's one (value correct, support
+  inadmissible) -- and `correct_conditions` by design changes a value while
+  keeping its quote, locator and source, so it cannot re-source. It is also a
+  rewrite of `records.jsonl` while another session is appending batches to it.
+  Its own entry, after batch 2.
+* **C009 gates admission, not the corpus.** It runs in `curate.run`'s batch
+  path, so extending `DIMENSIONS` refuses future records and does not
+  retroactively fail the 709 committed ones. That is why this could land
+  mid-pass at all, and it is also why the six survive until corrected.
+* **`fill_conditions` is unblocked but has not been run.** The 201 records
+  admitted in batch 1 still carry mostly null conditions.
+* D-074's *"your 508 records are clean"* holds for the four dimensions C009
+  covered and not for 3b as written: six of them were inadmissible on the fifth,
+  and the route that would have caught it was the one skipped on my dimension.

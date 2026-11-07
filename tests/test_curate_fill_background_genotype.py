@@ -393,5 +393,68 @@ class CLITest(unittest.TestCase):
         self.assertFalse(args.allow_refusals)
 
 
+class CommittedCorpusAdmissibilityTest(unittest.TestCase):
+    """D-075: this pass let the arm rule read a Methods paragraph.
+
+    The arm rule decides whether an allele is the recorded perturbation or the
+    substrate it was applied to **for this record's arm**. A Methods paragraph
+    describes every arm, so it cannot pin a record to one -- and six committed
+    records carry a genotype whose evidence is sourced ``methods`` with the
+    rule ``llm_read_the_passage_under_the_arm_rule``. The rule name says a
+    passage was read; the source says which section that passage was in.
+
+    C009 could not see them until ``background_genotype`` entered
+    ``conditions.DIMENSIONS`` (D-075). The number is recorded in the decision
+    entry rather than here, because a test that must be edited when the data
+    is corrected is a test that argues against correcting it. What is asserted
+    here is the invariant that holds before and after: no Methods-sourced
+    genotype entry is admissible, because ``constant`` is unreachable for this
+    dimension.
+    """
+
+    def _corpus(self):
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(root, "data", "curated", "records.jsonl")
+        if not os.path.exists(path):  # pragma: no cover
+            self.skipTest("no committed corpus")
+        with open(path, encoding="utf-8") as handle:
+            return [json.loads(l) for l in handle if l.strip()]
+
+    def test_no_methods_sourced_genotype_entry_is_admissible(self):
+        from syn4rch.curate.conditions import inadmissible_methods_conditions
+
+        class _R:
+            def __init__(self, evidence):
+                self.condition_evidence = evidence
+
+        class _P:
+            verdicts = {"background_genotype": "varies"}
+
+        for row in self._corpus():
+            methods_entries = [
+                e for e in row.get("condition_evidence") or []
+                if e.get("dimension") == "background_genotype"
+                and e.get("source") == "methods"
+            ]
+            if not methods_entries:
+                continue
+            self.assertTrue(
+                inadmissible_methods_conditions(_R(methods_entries), _P()),
+                row.get("record_id"),
+            )
+
+    def test_the_passage_route_carries_the_overwhelming_majority(self):
+        """If this inverts, the fill has started preferring the Methods."""
+        sources = {}
+        for row in self._corpus():
+            for e in row.get("condition_evidence") or []:
+                if e.get("dimension") == "background_genotype":
+                    sources[e.get("source")] = sources.get(e.get("source"), 0) + 1
+        self.assertGreater(
+            sources.get("passage", 0), 5 * sources.get("methods", 0),
+            "the arm rule belongs to a record's own passage (D-060): %s" % sources,
+        )
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
