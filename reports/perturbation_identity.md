@@ -8,7 +8,7 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-07T02:53:56Z |
+| generated (UTC) | 2026-11-07T05:59:05Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
 | scope | all records read |

@@ -1,6 +1,6 @@
 # SYN4RCH feasibility report (Phase 2)
 
-**Verdict: 1 of 265 (population, outcome) task(s) are feasible for predictive modelling (3 marginal, 261 insufficient), from 678 usable record(s) from 97 studies and 85 identified lab(s).**
+**Verdict: 1 of 265 (population, outcome) task(s) are feasible for predictive modelling (2 marginal, 262 insufficient), from 678 usable record(s) from 97 studies and 85 identified lab(s).**
 
 Every number below is counted from the input named in the Run table. Nothing is estimated, imputed or projected. An `insufficient` verdict is a measurement of the corpus, not a failure of this module.
 
@@ -8,7 +8,7 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-07T05:20:37Z |
+| generated (UTC) | 2026-11-07T05:59:04Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
 | records read | 709 |
@@ -19,7 +19,7 @@ Every number below is counted from the input named in the Run table. Nothing is 
 | distinct studies | 97 |
 | distinct labs (last author, D-056) | 85 |
 | usable records with no lab identity | 0 |
-| usable records stating none of the 5 conditions | 262 |
+| usable records stating none of the 5 conditions | 132 |
 | load errors | 0 |
 
 ### Why records were held out of the matrix
@@ -129,17 +129,17 @@ Counted by reason, so nothing is filtered silently. A record may appear under mo
 
 The unit is the claim `syn4rch.qc.keys.claim_key`, which under schema v0.2.0 is `(population, perturbation_class, perturbation_polarity, perturbation_target, outcome_id, sex, diet, age_group, challenge, background_genotype)`. SCHEMA.md 1 forbids aggregating across perturbations, so a circuit activation and a gene knockout on the same pair are two claims, not two observations of one; and the condition is in the key for the same reason one step further out, because a fasted male cohort and a fed female one were never comparable.
 
-**12 of 517 claim(s) are replicated across two or more labs**; a further 0 are replicated across studies within a single lab and are discounted (SCHEMA.md 5.2 names repeat publication by one group as the largest leakage risk here); 420 claim(s) rest on a single observation.
+**10 of 519 claim(s) are replicated across two or more labs**; a further 0 are replicated across studies within a single lab and are discounted (SCHEMA.md 5.2 names repeat publication by one group as the largest leakage risk here); 428 claim(s) rest on a single observation.
 
 | field | count |
 |---|---|
-| claims (strict v0.2.0 claim key) | 517 |
-| single observation | 420 |
-| replicated across >= 2 studies | 12 |
-| replicated across >= 2 labs | 12 |
+| claims (strict v0.2.0 claim key) | 519 |
+| single observation | 428 |
+| replicated across >= 2 studies | 10 |
+| replicated across >= 2 labs | 10 |
 | same lab only (discounted) | 0 |
 | claims containing records with no lab identity | 0 |
-| claims matched on 'both unknown' conditions | 192 |
+| claims matched on 'both unknown' conditions | 92 |
 
 ### Every replication figure, by minimum condition specificity
 
@@ -147,14 +147,14 @@ The unit is the claim `syn4rch.qc.keys.claim_key`, which under schema v0.2.0 is 
 
 | min condition specificity | claims | replicated >= 2 studies | replicated >= 2 labs | agreement defined | mean agreement |
 |---|---|---|---|---|---|
-| 0 of 5 | 192 | 9 | 9 | 9 | 0.69 |
-| 1 of 5 | 137 | 2 | 2 | 2 | 1.00 |
-| 2 of 5 | 172 | 1 | 1 | 1 | 0.50 |
-| 3 of 5 | 16 | 0 | 0 | 0 | undefined |
-| 4 of 5 | 0 | 0 | 0 | 0 | undefined |
+| 0 of 5 | 92 | 3 | 3 | 3 | 0.61 |
+| 1 of 5 | 186 | 5 | 5 | 4 | 0.62 |
+| 2 of 5 | 197 | 1 | 1 | 1 | 0.50 |
+| 3 of 5 | 43 | 1 | 1 | 1 | 1.00 |
+| 4 of 5 | 1 | 0 | 0 | 0 | undefined |
 | 5 of 5 | 0 | 0 | 0 | 0 | undefined |
 
-The pooled mean agreement across all specificities is 0.72. It is printed last and deliberately: a mean taken across cells that matched on nothing and cells that matched on three stated conditions describes neither, and the row-by-row breakdown above is the figure to read.
+The pooled mean agreement across all specificities is 0.65. It is printed last and deliberately: a mean taken across cells that matched on nothing and cells that matched on three stated conditions describes neither, and the row-by-row breakdown above is the figure to read.
 
 No claim in this corpus reaches specificity 5 of 5: not one record states every condition. Every replication figure above is therefore qualified, and none of them describes two experiments known to have run under the same conditions.
 
@@ -162,35 +162,32 @@ No claim in this corpus reaches specificity 5 of 5: not one record states every 
 
 Agreement is the fraction of independent studies stating the modal direction, with a 95% Wilson score interval (chosen because the Wald interval has width zero at a unanimous 2 of 2, and the standard library has no incomplete beta for Clopper-Pearson; `syn4rch.feasibility.replication` documents this).
 
-**Agreement is undefined, not 100%, for a claim with one independent observation**: 505 of 517 claim(s) have no second independent study, and a defined agreement exists for only 12.
+**Agreement is undefined, not 100%, for a claim with one independent observation**: 510 of 519 claim(s) have no second independent study, and a defined agreement exists for only 9.
 
-Of the 12 claim(s) with a defined agreement, 5 are unanimous and 7 are contested (independent studies state incompatible directions, by the QC definition in docs/DECISIONS.md D-011). 192 of them matched on conditions that were unknown rather than known to be the same; the mean agreement is broken down by specificity in section 3 rather than pooled here. Nothing was resolved, averaged or dropped.
+Of the 9 claim(s) with a defined agreement, 2 are unanimous and 8 are contested (independent studies state incompatible directions, by the QC definition in docs/DECISIONS.md D-011). 92 of them matched on conditions that were unknown rather than known to be the same; the mean agreement is broken down by specificity in section 3 rather than pooled here. Nothing was resolved, averaged or dropped.
 
 The `min cond` column is the minimum condition specificity of the cell, out of 5. It is not a footnote: an agreement at `0/5` was computed over studies that matched on their conditions being unknown.
 
 | population | perturbation (class / polarity / target) | outcome | condition | min cond | studies | labs | modal direction | agreement | 95% CI | conflicts |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `lha_orexin` | circuit_activity / increase / <null> | `sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 4 | 4 | no_change | 0.50 | [0.15, 0.85] | QC_CONFLICT_EFFECT_VS_NULL, QC_CONFLICT_OPPOSED |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=ad_libitum, background_genotype=unknown | 1/5 | 3 | 3 | increase | 1.00 | [0.44, 1.00] | - |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | 3 | 3 | increase | 1.00 | [0.44, 1.00] | - |
+| `lha_orexin` | circuit_activity / increase / <null> | `sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 3 | 3 | no_change | 0.67 | [0.21, 0.94] | QC_CONFLICT_EFFECT_VS_NULL |
 | `lha_orexin` | circuit_activity / increase / <null> | `wakefulness` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 3 | 3 | no_change | 0.67 | [0.21, 0.94] | QC_CONFLICT_EFFECT_VS_NULL |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=young_adult, challenge=ad_libitum, background_genotype=unknown | 3/5 | 2 | 2 | increase | 1.00 | [0.34, 1.00] | - |
 | `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=male, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 2/5 | 2 | 2 | increase | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | 2 | 2 | increase | 1.00 | [0.34, 1.00] | - |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | increase | 1.00 | [0.34, 1.00] | - |
-| `lha_mch` | circuit_activity / increase / <null> | `nrem_sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | increase (tied) | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
-| `lha_mch` | circuit_activity / increase / <null> | `rem_sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | increase | 1.00 | [0.34, 1.00] | - |
+| `arc_agrp` | circuit_activity / increase / <null> | `blood_glucose` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | 2 | 2 | no_change | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
+| `arc_agrp` | circuit_activity / increase / <null> | `glucose_tolerance` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | 2 | 2 | no_change | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
+| `arc_agrp` | circuit_activity / increase / <null> | `insulin_sensitivity` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | 2 | 2 | decrease | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
 | `lha_orexin` | circuit_activity / increase / <null> | `locomotor_activity` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | increase (tied) | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
-| `lha_orexin` | circuit_activity / decrease / <null> | `nrem_sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | decrease (tied) | 0.50 | [0.09, 0.91] | QC_CONFLICT_OPPOSED |
-| `lha_orexin` | circuit_activity / increase / <null> | `nrem_sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | decrease | 1.00 | [0.34, 1.00] | - |
-| `scn_vip` | circuit_activity / increase / <null> | `sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | 2 | 2 | increase (tied) | 0.50 | [0.09, 0.91] | QC_CONFLICT_EFFECT_VS_NULL |
 
 ### Modal direction per claim
 
 | modal direction | claims |
 |---|---|
-| decrease | 115 |
-| increase | 172 |
-| no_change | 184 |
-| undetermined | 46 |
+| decrease | 117 |
+| increase | 174 |
+| no_change | 186 |
+| undetermined | 42 |
 
 ## 5. Which outcomes have sufficient evidence for predictive modelling?
 
@@ -201,19 +198,17 @@ Verdicts are per claim-keyed task (the full claim key) and then rolled up to the
 | verdict | tasks | (population, outcome) pairs |
 |---|---|---|
 | feasible | 1 | 1 |
-| marginal | 5 | 3 |
-| insufficient | 511 | 261 |
+| marginal | 3 | 2 |
+| insufficient | 515 | 262 |
 
 ### Tasks reaching marginal or better
 
 | population | perturbation | outcome | condition | min cond | verdict | records | studies | labs | agreement | reasons | notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=ad_libitum, background_genotype=unknown | 1/5 | feasible | 3 | 3 | 3 | 1.00 | `MEETS_ALL_FEASIBLE_GATES` | `CONDITIONS_PARTIALLY_UNKNOWN` |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | feasible | 7 | 3 | 3 | 1.00 | `MEETS_ALL_FEASIBLE_GATES` | `CONDITIONS_PARTIALLY_UNKNOWN` |
+| `lha_orexin` | circuit_activity / increase / <null> | `sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | marginal | 5 | 3 | 3 | 0.67 | `AGREEMENT_BELOW_FEASIBLE`, `AGREEMENT_CI_INCLUDES_CHANCE` | `CONDITIONS_ALL_UNKNOWN`, `WITHIN_STUDY_DISAGREEMENT`, `DIRECTION_DISAGREEMENT_PRESENT` |
 | `lha_orexin` | circuit_activity / increase / <null> | `wakefulness` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | marginal | 3 | 3 | 3 | 0.67 | `AGREEMENT_BELOW_FEASIBLE`, `AGREEMENT_CI_INCLUDES_CHANCE` | `CONDITIONS_ALL_UNKNOWN`, `DIRECTION_DISAGREEMENT_PRESENT` |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=unknown, challenge=unknown, background_genotype=unknown | 1/5 | marginal | 4 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE` | `CONDITIONS_PARTIALLY_UNKNOWN` |
-| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | marginal | 2 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE`, `RECORDS_BELOW_FEASIBLE` | `CONDITIONS_ALL_UNKNOWN` |
-| `lha_mch` | circuit_activity / increase / <null> | `rem_sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | marginal | 3 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE` | `CONDITIONS_ALL_UNKNOWN` |
-| `lha_orexin` | circuit_activity / increase / <null> | `nrem_sleep` | sex=unknown, diet=unknown, age_group=unknown, challenge=unknown, background_genotype=unknown | 0/5 | marginal | 2 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE`, `RECORDS_BELOW_FEASIBLE` | `CONDITIONS_ALL_UNKNOWN` |
+| `arc_agrp` | circuit_activity / increase / <null> | `food_intake` | sex=unknown, diet=chow, age_group=young_adult, challenge=ad_libitum, background_genotype=unknown | 3/5 | marginal | 2 | 2 | 2 | 1.00 | `STUDIES_BELOW_FEASIBLE`, `RECORDS_BELOW_FEASIBLE` | `CONDITIONS_PARTIALLY_UNKNOWN` |
 
 ### Verdicts by minimum condition specificity
 
@@ -222,22 +217,22 @@ A `feasible` verdict whose cell matched on unknown conditions is still a `feasib
 | verdict | 0/5 | 1/5 | 2/5 | 3/5 | 4/5 | 5/5 |
 |---|---|---|---|---|---|---|
 | feasible | 0 | 1 | 0 | 0 | 0 | 0 |
-| marginal | 4 | 1 | 0 | 0 | 0 | 0 |
-| insufficient | 188 | 135 | 172 | 16 | 0 | 0 |
+| marginal | 2 | 0 | 0 | 1 | 0 | 0 |
+| insufficient | 90 | 185 | 197 | 42 | 1 | 0 |
 
 ### Why tasks did not pass
 
 | reason | tasks | meaning |
 |---|---|---|
-| `AGREEMENT_BELOW_FEASIBLE` | 1 | direction agreement below 0.70 |
-| `AGREEMENT_CI_INCLUDES_CHANCE` | 1 | the Wilson 95% lower bound on agreement does not clear the 0.33 chance rate |
-| `AGREEMENT_UNDEFINED` | 505 | fewer than 2 studies state a direction, so agreement is undefined (not 100%) |
-| `DIRECTION_CONTESTED` | 6 | independent studies do not agree on a direction (agreement below 0.60); reported as contested, not resolved |
+| `AGREEMENT_BELOW_FEASIBLE` | 2 | direction agreement below 0.70 |
+| `AGREEMENT_CI_INCLUDES_CHANCE` | 2 | the Wilson 95% lower bound on agreement does not clear the 0.33 chance rate |
+| `AGREEMENT_UNDEFINED` | 510 | fewer than 2 studies state a direction, so agreement is undefined (not 100%) |
+| `DIRECTION_CONTESTED` | 5 | independent studies do not agree on a direction (agreement below 0.60); reported as contested, not resolved |
 | `MEETS_ALL_FEASIBLE_GATES` | 1 | every gate passed |
-| `NO_INDEPENDENT_REPLICATION` | 505 | fewer than 2 distinct studies |
-| `RECORDS_BELOW_FEASIBLE` | 2 | fewer than 3 records |
-| `SINGLE_OBSERVATION` | 420 | exactly one record: nothing to replicate against |
-| `STUDIES_BELOW_FEASIBLE` | 4 | fewer than 3 distinct studies |
+| `NO_INDEPENDENT_REPLICATION` | 509 | fewer than 2 distinct studies |
+| `RECORDS_BELOW_FEASIBLE` | 1 | fewer than 3 records |
+| `SINGLE_OBSERVATION` | 428 | exactly one record: nothing to replicate against |
+| `STUDIES_BELOW_FEASIBLE` | 1 | fewer than 3 distinct studies |
 
 ### Promotion gates
 
@@ -264,32 +259,32 @@ Every threshold is a named constant in `src/syn4rch/feasibility/gates.py`, each 
 | quantity | pooled key (v0.1.0) | strict key (v0.2.0) |
 |---|---|---|
 | records keyed | 678 | 678 |
-| cells | 328 | 517 |
-| directly opposed cells (increase and decrease in one cell) | 29 | 12 |
-| cells carrying a QC conflict code across studies | 43 | 7 |
-| multi-study cells | 53 | 12 |
-| multi-lab cells | 53 | 12 |
-| cells with a defined agreement | 51 | 12 |
-| single-observation cells | 211 | 420 |
+| cells | 328 | 519 |
+| directly opposed cells (increase and decrease in one cell) | 29 | 10 |
+| cells carrying a QC conflict code across studies | 43 | 8 |
+| multi-study cells | 53 | 10 |
+| multi-lab cells | 53 | 10 |
+| cells with a defined agreement | 51 | 9 |
+| single-observation cells | 211 | 428 |
 
 ### What the split did, cell by cell
 
 | quantity | count |
 |---|---|
-| pooled cells the strict key splits in two or more | 74 |
-| largest number of strict cells out of one pooled cell | 14 |
-| opposed pooled cells whose refinements are all internally consistent (the contradiction was heterogeneity) | 18 |
-| opposed pooled cells still opposed after the split (a real head-to-head disagreement) | 11 |
-| multi-study pooled cells whose every refinement has one study (replication evidence given up) | 44 |
+| pooled cells the strict key splits in two or more | 76 |
+| largest number of strict cells out of one pooled cell | 15 |
+| opposed pooled cells whose refinements are all internally consistent (the contradiction was heterogeneity) | 20 |
+| opposed pooled cells still opposed after the split (a real head-to-head disagreement) | 9 |
+| multi-study pooled cells whose every refinement has one study (replication evidence given up) | 45 |
 | — of those, lost because the refinements are different perturbations | 18 |
-| — of those, lost because two refinements state *different* conditions | 9 |
-| — of those, lost **only** because one paper states a condition the other leaves unknown | 17 |
+| — of those, lost because two refinements state *different* conditions | 7 |
+| — of those, lost **only** because one paper states a condition the other leaves unknown | 20 |
 
-**What it bought:** 18 of the 29 head-to-head `increase` vs `decrease` cells under the old key were not contradictions. A finer key separated them, which means they had been a male cohort against a female one, a chow-fed cohort against a high-fat one, or a gene knockout against a gene overexpression — experiments that were never comparable, recorded as laboratories disagreeing. 11 remain, and those are the real disagreements.
+**What it bought:** 20 of the 29 head-to-head `increase` vs `decrease` cells under the old key were not contradictions. A finer key separated them, which means they had been a male cohort against a female one, a chow-fed cohort against a high-fat one, or a gene knockout against a gene overexpression — experiments that were never comparable, recorded as laboratories disagreeing. 9 remain, and those are the real disagreements.
 
-**What it cost:** 44 of the 53 multi-study cells stopped being multi-study — 83.0% of the replication evidence the old key appeared to have. Most of it was never evidence: 18 of the 44 were records describing different *perturbations* (a knockout of one gene against a knockout of another), and 9 were two different stated conditions. Pooling those and counting the papers is the defect v0.2.0 exists to fix. The loss is still real in the sense that matters for modelling: there are now fewer cells that can clear a gate counting studies and labs.
+**What it cost:** 45 of the 53 multi-study cells stopped being multi-study — 84.9% of the replication evidence the old key appeared to have. Most of it was never evidence: 18 of the 45 were records describing different *perturbations* (a knockout of one gene against a knockout of another), and 7 were two different stated conditions. Pooling those and counting the papers is the defect v0.2.0 exists to fix. The loss is still real in the sense that matters for modelling: there are now fewer cells that can clear a gate counting studies and labs.
 
-**What cannot be adjudicated:** the remaining 17 lost cell(s) were split *only* because one paper states a condition the other leaves unknown. `unknown` pools "the curator did not ask" with "the paper does not say", and neither can match a stated value: a paper reporting male mice and a paper reporting no sex at all are two keys, so they stop replicating each other even if both ran males. **Nothing in this corpus can say whether they did.** The alternative — assuming the unstated condition matched — is the inference SCHEMA.md 2 rule 4 forbids, so this cost is paid and reported rather than argued away. It is counted on its own line and never as heterogeneity resolved.
+**What cannot be adjudicated:** the remaining 20 lost cell(s) were split *only* because one paper states a condition the other leaves unknown. `unknown` pools "the curator did not ask" with "the paper does not say", and neither can match a stated value: a paper reporting male mice and a paper reporting no sex at all are two keys, so they stop replicating each other even if both ran males. **Nothing in this corpus can say whether they did.** The alternative — assuming the unstated condition matched — is the inference SCHEMA.md 2 rule 4 forbids, so this cost is paid and reported rather than argued away. It is counted on its own line and never as heterogeneity resolved.
 
 ### Gate arithmetic under both keys
 
@@ -298,8 +293,8 @@ The same gates, the same records, two keys. The pooled column is **not a result*
 | verdict | tasks (pooled v0.1.0) | tasks (strict v0.2.0) | pairs (pooled) | pairs (strict) |
 |---|---|---|---|---|
 | feasible | 2 | 1 | 2 | 1 |
-| marginal | 16 | 5 | 15 | 3 |
-| insufficient | 310 | 511 | 248 | 261 |
+| marginal | 16 | 3 | 15 | 2 |
+| insufficient | 310 | 515 | 248 | 262 |
 
 ### The usability predicate also changed
 
