@@ -74,6 +74,7 @@ __all__ = [
     "FROM_VERSION",
     "ACCEPTED_INPUT_VERSIONS",
     "output_version_for",
+    "report_title",
     "TO_VERSION",
     "FILLED",
     "CORRECTED",
@@ -775,10 +776,29 @@ def _inline(dist: Dict[str, int]) -> str:
     return ", ".join("%s %d" % (k, v) for k, v in dist.items())
 
 
-def render_report_md(stats: dict, *, generated: str) -> str:
+def report_title(in_version: str, out_version: str) -> str:
+    """The heading a run earns, rather than the one the module was born with.
+
+    D-077's review found the published report for a 0.4.0 top-up still headed
+    "schema v0.2.0 -> v0.3.0" -- the migration it did not perform. D-078 made
+    the *filenames* follow the version written and left the document title and
+    the id map's ``_meta`` behind, which is the same defect surviving a fix
+    aimed at it. A top-up changes no version, so it gets no arrow (D-081).
+    """
+    if in_version == out_version:
+        return "# Condition fill (top-up), schema v%s" % out_version
+    return "# Condition fill, schema v%s -> v%s" % (in_version, out_version)
+
+
+def render_report_md(
+    stats: dict,
+    *,
+    generated: str,
+    versions: Tuple[str, str] = (FROM_VERSION, TO_VERSION),
+) -> str:
     A: List[str] = []
     add = A.append
-    add("# Condition fill, schema v0.2.0 -> v0.3.0")
+    add(report_title(*versions))
     add("")
     add("Generated %s by `python3 -m syn4rch.curate.fill_conditions run`." % generated)
     add("")
@@ -1034,11 +1054,19 @@ def render_report_md(stats: dict, *, generated: str) -> str:
 # --------------------------------------------------------------------------- #
 
 
-def _id_map_document(result: FillResult, *, records_path: str, generated: str) -> dict:
+def _id_map_document(
+    result: FillResult,
+    *,
+    records_path: str,
+    generated: str,
+    versions: Tuple[str, str] = (FROM_VERSION, TO_VERSION),
+) -> dict:
     return {
         "_meta": {
-            "from_schema_version": FROM_VERSION,
-            "to_schema_version": TO_VERSION,
+            # Not FROM_VERSION/TO_VERSION: those are the migration's, and a
+            # top-up performs no migration (D-081).
+            "from_schema_version": versions[0],
+            "to_schema_version": versions[1],
             "generated": generated,
             "generated_by": "python3 -m syn4rch.curate.fill_conditions run",
             "source": os.path.relpath(records_path, _repo_root()),
@@ -1190,9 +1218,15 @@ def cmd_run(args) -> int:
 
     _atomic_write_text(records_path, _records_text(result.records))
     _write_json(
-        args.id_map, _id_map_document(result, records_path=records_path, generated=generated)
+        args.id_map,
+        _id_map_document(result, records_path=records_path, generated=generated,
+                         versions=(input_version, out_version)),
     )
-    _atomic_write_text(args.report, render_report_md(stats, generated=generated))
+    _atomic_write_text(
+        args.report,
+        render_report_md(stats, generated=generated,
+                         versions=(input_version, out_version)),
+    )
     if args.json:
         _write_json(args.json, stats)
 

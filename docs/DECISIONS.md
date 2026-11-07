@@ -5793,3 +5793,30 @@ inadmissible.
   The key must be right for the corpus the project is going to have; what has
   changed is that the project now knows its replication count was never
   measuring replication.
+
+## D-081 - A fix that left two copies of the defect standing: the top-up's report named the migration it did not perform
+
+D-077's review found that a 0.4.0 top-up still published its report under
+`# Condition fill, schema v0.2.0 -> v0.3.0`. D-078 was aimed at exactly that
+and fixed the wrong half: the backup, id-map and report **filenames** now
+follow the version written, while the document **title** stayed a hardcoded
+string, and the id map's `_meta` kept emitting `from_schema_version:
+FROM_VERSION` / `to_schema_version: TO_VERSION` -- the migration's constants,
+on a run that performed no migration.
+
+So one defect, three sites, and a fix that touched one of them. The pattern is
+worth naming because it is the fourth instance in two days of the same shape:
+a thing is stated in one place, implemented in another, and nothing ties them
+together (D-074's unenforced rule, D-075's tuple carrying two decisions,
+D-078's docstring naming itself as the enforcement point).
+
+`report_title(in_version, out_version)` is now derived, and a top-up gets no
+arrow at all because it moves nothing: `# Condition fill (top-up), schema
+v0.4.0`. `_id_map_document` takes the same pair. The test that matters is
+neither of the two readable examples but the invariant over every accepted
+version -- a run's title may name the version it read and the version it wrote,
+and no other version the pass knows. That is what a hardcoded string cannot
+satisfy and what the next accepted version will be checked against.
+
+Found by another session reading the published artefact rather than the code,
+which is the only place this was visible: the filenames were right.

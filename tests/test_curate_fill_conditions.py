@@ -368,6 +368,68 @@ class OutputVersionTest(unittest.TestCase):
             fill_records(self._row(), tempfile.mkdtemp(), out_version="0.9.9")
 
 
+class ReportTitleTest(unittest.TestCase):
+    """D-081: a top-up's published report named the migration it did not run.
+
+    D-077's review found the heading; D-078 fixed the output *filenames* and
+    left the document title and the id map's `_meta` claiming
+    `0.2.0 -> 0.3.0` on a 0.4.0 run. A fix aimed at a defect that leaves two
+    copies of it standing is the shape this project keeps finding, so the
+    title is now derived and tested in both directions.
+    """
+
+    def test_a_migration_keeps_its_arrow(self):
+        from syn4rch.curate.fill_conditions import report_title
+
+        self.assertEqual(
+            report_title("0.2.0", "0.3.0"),
+            "# Condition fill, schema v0.2.0 -> v0.3.0",
+        )
+
+    def test_a_top_up_gets_no_arrow_because_it_moves_nothing(self):
+        from syn4rch.curate.fill_conditions import report_title
+
+        self.assertEqual(
+            report_title("0.4.0", "0.4.0"),
+            "# Condition fill (top-up), schema v0.4.0",
+        )
+
+    def test_no_title_claims_a_version_the_run_did_not_touch(self):
+        """The invariant, over every version the pass accepts."""
+        from syn4rch.curate.fill_conditions import (
+            ACCEPTED_INPUT_VERSIONS,
+            output_version_for,
+            report_title,
+        )
+
+        for version in ACCEPTED_INPUT_VERSIONS:
+            out = output_version_for(version)
+            title = report_title(version, out)
+            self.assertIn(out, title, version)
+            for other in ACCEPTED_INPUT_VERSIONS:
+                if other in (version, out):
+                    continue
+                self.assertNotIn(
+                    other, title,
+                    "a %s run must not name %s" % (version, other),
+                )
+
+    def test_the_id_map_meta_follows_the_run_not_the_migration(self):
+        from syn4rch.curate.fill_conditions import _id_map_document, fill_records
+
+        result = fill_records(
+            [record(outcome_raw="synthetic readout 1")],
+            tempfile.mkdtemp(),
+            out_version="0.4.0",
+        )
+        doc = _id_map_document(
+            result, records_path="data/curated/records.jsonl",
+            generated="2026-01-01T00:00:00Z", versions=("0.4.0", "0.4.0"),
+        )
+        self.assertEqual(doc["_meta"]["from_schema_version"], "0.4.0")
+        self.assertEqual(doc["_meta"]["to_schema_version"], "0.4.0")
+
+
 if __name__ == "__main__":
     unittest.main()
 
