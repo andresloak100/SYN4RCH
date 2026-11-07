@@ -6376,3 +6376,133 @@ state. A measured extremum is not an invariant. The rule that would have caught
 it: **a bound does not enter an entry as structural unless something prevents
 it from moving** — and here the thing that moved it was a pass I was holding at
 the time, named in the same entry.
+
+
+## D-087 - Batch 2: the seam is exhausted, 13 records, and a clinical-state word the D-064 split carried in unchecked
+
+**14 papers, 48 passages, 13 records admitted, 0 rejected.** Batch 1 was 30
+papers and 702 passages. The difference is the finding.
+
+### The seam is exhausted for Results-section curation
+
+Of the 61 seam papers not yet read, their 340 units sit:
+
+| section | units |
+|---|---|
+| Discussion | **199** |
+| Introduction | 86 |
+| Abstract | 31 |
+| Results | **9** |
+| Other | 8 |
+| Methods | 7 |
+
+**Nine Results units across 61 papers**, and only 14 papers hold anything in the
+sections a reader may read. The screen -- EEG mentions, an intervention term and
+a hypothalamic term -- is satisfiable by a Discussion that *reviews* this
+literature, so the tail of the seam is papers that cite it rather than report
+it. D-072's selection excluded Discussion deliberately, and batch 1's
+`PMC3657625` refusal demonstrated why: its reader refused passage after passage
+because the results in them were attributed in-passage to other papers.
+
+So batch 1 took the 30 papers that report, and what is left mostly discusses.
+D-072's criterion 1 (>=150 records) was met at 201 from a third of the papers;
+the remaining two thirds offer 48 passages.
+
+**Three of batch 1's papers were nearly re-read.** They produced zero records --
+every passage refused -- so they are absent from the `curated` set the selection
+excludes on. The selection now excludes papers already **read**. `PMC3657625`,
+whose refusal a verifier challenged on its grounds rather than its conclusion,
+is the one worth revisiting and that should be a deliberate act.
+
+### The brief's fixes held
+
+| | batch 1 | batch 2 |
+|---|---|---|
+| fatal defects | **48** | **1** |
+| warnings | 133 | 50 |
+| records with a Methods-sourced condition | 152 | **0** |
+| records asserting `significant` from silence | 20 | **0** |
+| records with a wrong `schema_version` | 8 | **0** |
+
+87 refusals against 13 records -- a 6.7:1 ratio where batch 1 was 1.9:1, which
+is what reading papers that mostly discuss looks like. Several verifiers
+confirmed the refusals rather than contesting them: *"the zero is correct. I
+audited all four sentences clause by clause and every one of the reader's 7
+refusals holds."* The 50 warnings are mostly about reader prose and process --
+mis-stated segmentation diagnoses, ASCII transliteration in notes, modified
+locators in refusal logs -- not about records.
+
+### The one fatal defect was a vocabulary gap, and it is mine
+
+`PMC7969886` proposed `sleep INCREASE` on *"both young-onset and adult-onset
+mice developed severe cataplexy and the sleep-wake fragmentation characteristic
+of narcolepsy."* The direction describes **the appearance of a clinical state**,
+not a change in any sleep amount, and the reader's own notes conceded it.
+
+`sleep.synonyms` holds three clinical-state words -- `insomnia`, `cataplexy`,
+`narcolepsy` -- and `signed_synonyms` held only `insomnia`. The polarity policy
+exists for exactly this: *"these words already carry a direction or name a
+clinical state. direction must describe the CHANGE in this entry's quantity,
+never the presence of the state."* **D-064's split carried `cataplexy` and
+`narcolepsy` into `sleep.synonyms` and never checked them against it**, so two of
+the three traps sat unmarked and a reader stood on one.
+
+Fixed at outcomes 0.5.2, with a test asserting that no clinical-state word in
+`sleep.synonyms` is unsigned. Same one-sided sweep as D-072's criterion 3: I
+applied a rule to the case in front of me and not to its siblings.
+
+### Lab identity: seven laboratories under fourteen keys, and two null results
+
+11 of the 13 records carried no `last_author`, so `lab_key` was `None` and they
+were invisible to every lab grouping. Backfilled from the parsed JATS -- the
+value is metadata in the paper, not a reader judgement.
+
+Matching the corpus's existing spelling mattered, because the corpus already
+holds the same laboratory under two keys:
+
+| | | records |
+|---|---|---|
+| `Yamanaka A` / `Yamanaka A.` | trailing full stop | 31 |
+| `Luis de Lecea` / `de Lecea L.` | name order | 36 |
+| `Fuller PM` / `Fuller PM.` | trailing full stop | 16 |
+| `Scott M Sternson` / `Sternson SM.` | name order | 13 |
+| `Huang ZL` / `Huang ZL.` | trailing full stop | 7 |
+| `Takeshi Sakurai` / `Sakurai T.` | name order | 5 |
+| `Deniz Atasoy` / `Atasoy D.` | name order | 3 |
+
+Read individually. `Huang YH` / `Huang ZL` / `Yingqun Huang` and
+`Wang B.` / `Wang J.` are left alone: different initials are different people,
+and merging them would be the homonym D-056 guards against.
+`Wagner E.` / `Wagner EJ.` is plausibly one person and not establishable.
+
+**D-056 named one failure mode of the author-only key and not its inverse.** Its
+docstring: *"The failure mode of this looser key is a homonym: two unrelated
+researchers whose normalised surname and initials coincide merge into one lab,
+which costs test rows and manufactures a replication."* That is the direction
+that **inflates** replication, and it is detected. One person under two keys
+**suppresses** it, and nothing looks for that. D-056 is mine.
+
+**And both consequences I predicted are null.** Measured, not argued:
+
+* multi-lab circuit cells: **10 with the aliases stored, 10 with the seven
+  merged.** Not one cell changes; 71 distinct labs become 64.
+* the generalisation estimate: `lab` **+0.167 (p=0.007, n=192) either way**,
+  with only the group count moving 40 to 38.
+
+105 of 678 usable records (15.5%) sit in a split laboratory, and holding out
+`yamanaka a` leaves 26 records of the same lab in training -- a real leakage
+hole in the grouping D-056 exists to make real. It has no measured effect on
+either number it could plausibly have affected. Worth fixing because the next
+records could land in a cell that does span an alias pair; not a retrospective
+correction to anything published.
+
+**Two bugs in my own backfill, both caught by reading its output rather than by
+its logic.** It first merged `Scammell Thomas E.` into the corpus's
+`Thomas S Kilduff` on the shared token "thomas" -- a given name colliding with a
+given name, which is the homonym defect, written by the thing meant to avoid it.
+Matching on the surname alone fixes it. Then `jats_surname` walked the XML with
+`root.iter()` and returned the last author of the last **bibliographic
+reference**: 'Roth' for a Scammell paper, 'Zhang' for a Kilduff one. The parser
+had already built `last_author` as "surname given" from the article's own
+contrib-group. Re-deriving what the parser knew is the fifth instance today of
+not asking the code that already had the answer.
