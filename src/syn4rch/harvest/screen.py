@@ -189,8 +189,9 @@ def out_of_scope_readouts(raw_text: str) -> List[str]:
     synonym. Nothing guarded the *matcher*, and it did not need to: a sentence
     reporting "EEG delta power during wakefulness increased" resolves to
     `wakefulness` through an incidental word, so an out-of-scope readout
-    arrives under a legitimate id and no rule is broken on the way in. 142 of
-    946 proposed sleep units are in this state (D-070).
+    arrives under a legitimate id and no rule is broken on the way in. 224 of
+    946 proposed sleep units carry one and 133 still resolve to an in-scope
+    state (D-070).
 
     This does not suppress the id, because the passage may genuinely report
     both an in-scope state and an out-of-scope measure in one sentence, and

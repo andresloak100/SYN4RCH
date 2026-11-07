@@ -4133,7 +4133,20 @@ resolving it automatically.
 ### Defect 2: an out-of-scope readout arrives under a legitimate id
 
 "EEG delta power during wakefulness increased" resolves to `wakefulness`,
-through an incidental word. **142 of 946 units are in this state.**
+through an incidental word. **133 of 946 units are in this state**, and 224
+carry an out-of-scope readout at all.
+
+**That number is a correction, and the way it was wrong is the point.** I first
+measured 142 with a regex I hand-rolled for the purpose; the other session
+measured 125 with one it hand-rolled independently. Neither was right. Running
+the detector that reads the vocabulary's own `out_of_scope_readouts` gives 224
+carrying and **133 still resolving to an in-scope state**, split
+`neural_activity` 179 and `behavioural_affective` 52 — and both sessions
+reproduce it exactly, because there is now one detector instead of two. Two
+hand-rolled matchers disagreeing in opposite directions around the right answer
+is the signature this project already knows: `syn4rch.curate.units` imports the
+screener's matchers rather than reimplementing them for exactly this reason, and
+I reimplemented one anyway to measure a defect about reimplemented matchers.
 
 D-063 put neural activity out of scope and `tests/test_vocab_scope.py` guards
 the *vocabulary*: no entry may list an out-of-scope term as a synonym of any
@@ -4171,7 +4184,7 @@ session rather than taken silently.
 
 * It does not re-propose anything. The units are regenerated against outcomes
   0.5.1; no record changed, no direction moved, and the dataset is untouched.
-* It does not make the EEG pass safe on its own. The 142 out-of-scope passages
+* It does not make the EEG pass safe on its own. The 133 out-of-scope passages
   are now *flagged*, not excluded, and a curator still has to read them.
 * `outcomes.json` goes to 0.5.1 — a synonym addition, not a new id.
 
