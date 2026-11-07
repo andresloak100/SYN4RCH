@@ -5985,3 +5985,96 @@ not** -- see its amendment; proved by perturbation rather than argued.
 One figure to retire: the feasibility report prints "12 of 517" and the corpus
 now gives 12 of 540. The report predates the current `records.jsonl` by 39
 minutes and should be re-run before either number is quoted.
+
+### Amendment to D-080: the conclusion is withdrawn. It had no base rate, it was unfalsifiable, it was false as stated, and D-023 had already ruled
+
+The D-082 session checked all four and every one holds. Verified here
+independently before accepting.
+
+**1. No base rate.** I reported that all 12 multi-lab cells match on `unknown`
+in at least three of five condition dimensions. The histogram over **all 517
+strict cells** is `{2: 16, 3: 172, 4: 137, 5: 192}`, so "at least three of five
+unknown" is true of **501 of 517 = 96.9%** of every cell in the corpus,
+replicating or not. 12 of 12 against 96.9% distinguishes nothing. I measured a
+property of a subgroup and never asked what that property's base rate was.
+
+**2. Unfalsifiable.** "0 of the 7 survivors are matched on fully stated
+conditions." Records by number of stated condition dimensions:
+`{0: 262, 1: 181, 2: 218, 3: 17}`. **No record states more than 3 of 5**, and
+because the condition is part of the claim key a cell can never exceed its own
+records, so **no cell in any reachable state of this data can be matched on
+fully stated conditions.** The sentence is true of every possible corpus and
+says nothing about this one.
+
+**3. False as stated.** "No condition-matched cross-lab replication at all" --
+**3 of the 12 match on a stated value shared across laboratories**, and two of
+the three are unanimous in direction:
+
+| population | outcome | stated match | labs | directions |
+|---|---|---|---|---|
+| `arc_agrp` | `food_intake` | sex=male, diet=chow | 2 | increase, no_change |
+| `arc_agrp` | `food_intake` | diet=chow | 2 | increase |
+| `arc_agrp` | `food_intake` | challenge=ad_libitum | 3 | increase |
+
+**4. D-023 decided this, the other way, and published the ceiling I
+"discovered".** Verbatim: *"That discards real information: two labs
+independently reporting that AgRP activation raises food intake is replication,
+whether or not either states the diet."* That is row three of the table above
+by name. And: *"**The cost, stated.** A cell matched on 'both unknown' is weaker
+evidence than one matched on a known sex and diet. `condition_specificity` is
+reported with every conflict and every replication figure so the two cannot be
+printed as one number. Across the corpus: 153 records know no condition slot,
+161 know one, 43 know two, 5 know three, and **none knows all four**."*
+
+So the ceiling was already in the log, the trade was already argued, the verdict
+was **weaker, not void**, and the remedy was disclosure -- which the code
+implements, in `models/task.py`, `feasibility/gates.py`'s
+`CONDITIONS_ALL_UNKNOWN`, and `feasibility/replication.py`. **D-080 presented as
+a discovery a thing this repository discloses by design.** D-044 does not
+support it either: its subject is the extractor, and two records sharing an
+unstated dimension assert no absence and write nothing.
+
+**The detail corrections, one of which matters more than the arithmetic.**
+
+* 55 + 1 = 56, not the 58 I wrote. The two missing records are the finding.
+  `1f2c0189ace296a2` and `6153f87b799a9b76` are both `PMC3940852`, both
+  `sex: "female"`, both `condition_evidence: []`, both quoting Results para 8:
+  *"Male Agrp-Cre; Rosa26 Sirt1-WT mice (Agrp-Sw) showed a lean phenotype,
+  whereas female Agrp-Cre; Rosa26 Sirt1-H355Y mice (Agrp-Sh) tended toward
+  increased body weight"*. **The dataset already asserted a female outcome from
+  the same paper whose 16 male records cite a Methods sentence claiming no
+  second sex exists.** The dimorphism was provable from `records.jsonl` alone. I
+  opened the XML and ran a regex screen across 42 papers to find what two rows
+  of the curated data already said.
+* So the six papers split **three** ways under C009, not two: 55 refused, 1
+  null, 2 female-with-no-evidence that the gate never inspects because it only
+  reads `source == "methods"`.
+* My quote of that sentence in D-080 was a compression of my own and would fail
+  the project's locator-strict check.
+* "21 times, in the Results" -- 21 is right; they span Results (2), Discussion
+  (5) and three figure legends.
+* **D-069's trigger does not count these cells and the claim is dropped.** Its
+  conditions 1 and 1b resolve to bootstrap gene indices and atlas Jaccard, and
+  2/3/3b are per-population record counts. Proved by mutation rather than
+  argued: randomising every condition field left the per-population counts
+  byte-identical while multi-lab cells went 12 to 0 in the same run.
+
+**What survives.** A weak number is printed next to a strong-sounding word, and
+D-072's criterion 4 and the feasibility report's replication line both inherit
+it. That is worth fixing and is much less than D-080 claimed.
+
+**And the methodological lesson, which is larger than the six regex counts.**
+Those were sloppy; this was a category error. A subgroup statistic without its
+base rate is not a weak finding, it is not a finding. The rule the other session
+and I have both converged on -- *a count does not enter an entry until someone
+has read a sample of what it counted* -- would not have caught this one. The
+companion rule it needs: **a statistic about a subgroup does not enter an entry
+until the same statistic has been computed over the whole.**
+
+**One more stale artefact, found while checking theirs.**
+`reports/feasibility_report.md` was written 39 minutes before the
+`records.jsonl` it describes. Regenerated; every figure is identical, so nothing
+published was wrong -- but a report older than its input is the same class as
+the signaling graph and `screened_on`, and the agreement was luck. Their
+"12 of 540" does not reproduce here: regeneration gives 12 of 517 on both
+readings.
