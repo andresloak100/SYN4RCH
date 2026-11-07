@@ -5613,3 +5613,73 @@ detector blocker is gone. The fill is still not run, because the precondition I
 set for myself in D-077 -- C009 requiring a verdict that survived with **no
 refusal recorded on its dimension**, not merely the word `constant` -- is mine
 and is now unblocked rather than done.
+
+
+## D-079 - C009 now requires a verdict that survived, and the refusals are attributed by caller rather than by name
+
+The precondition I set for myself in D-077 and could not meet until D-078 fixed
+the detectors. C009 asked only whether a dimension's verdict was the word
+`constant`. The ten defects of D-077 and D-078 were all `constant`, so the gate
+blessed every one of them.
+
+A `constant` verdict claims no second value exists in the paper. **A refusal
+recorded on the same dimension is the reader saying it could not establish
+that.** D-044 asks for a value that was established, never one merely
+undetected, so a constant standing beside its own dimension's refusal is
+exactly the state D-044 forbids. The check now rejects it.
+
+### The attribution, which is the part that could have gone wrong
+
+The obvious implementation reads the refusal names out of
+`PaperConditions.notes` and maps each to a dimension. `REFUSALS` is a flat tuple
+of 23 names with **no dimension in it**, and the names do not encode one
+uniformly -- `refused_in_vitro_age_statement` is age, `refused_housing_statement_is_not_a_challenge`
+is challenge. So that implementation needs a hand-authored name-to-dimension
+map, which would be a fifth declared thing nothing keeps in step: the D-075
+review had already found two new refusal names missing from `REFUSALS` itself.
+
+**The dimension is not in the name; it is in which reader was called.**
+`read_paper_conditions` dispatches `_read_sex`, `_read_diet`, `_read_age`,
+`_read_challenge` and `_read_genotype` in turn, and each now writes into its own
+notes list, so whatever it records is attributed to the dimension it was called
+for. Nothing is parsed. `PaperConditions.refusals` is
+`dimension -> [refusal names]`, filtered to membership in `REFUSALS` so an
+informational note is not mistaken for a refusal, and the verbatim gate's own
+`dropped_quote_not_verbatim` is recorded on the dimension it dropped.
+
+This is the fifth time today the choice was between a pattern over strings and
+asking the code that already knew. The previous four went the other way and all
+four were wrong (142 against 133, 9 against 20, 50 against 0, and a usability
+predicate that invented 10 cells).
+
+### Two refusals are exempt, and the exemption is the rule working
+
+`refused_sex_not_constant_after_a_refusal` and
+`refused_age_not_constant_after_a_refusal` **are** the demotion: they are
+recorded when a prior refusal has already forced the verdict off `constant`. A
+verdict that is still `constant` therefore cannot have been produced by them,
+and treating them as blocking would refuse every paper whose reader did its job.
+Named in `_REFUSALS_THAT_DO_NOT_UNSETTLE` with that reasoning, and tested.
+
+### What it costs today: nothing, and that is the finding
+
+Measured over the 102 papers holding records: **95 `constant` verdicts, 0
+standing beside a refusal on their own dimension.** After D-078 the demotion
+doctrine fires everywhere it can, so this check rejects nothing that exists and
+the corpus still gates at 703 admitted / 6 rejected -- the six being the
+background_genotype records D-075 made gateable, which that session owns.
+
+So it is a backstop for the next detector gap rather than a fix for a live
+defect, and it is worth having for the reason D-078 made explicit: a missed
+assay class leaves a wrong `constant` standing, and unlike D-075's genotype
+guard -- where both reachable verdicts refused and detector quality changed only
+the message -- here detector quality is the only thing between a defective
+sentence and the dataset. Two independent conditions now have to fail together.
+
+### What it does not do
+
+It cannot catch a paper where the reader detected nothing at all, which is the
+state all ten defects were in before D-078. Only a better detector or a human
+reading the quote catches that. The circularity named in D-077 stands: C009 asks
+the classifier about the classifier's own output, and this makes the question
+harder to pass without making it a different question.
