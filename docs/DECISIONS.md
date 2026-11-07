@@ -4990,3 +4990,98 @@ non-blocking has to be made when nothing turns on it.
 * D-074's *"your 508 records are clean"* holds for the four dimensions C009
   covered and not for 3b as written: six of them were inadmissible on the fifth,
   and the route that would have caught it was the one skipped on my dimension.
+
+
+## D-076 - Which condition dimension costs the replication: an ablation, and a prediction made before the fill
+
+**Written before running `fill_conditions`**, which D-075 has just made possible
+at schema 0.4.0 and deliberately left to me. The point of writing now is that
+the prediction below is cheap to make while I cannot see the answer and
+worthless afterwards -- D-074's criterion 4 is the entry that taught me this at
+my own expense.
+
+### The block measurement, refined
+
+D-074 found that dropping the five condition dimensions from the claim key
+moves multi-lab circuit cells **12 -> 35**, against D-064's sleep split which
+moves them 12 -> 11. That identified conditions as the binding constraint on
+replication and said nothing about which of the five, so:
+
+| dimension dropped from the claim key | multi-lab cells | gain |
+|---|---|---|
+| none | 12 | - |
+| `sex` | 18 | **+6** |
+| `background_genotype` | 17 | **+5** |
+| `challenge` | 16 | **+4** |
+| `diet` | 13 | +1 |
+| `age_group` | 13 | +1 |
+| all five | 35 | +23 |
+
+Cumulatively, `sex` + `background_genotype` + `challenge` reach 30 of the 35.
+
+### The measurement a cell count cannot make
+
+A dimension belongs in the claim key if it separates experiments that genuinely
+differ. It does not belong there if it separates records that differ only in how
+completely they were curated. **Those two are indistinguishable in a cell
+count** and are told apart by asking what the values are when the dimension
+splits a cell two labs both contribute to:
+
+| dimension | splits on two stated values | splits a stated value from a gap | |
+|---|---|---|---|
+| `sex` | 1 | **7** | 88% are gaps |
+| `challenge` | 2 | **7** | 78% are gaps |
+| `age_group` | 0 | 2 | 100% are gaps |
+| `diet` | 1 | 2 | 67% are gaps |
+| `background_genotype` | **4** | 4 | the only one at parity |
+
+Read by eye rather than trusted as an aggregate. The `sex` splits are
+`male` against `unknown`, repeatedly: on `arc_agrp` / `circuit_activity` /
+`food_intake`, Perez-Tilve and Andrews both state male while Young-Bum Kim and
+Sternson state nothing, so one experiment occupies two cells. The
+`background_genotype` splits are `asip:gain_of_function:global` against
+`lep:loss_of_function:global` -- an agouti-overexpressing mouse is not a
+leptin-deficient mouse, and those records belong apart.
+
+**So most of the replication cost is not an experimental-contrast cost. It is
+curation incompleteness wearing the costume of one.** And the dimension that
+earns its place is the one added today by another session, which I had been
+sceptical of: on this corpus `background_genotype` is the only condition whose
+cell splits are as often real as not.
+
+### The prediction, before the fill
+
+If the splits are mostly gaps rather than contrasts, then filling the
+conditions mechanically should **recover** replication rather than cost it,
+because it turns `unknown` into a stated value that can then match another
+stated value. Where two labs genuinely used different sexes the cell stays
+split, correctly.
+
+1. **Multi-lab circuit cells rise from 12.** Not fall, and not hold.
+2. **They rise to at least 16**, since `sex` alone accounts for +6 and its
+   splits are 88% gaps; closing most of those should land near the
+   `sex`-dropped figure of 18 without reaching it, because a real `male` vs
+   `female` contrast must survive.
+3. **`background_genotype` gains least of the five**, because its splits are
+   the ones that are real, and because D-075 makes `constant` unreachable for
+   it -- so the fill cannot write it at all.
+4. **Total circuit cells fall from 372.** Filling merges cells; it cannot
+   create one.
+
+**And the prediction I expect to be wrong.** Number 2. The fill writes a value
+only where the paper holds the dimension constant, and the papers on the
+`unknown` side of these splits are exactly the ones whose Methods may describe
+two cohorts -- which is why their curators left the field null in the first
+place. If the gaps are mostly *correct* refusals rather than omissions, the
+fill closes few of them and the figure moves by one or two. That outcome would
+mean something sharper than a miss: that the replication ceiling is set by what
+the papers report, not by what this project has got around to curating, and no
+amount of curation effort moves it.
+
+### What this does not license
+
+Dropping a condition dimension from the claim key to buy replication. A
+dimension that splits on gaps today splits on real contrasts once the gaps are
+filled, and the key must be right for the corpus the project is going to have
+rather than the one it has. The ablation is a diagnosis of where the cost sits,
+not a proposal to stop paying it.
