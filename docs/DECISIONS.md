@@ -5242,3 +5242,164 @@ better founded: D-075 makes `constant` unreachable for `background_genotype`,
 so the fill cannot write it at all. 2 is the one I expect to fail and the
 reasons have strengthened -- if 8 of 8 `sex` splits contain a gap and those gaps
 are correct refusals rather than omissions, the fill closes few of them.
+
+
+## D-077 - The fill is not runnable after all: the classifier returns `constant` from sentences that refute it, and C009 cannot see it
+
+**Decision: `fill_conditions` is not run.** D-076's predictions are
+unfalsifiable as stated and stay on the record unresolved rather than quietly
+dropped. 31 agents reviewed D-075 adversarially -- 26 findings raised, 20
+surviving refutation, 6 refuted. Two survived at `fatal`, both in the dimension
+asking what the fill would actually write, and both reproduce from a cold start
+on the corpus at HEAD.
+
+### 1. `diet = high_fat` from a two-minute petri dish
+
+`PMC11206529`'s diet verdict is `constant`, value `high_fat`, and the quote
+offered as evidence is:
+
+> GCaMP6f signal was sampled for 4 min each session with 2 min as baseline and
+> 2-min exposure to salient stimuli including a 15-ml novel Falcon tube
+> (novelty), novel male mouse, novel female mouse, HFD (in a small petri dish),
+> rat bedding (in a small petri dish), restraint (...), TMT (...), and manual
+> grabbing.
+
+`HFD` is one item in an enumeration of salient stimuli. The paper feeds no
+animal a high-fat diet: over its full text, `chow` occurs 0 times and the only
+cohort sentence is "Young adult (3 to 6 months) male mice were used in this
+study." The fill would write `diet=high_fat` with a Methods-sourced evidence
+entry onto **11 records across 2 papers**, nine of them sleep and wakefulness
+readouts from batch 1.
+
+**The guard for exactly this trap exists and does not fire.**
+`conditions._DIET_AS_STIMULUS` is documented as "the diet analogue of the
+husbandry trap", and it fails twice over: its food alternation is
+`(?:chow|food|diet)` while `_DIET_SHAPES` also recognises
+`HFD|HFHS|ND|NCD|SCD|LFD|CD|RD|WD`, so **the guard knows none of the
+abbreviations**; and its cue list omits `exposure to`. Either gap alone defeats
+it here. `tests/test_curate_conditions.py:324` pins the sentence shape "Chow was
+presented after the baseline period" -- write `HFD` for `Chow` and it passes.
+
+### 2. `constant` returned from a sentence that states the second cohort
+
+`read_paper_conditions` returns `constant` when one value survived and **no
+refusal fired**, which makes `constant` mean merely-undetected whenever a
+detector misses a stated second cohort. Four papers, **41 condition writes**:
+
+| paper | written | the quote stored as the evidence |
+|---|---|---|
+| `PMC5910424` | `sex=male` ×5 | "Male mice at 10-16 weeks ... **whereas mice of either sex** at 4-8 weeks ... patch-clamp" |
+| `PMC4335349` | `sex=male` ×27 | "**All behavioural experiments conducted to target Hcrt neurons** were done on ... male mice" -- while 20+ of the 27 records are corticosterone, blood pressure and heart rate |
+| `PMC6548533` | `age_group=young_adult` ×7 | "... mice **of both sexes**, aged 2-5 months, were used for electrophysiological recordings" |
+| `PMC6140123` | `diet=chow` ×2 | "**Sixteen of** the Orexin-tTA mice were reared with chow that included doxycycline" |
+
+`_sex_vote` on the first returns `(male, None)` -- a clean vote, no refusal --
+because "either sex" contains neither a `male` nor a `female` token, so the two
+sex refusals never see it. **The sentence stored as the claim that no second
+value exists states the second value verbatim.** Verified directly, not taken
+from the report.
+
+This is the module's own docstring describing its own present behaviour: "a
+`constant` verdict is a claim that no second value exists in the paper, so it is
+returned only when the absence of a second value was *established* -- never when
+a second value merely was not detected. Three defects in this module's first
+version were all this one mistake." Those three were fixed. This is the fourth,
+fifth and sixth, and the rule they violate is the one D-044 exists to state.
+
+### 3. C009's foundation is circular, and I reported the circle as validation
+
+D-074 said: the committed corpus holds "320 Methods-sourced entries with zero
+violations -- the rule was obeyed because the only thing obeying it was a
+module." **314 of those 320 carry the classifier's own rule names**
+(`methods_single_sex` 160, `methods_single_diet` 104,
+`methods_single_age_band` 36, `methods_both_sexes` 14). So they were written by
+`read_paper_conditions`, and C009 validates them by asking
+`read_paper_conditions`. The agreement I reported as a clean bill of health was
+the classifier agreeing with itself.
+
+What C009 is actually worth, stated correctly: it catches a **curator** asserting
+a Methods value the classifier refuses -- which is real, and is 82 records of
+batch 1. It cannot catch the **classifier** being wrong. And `fill_conditions`
+never calls it: the fill path has no gate beyond the word `constant`.
+
+### 4. The non-circular check, which comes back clean
+
+A `constant` verdict can be tested without the classifier by reading the stored
+quote: if the sentence offered as evidence names a second value **of that
+dimension**, the claim refutes itself on its own face. Over all 314
+classifier-written entries: **0**. `either sex` occurs in 0 of them.
+
+My first pass at this said 50, then 11. Both were my own detector: `sex=both`
+derived from "male and female" is the evidence and not a conflict, "both sexes"
+in an age quote opposes a different dimension, and the two survivors were a
+`while` clause about which vendor supplied which mice, and "used for behavioral
+and/or electrophysiological experiments", which scopes to both rather than to a
+subset. Reading them is what produced the right answer.
+
+**So the committed corpus is sound and the exposure is entirely prospective.**
+All five implicated papers are batch-1 papers: the defect is in what the fill
+would write onto my 201 records, not in the 508.
+
+### 5. What this does to D-074
+
+**The reset was right and its stated reason was wrong.** Resetting 272
+hand-filled Methods conditions was correct -- the classifier refuses 115 of them
+and that judgement stands. But D-074's framing was "the readers did by hand a
+job a module does correctly, so let the module do it." The module does not do
+it correctly, and "let the module do it" is not available. The 201 records keep
+their null conditions, and null remains the honest value rather than an interim
+one.
+
+### 6. My own defect in the same review, and the pattern behind it
+
+C009 **failed open**. `cmd_gate` resolved the paper with a loop I wrote over
+`(pmcid, doi, pmid, study_id)` probed verbatim, while `verify._probe_keys` --
+the lookup that admits the record -- also probes the prefix-stripped form. With
+`offences` initialised to `()` and assigned only inside `if paper is not None`,
+a divergence admitted the record with the blocking check never run. The two
+records C009 rejects today, with nothing changed but
+`study_id="europepmc:PMC..."` and the other ids null, gated as **admitted 2,
+rejected 0**. Fixed to use `_probe_keys` itself and to fail closed.
+
+**That is the third time today I wrote something the project already had**:
+`find_paper` here, `coverage.is_usable` in D-076 (11 records with
+`PERTURBATION_POLARITY_UNCLEAR`, 10 phantom cells), and `fill_conditions`' whole
+job in D-074's reader brief. Each time the reimplementation was weaker than the
+original in a way that mattered, and each time the original was one import away.
+
+**And the fourth count I published before reading the matches.** 142 against a
+true 133 out-of-scope passages; 9 against a true 20 significance records; 50
+then 11 then 0 here. The failures are all the same move -- write a pattern,
+report its count, read the matches afterwards -- and the fix each time was to
+read first.
+
+### 7. What the refutations killed, including my own framing
+
+Six findings were refuted, and the most important was the headline. A reviewer
+argued the unwelded output version could silently downgrade the corpus; the
+verifier showed a downgrade is **loud and then unloadable**:
+`S006_SCHEMA_VERSION_MISMATCH` is HARD and fires on all 709 records, so the
+write refuses and needs `--allow-new-findings --force`, and `schema/io.py`
+then refuses to load a 0.3.0 corpus at all. Corrected severity: note. **My own
+brief for the review said that code "can silently rewrite the curated dataset",
+and that was overstated in the same direction.**
+
+What survives there is small and real: `fill_records` is exported with
+`out_version` defaulting to the migration target and validates nothing, its
+docstring names it as the enforcement point when enforcement lives in one
+caller line, and the test cited for the invariant is tautological -- it asserts
+back the value it passes in, so a fifth accepted version would satisfy it
+automatically. Two mutants that reinstate the original defect both leave 1341
+tests green.
+
+### What happens next, and what does not
+
+* The classifier fixes are the blocker and are named precisely: teach
+  `_DIET_AS_STIMULUS` the diet abbreviations and the `exposure to` cue; make
+  "either sex" / "of both sexes" trigger the sex refusals rather than passing
+  invisibly; give `_SCOPED_TO_A_SUBSET` a leading-scope and a numeric-subset
+  form.
+* **C009 should require more than the word `constant`**: a verdict that survived
+  with no refusal recorded on its dimension. The demotion machinery already
+  exists for sex and age and simply never fires, because nothing was detected.
+* Until then the fill does not run, and D-076's predictions stay open.
