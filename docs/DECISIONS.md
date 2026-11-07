@@ -4860,6 +4860,68 @@ making all eight inadmissible -- is correct and is corrected above.
 
 ## D-075 - One tuple carrying two decisions, and one module carrying two passes: closing C009 over genotype, and unlocking the pass that implements 3b
 
+> **Amended by this session's own verification, after D-076 offered to
+> characterise the cost.** Three things below were wrong and one claim offered
+> in this entry's favour did not survive checking. The decisions stand; the
+> reasoning in §1 and §3 does not, in these places.
+>
+> **§3 undercounted the enforcement sites and misnamed the defect.** Removing
+> `water_intake` from `OUTCOME_SYSTEM` fires **three** tests, not two --
+> `test_every_outcome_in_the_real_dataset_has_a_system`,
+> `test_real_dataset_is_internally_consistent` and
+> `test_the_real_dataset_has_no_unclassified_outcome` (measured: 3 failed, 29
+> passed). A fix aimed at "the two disagreeing tests" would have left two
+> others firing on the same commit.
+>
+> And the two are **not** in contradiction. One drives `build_graph` over
+> synthetic input; the other reads the committed tree. That is an ordinary
+> strictness gradient -- a library may tolerate an input a repository refuses
+> to contain -- and the gradient is sound. What is actually wrong is the prose:
+> the docstring saying the gap "arrives as a number" is true of `build_graph`
+> and false of the test it documents. §3 named a documentation defect as a
+> design contradiction, and then declined to fix it on the grounds that fixing
+> it would be a goalpost move. The restraint was right for the wrong reason.
+>
+> **And the map was load-bearing for something nobody assigned it.** A record
+> carrying `outcome_id = "food_intakee"` -- an id the vocabulary does not
+> declare -- produces **zero** hard schema findings and passes admission. There
+> is no membership check on `outcome_id` anywhere in `src/`: `A005` requires
+> only that the field be non-blank, and `qc/units.py` checks a units table
+> rather than the vocabulary. The only thing in this project that notices an
+> outcome id that does not exist is `signaling.system_of` returning `None`, via
+> those three atlas tests. So the "presentational layout aid" is the de facto
+> membership gate, and loosening it -- which §3 contemplated and deferred --
+> would have opened a real hole while appearing to tidy a cosmetic one. The
+> ordering that follows: close the membership check where it belongs first,
+> and only then is the map's strictness a presentational question at all.
+>
+> **The cost in §1's "stated rather than waved past" is nil today, and not for
+> the reason given.** D-076 offered a sharper version of that paragraph --
+> that genotype is the one condition dimension where refusing a correct value
+> removes a *real* contrast rather than a gap. Checked against the corpus, the
+> record it concerns (`d50e2d0e7222e6ef`, PMC6338802) is a singleton under both
+> the claim key and the key with genotype dropped, and is **not in the usable
+> pool at all**: `exclusion_reasons` returns `NO_PERTURBATION_METHOD` and
+> `NO_PERTURBATION_POLARITY` because its `method` is null. It contributes to no
+> replication cell and no ablation census. Nulling its genotype creates no gap
+> and removes no contrast. If its missing `method` were ever curated it would
+> join a two-lab cell and the cost would become real -- so the value is
+> latently load-bearing, behind a different curation gap than the one this
+> entry is about.
+>
+> **The offered characterisation was declined, having been checked.** D-076's
+> "the only condition dimension at parity" (4 real / 4 gaps) reproduces
+> exactly, and is an artefact of an unstated choice: cells holding
+> `{stated_A, stated_B, unknown}` are credited wholly to *real*, though the
+> unknown records in them still occupy a cell of their own. Three-way, genotype
+> is 1 pure-real / 3 both / 4 gap, and **7 of its 8 split cells contain a gap**.
+> The folding inflates every dimension holding a multi-valued cell -- sex's
+> single "real" and challenge's two are all of that kind, with zero pure --
+> and it inflates genotype most, which is what produced the parity. So §1's
+> paragraph is left as written: the cost is real in principle, unmeasurable in
+> this corpus, and not established by the parity figure.
+
+
 Two defects, found by following up D-074's handover rather than by a test. They
 are the same shape: a decision that was argued once, correctly, and left
 governing a second thing nobody argued.
