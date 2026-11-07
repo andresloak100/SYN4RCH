@@ -5147,3 +5147,98 @@ dimension that splits on gaps today splits on real contrasts once the gaps are
 filled, and the key must be right for the corpus the project is going to have
 rather than the one it has. The ablation is a diagnosis of where the cost sits,
 not a proposal to stop paying it.
+
+### Amendment, before the fill ran: the conclusion does not survive, the finding does
+
+The session that wrote D-075 attacked this entry rather than importing it, and
+was right on every point it raised. Recorded here, inside the entry, because
+the predictions below were still blind when this was written and the point of
+D-076 was to be checkable.
+
+**1. "Parity" was an artefact of a folding rule I never stated.** The classifier
+credited a cell holding `{stated_A, stated_B, unknown}` wholly to *real*, though
+the unknown records still occupy a cell of their own. Three ways rather than two:
+
+| dimension | pure-real | both | gap | split cells containing a gap |
+|---|---|---|---|---|
+| `sex` | **0** | 1 | 7 | 8 of 8 |
+| `challenge` | 0 | 2 | 7 | 9 of 9 |
+| `age_group` | 0 | 0 | 2 | 2 of 2 |
+| `diet` | 1 | 0 | 2 | 2 of 3 |
+| `background_genotype` | **1** | 3 | 4 | 7 of 8 |
+
+The folding inflated every dimension with a multi-valued cell and inflated
+genotype most -- 3 of its 4 -- which is exactly what produced the parity.
+
+**2. And its one pure-real cell is a nesting, not a contrast.** `arc_agrp` /
+`circuit_activity` / `locomotor_activity` splits Brüning's `mixed` from
+Herzog's `npy:loss_of_function:cell_type_restricted`. `mixed` means *one result
+pools two arms*, so the two sides are the same gene with one a superset of the
+other. **On the honest rule no condition dimension has a clean real split,
+`background_genotype` included.**
+
+So **"background_genotype is the only condition that earns its place in the
+claim key" is withdrawn.** The gating scepticism it replaced stays retired on
+C009's own evidence, and the claim-key question goes back to open. What is left
+is weaker and still worth having: genotype's splits are more often *partly*
+real than the other four's (4 of 8 against sex's 1 of 8).
+
+**3. The narrative example read the wrong way, and I had claimed to read it by
+eye.** I wrote that the genotype splits are `asip:gain_of_function:global`
+against `lep:loss_of_function:global`. That contrast is genuine and in 2 of 8
+cells -- and **both of those cells also hold unknown records**, four and one.
+They were visible in the output I was looking at. Saying "read by eye rather
+than trusted as an aggregate" and then missing the third value in the cell is
+worse than quoting the aggregate would have been, because it claims a check it
+did not perform.
+
+**4. PMC6338802 contributes nothing, so the cost paragraph was empty.** I called
+the refusal of its genotype "a real cost ... higher than for the other four."
+Its `method` is `None`, so `perturbation_class` and `perturbation_polarity` are
+`None`, `coverage.is_usable` is False, and it is **in no pool, no replication
+cell and no ablation census**. Nulling its genotype creates no gap and removes
+no contrast. It is latently load-bearing -- curate the missing method and it
+joins a two-lab cell -- but that is a different curation gap than the one being
+argued about.
+
+**5. The cell denominators in D-074 are 10 too high, and the cause is mine
+twice over.** D-074's counterfactual table reads 372 / 333 / 271; the correct
+figures are **362 / 323 / 261**. Every multi-lab count is unchanged.
+
+The other session identified the offset and guessed null `method`/`polarity`;
+it is neither. I wrote my own usability test, `method is not None and
+perturbation_polarity is not None`, when `coverage.is_usable` already existed.
+**11 records carry `PERTURBATION_POLARITY_UNCLEAR`** -- a *stated* unclear
+polarity, which my `is not None` test waves through and the project's own filter
+excludes -- and they form the 10 extra cells.
+
+Writing a predicate the project already has is the same defect as D-074's
+brief asking readers to do by hand what `fill_conditions` does. Second instance
+in one day, and this one had a one-line alternative.
+
+**What survives, and is strengthened.** Multi-lab cells are **12** under every
+pool variant tried (circuit only, circuit+structural, project-usable,
+non-molecular, with and without the usability filter), and **35** with the
+conditions dropped. The ranking reproduces exactly: `sex` +6,
+`background_genotype` +5, `challenge` +4, `diet` +1, `age_group` +1. The
+qualitative conclusion is *better* supported on the honest rule than on the
+folded one: 8 of 8 `sex` splits, 9 of 9 `challenge` splits and 7 of 8
+`background_genotype` splits contain a gap. **Most of the replication miss is
+curation incompleteness in the costume of an experimental contrast**, and now no
+dimension is exempt from that reading.
+
+**One number to state precisely, having conflated two.** My pool is 517
+*records*; the project's strict-key total over its own 678-record usable pool is
+517 *cells* (`reports/feasibility.json`, which is untracked rather than
+committed). The coincidence is why the other session read my table as a
+record/cell conflation. It was not one, but a table labelled "circuit" while
+using `circuit_activity` + `structural` invites the reading, and genotype is the
+one dimension sensitive to that choice: **+4 on `circuit_activity` alone, +5
+with `structural`**, because the eighth cell is `lha_orexin | structural |
+sleep`. The other four dimensions are identical in both pools.
+
+**The predictions stand unamended.** 1, 3 and 4 are untouched, and 3 is now
+better founded: D-075 makes `constant` unreachable for `background_genotype`,
+so the fill cannot write it at all. 2 is the one I expect to fail and the
+reasons have strengthened -- if 8 of 8 `sex` splits contain a gap and those gaps
+are correct refusals rather than omissions, the fill closes few of them.
