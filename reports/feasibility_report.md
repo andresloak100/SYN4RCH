@@ -1,6 +1,6 @@
 # SYN4RCH feasibility report (Phase 2)
 
-**Verdict: 1 of 265 (population, outcome) task(s) are feasible for predictive modelling (2 marginal, 262 insufficient), from 678 usable record(s) from 97 studies and 85 identified lab(s).**
+**Verdict: 1 of 269 (population, outcome) task(s) are feasible for predictive modelling (2 marginal, 266 insufficient), from 689 usable record(s) from 103 studies and 89 identified lab(s).**
 
 Every number below is counted from the input named in the Run table. Nothing is estimated, imputed or projected. An `insufficient` verdict is a measurement of the corpus, not a failure of this module.
 
@@ -8,18 +8,18 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-07T05:59:04Z |
+| generated (UTC) | 2026-11-07T19:37:23Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
-| records read | 709 |
-| records usable as observations | 678 |
-| records held out of the matrix | 31 |
+| records read | 722 |
+| records usable as observations | 689 |
+| records held out of the matrix | 33 |
 | usability predicate | schema v0.2.0 |
 | claim key | `population + perturbation_class + perturbation_polarity + perturbation_target + outcome_id + sex + diet + age_group + challenge + background_genotype` (schema v0.2.0, 10 components) |
-| distinct studies | 97 |
-| distinct labs (last author, D-056) | 85 |
+| distinct studies | 103 |
+| distinct labs (last author, D-056) | 89 |
 | usable records with no lab identity | 0 |
-| usable records stating none of the 5 conditions | 132 |
+| usable records stating none of the 5 conditions | 142 |
 | load errors | 0 |
 
 ### Why records were held out of the matrix
@@ -30,17 +30,17 @@ Counted by reason, so nothing is filtered silently. A record may appear under mo
 |---|---|---|
 | NO_PERTURBATION_METHOD | 2 | method is absent: the intervention is unspecified |
 | NO_PERTURBATION_POLARITY | 2 | perturbation_polarity is absent and cannot be derived from method: the manipulation has no sign on any axis (schema v0.2.0 predicate) |
-| PERTURBATION_POLARITY_UNCLEAR | 29 | perturbation_polarity is 'unclear': the manipulation's sign is not derivable even along its own class's axis, so it cannot serve as a model input; kept in the dataset, counted here, never coerced (schema v0.2.0 predicate) |
+| PERTURBATION_POLARITY_UNCLEAR | 31 | perturbation_polarity is 'unclear': the manipulation's sign is not derivable even along its own class's axis, so it cannot serve as a model input; kept in the dataset, counted here, never coerced (schema v0.2.0 predicate) |
 
 ## 1. How many neuronal populations have usable intervention data?
 
-**77.** A population counts when at least one record names it, names a perturbation `method`, and carries a `perturbation_polarity` that is neither absent nor `unclear` — a perturbation of unstated sign states nothing an input could encode. Under schema v0.1.0 this predicate read `valence` instead, which held out every molecular record; the difference is measured in the section on the key change. Of these populations, 49 are unresolved and grouped by their raw name under a `raw:` prefix (no vocabulary match; SCHEMA.md 3.2 forbids force-mapping them).
+**79.** A population counts when at least one record names it, names a perturbation `method`, and carries a `perturbation_polarity` that is neither absent nor `unclear` — a perturbation of unstated sign states nothing an input could encode. Under schema v0.1.0 this predicate read `valence` instead, which held out every molecular record; the difference is measured in the section on the key change. Of these populations, 51 are unresolved and grouped by their raw name under a `raw:` prefix (no vocabulary match; SCHEMA.md 3.2 forbids force-mapping them).
 
 | population | records | studies | outcomes measured |
 |---|---|---|---|
 | `arc_agrp` | 178 | 25 | 19 |
 | `arc_pomc` | 102 | 21 | 18 |
-| `lha_orexin` | 52 | 9 | 14 |
+| `lha_orexin` | 53 | 10 | 14 |
 | `lha_mch` | 43 | 5 | 9 |
 | `vmh_sf1` | 22 | 2 | 6 |
 | `raw:npy+/lepr+ neurons` | 20 | 1 | 10 |
@@ -51,6 +51,7 @@ Counted by reason, so nothing is filtered silently. A record may appear under mo
 | `raw:dmm crh neurons` | 14 | 1 | 4 |
 | `raw:mbh` | 11 | 1 | 8 |
 | `raw:npy−/lepr+ neurons` | 10 | 1 | 10 |
+| `tmn_histamine` | 10 | 4 | 3 |
 | `pvh_trh` | 8 | 1 | 6 |
 | `lha_vgat` | 7 | 1 | 2 |
 | `raw:dmh-located trh neurons (dmhtrh)` | 7 | 1 | 7 |
@@ -74,12 +75,11 @@ Counted by reason, so nothing is filtered silently. A record may appear under mo
 | `raw:sumnos1/vglut2 neurons` | 3 | 1 | 2 |
 | `raw:vtagad67+` | 3 | 1 | 2 |
 | `scn_vip` | 3 | 2 | 2 |
-| `tmn_histamine` | 3 | 2 | 2 |
 | `arc_agrp->raw:bnst` | 2 | 2 | 1 |
 | `arc_agrp->raw:lha` | 2 | 2 | 1 |
 | `arc_agrp->raw:pvh` | 2 | 2 | 1 |
 
-... 37 more row(s) not shown.
+... 39 more row(s) not shown.
 
 ## 2. How many physiological outcomes have been measured?
 
@@ -88,21 +88,21 @@ Counted by reason, so nothing is filtered silently. A record may appear under mo
 | outcome | tier | records | studies | populations measured |
 |---|---|---|---|---|
 | `food_intake` | A | 148 | 49 | 29 |
-| `locomotor_activity` | A | 47 | 22 | 20 |
+| `locomotor_activity` | A | 49 | 24 | 20 |
 | `body_weight` | A | 44 | 26 | 12 |
 | `energy_expenditure` | A | 41 | 17 | 15 |
-| `wakefulness` | A | 36 | 15 | 21 |
-| `sleep` | A | 28 | 16 | 11 |
-| `nrem_sleep` | A | 26 | 15 | 14 |
+| `wakefulness` | A | 40 | 18 | 23 |
+| `sleep` | A | 29 | 17 | 12 |
+| `nrem_sleep` | A | 28 | 16 | 14 |
 | `bat_thermogenesis` | A | 25 | 12 | 13 |
 | `insulin_sensitivity` | A | 25 | 13 | 7 |
+| `rem_sleep` | A | 25 | 12 | 13 |
 | `fat_mass` | A | 24 | 13 | 9 |
-| `rem_sleep` | A | 24 | 11 | 12 |
 | `glucose_tolerance` | A | 23 | 13 | 8 |
 | `core_temperature` | A | 22 | 11 | 15 |
+| `sleep_fragmentation` | A | 22 | 7 | 6 |
 | `blood_glucose` | A | 21 | 9 | 6 |
 | `rer` | A | 21 | 8 | 9 |
-| `sleep_fragmentation` | A | 21 | 6 | 6 |
 | `corticosterone` | A | 20 | 7 | 6 |
 | `plasma_insulin` | A | 14 | 11 | 7 |
 | `sleep_latency` | A | 10 | 3 | 5 |
@@ -129,17 +129,17 @@ Counted by reason, so nothing is filtered silently. A record may appear under mo
 
 The unit is the claim `syn4rch.qc.keys.claim_key`, which under schema v0.2.0 is `(population, perturbation_class, perturbation_polarity, perturbation_target, outcome_id, sex, diet, age_group, challenge, background_genotype)`. SCHEMA.md 1 forbids aggregating across perturbations, so a circuit activation and a gene knockout on the same pair are two claims, not two observations of one; and the condition is in the key for the same reason one step further out, because a fasted male cohort and a fed female one were never comparable.
 
-**10 of 519 claim(s) are replicated across two or more labs**; a further 0 are replicated across studies within a single lab and are discounted (SCHEMA.md 5.2 names repeat publication by one group as the largest leakage risk here); 428 claim(s) rest on a single observation.
+**10 of 530 claim(s) are replicated across two or more labs**; a further 0 are replicated across studies within a single lab and are discounted (SCHEMA.md 5.2 names repeat publication by one group as the largest leakage risk here); 439 claim(s) rest on a single observation.
 
 | field | count |
 |---|---|
-| claims (strict v0.2.0 claim key) | 519 |
-| single observation | 428 |
+| claims (strict v0.2.0 claim key) | 530 |
+| single observation | 439 |
 | replicated across >= 2 studies | 10 |
 | replicated across >= 2 labs | 10 |
 | same lab only (discounted) | 0 |
 | claims containing records with no lab identity | 0 |
-| claims matched on 'both unknown' conditions | 92 |
+| claims matched on 'both unknown' conditions | 102 |
 
 ### Every replication figure, by minimum condition specificity
 
@@ -147,8 +147,8 @@ The unit is the claim `syn4rch.qc.keys.claim_key`, which under schema v0.2.0 is 
 
 | min condition specificity | claims | replicated >= 2 studies | replicated >= 2 labs | agreement defined | mean agreement |
 |---|---|---|---|---|---|
-| 0 of 5 | 92 | 3 | 3 | 3 | 0.61 |
-| 1 of 5 | 186 | 5 | 5 | 4 | 0.62 |
+| 0 of 5 | 102 | 3 | 3 | 3 | 0.61 |
+| 1 of 5 | 187 | 5 | 5 | 4 | 0.62 |
 | 2 of 5 | 197 | 1 | 1 | 1 | 0.50 |
 | 3 of 5 | 43 | 1 | 1 | 1 | 1.00 |
 | 4 of 5 | 1 | 0 | 0 | 0 | undefined |
@@ -162,9 +162,9 @@ No claim in this corpus reaches specificity 5 of 5: not one record states every 
 
 Agreement is the fraction of independent studies stating the modal direction, with a 95% Wilson score interval (chosen because the Wald interval has width zero at a unanimous 2 of 2, and the standard library has no incomplete beta for Clopper-Pearson; `syn4rch.feasibility.replication` documents this).
 
-**Agreement is undefined, not 100%, for a claim with one independent observation**: 510 of 519 claim(s) have no second independent study, and a defined agreement exists for only 9.
+**Agreement is undefined, not 100%, for a claim with one independent observation**: 521 of 530 claim(s) have no second independent study, and a defined agreement exists for only 9.
 
-Of the 9 claim(s) with a defined agreement, 2 are unanimous and 8 are contested (independent studies state incompatible directions, by the QC definition in docs/DECISIONS.md D-011). 92 of them matched on conditions that were unknown rather than known to be the same; the mean agreement is broken down by specificity in section 3 rather than pooled here. Nothing was resolved, averaged or dropped.
+Of the 9 claim(s) with a defined agreement, 2 are unanimous and 8 are contested (independent studies state incompatible directions, by the QC definition in docs/DECISIONS.md D-011). 102 of them matched on conditions that were unknown rather than known to be the same; the mean agreement is broken down by specificity in section 3 rather than pooled here. Nothing was resolved, averaged or dropped.
 
 The `min cond` column is the minimum condition specificity of the cell, out of 5. It is not a footnote: an agreement at `0/5` was computed over studies that matched on their conditions being unknown.
 
@@ -184,9 +184,9 @@ The `min cond` column is the minimum condition specificity of the cell, out of 5
 
 | modal direction | claims |
 |---|---|
-| decrease | 117 |
-| increase | 174 |
-| no_change | 186 |
+| decrease | 120 |
+| increase | 181 |
+| no_change | 187 |
 | undetermined | 42 |
 
 ## 5. Which outcomes have sufficient evidence for predictive modelling?
@@ -199,7 +199,7 @@ Verdicts are per claim-keyed task (the full claim key) and then rolled up to the
 |---|---|---|
 | feasible | 1 | 1 |
 | marginal | 3 | 2 |
-| insufficient | 515 | 262 |
+| insufficient | 526 | 266 |
 
 ### Tasks reaching marginal or better
 
@@ -218,7 +218,7 @@ A `feasible` verdict whose cell matched on unknown conditions is still a `feasib
 |---|---|---|---|---|---|---|
 | feasible | 0 | 1 | 0 | 0 | 0 | 0 |
 | marginal | 2 | 0 | 0 | 1 | 0 | 0 |
-| insufficient | 90 | 185 | 197 | 42 | 1 | 0 |
+| insufficient | 100 | 186 | 197 | 42 | 1 | 0 |
 
 ### Why tasks did not pass
 
@@ -226,12 +226,12 @@ A `feasible` verdict whose cell matched on unknown conditions is still a `feasib
 |---|---|---|
 | `AGREEMENT_BELOW_FEASIBLE` | 2 | direction agreement below 0.70 |
 | `AGREEMENT_CI_INCLUDES_CHANCE` | 2 | the Wilson 95% lower bound on agreement does not clear the 0.33 chance rate |
-| `AGREEMENT_UNDEFINED` | 510 | fewer than 2 studies state a direction, so agreement is undefined (not 100%) |
+| `AGREEMENT_UNDEFINED` | 521 | fewer than 2 studies state a direction, so agreement is undefined (not 100%) |
 | `DIRECTION_CONTESTED` | 5 | independent studies do not agree on a direction (agreement below 0.60); reported as contested, not resolved |
 | `MEETS_ALL_FEASIBLE_GATES` | 1 | every gate passed |
-| `NO_INDEPENDENT_REPLICATION` | 509 | fewer than 2 distinct studies |
+| `NO_INDEPENDENT_REPLICATION` | 520 | fewer than 2 distinct studies |
 | `RECORDS_BELOW_FEASIBLE` | 1 | fewer than 3 records |
-| `SINGLE_OBSERVATION` | 428 | exactly one record: nothing to replicate against |
+| `SINGLE_OBSERVATION` | 439 | exactly one record: nothing to replicate against |
 | `STUDIES_BELOW_FEASIBLE` | 1 | fewer than 3 distinct studies |
 
 ### Promotion gates
@@ -258,33 +258,33 @@ Every threshold is a named constant in `src/syn4rch/feasibility/gates.py`, each 
 
 | quantity | pooled key (v0.1.0) | strict key (v0.2.0) |
 |---|---|---|
-| records keyed | 678 | 678 |
-| cells | 328 | 519 |
+| records keyed | 689 | 689 |
+| cells | 337 | 530 |
 | directly opposed cells (increase and decrease in one cell) | 29 | 10 |
-| cells carrying a QC conflict code across studies | 43 | 8 |
-| multi-study cells | 53 | 10 |
-| multi-lab cells | 53 | 10 |
-| cells with a defined agreement | 51 | 9 |
-| single-observation cells | 211 | 428 |
+| cells carrying a QC conflict code across studies | 44 | 8 |
+| multi-study cells | 55 | 10 |
+| multi-lab cells | 55 | 10 |
+| cells with a defined agreement | 53 | 9 |
+| single-observation cells | 218 | 439 |
 
 ### What the split did, cell by cell
 
 | quantity | count |
 |---|---|
-| pooled cells the strict key splits in two or more | 76 |
+| pooled cells the strict key splits in two or more | 78 |
 | largest number of strict cells out of one pooled cell | 15 |
 | opposed pooled cells whose refinements are all internally consistent (the contradiction was heterogeneity) | 20 |
 | opposed pooled cells still opposed after the split (a real head-to-head disagreement) | 9 |
-| multi-study pooled cells whose every refinement has one study (replication evidence given up) | 45 |
+| multi-study pooled cells whose every refinement has one study (replication evidence given up) | 47 |
 | — of those, lost because the refinements are different perturbations | 18 |
 | — of those, lost because two refinements state *different* conditions | 7 |
-| — of those, lost **only** because one paper states a condition the other leaves unknown | 20 |
+| — of those, lost **only** because one paper states a condition the other leaves unknown | 22 |
 
 **What it bought:** 20 of the 29 head-to-head `increase` vs `decrease` cells under the old key were not contradictions. A finer key separated them, which means they had been a male cohort against a female one, a chow-fed cohort against a high-fat one, or a gene knockout against a gene overexpression — experiments that were never comparable, recorded as laboratories disagreeing. 9 remain, and those are the real disagreements.
 
-**What it cost:** 45 of the 53 multi-study cells stopped being multi-study — 84.9% of the replication evidence the old key appeared to have. Most of it was never evidence: 18 of the 45 were records describing different *perturbations* (a knockout of one gene against a knockout of another), and 7 were two different stated conditions. Pooling those and counting the papers is the defect v0.2.0 exists to fix. The loss is still real in the sense that matters for modelling: there are now fewer cells that can clear a gate counting studies and labs.
+**What it cost:** 47 of the 55 multi-study cells stopped being multi-study — 85.5% of the replication evidence the old key appeared to have. Most of it was never evidence: 18 of the 47 were records describing different *perturbations* (a knockout of one gene against a knockout of another), and 7 were two different stated conditions. Pooling those and counting the papers is the defect v0.2.0 exists to fix. The loss is still real in the sense that matters for modelling: there are now fewer cells that can clear a gate counting studies and labs.
 
-**What cannot be adjudicated:** the remaining 20 lost cell(s) were split *only* because one paper states a condition the other leaves unknown. `unknown` pools "the curator did not ask" with "the paper does not say", and neither can match a stated value: a paper reporting male mice and a paper reporting no sex at all are two keys, so they stop replicating each other even if both ran males. **Nothing in this corpus can say whether they did.** The alternative — assuming the unstated condition matched — is the inference SCHEMA.md 2 rule 4 forbids, so this cost is paid and reported rather than argued away. It is counted on its own line and never as heterogeneity resolved.
+**What cannot be adjudicated:** the remaining 22 lost cell(s) were split *only* because one paper states a condition the other leaves unknown. `unknown` pools "the curator did not ask" with "the paper does not say", and neither can match a stated value: a paper reporting male mice and a paper reporting no sex at all are two keys, so they stop replicating each other even if both ran males. **Nothing in this corpus can say whether they did.** The alternative — assuming the unstated condition matched — is the inference SCHEMA.md 2 rule 4 forbids, so this cost is paid and reported rather than argued away. It is counted on its own line and never as heterogeneity resolved.
 
 ### Gate arithmetic under both keys
 
@@ -293,8 +293,8 @@ The same gates, the same records, two keys. The pooled column is **not a result*
 | verdict | tasks (pooled v0.1.0) | tasks (strict v0.2.0) | pairs (pooled) | pairs (strict) |
 |---|---|---|---|---|
 | feasible | 2 | 1 | 2 | 1 |
-| marginal | 16 | 3 | 15 | 2 |
-| insufficient | 310 | 515 | 248 | 262 |
+| marginal | 17 | 3 | 16 | 2 |
+| insufficient | 318 | 526 | 251 | 266 |
 
 ### The usability predicate also changed
 
@@ -302,17 +302,17 @@ Usability used to require a `valence` that was neither absent nor `unclear`. Und
 
 | quantity | count |
 |---|---|
-| records read | 709 |
-| usable under the v0.1.0 predicate | 506 |
-| usable under the v0.2.0 predicate | 678 |
-| admitted by v0.2.0 only | 172 |
+| records read | 722 |
+| usable under the v0.1.0 predicate | 514 |
+| usable under the v0.2.0 predicate | 689 |
+| admitted by v0.2.0 only | 175 |
 | admitted by v0.1.0 only | 0 |
 
 The records the change admits, by perturbation class — a predicate change that *admits* records is the kind that most needs showing, so it is broken down rather than stated as one number:
 
 | perturbation class | records admitted by v0.2.0 only |
 |---|---|
-| `molecular` | 172 |
+| `molecular` | 175 |
 
 ## Coverage matrix (population x outcome)
 
@@ -320,14 +320,14 @@ The matrix is built dense and the zeros are kept: which relationships nobody has
 
 | field | value |
 |---|---|
-| matrix shape | 77 x 37 |
-| cells | 2849 |
-| cells with at least one record | 265 |
-| cells with no records | 2584 |
-| cells with two or more labs | 48 |
-| sparsity (fraction of cells empty) | 90.7% |
+| matrix shape | 79 x 37 |
+| cells | 2923 |
+| cells with at least one record | 269 |
+| cells with no records | 2654 |
+| cells with two or more labs | 51 |
+| sparsity (fraction of cells empty) | 90.8% |
 
-The dense grid is not drawn: 77 x 37 exceeds the 12 x 12 printable limit. 2584 cell(s) are empty and are listed in the JSON output by omission from `populated_cells`.
+The dense grid is not drawn: 79 x 37 exceeds the 12 x 12 printable limit. 2654 cell(s) are empty and are listed in the JSON output by omission from `populated_cells`.
 
 ### Populated cells
 
@@ -371,10 +371,10 @@ The dense grid is not drawn: 77 x 37 exceeds the 12 x 12 printable limit. 2584 c
 | `raw:arc` | `bat_thermogenesis` | 4 | 1 | 1 |
 | `raw:type 1 agrp neurons` | `energy_expenditure` | 4 | 1 | 1 |
 | `raw:vtavgat neurons->raw:lh` | `locomotor_activity` | 4 | 1 | 1 |
+| `tmn_histamine` | `locomotor_activity` | 4 | 4 | 3 |
 | `vmh_sf1` | `energy_expenditure` | 4 | 1 | 1 |
-| `arc_agrp` | `plasma_glucagon` | 3 | 2 | 2 |
 
-... 225 more row(s) not shown.
+... 229 more row(s) not shown.
 
 ## Leakage-aware splits available on this corpus
 
@@ -386,9 +386,9 @@ Grouping is also not the whole of leakage control. SCHEMA.md 5b: a split can kee
 
 | grouping | groups | usable folds | cross-validation possible | records excluded as ungroupable |
 |---|---|---|---|---|
-| `by_study` | 97 | 97 | yes | 0 |
-| `by_lab` | 85 | 85 | yes | 0 |
-| `leave_one_population_out` | 77 | 77 | yes | 0 |
+| `by_study` | 103 | 103 | yes | 0 |
+| `by_lab` | 89 | 89 | yes | 0 |
+| `leave_one_population_out` | 79 | 79 | yes | 0 |
 
 ## What this report does not claim
 

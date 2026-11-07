@@ -181,7 +181,7 @@ class MetaAccessorTest(unittest.TestCase):
         block = meta("outcomes")
         self.assertIn("out_of_scope_readouts", block)
         self.assertIn("scope_policy", block)
-        self.assertEqual(block["version"], "0.5.1")
+        self.assertEqual(block["version"], "0.5.2")
 
     def test_meta_is_empty_rather_than_raising_for_a_file_without_one(self):
         for kind in ("regions", "methods", "populations", "targets"):

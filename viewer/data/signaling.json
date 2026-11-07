@@ -1,13 +1,13 @@
 {
- "generated_at": "2026-11-07T05:58:56Z",
+ "generated_at": "2026-11-07T19:37:21Z",
  "generated_from": "data/curated/records.jsonl",
  "mode_label": "Measured signalling - evidence playback",
  "mode_note": "Recorded observations animated. Nothing is simulated: no equation is integrated and no unmeasured response is inferred.",
- "n_records_in": 709,
- "n_records_used": 491,
+ "n_records_in": 722,
+ "n_records_used": 500,
  "n_records_with_projection_target": 13,
  "excluded": {
-  "no resolved population_id (region-level record, not cell-type-specific)": 218
+  "no resolved population_id (region-level record, not cell-type-specific)": 222
  },
  "axis_source": "perturbation_polarity when the record carries it, otherwise valence",
  "axis_class_source": "perturbation_class when the record carries it, otherwise mapped from method",
@@ -16,8 +16,8 @@
  "outcomes_without_a_declared_system": [],
  "outcomes_without_a_declared_system_note": "Outcome ids present in the dataset that OUTCOME_SYSTEM does not place. They are laid out under 'unclassified' and are otherwise complete: the grouping is presentational and nothing about an edge depends on it. A non-empty list means the outcome vocabulary has moved ahead of this layout aid.",
  "directions_seen": {
-  "decrease": 123,
-  "increase": 172,
+  "decrease": 125,
+  "increase": 179,
   "no_change": 195,
   "non_monotonic": 1
  },
@@ -92,8 +92,8 @@
    "marker_genes": [
     "Hcrt"
    ],
-   "n_records": 54,
-   "n_studies": 10,
+   "n_records": 55,
+   "n_studies": 11,
    "in_vocabulary": true
   },
   {
@@ -151,6 +151,20 @@
    ],
    "n_records": 15,
    "n_studies": 3,
+   "in_vocabulary": true
+  },
+  {
+   "id": "tmn_histamine",
+   "label": "TMN histaminergic neurons",
+   "region_id": "tmn",
+   "neurotransmitter": [
+    "histamine"
+   ],
+   "marker_genes": [
+    "Hdc"
+   ],
+   "n_records": 10,
+   "n_studies": 4,
    "in_vocabulary": true
   },
   {
@@ -220,8 +234,8 @@
    "marker_genes": [
     "Slc17a6"
    ],
-   "n_records": 3,
-   "n_studies": 2,
+   "n_records": 4,
+   "n_studies": 3,
    "in_vocabulary": true
   },
   {
@@ -234,20 +248,6 @@
    ],
    "marker_genes": [
     "Vip"
-   ],
-   "n_records": 3,
-   "n_studies": 2,
-   "in_vocabulary": true
-  },
-  {
-   "id": "tmn_histamine",
-   "label": "TMN histaminergic neurons",
-   "region_id": "tmn",
-   "neurotransmitter": [
-    "histamine"
-   ],
-   "marker_genes": [
-    "Hdc"
    ],
    "n_records": 3,
    "n_studies": 2,
@@ -812,8 +812,8 @@
    "tier": "A",
    "modality": "behaviour",
    "system": "behaviour",
-   "n_records": 32,
-   "n_studies": 16,
+   "n_records": 34,
+   "n_studies": 18,
    "n_records_excluded": 15,
    "in_vocabulary": true
   },
@@ -825,7 +825,7 @@
    "system": "behaviour",
    "n_records": 22,
    "n_studies": 13,
-   "n_records_excluded": 6,
+   "n_records_excluded": 8,
    "in_vocabulary": true
   },
   {
@@ -834,9 +834,20 @@
    "tier": "A",
    "modality": "EEG/EMG",
    "system": "behaviour",
-   "n_records": 18,
-   "n_studies": 8,
-   "n_records_excluded": 20,
+   "n_records": 22,
+   "n_studies": 11,
+   "n_records_excluded": 21,
+   "in_vocabulary": true
+  },
+  {
+   "id": "nrem_sleep",
+   "label": "NREM sleep amount",
+   "tier": "A",
+   "modality": "EEG/EMG",
+   "system": "behaviour",
+   "n_records": 17,
+   "n_studies": 10,
+   "n_records_excluded": 14,
    "in_vocabulary": true
   },
   {
@@ -847,18 +858,7 @@
    "system": "behaviour",
    "n_records": 16,
    "n_studies": 5,
-   "n_records_excluded": 10,
-   "in_vocabulary": true
-  },
-  {
-   "id": "nrem_sleep",
-   "label": "NREM sleep amount",
-   "tier": "A",
-   "modality": "EEG/EMG",
-   "system": "behaviour",
-   "n_records": 15,
-   "n_studies": 9,
-   "n_records_excluded": 14,
+   "n_records_excluded": 11,
    "in_vocabulary": true
   },
   {
@@ -867,8 +867,8 @@
    "tier": "A",
    "modality": "EEG/EMG",
    "system": "behaviour",
-   "n_records": 8,
-   "n_studies": 3,
+   "n_records": 9,
+   "n_studies": 4,
    "n_records_excluded": 15,
    "in_vocabulary": true
   },
@@ -3111,6 +3111,51 @@
    "record_ids_truncated": false
   },
   {
+   "population_id": "tmn_histamine",
+   "outcome_id": "locomotor_activity",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 1,
+    "no_change": 1
+   },
+   "consensus": null,
+   "agreement": 0.5,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "73dc1367df072b7a",
+    "aff45e7510102e61"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "tmn_histamine",
+   "outcome_id": "nrem_sleep",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 2,
+   "n_studies": 2,
+   "n_labs": 2,
+   "directions": {
+    "increase": 2
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "7dbcd426e0ab9453",
+    "4e9a9e516268dd8e"
+   ],
+   "record_ids_truncated": false
+  },
+  {
    "population_id": "vmh_sf1",
    "outcome_id": "bat_thermogenesis",
    "axis": "increase",
@@ -4505,6 +4550,27 @@
   },
   {
    "population_id": "lha_orexin",
+   "outcome_id": "sleep_fragmentation",
+   "axis": "remove",
+   "axis_class": "structural",
+   "axis_phrase": "population or gene product removed",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "003d5583615395d4"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_orexin",
    "outcome_id": "sleep_latency",
    "axis": "remove",
    "axis_class": "structural",
@@ -4584,6 +4650,27 @@
    "minority_replicated": false,
    "record_ids": [
     "79c8c989f117e5f8"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "lha_vglut2",
+   "outcome_id": "wakefulness",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "d06050ae8b835bde"
    ],
    "record_ids_truncated": false
   },
@@ -5199,30 +5286,9 @@
   {
    "population_id": "tmn_histamine",
    "outcome_id": "locomotor_activity",
-   "axis": "increase",
-   "axis_class": "circuit_activity",
-   "axis_phrase": "more firing",
-   "n_records": 1,
-   "n_studies": 1,
-   "n_labs": 1,
-   "directions": {
-    "no_change": 1
-   },
-   "consensus": "no_change",
-   "agreement": 1.0,
-   "contested": false,
-   "minority_replicated": false,
-   "record_ids": [
-    "73dc1367df072b7a"
-   ],
-   "record_ids_truncated": false
-  },
-  {
-   "population_id": "tmn_histamine",
-   "outcome_id": "nrem_sleep",
    "axis": "decrease",
-   "axis_class": "circuit_activity",
-   "axis_phrase": "less firing",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
    "n_records": 1,
    "n_studies": 1,
    "n_labs": 1,
@@ -5234,7 +5300,91 @@
    "contested": false,
    "minority_replicated": false,
    "record_ids": [
-    "7dbcd426e0ab9453"
+    "9f61aebd80bf50d9"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "tmn_histamine",
+   "outcome_id": "nrem_sleep",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "68cc152adb475a46"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "tmn_histamine",
+   "outcome_id": "wakefulness",
+   "axis": "decrease",
+   "axis_class": "molecular",
+   "axis_phrase": "less of the target gene product",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "e75cddc960097b1d"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "tmn_histamine",
+   "outcome_id": "wakefulness",
+   "axis": "decrease",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "less firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "decrease": 1
+   },
+   "consensus": "decrease",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "b00836f6876452fd"
+   ],
+   "record_ids_truncated": false
+  },
+  {
+   "population_id": "tmn_histamine",
+   "outcome_id": "wakefulness",
+   "axis": "increase",
+   "axis_class": "circuit_activity",
+   "axis_phrase": "more firing",
+   "n_records": 1,
+   "n_studies": 1,
+   "n_labs": 1,
+   "directions": {
+    "increase": 1
+   },
+   "consensus": "increase",
+   "agreement": 1.0,
+   "contested": false,
+   "minority_replicated": false,
+   "record_ids": [
+    "c48af296357fdc8d"
    ],
    "record_ids_truncated": false
   },
@@ -5260,19 +5410,19 @@
    "record_ids_truncated": false
   }
  ],
- "n_edges": 190,
+ "n_edges": 197,
  "n_edges_contested": 39,
  "n_edges_minority_replicated": 2,
  "n_edges_unclear_axis": 8,
  "n_populations_with_records": 16,
  "_honesty": [
-  "Nothing on this page is predicted. Every arrow, pulse and number is a count of curated observations already published in 102 papers.",
+  "Nothing on this page is predicted. Every arrow, pulse and number is a count of curated observations already published in 109 papers.",
   "An arrow is a count of published observations, not a measurement of signal flow. It says that perturbing this population was followed by a measured change in this readout in N records; it does not say that a signal travels this way, and the animation's speed and timing carry no physiological units.",
-  "No neural projection is drawn. Only 13 of 709 curated records name a projection target, so this dataset cannot support a wiring diagram and none is shown: the right-hand nodes are bodily readouts, not brain regions.",
-  "218 of 709 records are region-level (no cell-type-specific population) and are excluded from this view entirely. They are real evidence about a nucleus; they just cannot be attached to a population.",
-  "8 of the 190 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
+  "No neural projection is drawn. Only 13 of 722 curated records name a projection target, so this dataset cannot support a wiring diagram and none is shown: the right-hand nodes are bodily readouts, not brain regions.",
+  "222 of 722 records are region-level (no cell-type-specific population) and are excluded from this view entirely. They are real evidence about a nucleus; they just cannot be attached to a population.",
+  "8 of the 197 edges are unpolarised: the records do not establish whether the manipulation raised or lowered what it acted on, so they are drawn as dashed channels with hollow pulses and must not be read as switching the neurons on or off. The readout itself was still measured, and its direction is still shown.",
   "The axis and the direction can read as the same two words and are not the same statement. The axis is what the experiment did inside the brain -- more firing, less of a gene product, the population removed. The direction is what the body did. Every axis on this page is therefore written out in words rather than left as its bare value.",
-  "39 of the 190 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 2 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
+  "39 of the 197 edges are contested, meaning the records disagree about the direction. They are drawn split rather than averaged, and the split is the real record count on each side. Rule: contested = agreement < 0.7 and n_records >= 3. A further 2 edges agree well overall but have a minority direction that more than one study reported; that is flagged in the readout, not drawn as conflict.",
   "14 of the 30 vocabulary populations carry no curated record at all. That is a statement about how far curation has got, not about what the literature contains."
  ]
 }

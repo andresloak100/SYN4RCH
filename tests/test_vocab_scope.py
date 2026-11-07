@@ -231,18 +231,57 @@ class SleepSplitTest(unittest.TestCase):
         self.assertIn("not a complement", notes)
 
 
+class SignedClinicalStateTest(unittest.TestCase):
+    """The three clinical-state words in `sleep.synonyms` are all signed (D-087).
+
+    `insomnia` was signed from the start; `cataplexy` and `narcolepsy` were
+    carried in by D-064's split and never checked against the same rule, so two
+    of the three traps sat unmarked and a batch-2 reader walked into one --
+    proposing `sleep INCREASE` on "mice developed severe cataplexy", where the
+    direction describes the appearance of a state and not a change in any sleep
+    amount.
+
+    The list is declared non-exhaustive, so this does not assert it is complete.
+    It asserts that no word already IN `sleep.synonyms` names a clinical state
+    without also being signed, which is the invariant D-064 broke.
+    """
+
+    CLINICAL = ("insomnia", "cataplexy", "narcolepsy")
+
+    def test_every_clinical_state_synonym_of_sleep_is_signed(self):
+        sleep = load()["entries"]["sleep"]
+        synonyms = {s.lower() for s in sleep["synonyms"]}
+        signed = {s.lower() for s in (sleep.get("signed_synonyms") or [])}
+        for word in self.CLINICAL:
+            if word in synonyms:
+                self.assertIn(
+                    word, signed,
+                    "%r names a clinical state and is a synonym of `sleep`; "
+                    "direction would describe the state's appearance rather "
+                    "than a change in sleep amount (D-021)" % word,
+                )
+
+    def test_the_entry_says_why(self):
+        notes = (load()["entries"]["sleep"].get("notes") or "").lower()
+        self.assertIn("cataplexy", notes)
+        self.assertIn("clinical state", notes)
+
+
 class VersionTest(unittest.TestCase):
     def test_the_version_and_changelog_moved_together(self):
         meta = load()["_meta"]
-        self.assertEqual(meta["version"], "0.5.1")
+        self.assertEqual(meta["version"], "0.5.2")
         self.assertTrue(
-            any(entry.startswith("0.5.1:") for entry in meta["changelog"]),
+            any(entry.startswith("0.5.2:") for entry in meta["changelog"]),
             "a version bump with no changelog entry is an unexplained change",
         )
 
     def test_each_changelog_entry_cites_its_decision(self):
         changelog = load()["_meta"]["changelog"]
-        for version, decision in (("0.4.0", "D-063"), ("0.5.0", "D-064"), ("0.5.1", "D-070")):
+        for version, decision in (
+            ("0.4.0", "D-063"), ("0.5.0", "D-064"), ("0.5.1", "D-070"),
+            ("0.5.2", "D-087"),
+        ):
             entry = next(e for e in changelog if e.startswith(version + ":"))
             self.assertIn(decision, entry)
 
