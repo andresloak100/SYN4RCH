@@ -6151,3 +6151,98 @@ is the count over all 709 including the 31 `is_usable` excludes. Their 517 was
 right. I passed on a verification agent's figure without checking which pool
 it had used, in the same message where I asked them to stop quoting numbers
 nobody had read.
+
+
+## D-084 - Removing 55 Methods-sourced sex values the papers contradict, and an idempotency my own corrector claims and does not have
+
+D-082's scope fix changed five papers' `sex` verdict from `constant` to
+`varies`, which made the 55 records citing their Methods inadmissible under
+`C009`. **The committed dataset was holding 61 records its own gate would
+refuse** — these 55 and the 6 `background_genotype` records the D-075 session
+owns. All 55 are removed here; the 6 are not mine.
+
+### The disposition, verified rather than taken
+
+All 55 carry `from_value="male"` under rule `methods_single_sex`. Classified by
+running the project's own `_sex_vote` over each record's **own** `support_quote`:
+
+| what the record's own passage says | records | under PROTOCOL 3b |
+|---|---|---|
+| nothing about sex | **52** | the dimension stays `null` |
+| both sexes in one sentence | 2 | a refusal, not a pick -- `null` |
+| its own cohort | 1 | re-sourceable |
+
+The D-075 session reached 52/1/2 independently from a different route, and the
+two readings agree. The two both-sex records are `PMC3940852`'s *"Male Agrp-Sw
+... whereas female Agrp-Sh"* and *"the Agrp-Sw male and Agrp-Sh female mice,
+respectively"* -- one sentence naming both arms, which no single value can be
+read from.
+
+**The 56th operation is deferred, not lost.** `23fe1e3dc459a0e4`'s passage reads
+*"Acute treatment of POMC-G12D mice (males with free access to regular chow)"*,
+so `sex=male` is re-sourceable from the record's own passage. It is removed
+rather than re-sourced because this module keeps the evidence sentence and
+changes only the value **by design** -- a re-source replaces the sentence, which
+is a different operation and deserves its own argument rather than a silent
+reuse of this one. The evidence is quoted here so the value can be restored by a
+curation pass.
+
+`_sex_vote` returned `refused_figure_scoped_cohort_sentence` on that passage.
+That refusal is a Methods-scoped rule: a sentence scoped to one figure cannot
+speak for the whole paper. Applied to a record's **own** passage the scoping is
+irrelevant, because the passage *is* the record's scope. Noted because it is my
+misapplication of their rule rather than a defect in it.
+
+**The five stored quotes are four anaesthesia-or-purchase sentences and one
+age-matching sentence** -- exactly the shapes D-083's `_evidence_rank`
+penalises. Consistent, and not what makes them inadmissible: what does is that a
+`constant` verdict claims no second value exists *in the paper*, and these five
+papers report female cohorts in their Results.
+
+### The defect this surfaced in my own module
+
+`correct_conditions` refused all 7 pre-existing D-053 corrections with
+`refused_record_not_found`, and its docstring says *"running the same
+corrections twice reports `already_applied` and writes nothing"*. **That is
+false, and it is false for every correction this module can make.** Every
+condition dimension except `background_genotype` is a `RECORD_ID_FIELDS`
+component, so applying a correction **re-identifies the record** and the table's
+`record_id` stops resolving. A second run cannot recognise its own work; it
+reports the record as missing.
+
+The refusal text I wrote even says so -- *"this one may already have been
+applied and re-identified"* -- so the behaviour was understood and the claimed
+property was left standing beside it. Same shape as everything else this week: a
+declared property nothing enforces, which is in fact untrue.
+
+`--allow-refusals` exists for *"a refused correction means the dataset is not
+what the table expected"*. Here the dataset **is** what the table expected, so
+the bar the flag sets -- "only once each refusal is understood" -- was met by
+confirming all 7 independently of their ids: 6 by searching their own evidence
+quotes and finding the corrected value in place, and the 7th
+(`41fca07890c238c8`, whose `quote_contains` is the too-generic "hyperphagia")
+from `reports/condition_corrections_d053.json`, which records
+`41fca07890c238c8 -> d206091ce714a8f6, outcome applied`.
+
+**Not fixed here.** The fix is for the table to carry the post-correction id, or
+for already-applied detection to identify by evidence rather than by a hash the
+correction mutates. Either is a change to the module's contract while a
+55-record correction is in flight through it, and the flag covers this run. It
+is the module's open defect and the next run will hit 62 stale refusals, not 7.
+
+### A test that failed the intent it was written to protect
+
+`test_every_value_is_a_real_challenge_or_a_removal` read
+`{c.value for c in Challenge}` while the table held only `challenge`
+corrections, so the first `sex` correction failed a test whose intent it
+satisfied. Generalised to look the enum up in the schema's own `_ENUM_FIELDS`
+by dimension, plus a test that the table now covers more than one dimension --
+so the generalisation is exercised rather than merely written.
+
+### State
+
+55 applied, 55 ids re-identified, 0 collisions. The gate goes 648/61 to
+**703/6**, the 6 being the other session's. `PMC3940852` keeps 2 `sex=female`
+records: they are passage-sourced with no evidence entry, were never part of the
+55, and `C009` does not inspect them because it reads only
+`source == "methods"`.
