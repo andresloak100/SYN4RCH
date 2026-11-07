@@ -1646,6 +1646,100 @@ class ClaimScopeTest(unittest.TestCase):
         self.assertEqual(result.verdicts["sex"], "varies")
 
 
+class EvidenceRankTest(unittest.TestCase):
+    """D-083: the stored quote was the first agreeing sentence, by position.
+
+    FABRICATED TEST DATA - NEVER EVIDENCE, except the real-paper checks, named
+    as such.
+
+    11 of the 23 papers holding Methods-sourced sex entries have more than one
+    sex-voting Methods sentence, carrying 95 of 174 entries. `_read_sex`
+    already refuses when they disagree, so the verdict was never at risk --
+    only which sentence a reader is shown as the evidence.
+    """
+
+    def test_the_paper_wide_sentence_wins_over_a_purchase(self):
+        result = read([
+            "Eight-week-old male C57BL/6J mice were obtained from the Animal "
+            "Core Facility of the university.",
+            "Unless otherwise specified, male mice were used exclusively in "
+            "this study.",
+        ])
+        self.assertEqual(result.verdicts["sex"], "constant")
+        self.assertIn("exclusively in this study", result.constants["sex"].quote)
+
+    def test_an_all_equal_field_keeps_the_positional_choice(self):
+        """`max` is stable, so nothing moves without a reason to move."""
+        result = read([
+            "Male mice were used for the first set.",
+            "Male mice were used for the second set.",
+        ])
+        self.assertIn("first set", result.constants["sex"].quote)
+
+    def test_the_rank_cannot_change_a_verdict_or_a_value(self):
+        """It only ever runs over sentences that already agree: two Methods
+        sentences disagreeing is `varies` before the rank is consulted."""
+        result = read([
+            "Male mice were used exclusively in this study.",
+            "Female mice were anaesthetised for the recordings.",
+        ])
+        self.assertEqual(result.verdicts["sex"], "varies")
+        self.assertNotIn("sex", result.constants)
+
+    def test_a_note_records_that_several_sentences_agreed(self):
+        """So the entry does not read as though one sentence settled it."""
+        result = read([
+            "Male mice were obtained from the supplier.",
+            "Male mice were used throughout.",
+        ])
+        self.assertTrue(has_note(result, "methods_sex_stated_by_2_sentences"))
+
+    def test_housing_is_not_incidental(self):
+        """Dropped from `_INCIDENTAL_CUE` after reading what it moved: a
+        housing statement describes the whole colony, unlike an anaesthesia or
+        injection sentence describing one procedure. Pinned so a later
+        tightening has to argue with the record rather than re-add it."""
+        self.assertEqual(
+            C._evidence_rank(
+                "Male mice were housed under controlled temperature."
+            ),
+            0,
+        )
+        self.assertEqual(
+            C._evidence_rank("Male mice were anaesthetised with isoflurane."), -1
+        )
+
+    def test_a_two_species_sentence_is_not_penalised(self):
+        """Also tried and dropped. "male Sprague Dawley rats and C57/BL6 WT
+        mice" asserts male of BOTH species, so it is not ambiguous about sex;
+        penalising it would have promoted a sentence scoped to one assay on a
+        paper carrying 34 entries."""
+        self.assertEqual(
+            C._evidence_rank(
+                "8-10-week-old male Sprague Dawley rats and C57/BL6 WT mice "
+                "were housed under controlled temperature."
+            ),
+            0,
+        )
+
+    def test_the_real_paper_that_names_the_rule(self):
+        """PMC12794213 stored a purchase sentence while the same paragraph
+        said "male mice were used exclusively in this study". 7 entries."""
+        import os
+        from syn4rch.curate.jats import parse_jats_file
+        from syn4rch.curate.conditions import read_paper_conditions
+
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(root, "data", "raw", "fulltext", "PMC12794213.xml")
+        if not os.path.exists(path):  # pragma: no cover
+            self.skipTest("PMC12794213 not retrieved")
+        result = read_paper_conditions(parse_jats_file(path), "", "PMC12794213")
+        self.assertEqual(result.verdicts["sex"], "constant")
+        self.assertIn(
+            "exclusively in this study", result.constants["sex"].quote
+        )
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
 

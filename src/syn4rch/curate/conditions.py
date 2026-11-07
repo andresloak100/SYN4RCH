@@ -1600,6 +1600,63 @@ def _methods_species(units: List[Tuple[str, str]]) -> Tuple[Optional[str], bool,
 _BLOCKING_ONLY = frozenset({"refused_figure_scoped_cohort_sentence"})
 
 
+#: A sentence making a claim about the whole study, which is what a
+#: ``constant`` verdict rests on.
+_PAPER_WIDE_CUE = _any(
+    r"\bin\s+th(?:is|e\s+present)\s+(?:study|work|paper)\b",
+    r"\bthroughout\b", r"\bexclusively\b", r"\bunless\s+otherwise\b",
+    r"\ball\s+(?:experiments|animals|mice|rats|studies)\b",
+    r"\bevery\s+(?:experiment|animal|mouse)\b",
+    r"\bused\s+(?:for|in)\s+all\b",
+)
+
+#: A sentence describing a procedure or a purchase. It may mention the cohort's
+#: sex in passing, but it is not where a paper states what it studied.
+_INCIDENTAL_CUE = _any(
+    # `ana?es?thet`, not `anes?thet`: the second misses "anaesthetised", and
+    # this corpus is roughly half British spelling.
+    r"\bana?es?thet", r"\bpurchased\b", r"\bobtained\b",
+    r"\bplaced\b", r"\binjected\b", r"\bperfused\b", r"\bstereotax",
+    r"\bsurgery\b", r"\bsurgical\b", r"\bsacrific", r"\beuthan",
+    r"\bbred\b", r"\bpaired\s+with\b", r"\bmated\b", r"\bdissect",
+)
+
+
+def _evidence_rank(sentence: str) -> int:
+    """How well a sentence serves as the stored evidence for a verdict.
+
+    Higher is better. Only ever used to choose among sentences that already
+    **agree**, so this cannot change a verdict or a value -- `_read_sex`
+    returns ``varies`` the moment two Methods sentences disagree. It changes
+    only which quote and locator a reader is shown, which is the whole defect
+    (D-083): the choice used to be ``votes[0]``, first by position.
+
+    PMC12794213 is the case that names the rule. Its stored evidence was
+    "Eight-week-old male C57BL/6J mice were obtained from the Animal Core
+    Facility ..." -- a purchase -- while the same paragraph contains "Unless
+    otherwise specified, male mice were used exclusively in this study", which
+    is the paper-wide claim a ``constant`` verdict actually rests on. The
+    second one lost on position alone.
+
+    Two penalties were tried and dropped after reading what they moved, which
+    is the discipline this pass was written under. A two-species penalty would
+    have demoted PMC6109113's "8-10-week-old male Sprague Dawley rats and
+    C57/BL6 WT mice were housed ..." (34 entries) in favour of a patch-clamp
+    sentence -- but that sentence asserts *male* of both species, so it is not
+    ambiguous about sex at all, and the replacement was scoped to one assay.
+    ``housed`` was likewise dropped from :data:`_INCIDENTAL_CUE`: a housing
+    statement describes the whole colony, unlike an anaesthesia or injection
+    sentence that describes one procedure. Both would have made two of five
+    papers worse to make one better.
+    """
+    score = 0
+    if _PAPER_WIDE_CUE.search(sentence):
+        score += 2
+    if _INCIDENTAL_CUE.search(sentence):
+        score -= 1
+    return score
+
+
 def _read_sex(units, verdicts, constants, notes) -> None:
     votes: List[Tuple[Sex, str, str]] = []
     refusals: List[str] = []
@@ -1666,7 +1723,17 @@ def _read_sex(units, verdicts, constants, notes) -> None:
         )
         return
     value = next(iter(distinct))
-    _, sentence, locator = votes[0]
+    # The best of the agreeing sentences, not the first (D-083). `max` is
+    # stable, so an all-equal field keeps the original positional choice.
+    _, sentence, locator = max(votes, key=lambda v: _evidence_rank(v[1]))
+    if len(votes) > 1:
+        notes.append(
+            "methods_sex_stated_by_%d_sentences: %d Methods sentences agree "
+            "on %s and the best-ranked one is stored (%s). A `constant` "
+            "verdict rests on the paper being uniform, not on this sentence "
+            "describing this record's animals -- which it may not."
+            % (len(votes), len(votes), value.value, locator)
+        )
     verdicts["sex"] = "constant"
     constants["sex"] = Extracted(
         dimension="sex",

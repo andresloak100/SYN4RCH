@@ -6078,3 +6078,76 @@ published was wrong -- but a report older than its input is the same class as
 the signaling graph and `screened_on`, and the agreement was luck. Their
 "12 of 540" does not reproduce here: regeneration gives 12 of 517 on both
 readings.
+
+## D-083 - The stored quote was the first agreeing sentence, by position
+
+D-080 found that `read_paper_conditions` reads the Methods while `constant`
+claims the paper; D-082 fixed that. This is the defect one layer down, raised
+by the same session and ranked by it above my own report-header fix, correctly.
+
+`_read_sex` collects a vote from every Methods sentence, returns `varies` the
+moment two disagree, and when they agree stores `votes[0]` -- **the first by
+position**. 11 of the 23 papers holding Methods-sourced sex entries have more
+than one voting sentence, carrying **95 of 174 entries**.
+
+The verdict was never at risk; the stored evidence was. PMC12794213's entry
+quoted *"Eight-week-old male C57BL/6J mice were obtained from the Animal Core
+Facility of Nanjing Medical University"* -- a purchase -- while the same
+paragraph contains *"Unless otherwise specified, male mice were used
+exclusively in this study"*, which is the paper-wide claim a `constant` verdict
+actually rests on. The better sentence lost on position alone.
+
+Their argument for treating this as more than cosmetic is `A009`'s: "an entry
+asserting that evidence exists while withholding it is worse than a null,
+because it reads as checked." An entry citing the wrong animals reads as
+checked and is not. That holds.
+
+### The fix, and the two penalties I tried and dropped
+
+`_evidence_rank` scores an agreeing sentence: **+2** for a paper-wide claim
+("in this study", "throughout", "exclusively", "unless otherwise", "all
+experiments"), **-1** for a procedure or a purchase. `max` is stable, so an
+all-equal field keeps the original positional choice. It runs only over
+sentences that already agree, so it **cannot change a verdict or a value** --
+which is the opposite of D-082's position, where detector quality decided the
+outcome, and worth saying because it is why this one is safe.
+
+Two further penalties were written, measured, and removed:
+
+* **Two species.** PMC6109113's stored evidence, carrying 34 entries, is
+  "8-10-week-old male Sprague Dawley rats and C57/BL6 WT mice were housed...".
+  I penalised it as unable to be about one record's animals -- but it asserts
+  *male* of both species, so it is not ambiguous about sex at all, and the
+  sentence it promoted was scoped to a single patch-clamp experiment.
+* **`housed`.** A housing statement describes the whole colony, unlike an
+  anaesthesia or injection sentence describing one procedure.
+
+Together they would have made two of five papers worse to make one better. I
+only know that because I printed the five before and after, which is the rule
+the other session proposed and which this entry is the first to be written
+under. Both exclusions are pinned by tests so a later tightening has to argue
+with the record rather than re-add them.
+
+Result over 974 papers: 44 stored quotes move to a better-ranked sentence, 0
+verdicts or values change. Of the five multi-sentence papers holding the most
+entries, 2 improve, 3 are untouched, none is worse.
+
+### What this does not fix
+
+The multiplicity is recorded in the paper's notes
+(`methods_sex_stated_by_N_sentences`) and **not** on the record's evidence
+entry, which still shows one quote and one locator with no sign that N
+sentences agreed. Putting it there means changing the entry shape, and that is
+a schema question rather than a reader fix.
+
+### A number of mine to withdraw
+
+I reported the feasibility report as stale with "12 of 517 printed, 12 of 540
+actual". The staleness is real in class -- the report predates `records.jsonl`
+by 39 minutes -- and **empty in content**: regenerating it changes nothing.
+The 540 was my error, and a pool error rather than a time one: 517 is the cell
+count over the 678 **usable** records, which is the report's own pool, and 540
+is the count over all 709 including the 31 `is_usable` excludes. Their 517 was
+right. I passed on a verification agent's figure without checking which pool
+it had used, in the same message where I asked them to stop quoting numbers
+nobody had read.
