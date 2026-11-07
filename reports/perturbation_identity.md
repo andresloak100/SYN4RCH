@@ -1,6 +1,6 @@
 # SYN4RCH perturbation identity report
 
-**Under `lab` grouping, 33.9% of placed records have a perturbation identity that occurs in exactly one group: when that group is held out, nothing in training shares the manipulation, so a fold-averaged accuracy over them measures the label prior and not generalisation.**
+**Under `lab` grouping, 25.8% of placed records have a perturbation identity that occurs in exactly one group: when that group is held out, nothing in training shares the manipulation, so a fold-averaged accuracy over them measures the label prior and not generalisation.**
 
 Every number below is counted from the input named in the Run table. Nothing is estimated, imputed or projected, and no target is inferred from a targeting strategy. SCHEMA.md 5b: a cross-validated number must be reported alongside the fraction of test rows whose perturbation identity was unseen in training. This report is that fraction.
 
@@ -8,16 +8,16 @@ Every number below is counted from the input named in the Run table. Nothing is 
 
 | field | value |
 |---|---|
-| generated (UTC) | 2026-11-06T21:24:30Z |
+| generated (UTC) | 2026-11-07T02:53:56Z |
 | input | `data/curated/records.jsonl` |
 | input present | yes |
 | scope | all records read |
-| records analysed | 508 |
+| records analysed | 709 |
 | perturbation identity | `perturbation_class / perturbation_polarity / perturbation_target` |
 | target resolution state | targets partially resolved |
 | records with a resolved `target_id` | 170 |
-| records with `target_raw` only | 0 |
-| records whose class needs a target | 175 (of which 170 have one) |
+| records with `target_raw` only | 2 |
+| records whose class needs a target | 182 (of which 172 have one) |
 | load errors | 0 |
 
 > **What state the data was in.** Targets partially resolved. A molecular record's identity is its target gene; with the target null, every knockout in the corpus shares one identity and every overexpression another, so such records are counted as `target_unresolved` and are **excluded from both** the learnable and the unlearnable bucket rather than counted as learnable. Reading them as learnable is the one serious misinterpretation available here, and it is the artefact of a field that has not been filled in yet.
@@ -42,11 +42,11 @@ Groupings are `syn4rch.models.task.GROUPINGS`, reused rather than restated: SCHE
 
 | grouping | leakage-prone | groups | placed records | single-group records | unseen-identity fraction | identity not placeable | ungroupable |
 |---|---|---|---|---|---|---|---|
-| `lab` | no | 68 | 502 | 170 | 33.9% | 6 | 0 |
-| `population` | no | 44 | 502 | 122 | 24.3% | 6 | 0 |
-| `population_outcome` | no | 183 | 502 | 0 | 0.0% | 6 | 0 |
-| `record` | yes | 508 | 502 | 0 | 0.0% | 6 | 0 |
-| `study_id` | no | 75 | 502 | 170 | 33.9% | 6 | 0 |
+| `lab` | no | 88 | 697 | 180 | 25.8% | 12 | 0 |
+| `population` | no | 82 | 697 | 132 | 18.9% | 12 | 0 |
+| `population_outcome` | no | 274 | 697 | 0 | 0.0% | 12 | 0 |
+| `record` | yes | 709 | 697 | 0 | 0.0% | 12 | 0 |
+| `study_id` | no | 102 | 697 | 180 | 25.8% | 12 | 0 |
 
 Every fraction above is stated with its grouping, as SCHEMA.md 5 requires. `IdentityCoverage` has no `__float__`, so the bare number cannot be formatted without naming the field that carries the grouping beside it.
 
@@ -58,41 +58,45 @@ This is the breakdown the analysis exists for. `circuit_activity` and `molecular
 
 | class | records | identity resolved | distinct identities | single-group | multi-group | unseen-identity fraction | not placeable |
 |---|---|---|---|---|---|---|---|
-| `<null>` | 1 | 0 | 0 | 0 | 0 | not measurable | 1 |
-| `circuit_activity` | 314 | 314 | 3 | 0 | 314 | 0.0% | 0 |
-| `molecular` | 170 | 170 | 22 | 170 | 0 | 100.0% | 0 |
-| `pharmacological` | 5 | 0 | 0 | 0 | 0 | not measurable | 5 |
-| `structural` | 18 | 18 | 1 | 0 | 18 | 0.0% | 0 |
+| `<null>` | 2 | 0 | 0 | 0 | 0 | not measurable | 2 |
+| `circuit_activity` | 480 | 480 | 3 | 0 | 480 | 0.0% | 0 |
+| `molecular` | 172 | 172 | 23 | 172 | 0 | 100.0% | 0 |
+| `other` | 8 | 8 | 1 | 8 | 0 | 100.0% | 0 |
+| `pharmacological` | 10 | 0 | 0 | 0 | 0 | not measurable | 10 |
+| `structural` | 37 | 37 | 1 | 0 | 37 | 0.0% | 0 |
 
 ### Grouping `population`
 
 | class | records | identity resolved | distinct identities | single-group | multi-group | unseen-identity fraction | not placeable |
 |---|---|---|---|---|---|---|---|
-| `<null>` | 1 | 0 | 0 | 0 | 0 | not measurable | 1 |
-| `circuit_activity` | 314 | 314 | 3 | 0 | 314 | 0.0% | 0 |
-| `molecular` | 170 | 170 | 22 | 122 | 48 | 71.8% | 0 |
-| `pharmacological` | 5 | 0 | 0 | 0 | 0 | not measurable | 5 |
-| `structural` | 18 | 18 | 1 | 0 | 18 | 0.0% | 0 |
+| `<null>` | 2 | 0 | 0 | 0 | 0 | not measurable | 2 |
+| `circuit_activity` | 480 | 480 | 3 | 0 | 480 | 0.0% | 0 |
+| `molecular` | 172 | 172 | 23 | 124 | 48 | 72.1% | 0 |
+| `other` | 8 | 8 | 1 | 8 | 0 | 100.0% | 0 |
+| `pharmacological` | 10 | 0 | 0 | 0 | 0 | not measurable | 10 |
+| `structural` | 37 | 37 | 1 | 0 | 37 | 0.0% | 0 |
 
 ### Grouping `population_outcome`
 
 | class | records | identity resolved | distinct identities | single-group | multi-group | unseen-identity fraction | not placeable |
 |---|---|---|---|---|---|---|---|
-| `<null>` | 1 | 0 | 0 | 0 | 0 | not measurable | 1 |
-| `circuit_activity` | 314 | 314 | 3 | 0 | 314 | 0.0% | 0 |
-| `molecular` | 170 | 170 | 22 | 0 | 170 | 0.0% | 0 |
-| `pharmacological` | 5 | 0 | 0 | 0 | 0 | not measurable | 5 |
-| `structural` | 18 | 18 | 1 | 0 | 18 | 0.0% | 0 |
+| `<null>` | 2 | 0 | 0 | 0 | 0 | not measurable | 2 |
+| `circuit_activity` | 480 | 480 | 3 | 0 | 480 | 0.0% | 0 |
+| `molecular` | 172 | 172 | 23 | 0 | 172 | 0.0% | 0 |
+| `other` | 8 | 8 | 1 | 0 | 8 | 0.0% | 0 |
+| `pharmacological` | 10 | 0 | 0 | 0 | 0 | not measurable | 10 |
+| `structural` | 37 | 37 | 1 | 0 | 37 | 0.0% | 0 |
 
 ### Grouping `study_id`
 
 | class | records | identity resolved | distinct identities | single-group | multi-group | unseen-identity fraction | not placeable |
 |---|---|---|---|---|---|---|---|
-| `<null>` | 1 | 0 | 0 | 0 | 0 | not measurable | 1 |
-| `circuit_activity` | 314 | 314 | 3 | 0 | 314 | 0.0% | 0 |
-| `molecular` | 170 | 170 | 22 | 170 | 0 | 100.0% | 0 |
-| `pharmacological` | 5 | 0 | 0 | 0 | 0 | not measurable | 5 |
-| `structural` | 18 | 18 | 1 | 0 | 18 | 0.0% | 0 |
+| `<null>` | 2 | 0 | 0 | 0 | 0 | not measurable | 2 |
+| `circuit_activity` | 480 | 480 | 3 | 0 | 480 | 0.0% | 0 |
+| `molecular` | 172 | 172 | 23 | 172 | 0 | 100.0% | 0 |
+| `other` | 8 | 8 | 1 | 8 | 0 | 100.0% | 0 |
+| `pharmacological` | 10 | 0 | 0 | 0 | 0 | not measurable | 10 |
+| `structural` | 37 | 37 | 1 | 0 | 37 | 0.0% | 0 |
 
 ## The same contrast at cell level — and why this is the honest one
 
@@ -106,51 +110,56 @@ One table below is 0 by construction and is printed anyway. A cell contains the 
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 157 | 26 | 17% |
-| `molecular` | 170 | 132 | 0 | 0% |
-| `pharmacological` | 5 | 3 | 0 | 0% |
-| `structural` | 18 | 13 | 0 | 0% |
-| `unclassified` | 1 | 1 | 0 | 0% |
+| `circuit_activity` | 480 | 242 | 34 | 14% |
+| `molecular` | 172 | 134 | 0 | 0% |
+| `other` | 8 | 5 | 0 | 0% |
+| `pharmacological` | 10 | 5 | 0 | 0% |
+| `structural` | 37 | 29 | 1 | 3% |
+| `unclassified` | 2 | 2 | 0 | 0% |
 
 ### Grouping `population`
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 157 | 0 | 0% |
-| `molecular` | 170 | 132 | 0 | 0% |
-| `pharmacological` | 5 | 3 | 0 | 0% |
-| `structural` | 18 | 13 | 0 | 0% |
-| `unclassified` | 1 | 1 | 0 | 0% |
+| `circuit_activity` | 480 | 242 | 0 | 0% |
+| `molecular` | 172 | 134 | 0 | 0% |
+| `other` | 8 | 5 | 0 | 0% |
+| `pharmacological` | 10 | 5 | 0 | 0% |
+| `structural` | 37 | 29 | 0 | 0% |
+| `unclassified` | 2 | 2 | 0 | 0% |
 
 ### Grouping `population_outcome`
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 157 | 0 | 0% |
-| `molecular` | 170 | 132 | 0 | 0% |
-| `pharmacological` | 5 | 3 | 0 | 0% |
-| `structural` | 18 | 13 | 0 | 0% |
-| `unclassified` | 1 | 1 | 0 | 0% |
+| `circuit_activity` | 480 | 242 | 0 | 0% |
+| `molecular` | 172 | 134 | 0 | 0% |
+| `other` | 8 | 5 | 0 | 0% |
+| `pharmacological` | 10 | 5 | 0 | 0% |
+| `structural` | 37 | 29 | 0 | 0% |
+| `unclassified` | 2 | 2 | 0 | 0% |
 
 ### Grouping `record`
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 157 | 49 | 31% |
-| `molecular` | 170 | 132 | 30 | 23% |
-| `pharmacological` | 5 | 3 | 1 | 33% |
-| `structural` | 18 | 13 | 3 | 23% |
-| `unclassified` | 1 | 1 | 0 | 0% |
+| `circuit_activity` | 480 | 242 | 81 | 33% |
+| `molecular` | 172 | 134 | 30 | 22% |
+| `other` | 8 | 5 | 2 | 40% |
+| `pharmacological` | 10 | 5 | 2 | 40% |
+| `structural` | 37 | 29 | 6 | 21% |
+| `unclassified` | 2 | 2 | 0 | 0% |
 
 ### Grouping `study_id`
 
 | class | records | cells | cells spanning >=2 groups | share |
 |---|---|---|---|---|
-| `circuit_activity` | 314 | 157 | 26 | 17% |
-| `molecular` | 170 | 132 | 0 | 0% |
-| `pharmacological` | 5 | 3 | 0 | 0% |
-| `structural` | 18 | 13 | 0 | 0% |
-| `unclassified` | 1 | 1 | 0 | 0% |
+| `circuit_activity` | 480 | 242 | 34 | 14% |
+| `molecular` | 172 | 134 | 0 | 0% |
+| `other` | 8 | 5 | 0 | 0% |
+| `pharmacological` | 10 | 5 | 0 | 0% |
+| `structural` | 37 | 29 | 1 | 3% |
+| `unclassified` | 2 | 2 | 0 | 0% |
 
 ## Why: the structure of how this field publishes
 
@@ -158,25 +167,27 @@ The numbers above are not a sample-size problem. They are a description of publi
 
 | class | records | studies | labs | labs with >1 study | targeting strategies | strategies in >1 study | one study per lab |
 |---|---|---|---|---|---|---|---|
-| `<null>` | 1 | 1 | 1 | 0 | 0 | 0 | yes |
-| `circuit_activity` | 314 | 57 | 50 | 4 | 89 | 0 | no |
-| `molecular` | 170 | 16 | 16 | 0 | 28 | 0 | yes |
-| `pharmacological` | 5 | 2 | 2 | 0 | 2 | 0 | yes |
-| `structural` | 18 | 2 | 2 | 0 | 1 | 0 | yes |
+| `<null>` | 2 | 2 | 2 | 0 | 0 | 0 | yes |
+| `circuit_activity` | 480 | 80 | 69 | 7 | 149 | 0 | no |
+| `molecular` | 172 | 17 | 17 | 0 | 30 | 0 | yes |
+| `other` | 8 | 1 | 1 | 0 | 3 | 0 | yes |
+| `pharmacological` | 10 | 3 | 3 | 0 | 7 | 0 | yes |
+| `structural` | 37 | 7 | 7 | 0 | 7 | 0 | yes |
 
-`<null>` rests on a single study, so for it the unseen-identity fraction is not yet a statement about how the field publishes: it is a statement that the corpus holds one paper.
+`other` rests on a single study, so for it the unseen-identity fraction is not yet a statement about how the field publishes: it is a statement that the corpus holds one paper.
 
-For `molecular`, `pharmacological`, `structural`, every study comes from a different laboratory and no laboratory contributed two: the study-to-lab map is one-to-one. Holding out a lab therefore holds out exactly one study, so `study_id` and `lab` grouping must give these classes the same unseen-identity fraction, now and after the targets are resolved. The two groupings cannot be played off against each other to make the number smaller.
+For `<null>`, `molecular`, `pharmacological`, `structural`, every study comes from a different laboratory and no laboratory contributed two: the study-to-lab map is one-to-one. Holding out a lab therefore holds out exactly one study, so `study_id` and `lab` grouping must give these classes the same unseen-identity fraction, now and after the targets are resolved. The two groupings cannot be played off against each other to make the number smaller.
 
 ## What this corpus can and cannot support
 
 In plain terms, and without a model having been fitted:
 
-- **`<null>` (1 records): one laboratory, so there is no cross-study question yet.** The whole class is 1 study from 1 laboratory. Held out under `lab`, there is no other lab left. This is not the one-gene-one-lab structure described below; it is a class the corpus has barely begun to cover.
-- **`circuit_activity` (314 records): can support cross-study prediction, as far as identity goes.** Every manipulation here recurs across laboratories, so a held-out record's perturbation identity is one the training set has seen. That is a necessary condition for generalisation, not a sufficient one — it says a model *could* have learned something, not that it did.
-- **`molecular` (170 records): cannot support cross-study prediction at all.** Every one of these records has a manipulation that appears in exactly one laboratory. Held out, there is nothing in training that shares it. No amount of modelling fixes this and no additional paper from the same groups fixes it either: the only remedy is a second laboratory repeating the same manipulation.
-- **`pharmacological` (5 records): cannot be assessed from this corpus today.** Not one of these records has an identity specific enough to look for in a training set, because the field that would carry it is null. This is not a finding that they are predictable; it is a finding that the question cannot be put yet.
-- **`structural` (18 records): can support cross-study prediction, as far as identity goes.** Every manipulation here recurs across laboratories, so a held-out record's perturbation identity is one the training set has seen. That is a necessary condition for generalisation, not a sufficient one — it says a model *could* have learned something, not that it did.
+- **`<null>` (2 records): cannot be assessed from this corpus today.** Not one of these records has an identity specific enough to look for in a training set, because the field that would carry it is null. This is not a finding that they are predictable; it is a finding that the question cannot be put yet.
+- **`circuit_activity` (480 records): can support cross-study prediction, as far as identity goes.** Every manipulation here recurs across laboratories, so a held-out record's perturbation identity is one the training set has seen. That is a necessary condition for generalisation, not a sufficient one — it says a model *could* have learned something, not that it did.
+- **`molecular` (172 records): cannot support cross-study prediction at all.** Every one of these records has a manipulation that appears in exactly one laboratory. Held out, there is nothing in training that shares it. No amount of modelling fixes this and no additional paper from the same groups fixes it either: the only remedy is a second laboratory repeating the same manipulation.
+- **`other` (8 records): one laboratory, so there is no cross-study question yet.** The whole class is 1 study from 1 laboratory. Held out under `lab`, there is no other lab left. This is not the one-gene-one-lab structure described below; it is a class the corpus has barely begun to cover.
+- **`pharmacological` (10 records): cannot be assessed from this corpus today.** Not one of these records has an identity specific enough to look for in a training set, because the field that would carry it is null. This is not a finding that they are predictable; it is a finding that the question cannot be put yet.
+- **`structural` (37 records): can support cross-study prediction, as far as identity goes.** Every manipulation here recurs across laboratories, so a held-out record's perturbation identity is one the training set has seen. That is a necessary condition for generalisation, not a sufficient one — it says a model *could* have learned something, not that it did.
 
 The reason is not a shortage of papers. It is that this field publishes one laboratory, one gene, one paper: a group establishes a gene's role in a population and the next group picks a different gene. Circuit manipulations escape this because their identity is a method everyone shares — a chemogenetic activation is the same manipulation in every laboratory that performs one — while a molecular manipulation's identity is the gene, and the gene is what distinguishes one laboratory's programme from another's.
 
@@ -196,8 +207,8 @@ The analysis above ran over **all records read**. The same measurement over **us
 
 | grouping | records | placed | single-group | unseen-identity fraction |
 |---|---|---|---|---|
-| `lab` | 492 | 492 | 170 | 34.6% |
-| `population` | 492 | 492 | 122 | 24.8% |
-| `population_outcome` | 492 | 492 | 0 | 0.0% |
-| `record` | 492 | 492 | 0 | 0.0% |
-| `study_id` | 492 | 492 | 170 | 34.6% |
+| `lab` | 678 | 678 | 172 | 25.4% |
+| `population` | 678 | 678 | 124 | 18.3% |
+| `population_outcome` | 678 | 678 | 0 | 0.0% |
+| `record` | 678 | 678 | 0 | 0.0% |
+| `study_id` | 678 | 678 | 172 | 25.4% |
