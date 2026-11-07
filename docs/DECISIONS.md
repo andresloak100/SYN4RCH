@@ -4424,7 +4424,7 @@ hold 27 records between them.
 2. **Depth where it is missing.** At least **6** tier A populations holding 5 or
    more records. **Baseline amended below: it is 4, not 5.**
 3. **Concentration.** `arc_agrp` + `arc_pomc` fall below **65%** of tier A
-   circuit records, from 82%.
+   circuit records. **Baseline amended below: it is 85.8%, not 82%.**
 4. **Replication.** Circuit cells spanning two or more laboratories rise by at
    least **15**, from 26. The seam brings 68 laboratories absent from the
    corpus.
@@ -4485,6 +4485,54 @@ change costs nothing on volume. Our filters still disagree — 1,724 against
 1,673 seam units — and neither of us should quote the other's figure as a
 replacement rather than a cross-check. The 5-to-4 change does not depend on the
 filter at all, being a record count over populations whose tier moved.
+
+### Second amendment: my own rule, applied systematically rather than once
+
+**Criterion 3 has the same flaw as criterion 2 and I fixed only criterion 2.**
+The principle I stated — a pre-registered threshold that reads a value from
+another session's artefact needs a companion that does not — I then applied to
+the one criterion whose breakage had been pointed out to me, and not to the
+others. Checking all four:
+
+| criterion | reads another session's artefact? |
+|---|---|
+| 1, volume (>=150 records) | no |
+| 2, depth (tier A populations at 5+) | **yes** — amended, companion 2b |
+| 3, concentration (% of **tier A** records) | **yes** — unamended until now |
+| 4, replication (multi-lab cells) | `lab_key`, and see below |
+
+**And criterion 3's baseline has already moved against me, further than
+criterion 2's did.** It said 82%. `pvh_trh`'s 8 records leaving tier A shrank
+the denominator from 213 to 204, so:
+
+| | `arc_agrp` + `arc_pomc` share |
+|---|---|
+| of tier A, when written | 82.2% |
+| of tier A, now | **85.8%** |
+| of all resolved circuit records | **71.4%** |
+
+The threshold stays at 65%, which makes the required fall 21 points rather than
+17. Taking the harder version again, for the same reason: the denominator moved
+because of a correction, and pinning to the old one measures against a value we
+both know is wrong.
+
+3b. **`arc_agrp` + `arc_pomc` fall below 55% of all resolved circuit records,
+    from 71.4%.** Tier-independent, so it means in a week what it means now.
+
+**Criterion 4 reads `lab_key` from another session's module and does not get a
+companion, deliberately.** It is a key rather than a judgement: settled at
+D-056, unchanged since, and there is no tier-like revision history behind it.
+The principle is about values that can be *re-decided*, not about every
+cross-session read — a companion for every import would be noise. Stating the
+reasoning so that a later reader can disagree with where I drew the line rather
+than guess at it.
+
+**What this episode actually shows.** I stated a rule, had it validated by the
+other session finding the same flaw in its own trigger within the hour, and
+still applied it to one of my own four criteria. A principle is easier to state
+than to sweep with, and sweeping is where it pays — which is the same lesson as
+D-049's thirteen polarity traps found by checking every entry against its own
+rule rather than fixing the one a curator hit.
 
 ### What would abandon the pass
 
