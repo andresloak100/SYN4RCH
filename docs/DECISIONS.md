@@ -4654,3 +4654,206 @@ exploratory `k = 3`, tier A admission, overlap disqualification and every logged
 diagnostic stand. D-069's re-run trigger stands and now reads against corrected
 tiers, which is why this had to land before the EEG pass produces a record
 rather than after. Tier B, never a training target.
+
+
+## D-074 - A rule stated and unenforced, walked into by my own brief: batch 1 of the D-072 pass
+
+The first 30 of the 91 seam papers, read one reader per paper with one
+adversarial verifier each. **201 records admitted, 0 rejected** after
+correction. Three of four pre-registered criteria met from a third of the
+papers. The pass's most useful output is not the records.
+
+### What the readers got right, measured rather than assumed
+
+| check | result |
+|---|---|
+| `support_quote` verbatim in the passage its own locator names | **207 / 207** |
+| `source_locator` naming a passage the reader was given | **207 / 207** |
+| p-value stored as the threshold (the deposit trial's failure) | **0** |
+
+The provenance core held completely. 389 refusals against 207 records -- nearly
+two refusals per record -- and 165 out-of-scope readouts seen and declined
+rather than recorded. "A refusal is a result" was carried.
+
+### The defect, which is mine and not the readers'
+
+The brief said each positive condition needs an evidence entry with
+`source ("passage" or "methods")`, and then: read `CURATION_PROTOCOL.md`
+sections 3 and 3b *"if you need the detail"*. The detail is the rule:
+
+> **A Methods value applies only where the paper holds the dimension
+> constant.** [...] Then the dimension stays `null` on every record whose own
+> passage does not say, however obvious the answer feels.
+
+I licensed the Methods route and omitted the sentence that governs it, with the
+governing document marked optional. The result, measured against the project's
+own classifier:
+
+| | entries |
+|---|---|
+| condition_evidence entries from batch 1 | 322 |
+| of those, `source = methods` | **272** (84%) |
+| on dimensions `read_paper_conditions` does **not** call `constant` | **115** |
+| `age_group` entries from a passage | **0 of 67** |
+
+Not twenty reader mistakes. One instruction error, replicated thirty times.
+
+### The hole it walked into, which predates the brief
+
+`A008`-`A011` check that a `condition_evidence` entry is **auditable**: locator
+present, quote present, value equal to the field. **Nothing checked it was
+admissible.** A record could carry `sex='male'` read from the Methods of a
+paper that studied both sexes, with a flawless locator and a verbatim quote,
+and pass every check in this project. `W009_AGE_GROUP_RULE_MISMATCH` fired on
+**67 of 67** age_group records and blocked none.
+
+**And a second gap found on the way.** A Methods-sourced
+`condition_evidence.quote` is never verified to occur in the paper at all. The
+suite's own `synthetic.good_record` claims three Methods-sourced conditions
+quoting a "Methods para 1" of a fixture that **has no Methods section**, and it
+was admitted for the life of the fixture. `read_paper_conditions` does verify
+its own extractions; the validator does not verify a curator's.
+
+**Why it stayed closed until now.** Conditions have only ever come from
+`fill_conditions`, which asks the classifier first and declines on anything but
+`constant`. The committed 508 records hold **320 Methods-sourced entries with
+zero violations** -- the rule was obeyed because the only thing obeying it was a
+module. The moment a reader filled conditions by hand, 115 went in.
+
+**And that module can no longer run.** `fill_conditions` accepts schema 0.2.0
+or 0.3.0; the schema is 0.4.0. The only mechanical implementation of 3b has
+been locked out by a version bump, which is why the brief reached for readers
+at all. Making it run again is not bundled in here: it is another session's
+module and deserves its own entry.
+
+### The fix
+
+`C009_CONDITION_NOT_CONSTANT_IN_PAPER`, blocking, in the gate -- where the
+paper is already parsed. The check lives next to the classifier that defines
+the verdict (`conditions.py` already imports `verify`, so the reverse would be
+a cycle). Dimensions outside the classifier's four are skipped rather than
+failed: `background_genotype` is a declared condition dimension with **no
+Methods rule behind it**, so there is no verdict to check and refusing it would
+punish a curator for the vocabulary's gap. A missing verdict fails *closed* --
+silence is not `constant`, and D-044 forbids reading a refusal as a licence.
+
+Re-gated: the uncorrected batch loses **82 records** to C009. The corrected
+batch: 201 admitted, 0 rejected. **The committed 508: 508 admitted, 0
+rejected** -- the check invalidates nothing that already exists, which is what
+makes it safe to make it HARD.
+
+### The scorecard, against baselines that reproduce
+
+Conditions were reset to `null` on the 152 affected records rather than
+repaired. `null` is the correct value when the passage does not say, and a
+value that agrees with the rule by coincidence is still a value produced
+without it; keeping the 157 that happen to agree would mix two provenances in
+one field with nothing recording which.
+
+| criterion | baseline | after | target | |
+|---|---|---|---|---|
+| 1. volume | 0 | **201** | 150 | met |
+| 2b. resolved populations at 5+ circuit records | 6 | **10** | 9 | met |
+| 3b. `arc_agrp`+`arc_pomc` share of resolved circuit | 67.9% | **47.0%** | <55% | met |
+| 4. circuit cells spanning 2+ labs | 26 | **35** | 41 | **missed** |
+
+New at 5+: `lha_mch`, `pvh_oxt`, `lha_vgat`, `poa_galanin` -- two of them
+targeted seam populations. 2 and 3 read a tier label from the other session's
+clustering module and are not scored; that is what 2b and 3b were written for,
+and this is the first time the companion rule has had to carry anything.
+
+**Two of my four baselines did not reproduce, and I am publishing both.**
+
+* **Criterion 4's "26" has a source after all, and it is the wrong one.** No
+  figure in `reports/feasibility_report.md` at `20a367b` is 26; it carries 5,
+  44 and 36. 26 is the multi-lab count **with the condition dimensions removed
+  from the claim key** -- so the criterion compared a condition-blind baseline
+  against a condition-aware target and I never recorded which. Both readings
+  miss: 35 against 41 blind, 12 against 20 strict.
+* **Criterion 3b's baseline is 68.2%, not the 71.4% I wrote.** The threshold
+  and the verdict are unaffected. 2b's 6 reproduces exactly, down to the same
+  six populations named.
+
+I amended two baselines carefully the same day, for the stated reason that
+restating one before any record exists is free, and still shipped two that were
+wrong. The discipline was real and incomplete, which is D-049's lesson again:
+stating a rule is easier than sweeping with it.
+
+### The prediction I expected to fail did fail, for the wrong reason
+
+D-072 predicted criterion 4 would miss **because D-064 split `sleep`**: one lab
+reporting NREM and one reporting wakefulness no longer share a cell. Tested as
+a counterfactual on the cells themselves:
+
+| | circuit cells | multi-lab |
+|---|---|---|
+| as it stands | 372 | **12** |
+| five sleep ids pooled back onto `sleep` | 333 | **11** |
+| condition dimensions dropped from the cell key | 271 | **35** |
+
+**Undoing the split does not recover replication -- it loses one cell.** The
+sleep split is not what suppresses replication. The condition dimension is, by
+a factor of three: five of the ten claim-key components are conditions, and
+they cost this corpus 23 of 35 multi-lab cells. D-023's fragmentation trade is
+real and sits on a dimension I was not watching.
+
+**And the defect was not flattering the criterion.** Gating the uncorrected
+proposals gives 9 multi-lab cells against the corrected set's 12 -- correcting
+the conditions *improved* replication, because `null` merges with `null` while
+wrong Methods values split cells along differences that do not exist. I checked
+this specifically because crediting a pre-registered prediction that my own
+edit had caused would be worthless.
+
+### Corrections applied to the proposals, each with a declared count
+
+Every count was declared before the run and the script refuses on any
+mismatch. It refused once, correctly: I predicted 9 records with `significant`
+set and no threshold language, and the true figure is **20** -- my audit's
+regex had `ns\b`, which matches `neurons` and `conditions`. The same
+hand-rolled-regex error as the out-of-scope count earlier today (142 against a
+true 133), caught this time by having to say the number first.
+
+| correction | records |
+|---|---|
+| `schema_version` 0.3.0 -> 0.4.0 | 8 |
+| Methods-sourced conditions reset | 152 (272 entries) |
+| `significant` nulled, no threshold language in its own quote | 20 |
+| `targeting_strategy` "closed-loop" removed, a token in no given passage | 4 |
+| duplicate `(population x perturbation x readout x study)` dropped | 6 |
+| `record_id` recomputed | 76 |
+
+**The 76 recomputes are the argument in miniature.** `sex`, `diet`,
+`age_group` and `challenge` are `RECORD_ID_FIELDS` components, so resetting a
+condition changes the record's identity. An inadmissible condition is not a
+cosmetic flaw: it moves the claim key, and two experiments that belong in one
+cell stop sharing it. That is the D-050 / D-052 class.
+
+**I did not generalise the import detector, having measured it first.** A
+content-word test over the free-text fields reports 60 `targeting_strategy`
+imports; reading them, it fires on morphology (`expressed` where the passage
+says `expressing`), on enums (`percent_change`), and on apostrophes
+(`Student's`). It is not a detector. "closed-loop" is corrected because a
+direct token search confirmed it occurs in no passage that reader was given;
+the other 56 are not reported as defects.
+
+### Where the verifiers overreached
+
+27 of 30 papers came back `needs-revision`, 48 defects at `fatal`. They were
+told to default to finding a defect, and the strongest claims were checked
+rather than accepted. One was wrong in substance: the verifier on `PMC5554302`
+asserted that none of its eight `support_quote`s contains a significance claim.
+Five of eight do. Its other finding on that paper -- the stale `schema_version`
+making all eight inadmissible -- is correct and is corrected above.
+
+### Named limitations
+
+* **Conditions on these 201 records are mostly `null`, and that is honest
+  rather than complete.** The admissible Methods values exist in the papers and
+  cannot be filled mechanically until `fill_conditions` runs at 0.4.0.
+* The brief is fixed before batch 2 by removing the Methods route from it
+  entirely: a reader fills a condition from the passage or leaves it null.
+* 47 records the verifiers say were missed are not pursued here.
+* The latent `non-REM` -> `rem_sleep` overlap (D-070) is still pinned, not
+  patched.
+* D-072's abandon condition -- fewer than 60 records from the first 30 papers
+  -- is not met at 201, so the pass continues.
