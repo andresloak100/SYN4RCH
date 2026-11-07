@@ -533,6 +533,61 @@ def cmd_gate(args) -> int:
         strict_locator_passage=(not args.lenient_passage),
     )
 
+    # C009: a Methods-sourced condition is admissible only where the paper holds
+    # that dimension constant (CURATION_PROTOCOL.md 3b, D-038). The schema's
+    # A008-A011 check such an entry is auditable; nothing checked it was
+    # allowed, so the rule was stated and unenforced until D-074 -- and the
+    # first batch of the D-072 pass walked 115 entries into it.
+    #
+    # The classifier is asked once per paper, not once per record: it re-reads
+    # the Methods and is the expensive part of this command.
+    from .conditions import inadmissible_methods_conditions, read_paper_conditions
+
+    paper_by_key = {}
+    for paper in papers:
+        for key in paper.study_keys():
+            paper_by_key.setdefault(str(key).strip().lower(), paper)
+
+    by_study: Dict[str, object] = {}
+    still_admitted: List[TierARecord] = []
+    for record in admitted:
+        offences = ()
+        if record.condition_evidence:
+            paper = None
+            for probe in (record.pmcid, record.doi, record.pmid, record.study_id):
+                if probe:
+                    paper = paper_by_key.get(str(probe).strip().lower())
+                    if paper is not None:
+                        break
+            if paper is not None:
+                key = record.study_id or record.pmcid or ""
+                if key not in by_study:
+                    by_study[key] = read_paper_conditions(
+                        paper, record.study_id or "", record.pmcid or ""
+                    )
+                offences = tuple(inadmissible_methods_conditions(record, by_study[key]))
+        if offences:
+            rejections.append(
+                Rejection(
+                    record=record,
+                    codes=("C009_CONDITION_NOT_CONSTANT_IN_PAPER",),
+                    reasons=(
+                        "%s Offending: %s"
+                        % (
+                            CODES["C009_CONDITION_NOT_CONSTANT_IN_PAPER"][1],
+                            "; ".join(
+                                "%s=%s (paper verdict: %s)" % (d, v, verdict)
+                                for d, v, verdict in offences
+                            ),
+                        ),
+                    ),
+                    detail={"inadmissible_conditions": [list(o) for o in offences]},
+                )
+            )
+        else:
+            still_admitted.append(record)
+    admitted = still_admitted
+
     # Two admitted records sharing a record_id, WITHIN this batch. The check
     # below against --out catches a collision with what is already stored; this
     # one catches a batch that collides with itself, which that check cannot

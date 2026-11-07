@@ -199,6 +199,7 @@ __all__ = [
     "Extracted",
     "PaperConditions",
     "paper_text",
+    "inadmissible_methods_conditions",
     "read_paper_conditions",
     "read_record_conditions",
     "sentences",
@@ -1904,6 +1905,51 @@ def _sentence_carrying(text: str, position: int) -> str:
             return sentence
         cursor = found + len(sentence)
     return text.strip()
+
+
+def inadmissible_methods_conditions(record, paper: "PaperConditions"):
+    """Methods-sourced conditions this paper does not hold constant (3b).
+
+    Returns ``[(dimension, value, verdict), ...]``, empty when every
+    Methods-sourced entry is admissible. A record carrying one of these is
+    inadmissible: the Methods named two cohorts on that dimension, so they say
+    the values exist and nothing about which one produced this figure.
+
+    **This closes a rule that was stated and unenforced.** ``A008``-``A011``
+    check that a ``condition_evidence`` entry is auditable -- locator present,
+    quote present, value matching the field. None of them asks whether the
+    value was allowed to be read from the Methods at all. So a record could
+    carry ``sex='male'`` sourced from the Methods of a paper that studied both
+    sexes, with a perfect locator and a verbatim quote, and pass every check in
+    the project.
+
+    The hole was never exercised while conditions came from
+    :mod:`syn4rch.curate.fill_conditions`, which asks
+    :func:`read_paper_conditions` first and declines on anything but
+    ``constant`` -- and the 508 records curated that way hold 320
+    Methods-sourced entries with zero violations. It was exercised the moment a
+    reader filled conditions by hand: the first 30 papers of the D-072 pass
+    produced 272 Methods-sourced entries of which **115 were on dimensions this
+    classifier refuses**. See D-074.
+
+    Dimensions outside :data:`DIMENSIONS` are skipped rather than failed.
+    ``background_genotype`` is a declared condition dimension with no Methods
+    rule behind it, so there is no verdict to check and refusing it would
+    punish a curator for the vocabulary's gap rather than for a reading.
+    """
+    out = []
+    for entry in getattr(record, "condition_evidence", None) or []:
+        source = entry.get("source") if isinstance(entry, dict) else getattr(entry, "source", None)
+        dimension = entry.get("dimension") if isinstance(entry, dict) else getattr(entry, "dimension", None)
+        value = entry.get("value") if isinstance(entry, dict) else getattr(entry, "value", None)
+        source = getattr(source, "value", source)
+        dimension = getattr(dimension, "value", dimension)
+        if str(source) != "methods" or dimension not in DIMENSIONS:
+            continue
+        verdict = (paper.verdicts or {}).get(dimension)
+        if verdict != "constant":
+            out.append((dimension, getattr(value, "value", value), verdict))
+    return out
 
 
 def read_record_conditions(record, notes: Optional[List[str]] = None):

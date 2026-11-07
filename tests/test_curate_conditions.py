@@ -1218,3 +1218,150 @@ class TestPaperConditionsShape(unittest.TestCase):
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
+
+
+class InadmissibleMethodsConditionTest(unittest.TestCase):
+    """C009: a Methods value is admissible only where the paper holds it constant.
+
+    FABRICATED TEST DATA - NEVER EVIDENCE.
+
+    The rule is PROTOCOL 3b's, bold in that file since v0.3.0, with D-038
+    behind it. Nothing enforced it. ``A008``-``A011`` ask whether a
+    ``condition_evidence`` entry is *auditable* -- locator present, quote
+    present, value equal to the field -- and never whether the value was
+    allowed to come from the Methods at all. So a record could carry
+    ``sex='male'`` read from the Methods of a paper that studied both sexes,
+    with a flawless locator and a verbatim quote, and pass every check.
+
+    The hole stayed closed for as long as conditions came from
+    ``fill_conditions``, which asks the classifier and declines on anything but
+    ``constant``: 320 Methods-sourced entries in the committed corpus, zero
+    violations. It opened when a reader filled them by hand -- 115 of 272 in
+    the first batch of the D-072 pass. See D-074.
+    """
+
+    def _record(self, dimension, value, source="methods"):
+        from syn4rch.schema.record import TierARecord
+
+        return TierARecord.from_dict(
+            {
+                "study_id": STUDY,
+                "pmcid": PMCID,
+                "population_raw": "invented neurons",
+                "outcome_raw": "invented readout",
+                "outcome_id": "food_intake",
+                "direction": "increase",
+                "method": "chemogenetic",
+                "valence": "activation",
+                "support_quote": "Invented result sentence.",
+                "source_locator": "Results para 1",
+                "evidence_class": "causal_interventional",
+                dimension: value,
+                "condition_evidence": [
+                    {
+                        "dimension": dimension,
+                        "value": value,
+                        "source": source,
+                        "locator": "Methods para 1",
+                        "quote": "Invented methods sentence.",
+                        "rule": "invented_rule",
+                    }
+                ],
+            },
+            strict=True,
+        )
+
+    def test_a_constant_dimension_is_admissible(self):
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID,
+            verdicts={"sex": "constant"}, constants={},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(self._record("sex", "male"), paper), []
+        )
+
+    def test_a_varying_dimension_is_not(self):
+        """The case PROTOCOL 3b describes: the Methods name two cohorts."""
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID,
+            verdicts={"sex": "varies"}, constants={},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(self._record("sex", "male"), paper),
+            [("sex", "male", "varies")],
+        )
+
+    def test_an_absent_dimension_is_not_either(self):
+        """`absent` is the classifier declining, and D-044 forbids reading a
+        refusal as a licence: a dimension it could not establish is not one the
+        paper holds constant."""
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID,
+            verdicts={"age_group": "absent"}, constants={},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(
+                self._record("age_group", "young_adult"), paper
+            ),
+            [("age_group", "young_adult", "absent")],
+        )
+
+    def test_a_passage_sourced_value_is_never_checked(self):
+        """The record's own passage is always an admissible source. 3b widens
+        where a value may be read FROM; it does not narrow the passage."""
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID,
+            verdicts={"sex": "varies"}, constants={},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(
+                self._record("sex", "male", source="passage"), paper
+            ),
+            [],
+        )
+
+    def test_background_genotype_is_skipped_rather_than_failed(self):
+        """A declared condition dimension with no Methods rule behind it.
+
+        `background_genotype` is in schema CONDITION_DIMENSIONS and not in this
+        module's DIMENSIONS, so there is no verdict to check. Failing it would
+        punish a curator for the gap; the gap itself is named in D-074.
+        """
+        self.assertIn("background_genotype", self._schema_dimensions())
+        self.assertNotIn("background_genotype", C.DIMENSIONS)
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID, verdicts={}, constants={},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(
+                self._record("background_genotype", "mixed"), paper
+            ),
+            [],
+        )
+
+    def test_a_missing_verdict_fails_closed(self):
+        """A dimension the classifier covers but this paper has no verdict for.
+
+        Silence is not `constant`. Failing open here would reinstate the whole
+        defect for any paper the classifier could not read.
+        """
+        paper = C.PaperConditions(
+            study_id=STUDY, pmcid=PMCID, verdicts={}, constants={},
+        )
+        self.assertEqual(
+            C.inadmissible_methods_conditions(self._record("diet", "chow"), paper),
+            [("diet", "chow", None)],
+        )
+
+    def _schema_dimensions(self):
+        from syn4rch.schema.record import CONDITION_DIMENSIONS
+
+        return CONDITION_DIMENSIONS
+
+    def test_the_rejection_code_exists_and_blocks(self):
+        from syn4rch.curate.verify import CODES
+
+        blocking, message = CODES["C009_CONDITION_NOT_CONSTANT_IN_PAPER"]
+        self.assertTrue(blocking, "a reported-only version would not have helped")
+        self.assertIn("3b", message)
+        self.assertIn("D-038", message)

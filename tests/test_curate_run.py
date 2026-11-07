@@ -53,12 +53,24 @@ class TestCli(unittest.TestCase):
         self.assertIn("units_written                                    %d" % len(rows), out)
 
     def test_gate(self):
+        # synthetic.good_record defaults to Methods-sourced sex/diet/age_group,
+        # and synthetic_complete.xml has NO Methods section -- so the fixture
+        # record claimed a provenance its own paper could not support. Nothing
+        # read those quotes until C009 asked the classifier for a verdict
+        # (D-074), which is the same shape of defect C009 exists to catch. The
+        # conditions are dropped here rather than the check relaxed: this test
+        # is about quote verbatimness, and the record should be consistent with
+        # the paper it is paired with.
+        consistent = dict(
+            study_id="doi:" + DOI, doi=DOI, source_locator="Results para 1",
+            sex=None, diet=None, age_group=None, condition_evidence=[],
+        )
         good = synthetic.good_record(
-            study_id="doi:" + DOI, doi=DOI, source_locator="Results para 1",
-            support_quote="Chemogenetic activation of Agrp neurons increased food intake (n = 8 mice, p < 0.01)")
+            support_quote="Chemogenetic activation of Agrp neurons increased food intake (n = 8 mice, p < 0.01)",
+            **consistent)
         bad = synthetic.good_record(
-            study_id="doi:" + DOI, doi=DOI, source_locator="Results para 1",
-            support_quote="chemogenetic activation of Agrp neurons increased food intake (n = 8 mice, p < 0.01)")
+            support_quote="chemogenetic activation of Agrp neurons increased food intake (n = 8 mice, p < 0.01)",
+            **consistent)
         proposals = os.path.join(self.tmp, "proposals.jsonl")
         write_jsonl(proposals, [good, bad])
         with open(proposals, "a") as handle:

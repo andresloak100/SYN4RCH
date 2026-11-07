@@ -232,6 +232,16 @@ CODES: Dict[str, Tuple[bool, str]] = {
         True,
         "The proposed record could not be read as a Tier A record at all.",
     ),
+    "C009_CONDITION_NOT_CONSTANT_IN_PAPER": (
+        True,
+        "A condition_evidence entry sources a value from the paper's Methods, "
+        "but the paper does not hold that dimension constant. "
+        "CURATION_PROTOCOL.md 3b: 'A Methods value applies only where the "
+        "paper holds the dimension constant' -- otherwise the dimension stays "
+        "null on every record whose own passage does not say (D-038). A008-"
+        "A011 check that such an entry is AUDITABLE; this checks that it is "
+        "ADMISSIBLE, which nothing did until D-074.",
+    ),
     "W101_QUOTE_NOT_IN_LOCATED_PASSAGE": (
         False,
         "The quote is verbatim somewhere in this paper but not in the passage "
