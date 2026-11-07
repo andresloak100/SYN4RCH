@@ -1318,6 +1318,200 @@ class _GenotypeRecord:
     )
 
 
+class ScopeAndStimulusTest(unittest.TestCase):
+    """D-078: `constant` was returned from sentences that state the second cohort.
+
+    FABRICATED TEST DATA - NEVER EVIDENCE, except the sentences marked as
+    quoted from a named paper, which are verbatim and are the reason each
+    pattern exists.
+
+    Ten papers in the corpus produced a `constant` verdict whose own stored
+    quote refuted it. The positive tests below are those sentences. The
+    negative tests are the half that matters more: every pattern here refuses
+    a real value when it over-matches, and the paper-wide forms it must not
+    touch look almost identical to the subset forms it must catch.
+    """
+
+    # --- the second cohort, stated in the same sentence ------------------- #
+
+    def test_either_sex_refuses_though_it_names_no_sex_token(self):
+        """PMC5910424, verbatim. `_sex_vote` returned (male, None): "either
+        sex" holds neither a `male` nor a `female` token, so the disjunction
+        patterns never saw it."""
+        result = read([
+            "Male mice at 10-16 weeks of age were used for behavioral "
+            "experiments, whereas mice of either sex at 4-8 weeks of age were "
+            "used for in vitro patch-clamp experiments.",
+        ])
+        self.assertNotEqual(result.verdicts["sex"], "constant")
+        self.assertNotIn("sex", result.constants)
+
+    def test_either_sex_alone_is_a_refusal_not_a_silence(self):
+        """A sentence with no male/female token at all still states that the
+        sex is unresolved, which is not the same as saying nothing."""
+        self.assertEqual(
+            C._sex_vote("Mice of either sex were used for recordings.")[1],
+            "refused_disjunctive_sex_is_unresolved",
+        )
+
+    def test_mixed_sex_votes_both_rather_than_refusing(self):
+        """`mixed-sex` asserts both were used, so it joins "both sexes" and
+        not "either sex". Getting this backwards would discard real values."""
+        self.assertEqual(
+            C._sex_vote("A mixed-sex cohort of mice was used.")[0], C.Sex.both
+        )
+
+    def test_an_except_only_clause_names_the_second_cohort(self):
+        """PMC5746599, verbatim: 13 records, and the exception is the whole
+        point of the sentence."""
+        result = read([
+            "Male and female mice were used for most experiments, except for "
+            "optogenetic experiments that used males only.",
+        ])
+        self.assertNotEqual(result.verdicts["sex"], "constant")
+
+    def test_in_most_cases_denies_the_universality_it_is_read_for(self):
+        """PMC3416931, verbatim."""
+        result = read(["In most cases, behavioural experiments were with male mice."])
+        self.assertNotEqual(result.verdicts["sex"], "constant")
+
+    # --- a universal quantifier over ONE assay class ---------------------- #
+
+    def test_a_universal_over_one_assay_class_is_scoped(self):
+        """PMC4335349, verbatim. 27 records, and 20+ of them are
+        corticosterone, blood pressure and heart rate -- not behavioural."""
+        result = read([
+            "All behavioural experiments conducted to target Hcrt neurons were "
+            "done on C57BL/6 J wild-type male mice obtained at ~7 weeks of age "
+            "from the Jackson Laboratory.",
+        ])
+        self.assertNotEqual(result.verdicts["sex"], "constant")
+
+    def test_for_an_assay_class_is_scoped_without_the_article(self):
+        """PMC6978463 and PMC7468160. The pre-existing pattern required the
+        literal "the" and the literal word "experiments"."""
+        for sentence in (
+            "For chemogenetic experiments, only male mice were used.",
+            "For photometry experiments, the virus was injected in male "
+            "VIP-IRES-Cre mice.",
+            "Mice of both sexes, aged 2-5 months, were used for "
+            "electrophysiological recordings.",
+        ):
+            self.assertTrue(
+                C._SCOPED_TO_A_SUBSET.search(sentence), sentence
+            )
+
+    def test_an_enumerated_assay_subject_is_scoped(self):
+        """PMC9592589, verbatim."""
+        result = read([
+            "Optogenetic manipulations, fiber photometry, in vivo "
+            "multichannel recording, and RNA-inference experiments were "
+            "performed in male GAD2-IRES-Cre mice.",
+        ])
+        self.assertNotEqual(result.verdicts["sex"], "constant")
+
+    def test_a_counted_subset_of_the_colony_is_scoped(self):
+        """PMC6140123, verbatim. Also DOX chow, which is not plain chow."""
+        result = read([
+            "Sixteen of the Orexin-tTA mice were reared with chow that "
+            "included doxycycline (DOX).",
+        ])
+        self.assertNotEqual(result.verdicts["diet"], "constant")
+
+    # --- the negative half: paper-wide forms that must survive ------------ #
+
+    def test_an_unqualified_universal_is_still_the_paper(self):
+        """The distinction the assay lexicon exists to carry. These four
+        differ from "All behavioural experiments" by one word, and a
+        word-presence test cannot tell them apart -- "animal" and "mouse"
+        qualify the SUBJECT, not a subset of assays."""
+        for sentence, want in (
+            ("All experiments were performed on male adult mice (8-16 weeks old).", "male"),
+            ("All animal experiments used male mice and were approved by the "
+             "institutional committee.", "male"),
+            ("All the mouse experiments in this study were using male mice on a "
+             "C57BL/6N background.", "male"),
+            ("All mice used in the experiments were adult male.", "male"),
+        ):
+            result = read([sentence])
+            self.assertEqual(result.verdicts["sex"], "constant", sentence)
+            self.assertEqual(
+                result.constants["sex"].value, C.Sex(want), sentence
+            )
+
+    def test_for_all_experiments_is_not_a_subset(self):
+        for sentence in (
+            "Adult mice (8-16 weeks old) were used for all experiments.",
+            "Adult male mice (8-12 weeks old) were used for all of the studies.",
+            "Only male mice were used for experiments.",
+        ):
+            self.assertFalse(
+                C._SCOPED_TO_A_SUBSET.search(sentence),
+                "%r must not read as scoped" % sentence,
+            )
+
+    def test_a_husbandry_sentence_with_a_fasting_exception_keeps_its_chow(self):
+        """Four real `chow` constants sit on sentences like these. The
+        exception is a `challenge`, not a second diet, and the `except ... only`
+        pattern must not reach them -- none of them says "only"."""
+        for sentence in (
+            "Mice were singly housed with ad libitum access to food (Purina "
+            "Rodent Chow, 5001) and water except under conditions of food "
+            "restriction or when otherwise noted.",
+            "Mice were housed with free access to chow (LabDiet, PicoLab "
+            "Rodent Diet 20; 3.02 kcal/g) and water, except when indicated.",
+            "Mice were housed with standard pellet chow and water provided ad "
+            "libitum unless otherwise noted for fasting experiments.",
+        ):
+            result = read([sentence])
+            self.assertEqual(result.verdicts["diet"], "constant", sentence)
+            self.assertEqual(result.constants["diet"].value, C.Diet.chow, sentence)
+
+    # --- the stimulus guard did not know the abbreviations ---------------- #
+
+    def test_the_stimulus_guard_knows_the_diet_abbreviations(self):
+        """PMC11206529, verbatim. The guard's food alternation was
+        `(?:chow|food|diet)` while `_DIET_SHAPES` also knows HFD, so an HFD
+        presented in a petri dish during a 2-min behavioural assay wrote
+        `diet=high_fat` onto 9 records. `chow` occurs nowhere in that paper."""
+        result = read([
+            "GCaMP6f signal was sampled for 4 min each session with 2 min as "
+            "baseline and 2-min exposure to salient stimuli including a 15-ml "
+            "novel Falcon tube (novelty), novel male mouse, novel female "
+            "mouse, HFD (in a small petri dish), rat bedding (in a small petri "
+            "dish), restraint, TMT, and manual grabbing.",
+        ])
+        self.assertNotEqual(result.verdicts["diet"], "constant")
+
+    def test_the_pinned_chow_stimulus_test_holds_for_the_abbreviation_too(self):
+        """The existing test pins "Chow was presented after the baseline
+        period". Writing HFD for Chow used to pass it; now it must not."""
+        for token in ("Chow", "HFD", "NCD"):
+            sentence = "%s was presented after the baseline period." % token
+            self.assertTrue(
+                any(p.search(sentence) for p in C._DIET_AS_STIMULUS),
+                "%r not seen as a stimulus" % sentence,
+            )
+
+    def test_the_abbreviation_guard_is_case_sensitive(self):
+        """`\bCD\b` and `\bND\b` under IGNORECASE would match English
+        words, which is why that half of the guard is compiled without it."""
+        self.assertFalse(
+            any(p.search("The cd was presented after the baseline period.")
+                for p in C._DIET_AS_STIMULUS),
+            "a lowercase 'cd' must not read as a diet abbreviation",
+        )
+
+    def test_the_assay_lexicon_excludes_the_subject_words(self):
+        """If `mouse` or `animal` entered this lexicon, every "All animal
+        experiments" sentence in the corpus would start refusing."""
+        for word in ("animal", "animals", "mouse", "mice", "rodent", "this", "study"):
+            self.assertNotIn(
+                word, C._ASSAY_CLASS.split("|"),
+                "%r qualifies the subject, not a subset of assays" % word,
+            )
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
 

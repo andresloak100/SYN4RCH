@@ -73,6 +73,7 @@ from .migrate import (  # noqa: F401
 __all__ = [
     "FROM_VERSION",
     "ACCEPTED_INPUT_VERSIONS",
+    "output_version_for",
     "TO_VERSION",
     "FILLED",
     "CORRECTED",
@@ -154,6 +155,28 @@ PASSAGE_DIMENSIONS = CONDITION_DIMENSIONS
 #: the file as well and would also have swallowed a misspelled field name,
 #: which is how a column quietly stops being curated.
 RETIRED_FIELDS = ("condition_source", "condition_locator")
+
+
+def output_version_for(input_version: str) -> str:
+    """The version a run writes, given the version it read.
+
+    Named and exported because D-077's review found the alternative: the policy
+    was two lines inside :func:`cmd_run` while :func:`fill_records`' docstring
+    named *itself* as the enforcement point, and the test written for it
+    asserted back the value it had just passed in. Two mutants reinstating the
+    original defect left the whole suite green. A policy that cannot be tested
+    without a CLI is a policy nothing tests.
+
+    The migration moves the version by design; a top-up must not move it at
+    all. Refuses a version the pass does not accept, rather than inventing an
+    answer for it.
+    """
+    if input_version not in ACCEPTED_INPUT_VERSIONS:
+        raise ValueError(
+            "this pass reads %s, not %r"
+            % (" or ".join(ACCEPTED_INPUT_VERSIONS), input_version)
+        )
+    return TO_VERSION if input_version == FROM_VERSION else input_version
 
 
 def _now() -> str:
@@ -469,11 +492,19 @@ def fill_records(
     changed, because the file is one dataset at one schema version and a mixed
     file is what the version check exists to refuse.
 
-    ``out_version`` defaults to :data:`TO_VERSION`, which is the migration's
-    target. A top-up passes its own input version instead: it fills conditions
-    and must not move the corpus between schemas, least of all backwards (see
-    :data:`ACCEPTED_INPUT_VERSIONS`).
+    ``out_version`` is whatever the caller asks for, and this function is
+    **not** where the invariant lives -- :func:`output_version_for` is, and
+    :func:`cmd_run` calls it. Saying otherwise here is what D-077's review
+    caught: a docstring naming itself as the enforcement point while the
+    enforcement sat in the CLI. What is checked here is only that the version
+    is one the pass accepts at all, so a caller cannot write an arbitrary
+    string into every record.
     """
+    if out_version not in ACCEPTED_INPUT_VERSIONS:
+        raise ValueError(
+            "refusing to stamp records %r; this pass knows %s"
+            % (out_version, " or ".join(ACCEPTED_INPUT_VERSIONS))
+        )
     result = FillResult()
 
     # One parse per paper, not one per record: 362 records come from 42 papers,
@@ -1072,7 +1103,7 @@ def cmd_run(args) -> int:
     # migrating", so a 0.4.0 input could not have been a top-up even once it
     # was accepted.
     top_up = input_version != FROM_VERSION
-    out_version = input_version if top_up else TO_VERSION
+    out_version = output_version_for(input_version)
 
     stale = [r.record_id for r in records if not r.id_is_consistent()]
     if stale:

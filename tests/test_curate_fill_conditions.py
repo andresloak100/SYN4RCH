@@ -312,22 +312,60 @@ class OutputVersionTest(unittest.TestCase):
         self.assertEqual(TO_VERSION, "0.3.0")
         self.assertNotEqual(TO_VERSION, SCHEMA_VERSION)
 
-    def test_every_accepted_version_can_be_written_back_unchanged(self):
-        """The invariant stated as a loop, so a fourth accepted version
-        cannot be added without this passing for it too."""
+    def test_the_derivation_not_the_parameter(self):
+        """D-078. What the previous version of this test did not test.
+
+        It read ``test_every_accepted_version_can_be_written_back_unchanged``
+        and asserted that ``fill_records(out_version=v)`` writes ``v`` -- which
+        is to say, that a parameter is used. D-077's review pointed out that
+        two mutants reinstating the original defect both left the suite green,
+        because nothing tested how ``out_version`` is *chosen*. The policy is
+        now :func:`output_version_for` and this tests that.
+        """
         from syn4rch.curate.fill_conditions import (
             ACCEPTED_INPUT_VERSIONS,
             FROM_VERSION,
+            output_version_for,
         )
 
+        # The migration moves the version; nothing else may.
+        self.assertEqual(output_version_for(FROM_VERSION), TO_VERSION)
         for version in ACCEPTED_INPUT_VERSIONS:
             if version == FROM_VERSION:
-                continue  # the migration, which moves the version by design
-            result = fill_records(
-                self._row(), tempfile.mkdtemp(), out_version=version
+                continue
+            self.assertEqual(
+                output_version_for(version), version,
+                "a top-up at %s must write %s" % (version, version),
             )
-            for record in result.records:
-                self.assertEqual(record.schema_version, version, version)
+
+    def test_the_two_mutants_that_used_to_pass(self):
+        """Both reinstate the lockout defect, and both must now fail.
+
+        Mutant A: always write the migration target (the original bug, which
+        would downgrade a 0.4.0 corpus to 0.3.0).
+        Mutant B: always write the input version (which would stop the
+        migration migrating).
+        """
+        from syn4rch.curate.fill_conditions import FROM_VERSION, output_version_for
+
+        mutant_a = lambda v: TO_VERSION
+        mutant_b = lambda v: v
+        self.assertNotEqual(
+            mutant_a("0.4.0"), output_version_for("0.4.0"),
+            "mutant A survives: the top-up would downgrade the corpus",
+        )
+        self.assertNotEqual(
+            mutant_b(FROM_VERSION), output_version_for(FROM_VERSION),
+            "mutant B survives: the migration would not migrate",
+        )
+
+    def test_a_version_the_pass_does_not_know_is_refused(self):
+        from syn4rch.curate.fill_conditions import output_version_for
+
+        with self.assertRaises(ValueError):
+            output_version_for("0.9.9")
+        with self.assertRaises(ValueError):
+            fill_records(self._row(), tempfile.mkdtemp(), out_version="0.9.9")
 
 
 if __name__ == "__main__":

@@ -548,6 +548,35 @@ _IN_VITRO_CUE = _any(
 )
 
 
+#: Assay classes: a qualifier naming ONE kind of experiment among several.
+#:
+#: "All behavioural experiments ... were done on male mice" scopes itself to a
+#: subset; "All experiments were performed on male mice" does not. A
+#: word-presence test cannot tell them apart, because "All animal experiments"
+#: and "All the mouse experiments in this study" carry qualifiers too and those
+#: qualify the *subject* rather than selecting a subset of assays. The
+#: distinction is carried by this lexicon, so ``animal``, ``mouse``, ``mice``,
+#: ``rodent`` and ``this`` are deliberately absent from it.
+#:
+#: **Unlike the genotype guard (D-075), a miss here changes the outcome.** That
+#: guard was safe to leave modest because both of its verdicts refused; an
+#: assay class this lexicon does not know leaves a wrong ``constant`` standing.
+#: So the lexicon is generous and the cost of that is measured in D-078 rather
+#: than assumed -- 974 papers re-read before and after.
+_ASSAY_CLASS = (
+    r"behaviou?ral|electrophysiolog\w*|ephys|optogenetic|chemogenetic"
+    r"|photometr\w*|imaging|histolog\w*|immunohisto\w*|patch[\s" + _DASHES + r"]?clamp"
+    r"|slice|calcium|fibre|fiber|EEG|EMG|telemetr\w*|multichannel"
+    r"|microdialysis|tracing|anatomical|vitro|vivo|qPCR|western"
+    r"|perfusion|surgic\w*|feeding|locomotor"
+)
+
+#: The nouns an assay class attaches to.
+_ASSAY_NOUN = (
+    r"experiments?|recordings?|studies|assays?|measurements?"
+    r"|sessions?|tests?|manipulations?"
+)
+
 #: A figure, panel, cohort or experiment reference scopes a sentence to a
 #: *subset* of the paper, so it cannot vote on a paper-level verdict.
 #: "Experiments (Figure 3) were performed in female mice only" says the
@@ -572,6 +601,34 @@ _SCOPED_TO_A_SUBSET = _any(
     r"\bcohort\s*\d",
     # A direct subset marker: "performed in female mice only".
     r"\b(?:males?|females?)\s+(?:mice|rats|animals)\s+only\b",
+    # D-078. A universal quantifier over ONE assay class is not the paper:
+    # "All behavioural experiments conducted to target Hcrt neurons were done
+    # on ... male mice" left 20 of 27 records -- corticosterone, blood
+    # pressure, heart rate -- outside the sentence that spoke for them.
+    r"\b(?:all|every)\s+(?:the\s+)?(?:" + _ASSAY_CLASS + r")[\w"
+    + _DASHES + r"]*\s+(?:" + _ASSAY_NOUN + r")\b",
+    # "For chemogenetic experiments, only male mice were used"; "were used for
+    # electrophysiological recordings". The form above this one required the
+    # literal "the" and the literal word "experiments", so both missed.
+    r"\b(?:for|in|during)\s+(?:the\s+|our\s+)?(?:" + _ASSAY_CLASS
+    + r")[\w" + _DASHES + r"]*\s+(?:" + _ASSAY_NOUN + r")\b",
+    # The enumerated-assay subject: "Optogenetic manipulations, fiber
+    # photometry, in vivo multichannel recording, and RNA-inference
+    # experiments were performed in male ... mice".
+    r"^\s*(?:" + _ASSAY_CLASS + r")[\w" + _DASHES + r"]*\s+(?:"
+    + _ASSAY_NOUN + r")\b",
+    # An explicit denial of universality. "In most cases, behavioural
+    # experiments were with male mice" says there are other cases.
+    r"\bin\s+most\s+cases\b",
+    r"\bmost\s+(?:of\s+the\s+)?(?:" + _ASSAY_NOUN + r")\b",
+    # "...were used for most experiments, except for optogenetic experiments
+    # that used males only" -- the exception names the second cohort.
+    r"\bexcept\s+(?:for\s+)?[^.;]{0,80}?\b(?:only|alone)\b",
+    # "Sixteen of the Orexin-tTA mice were reared with chow that included
+    # doxycycline" -- a counted subset of the colony, not the colony.
+    r"\b(?:\d+|" + "|".join(_WORD_NUMERALS) + r")\s+of\s+"
+    r"(?:the\s+|these\s+|those\s+)?[\w" + _DASHES + r"]*\s*"
+    r"(?:mice|mouse|rats?|animals)\b",
 )
 
 
@@ -581,7 +638,30 @@ _SCOPED_TO_A_SUBSET = _any(
 
 _MALE = re.compile(r"\bmales?\b", re.IGNORECASE)
 _FEMALE = re.compile(r"\bfemales?\b", re.IGNORECASE)
-_BOTH_SEXES = re.compile(r"\bboth sexes\b", re.IGNORECASE)
+#: An explicit conjunction of sexes. ``mixed-sex`` joins "both sexes" rather
+#: than "either sex": it asserts that both were used, which is what
+#: :class:`Sex.both` means.
+_BOTH_SEXES = re.compile(
+    r"\bboth\s+sexes\b|\bboth\s+genders\b|\bmixed[\s" + _DASHES + r"]sex\b",
+    re.IGNORECASE,
+)
+
+#: "mice of either sex" leaves an individual record's sex unresolved, and a
+#: ``constant`` verdict claims that no second value exists.
+#:
+#: The phrase contains neither a ``male`` nor a ``female`` token, so
+#: :data:`_SEX_DISJUNCTION` never saw it, and a sentence naming a male cohort
+#: *and* an either-sex cohort -- "Male mice at 10-16 weeks were used for
+#: behavioral experiments, whereas mice of either sex at 4-8 weeks were used
+#: for in vitro patch-clamp experiments" -- voted ``male`` with no refusal.
+#: The sentence stored as the claim that no second value exists stated the
+#: second value verbatim (D-078).
+_EITHER_SEX = re.compile(
+    r"\b(?:either|any)\s+(?:sex|sexes|gender|genders)\b"
+    r"|\bsex(?:es)?\s+(?:was|were)\s+not\s+"
+    r"(?:specified|determined|recorded|reported)\b",
+    re.IGNORECASE,
+)
 
 _SEX_TOKEN = r"(?:males?|females?)"
 #: An optional parenthetical between the two sex words, so that
@@ -624,6 +704,9 @@ def _sex_vote(sentence: str) -> Tuple[Optional[Sex], Optional[str]]:
         # A colony's female breeders say nothing about the animals measured,
         # so this is not a cohort sentence at all -- not a refusal.
         return None, None
+    # Before the token test below, which cannot see a sexless phrasing.
+    if _EITHER_SEX.search(sentence):
+        return None, "refused_disjunctive_sex_is_unresolved"
     male = bool(_MALE.search(sentence))
     female = bool(_FEMALE.search(sentence))
     if not (male or female or _BOTH_SEXES.search(sentence)):
@@ -766,6 +849,11 @@ _DIET_WORD = re.compile(
 )
 
 
+#: The food words the stimulus guard screens, and the abbreviations it did not.
+_FOOD_WORD = r"(?:chow|food|diets?)"
+#: Matched case-sensitively; see the note in :data:`_DIET_AS_STIMULUS`.
+_FOOD_ABBR = r"(?:HFD|HFHS|NCD|SCD|LFD|ND|CD|RD|WD)"
+
 #: Food as a *stimulus* is not a maintenance diet. "response to chow" in a
 #: neural-recording sentence is chow presented to the animal during the
 #: recording; the paper may well be chow-fed, but this sentence is not
@@ -778,12 +866,40 @@ _DIET_AS_STIMULUS = (
         r"(?:the\s+)?(?:\w+[\s" + _DASHES + r"]+){0,2}?(?:chow|food|diet)\b",
     ),
     _any(
-        r"\b(?:chow|food|diet)\s+(?:presentation|delivery|exposure)\b",
-        r"\b(?:chow|food|diet)\s+was\s+(?:presented|delivered|offered|introduced)\b",
+        r"\b" + _FOOD_WORD + r"\s+(?:presentation|delivery|exposure)\b",
+        r"\b" + _FOOD_WORD + r"\s+was\s+(?:presented|delivered|offered|introduced)\b",
         r"\bupon\s+(?:chow|food)\b",
         r"\bpresentation\s+of\s+(?:\w+[\s" + _DASHES + r"]+){0,2}?(?:chow|food)\b",
         r"\b(?:presented|delivered|offered)\s+(?:with\s+)?"
         r"(?:\w+[\s" + _DASHES + r"]+){0,2}?(?:chow|food)\b",
+        # D-078. The food token BEFORE the verb: "The food presented in the
+        # feeding experimental sessions was standard laboratory chow".
+        r"\b" + _FOOD_WORD + r"\s+(?:that\s+was\s+)?"
+        r"(?:presented|delivered|offered|introduced)\b",
+        # "2-min exposure to salient stimuli including ... HFD (in a small
+        # petri dish)". The guard's own cue list had "chow exposure" and not
+        # "exposure to chow".
+        r"\b(?:exposure|exposed)\s+to\s+(?:\w+[\s" + _DASHES + r"]+){0,6}?"
+        + _FOOD_WORD + r"\b",
+        r"\bstimuli\s+includ\w*\s+(?:\w+[\s" + _DASHES + r"]+){0,8}?"
+        + _FOOD_WORD + r"\b",
+        r"\bin\s+a\s+(?:small\s+)?petri\s+dish\b",
+    ),
+    # Case-SENSITIVE, because the diet abbreviations are: `\bCD\b` and
+    # `\bND\b` under IGNORECASE would match English words. This is the half
+    # the guard was missing entirely -- its food alternation was
+    # `(?:chow|food|diet)` while `_DIET_SHAPES` also knows the abbreviations,
+    # so a stimulus written "HFD" was invisible to it and wrote `high_fat`
+    # onto 9 records from a behavioural assay (D-078).
+    re.compile(
+        r"(?:\b(?:[Ee]xposure|[Ee]xposed)\s+to\s+(?:\w+[\s" + _DASHES
+        + r"]+){0,6}?" + _FOOD_ABBR + r"\b"
+        r"|\bstimuli\s+includ\w*\s+(?:\w+[\s" + _DASHES + r"]+){0,8}?"
+        + _FOOD_ABBR + r"\b"
+        r"|\b" + _FOOD_ABBR + r"\s*\(\s*in\s+a\s+(?:small\s+)?petri"
+        r"|\b" + _FOOD_ABBR + r"\s+(?:presentation|delivery|exposure)\b"
+        r"|\b" + _FOOD_ABBR + r"\s+(?:(?:that\s+)?was\s+)?"
+        r"(?:presented|delivered|offered|introduced)\b)"
     ),
 )
 

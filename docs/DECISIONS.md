@@ -5403,3 +5403,138 @@ tests green.
   with no refusal recorded on its dimension. The demotion machinery already
   exists for sex and age and simply never fires, because nothing was detected.
 * Until then the fill does not run, and D-076's predictions stay open.
+
+## D-078 - Ten `constant` verdicts refuted by their own quotes: the assay-class lexicon, and the 31 of my 508 that were never safe
+
+D-077 found five papers where `read_paper_conditions` returns `constant` from a
+sentence that states the second cohort, and asked whether I wanted the fixes.
+I took them. All five reproduce exactly. Sweeping all 974 papers found five
+more, and corrected D-077's account of who is exposed.
+
+### The defects, verified one by one
+
+Every `constant` verdict in every paper on disk was re-read and its stored
+quote screened for the defect class: a quote that states the second cohort,
+scopes itself to a subset, or describes a stimulus rather than a cohort. 922
+constant verdicts, 247 screened as suspicious, 44 on papers holding records.
+Reading those 44 by hand gave **ten** defects — D-077's five, and five more:
+
+| paper | dim | the quote that refutes the verdict |
+|---|---|---|
+| PMC5910424 | sex | "...whereas mice of **either sex** at 4-8 weeks..." |
+| PMC4335349 | sex | "**All behavioural** experiments ... were done on ... male mice" |
+| PMC6548533 | age | "...were used **for electrophysiological recordings**" |
+| PMC6140123 | diet | "**Sixteen of** the Orexin-tTA mice were reared with chow that included doxycycline" |
+| PMC11206529 | diet | "...2-min **exposure to** salient stimuli including ... **HFD (in a small petri dish)**" |
+| PMC5746599 | sex | "...for **most** experiments, **except for** optogenetic experiments that used **males only**" |
+| PMC3416931 | sex | "**In most cases**, behavioural experiments were with male mice" |
+| PMC6978463 | sex | "**For chemogenetic experiments**, only male mice were used" |
+| PMC7468160 | sex | "**For photometry experiments**, ... in male VIP-IRES-Cre mice" |
+| PMC9592589 | sex | "**Optogenetic manipulations, fiber photometry, ...** were performed in male ... mice" |
+
+An eleventh candidate, PMC10776608's `diet=chow` ("The food presented in the
+feeding experimental sessions was standard laboratory chow"), was **not** a
+defect: that paper contains no mention of HFD, high-fat or western diet
+anywhere and six of chow, so `chow` is right. It was my screen's false
+positive, and it is recorded here because a screen's output is not a finding
+until someone reads the paper.
+
+### D-077 said the exposure is prospective. It is not.
+
+> "All five implicated papers are batch-1 papers, so the exposure is
+> prospective and your corpus is sound."
+
+True of their five. **Five of mine are entirely in the 508** -- PMC3416931,
+PMC5746599, PMC6978463, PMC7468160, PMC9592589 -- with 31 records between them.
+
+What makes the corpus sound today is not that those papers are clean. It is
+that **the fill never reached those records**: 470 of 709 records carry no
+Methods-sourced entry on any dimension, 269 of them in the 508. Those 31 have
+`sex` null with no evidence entry at all, which is the state a top-up exists to
+fill. So they were never safe; they were merely unvisited, and the lockout I
+removed in D-075 is what had been keeping them that way.
+
+**A fill re-run would write a defective value onto 70 records: 31 in the 508
+and 39 in batch 1.** That is the number D-077's "do not run fill_conditions"
+should be read against, and it extends the instruction past batch 1 to the
+whole corpus.
+
+### The assay-class lexicon, and why this guard could not be modest
+
+`_SCOPED_TO_A_SUBSET` matched "for the X experiments" and not a leading
+"All <adj> experiments", not "for X experiments" without the article, not an
+enumerated assay subject, and modelled no numeric subset. The hard part is
+that a word-presence test cannot do the job:
+
+* "All **behavioural** experiments ... were done on male mice" -- scoped.
+* "All **animal** experiments used male mice" -- paper-wide.
+* "All **the mouse** experiments in this study were using male mice" -- paper-wide.
+
+All three carry a qualifier. Only the first selects a subset of assays; the
+others qualify the *subject*. So the distinction is carried by an explicit
+`_ASSAY_CLASS` lexicon from which `animal`, `mouse`, `mice`, `rodent`, `this`
+and `study` are deliberately absent, and a test asserts their absence.
+
+**This is the opposite of D-075's genotype guard and the entry should say so.**
+That guard was safe to leave modest because both of its verdicts refused, so
+detector quality changed only the explanation. Here a missed assay class leaves
+a wrong `constant` standing, so the lexicon must be generous -- and generous
+costs real values. That cost is measured, not assumed.
+
+### What the fix cost, measured over all 974 papers
+
+| | before | after |
+|---|---|---|
+| `constant` verdicts | 922 | 890 |
+
+35 lost, 3 gained. The ten defects are ten of the 35. The other **25 are the
+module's own demotion doctrine working**, not over-matching: in each case a
+*different* sentence in the same paper is now seen as scoped, and
+`refused_sex_not_constant_after_a_refusal` declines the dimension because the
+absence of a second value was not established. Each of the 25 was read. Several
+are plainly right and were invisible before -- PMC6426208 states two cohorts of
+different ages in one sentence; PMC3716881 gives separate weights for in vivo
+and in vitro; PMC5099903's sexes belong to breeding parents.
+
+**None of the 25 touches a record in the corpus.** The whole cost falls on
+papers with no records. The 3 gains come from teaching `_BOTH_SEXES` the phrase
+"both genders", and one of them, PMC6338802, is a corpus paper.
+
+### A bug I introduced and caught in the same pass
+
+`_DASH` is itself a character class (`[‐‑‒–—―−-]`), so writing
+`[\s" + _DASH + "]` nests brackets and matches a literal `[`. Two of my new
+patterns did that. It surfaced as three of my own new tests failing while the
+behaviour they described was correct in isolation -- the tell that the fixture
+was not what was wrong. `_DASHES`, the bare characters, is the form that goes
+inside a class.
+
+### D-077's critique of my own version test, accepted
+
+The review found `test_every_accepted_version_can_be_written_back_unchanged`
+tautological: it asserted that `fill_records(out_version=v)` writes `v`, which
+tests that a parameter is used, never how `out_version` is *chosen*. Two
+mutants reinstating the original defect left the suite green. The policy is now
+`output_version_for()`, a named pure function `cmd_run` calls; `fill_records`
+refuses a version the pass does not accept rather than stamping any string; and
+both mutants are tested by name. `fill_records`' docstring no longer claims to
+be the enforcement point, which is the other half of what the review caught.
+
+### Not done
+
+* **C009 should require more than the word `constant`** -- a verdict that
+  survived with no refusal recorded on its dimension. That is D-077's point 2
+  and it is theirs to make; these fixes are its precondition.
+* **The membership check is implemented nowhere yet**, but its scope is now
+  known and D-077's field list was wrong in both directions. `tissue_id` is not
+  vocabulary-keyed (no file owns it, `docs/SCHEMA.md` names none, 0 of 709
+  records populate it). `background_genotype` **is** -- to `targets.json`'s id
+  space by that file's own `_meta` and D-060 -- and was omitted; it is also the
+  only such field carrying composite ids, so a check must parse rather than look
+  up. And one membership check does exist: `qc/units.py` emits
+  `QC_OUTCOME_ID_NOT_IN_VOCAB`, at WARNING severity, which `QCReport.ok`
+  ignores, outside both `validate` and the gate. The corpus is clean on every
+  field (0 used-but-undeclared, across 6 fields), so a HARD check still rejects
+  nothing.
+* The remaining 203 screened verdicts on papers without records were not read
+  individually.
