@@ -149,6 +149,26 @@ class Correction:
 #: The seventh is a different error. ``c1b98d981dba36bb`` took its ``challenge``
 #: from "comparable to fasted mice", where "fasted mice" is the *comparator* the
 #: effect is measured against and not the state of the animals measured.
+
+
+#: The 55 corrections D-084 identified: a Methods-sourced ``sex`` on five papers
+#: whose Results report the other sex.
+#:
+#: Every one is ``from_value="male"`` under rule ``methods_single_sex``, and the
+#: five stored quotes are four anaesthesia-or-purchase sentences and one
+#: age-matching sentence -- the shapes D-083's ``_evidence_rank`` penalises,
+#: which is consistent and is not what makes them inadmissible. What makes them
+#: inadmissible is that D-082 corrected the classifier's scope: a ``constant``
+#: verdict claims no second value exists **in the paper**, and these five papers
+#: report female cohorts in their Results. All five now return ``varies``, so
+#: ``C009`` rejects all 55 records and the committed dataset held records its
+#: own gate would refuse.
+#:
+#: All 55 are removals. 52 are silent on sex in their own passage, so
+#: CURATION_PROTOCOL 3b leaves the dimension ``null``. Two name both sexes in
+#: one sentence, which 3b makes a refusal. One states its cohort and is
+#: re-sourceable; it is removed here and its re-curation is deferred, because
+#: this module changes a value and keeps its evidence sentence by design.
 CORRECTIONS: Tuple[Correction, ...] = (
     Correction(
         record_id="0397b7caf40ad06b",
@@ -226,6 +246,763 @@ CORRECTIONS: Tuple[Correction, ...] = (
             "challenge for this record"
         ),
         decision="D-053",
+    ),
+    Correction(
+        record_id="0597926b69553b2e",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="207836afe1bbdc2a",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="53727385b18e0ef6",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="59ad77826998af41",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="5ae957cceb49c472",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="7edc37f497db2baa",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="c090086821e1b7e6",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="d38e944a2ead9f12",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="e740c67c9602d534",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male C57 BL/6 mice were purchased from GemPharmatech",
+        reason=(
+            "the Results report the same phenotypes in female Fam172a-loxP "
+            "and PFKO mice, so sex varies and the Methods purchase sentence "
+            "does not scope to this record "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="18bb2a91c838002a",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="23b123614a0837b2",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="2d45f698f9d5b39b",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="306eda2851dfc8e7",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="3fb9a23d967289cc",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="47d621b6a5848641",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="53c2504388fd8567",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="559b55f5f1c9550d",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="6da604c021094c11",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="7d2be54e91040f3c",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="92ec5f0baa4f646a",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="b372933b164eb9f8",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="b42212bc92a1f9a7",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="bbdfc6990941e272",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="c3dc855ab1017089",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="d247141bef42765c",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="d255954c15990b02",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="d427db2d93c11b97",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="da2e00a4a6298e7f",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="df66f47098b985df",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="e17d05d7d557ca5d",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="e256eb5de8f78800",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="male Agrpcre mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods sentence is an anaesthesia procedure and the paper "
+            "reports female cohorts in its Results ('improved glucose "
+            "tolerance in female AGRP-hM3q'), so sex is not constant and "
+            "this record's own passage does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="1b30e4473d0d7202",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Adult male mice were anesthetized with isoflurane",
+        reason=(
+            "the paper carries out metabolic studies on female POMC-G12D "
+            "mice in its Results, so sex varies; this record's own passage "
+            "does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="23fe1e3dc459a0e4",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Adult male mice were anesthetized with isoflurane",
+        reason=(
+            "the Methods value is inadmissible as for the rest of this "
+            "paper. NOTE: this record's own passage DOES state its cohort "
+            "-- 'POMC-G12D mice (males with free access to regular chow)' "
+            "-- so sex=male is re-sourceable from the passage under 3b. It "
+            "is removed rather than re-sourced because this module keeps "
+            "the evidence sentence and changes only the value by design, "
+            "and a re-source replaces the sentence. Recorded in D-084 as "
+            "deferred re-curation, not as a lost value "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="71eb042f9f9f2cb7",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Adult male mice were anesthetized with isoflurane",
+        reason=(
+            "the paper carries out metabolic studies on female POMC-G12D "
+            "mice in its Results, so sex varies; this record's own passage "
+            "does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="80874b755076808a",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Adult male mice were anesthetized with isoflurane",
+        reason=(
+            "the paper carries out metabolic studies on female POMC-G12D "
+            "mice in its Results, so sex varies; this record's own passage "
+            "does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="9a678ea47cbabe39",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Adult male mice were anesthetized with isoflurane",
+        reason=(
+            "the paper carries out metabolic studies on female POMC-G12D "
+            "mice in its Results, so sex varies; this record's own passage "
+            "does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="d113f0f9d665c1b4",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Adult male mice were anesthetized with isoflurane",
+        reason=(
+            "the paper carries out metabolic studies on female POMC-G12D "
+            "mice in its Results, so sex varies; this record's own passage "
+            "does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="f83bc46df17e1ae1",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Adult male mice were anesthetized with isoflurane",
+        reason=(
+            "the paper carries out metabolic studies on female POMC-G12D "
+            "mice in its Results, so sex varies; this record's own passage "
+            "does not state it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="2a73f93ea6b13cca",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="2df1fee7fd87178a",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "this record's own passage names BOTH sexes ('Male Agrp-Sw ... "
+            "whereas female Agrp-Sh'), which CURATION_PROTOCOL 3b makes a "
+            "refusal rather than a pick, so it cannot be re-sourced from "
+            "the passage either "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="33148b7354b90b52",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="43db6565053e145d",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="5a0778e270e63af0",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="5b48a0d35bc5b378",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="65d21ec042d52cbf",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="7f997d4c565bb5fe",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="b45891b14274922d",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="cc0375883b50d448",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="d1414d8588de21e3",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="ddec4c842f1573e9",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="f12cdc2916b65836",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "same as 2df1fee7fd87178a: the passage names the male and the "
+            "female arm in one sentence, so no single value is readable "
+            "from it "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="f91902e5fb544751",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="fb098e47a9945beb",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="fbf940efe71f13da",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="db/db male mice were purchased from CLEA Japan",
+        reason=(
+            "the paper is explicitly sexually dimorphic -- the dataset's "
+            "own records 1f2c0189ace296a2 and 6153f87b799a9b76 carry "
+            "sex=female from Results para 8 -- so the Methods purchase "
+            "sentence cannot speak for every figure "
+        ),
+        decision="D-084",
+    ),
+    Correction(
+        record_id="58eebeb60a276869",
+        dimension="sex",
+        from_value="male",
+        to_value=None,
+        quote_contains="Male transgenic mice were age matched",
+        reason=(
+            "the slice recording reported here was made in neurons 'from "
+            "both male and female mice', so the paper does not hold sex "
+            "constant "
+        ),
+        decision="D-084",
     ),
 )
 

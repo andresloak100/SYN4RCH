@@ -79,12 +79,27 @@ class DeclaredCorrectionsTest(unittest.TestCase):
         for item in CORRECTIONS:
             self.assertIn(item.dimension, CONDITION_DIMENSIONS, item.record_id)
 
-    def test_every_value_is_a_real_challenge_or_a_removal(self):
-        values = {c.value for c in Challenge}
+    def test_every_value_is_legal_for_its_own_dimension_or_a_removal(self):
+        """Per dimension, from the schema's own map.
+
+        This read `{c.value for c in Challenge}` while the table held only
+        `challenge` corrections, so the first `sex` correction (D-084) failed a
+        test whose intent it satisfied. The enum comes from
+        `record._ENUM_FIELDS` rather than a dict written here, so a dimension
+        added to the schema cannot be checked against the wrong enum.
+        """
+        from syn4rch.schema.record import _ENUM_FIELDS
+
         for item in CORRECTIONS:
-            self.assertIn(item.from_value, values, item.record_id)
+            enum = _ENUM_FIELDS[item.dimension]
+            values = {member.value for member in enum}
+            self.assertIn(item.from_value, values, "%s %s" % (item.record_id, item.dimension))
             if item.to_value is not None:
                 self.assertIn(item.to_value, values, item.record_id)
+
+    def test_the_table_covers_more_than_one_dimension(self):
+        """Pins that the generalisation above is exercised, not merely written."""
+        self.assertGreater(len({c.dimension for c in CORRECTIONS}), 1)
 
     def test_no_correction_is_a_no_op(self):
         for item in CORRECTIONS:
