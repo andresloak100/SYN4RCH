@@ -136,14 +136,43 @@ class OutOfScopeDetectorTest(unittest.TestCase):
         self.assertIn("wakefulness", ids(text))
         self.assertTrue(out_of_scope_readouts(text))
 
-    def test_every_declared_category_is_matchable(self):
-        """A category in the vocabulary that the matcher cannot see is a gap."""
+    def test_every_declared_term_is_matchable_not_one_per_category(self):
+        """Sampling a category proves it is wired, not that its members are.
+
+        This checked the first term of each category until the genotype session
+        observed that both of our near-miss audits had looked in one direction
+        only -- it then found `arc_ghrh` losing a cluster at 0.583 under a 0.60
+        cut, a removal-direction failure neither audit could have caught. The
+        same one-sidedness was here.
+
+        It matters because `TermMatcher` silently drops terms shorter than two
+        characters and acronyms listed in `AMBIGUOUS_ACRONYMS` -- which holds
+        `ARC`, `LH`, `ME`, `ZI` and `HY`, because they collide with populations
+        and regions. So a term could be declared out of scope and undetectable
+        at once, which would make it one more declared thing nothing reads.
+
+        Measured when written: 39 declared, 0 undetectable.
+        """
         block = meta("outcomes")["out_of_scope_readouts"]
         categories = [k for k in block if not k.startswith("_")]
         self.assertTrue(categories)
-        for category in categories:
-            first = block[category][0]
-            self.assertIn(category, out_of_scope_readouts(first), first)
+        undetectable = [
+            (category, term)
+            for category in categories
+            for term in block[category]
+            if category not in out_of_scope_readouts(term)
+        ]
+        self.assertEqual(
+            undetectable,
+            [],
+            "declared out-of-scope term(s) the matcher cannot detect; "
+            "TermMatcher drops sub-2-character terms and ambiguous acronyms",
+        )
+
+    def test_the_declared_list_is_large_enough_to_be_a_rule(self):
+        block = meta("outcomes")["out_of_scope_readouts"]
+        total = sum(len(v) for k, v in block.items() if not k.startswith("_"))
+        self.assertGreaterEqual(total, 30)
 
 
 class MetaAccessorTest(unittest.TestCase):
