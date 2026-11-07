@@ -6506,3 +6506,73 @@ reference**: 'Roth' for a Scammell paper, 'Zhang' for a Kilduff one. The parser
 had already built `last_author` as "surname given" from the article's own
 contrib-group. Re-deriving what the parser knew is the fifth instance today of
 not asking the code that already had the answer.
+
+
+## D-088 - The verdict rule is no longer calibrated, and D-057's `established` label is withdrawn until it is
+
+Batch 2's 13 records took the permutation null's `established` rate from
+**0.0300 to 0.6400** against a pre-registered threshold of `< 0.05`. The
+regenerated report says so itself: `calibrated | no`.
+
+**Reproducible and attributed.** Dropping `PMC8429727`'s five records restores
+the rate to 0.0300 exactly. Those five are the entire change to the headline
+slice -- n returns to 192 over 40 groups. The other eight records raise the
+`lab` delta from +0.167 to +0.240 and leave the null at 0.0300, so they are
+sound and the five are not the problem either: they are a well-designed
+bidirectional experiment, chemogenetic activation and inhibition of one
+population on the same readouts, which is the most informative shape a record
+can have.
+
+**What is and is not in doubt.** The report separates two things I had conflated:
+
+| | |
+|---|---|
+| null deltas reaching the observed one | **2 of 200** |
+| empirical p (add-one) | **0.015** |
+| null reached `established` | **128 (0.6400)** |
+| calibrated | **no** |
+
+So the observed effect is still extreme against its own null. What fails is the
+**decision rule**: the conjunction of a bootstrap interval excluding zero and an
+exact McNemar p < 0.05 fires on 64% of permuted datasets. An effect can be
+distinguishable from its null while the label "established" means nothing, and
+that is the state.
+
+**Therefore `established` is withdrawn as a verdict on this corpus.** D-057's
+finding is not retracted -- the effect is there, at p = 0.015 against a null
+that keeps the study clustering -- but the word that made it a result is not
+available until the rule is calibrated. Reports regenerated with the figures as
+they are, because the control reporting its own failure is the control working.
+
+**The mechanism is unresolved and I am not inventing one.** Four candidates
+measured, all null:
+
+* unpermutable studies (the null permutes *within* `study_id`, so a
+  label-homogeneous study is a fixed point) -- 93.2% permutable to 92.5%
+* a study holding both polarities on one readout -- 36 such cells already exist
+  corpus-wide, so batch 2's is not novel
+* headline-slice label balance -- majority 41.0% to 41.3%
+* total slice size -- four rows and three groups
+
+**And the module had already said more than any of those four.** Its own report:
+*"The null is not centred on zero. Its median delta is +0.133. Permuting within
+study preserves each study's own label multiset, so a cell that one study
+dominates keeps that study's labels and cell lookup still recovers study-level
+label structure."* A null with median +0.133 and a rule that tests whether an
+interval excludes zero was always going to be fragile; batch 2 moved it past the
+threshold rather than creating the fragility.
+
+I spent four measurements re-deriving prose that `reports/generalisation.md`
+prints above the table. That is the sixth instance in two days of not asking the
+thing that already knew -- after `find_paper`, `coverage.is_usable`,
+`fill_conditions`, the JATS parser's own `last_author`, and the D-053 report's
+own id map. The pattern is specific enough to name: **when a measurement
+surprises me, read what the module says about itself before measuring a fifth
+thing.**
+
+**What a fix has to do, and what it must not.** The rule must be calibrated
+against *this* null, not against zero -- the null's median is +0.133 and that is
+a property of within-study permutation preserving label multisets, not an
+artefact. Dropping the five records would make the test pass and is refused:
+they are the best-shaped evidence in the batch, and a control that fails on good
+data is reporting on itself.
