@@ -13,6 +13,8 @@ matcher was run over the passages it would actually be used on:
    vocabulary and could not catch this: no rule is broken on the way in.
 """
 
+import json
+import os
 import unittest
 
 from _path import *  # noqa: F401,F403  (puts src/ on sys.path)
@@ -155,6 +157,59 @@ class MetaAccessorTest(unittest.TestCase):
     def test_meta_is_empty_rather_than_raising_for_a_file_without_one(self):
         for kind in ("regions", "methods", "populations", "targets"):
             self.assertIsInstance(meta(kind), dict)
+
+
+
+
+class UnitsArtefactFreshnessTest(unittest.TestCase):
+    """Every outcome id in the units file must exist in the vocabulary (D-072).
+
+    The artefact carried `cognitive_decline` on 111 units for the life of the
+    project -- an id renamed to `cognitive_performance` at outcomes 0.2.0 by
+    D-029. Regenerating replaced all 111 with the new id, so no readout was
+    ever lost; the rename simply never reached the artefact and nothing checked.
+
+    Same class as the stale committed signaling graph: an invariant about a
+    generated file that no generator can enforce after the fact, because the
+    generator is not what went stale.
+    """
+
+    UNITS = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "data", "interim", "extraction_units.jsonl",
+    )
+
+    def test_no_unit_carries_an_outcome_id_the_vocabulary_lacks(self):
+        if not os.path.exists(self.UNITS):
+            self.skipTest("data/interim is untracked machine output (D-016)")
+        known = set(load("outcomes"))
+        seen, stale = set(), set()
+        with open(self.UNITS, encoding="utf-8") as handle:
+            for line in handle:
+                outcome = json.loads(line).get("candidate_outcome_id")
+                if not outcome:
+                    continue
+                seen.add(outcome)
+                if outcome not in known:
+                    stale.add(outcome)
+        self.assertTrue(seen, "no outcome ids in the units file at all")
+        self.assertEqual(
+            sorted(stale),
+            [],
+            "units carry outcome id(s) the vocabulary no longer has; "
+            "regenerate rather than edit the artefact",
+        )
+
+    def test_the_split_ids_reached_the_artefact(self):
+        """The regeneration is what makes the EEG pass safe; pin that it ran."""
+        if not os.path.exists(self.UNITS):
+            self.skipTest("data/interim is untracked machine output (D-016)")
+        with open(self.UNITS, encoding="utf-8") as handle:
+            present = {
+                json.loads(line).get("candidate_outcome_id") for line in handle
+            }
+        for state in ("nrem_sleep", "rem_sleep", "wakefulness"):
+            self.assertIn(state, present, state)
 
 
 if __name__ == "__main__":  # pragma: no cover

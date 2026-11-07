@@ -4272,3 +4272,138 @@ than corrected: dropping the cluster would change the mapping after the primary
 was measured, which D-067 forecloses.
 
 The mapping is otherwise unchanged. Tier B, never a training target.
+
+---
+
+## D-072 - Pre-registration: the EEG curation pass, sized on the regenerated units, with the leakage control the approval created
+
+**Written before any paper is read**, and committed before the briefs. The user
+authorised the pass after the D-070 matcher fixes landed; this fixes what it
+will curate, what would count as working, and what a reader is allowed to know.
+
+### What regenerating the units produced
+
+`syn4rch.curate.run units` re-segmented all 974 retrieved papers against
+outcomes 0.5.1. Units **8,860 -> 9,836**, and the sleep bucket stopped being one
+bucket:
+
+| outcome id | before | after |
+|---|---|---|
+| `sleep` | 946 | 767 |
+| `wakefulness` | 0 | **416** |
+| `rem_sleep` | 0 | **356** |
+| `nrem_sleep` | 0 | **268** |
+| `sleep_fragmentation` | 0 | **84** |
+| `sleep_latency` | 0 | **31** |
+| total | 946 | **1,922** |
+
+The total more than doubles because a passage reporting NREM, REM and wake now
+yields three units where it yielded one. Those are three readouts, and the 767
+remaining on `sleep` are genuine composites.
+
+**290 units were lost, and both causes are correct.** 179 were `sleep` units
+matching only on bare `arousal`, which D-070 deliberately made a synonym of
+nothing — three papers lost every unit they had, and reading their passages
+confirms the verdict: all three are about GCaMP signals, circuit tracing and
+microcircuit anatomy, and none reports a vigilance state. An ambiguous word was
+carrying them.
+
+**And 111 were stale for two vocabulary versions.** They carried
+`cognitive_decline`, an id renamed to `cognitive_performance` at outcomes 0.2.0
+by D-029. The new file has `cognitive_performance` 111 — the same count, so no
+readout was lost and the rename simply had never reached the artefact. **The
+units file had been carrying an outcome id the vocabulary did not have, for the
+life of the project, and nothing checked.** That is the stale-artefact class
+again: the fourth instance after `lab_key`'s affiliation (D-056), `screened_on`
+(D-061) and the signaling graph. An invariant — every outcome id in the units
+file must exist in the vocabulary — is cheap and now tested.
+
+### The seam, re-measured
+
+| population | tier | records now | units before | units after |
+|---|---|---|---|---|
+| `lha_orexin` | A | 16 | 306 | **560** |
+| `lha_mch` | A | 3 | 129 | **301** |
+| `pvh_crh` | A | 7 | 146 | **269** |
+| `tmn_histamine` | A | 1 | 58 | **131** |
+| `pvh_oxt` | A | 0 | 29 | 33 |
+| `arc_agrp` | A | 123 | 8 | 8 |
+| `arc_pomc` | A | 52 | 4 | 4 |
+
+Seam total **945 -> 1,724**. Tier A units outside `arc_agrp` and `arc_pomc`:
+**668 -> 1,294**, against **38** records in those populations today. The two
+dominant populations still draw 12 units between them, so the complementarity
+survived the matcher fix and strengthened.
+
+91 papers, 59 with at least one proposed unit, 42 with ten or more.
+
+### The leakage control, which the approval created
+
+Knowing which populations the similarity experiment needs is new as of today,
+and the session that found it raised this before I could act on it. Choosing
+which papers to read by record count is **sampling** and is legitimate. What a
+record *reports* must come from the passage alone. So:
+
+1. Readers receive the passage, the locator, the vocabularies and the protocol.
+   They do **not** receive the similarity matrix, the nearest-neighbour table,
+   the stability figures, or any statement of which populations are wanted.
+2. The targeted populations are named **here**, in this entry, and nowhere a
+   reader will see them. That makes the sampling auditable and the readers
+   blind at once.
+3. No population name appears in a brief as a thing to look for. A reader told
+   "we need `pvh_crh` records" will find `pvh_crh` records, and every one of
+   them will be individually defensible, which is why no downstream
+   quote-level check catches it.
+
+**Targeted, for the record:** `lha_orexin`, `lha_mch`, `pvh_crh`,
+`tmn_histamine`, `pvh_oxt` — the five tier A populations the seam reaches that
+hold 27 records between them.
+
+### The predictions
+
+1. **Volume.** At least **150 records** admitted from the 91 papers. The circuit
+   pass yielded 146 from 60.
+2. **Depth where it is missing.** At least **6** tier A populations holding 5 or
+   more records, against 3 today (`lha_orexin` 16, `pvh_trh` 8, `pvh_crh` 7).
+3. **Concentration.** `arc_agrp` + `arc_pomc` fall below **65%** of tier A
+   circuit records, from 82%.
+4. **Replication.** Circuit cells spanning two or more laboratories rise by at
+   least **15**, from 26. The seam brings 68 laboratories absent from the
+   corpus.
+
+**And the prediction I expect to fail, recorded because D-051 taught me to.**
+Number 4. D-064 split `sleep` into five ids, so an NREM record now only matches
+another NREM record — the comparability the split bought is paid for in
+fragmentation, and this pass is where the bill arrives. Two laboratories both
+reporting "sleep decreased" used to share a cell; now one reporting NREM and one
+reporting wakefulness do not. I expect volume and depth to come in and
+replication to disappoint, and if that happens the finding is that **splitting
+an outcome id and counting replication across it are in tension**, which is
+D-023's trade appearing a second time at a larger scale.
+
+### What would abandon the pass
+
+* Fewer than 60 records after the first 30 papers — the yield is not there.
+* Any reader brief found to name a targeted population, which voids the leakage
+  control for that reader's output.
+* `pvh_crh` refuted by the adversarial mapping pass *and* the pass yielding
+  fewer than 10 `pvh_crh` records: the second-largest seam would then be
+  supporting neither question.
+
+### Named limitations, before anyone finds them
+
+* **My screen is conservative and this entry does not fix it.** Requiring EEG
+  mentions plus intervention plus hypothalamic terms misses 50 studies that
+  carry sleep units, found by the other session using a different filter. The
+  limitation is about the screen's history rather than this pass: the same
+  threshold has run on every seam this project has ever selected.
+* **133 of the sleep passages carry an out-of-scope readout under an in-scope
+  id** and are flagged, not excluded (D-070). A curator still has to read them.
+* **`pvh_crh` is unsettled.** The adversarial pass on the eleven tier A mappings
+  has not reported, and `pvh_crh` is both the second-largest seam here and the
+  only stable neighbour of `pvh_trh` in D-068.
+* The pass cannot satisfy D-069's re-run trigger by itself. That requires 8
+  rankable populations, none over 50% of ranked rows, and 5 rankable with 5+
+  records — and rankability is a property of the mapping and the tie guard, not
+  of record counts. This pass moves one input of three.
+
