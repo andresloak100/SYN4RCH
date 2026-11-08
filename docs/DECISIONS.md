@@ -6576,3 +6576,83 @@ a property of within-study permutation preserving label multisets, not an
 artefact. Dropping the five records would make the test pass and is refused:
 they are the best-shaped evidence in the batch, and a control that fails on good
 data is reporting on itself.
+
+
+## D-089 - Pre-registration: calibrating the verdict rule, and the grouping nobody checked
+
+**Written before any code changes.** D-088 withdrew `established` because the
+rule fires on 64% of permuted datasets. This fixes it, and states what counts as
+fixed before measuring whether it is.
+
+### The diagnosis, restated exactly
+
+`established` is `interval_excludes_zero AND row_test_significant`, and **both
+tests are against zero**:
+
+* `interval_excludes_zero` -- a study-clustered bootstrap interval on the delta
+* `row_test_significant` -- exact McNemar at p < 0.05
+
+The null's delta is **not zero**. Its median is +0.133, mean +0.129, 95th
+percentile +0.199, range -0.015 to +0.235. So both tests correctly detect a
+non-zero delta on permuted labels, and the rule is sound for the question it
+asks. The question is the wrong one: nothing here establishes that the delta
+exceeds what within-study permutation already produces.
+
+Why the null is not centred on zero is in the module's own report and is not a
+defect: permuting within `study_id` preserves each study's label multiset, so a
+cell one study dominates keeps that study's labels and cell lookup still
+recovers study-level structure. That is the conservative null D-056 chose
+deliberately. **The null is right and the rule is pointed at the wrong origin.**
+
+### And the grouping that was never checked
+
+`permutation_probe` is called once, with `grouping="study_id"`.
+**D-057's headline is the `lab` grouping** -- +0.167 at the last sound run,
++0.265 now -- and it has no calibration check of any kind. So D-088 understated
+the position: the rule is *measured* miscalibrated on `study_id` and *unmeasured*
+on `lab`, which is the one the project quotes.
+
+### What changes
+
+1. Each permutation stores its own `(delta, mcnemar_p, interval_excludes_zero)`
+   rather than only a verdict tally, so any candidate rule can be scored against
+   the existing null without re-running it.
+2. A **calibrated verdict**: `established` requires the observed delta to exceed
+   the null's 95th percentile **and** the row-level McNemar p < 0.05. The
+   clustered interval stays reported -- it is a true statement that the delta is
+   non-zero -- but it stops being half of the verdict.
+3. The permutation runs for **both** groupings.
+4. Where no null exists for a slice, its verdict is `uncalibrated`, never
+   `established`. A rule that cannot be checked must not produce the word.
+
+**The calibration cannot be self-measured, and the honest check is a holdout.**
+Scoring "how often does the new rule fire on permuted data" using the same
+permutations that set its threshold is circular, and giving each permuted
+dataset its own 200 permutations is 40,000 runs. So: the threshold comes from
+the **first 100** permutations and the firing rate is measured on the **held-out
+100**. That is a real empirical check at no extra cost, and it replaces a
+measurement that had become a tautology.
+
+### Predictions
+
+1. **The calibrated rule's held-out rate is at or below 0.10** on 100 held-out
+   permutations -- the interval consistent with a true 0.05 at that n. The old
+   rule's rate on the same holdout stays near 0.64.
+2. **`study_id` stays `established`.** Observed +0.224 against a null 95th of
+   +0.199. **This is a 0.025 margin and I expect it to be the fragile one**: a
+   threshold refit on 100 rather than 200 permutations could move past it.
+3. **`lab`'s null is also well above zero**, by the same mechanism, so `lab`'s
+   old `established` was uncalibrated rather than merely unchecked.
+4. **And the prediction I expect to fail: `lab` survives the calibrated rule.**
+   Its delta is larger at +0.265, but if its null centre is higher in proportion
+   the margin disappears. I do not know which, and the whole reason for writing
+   this before running it is that I will want to have predicted whichever
+   happens.
+
+### What a fix must not do
+
+Dropping `PMC8429727`'s five records would restore 0.0300 and is refused, for
+the reason D-088 gave: they are a bidirectional activation/inhibition design on
+one population, the best-shaped evidence in batch 2, and a control that fails on
+good data is reporting on itself. Nor is the null being weakened to pass -- its
+centre at +0.133 is the quantity the new rule measures against.
