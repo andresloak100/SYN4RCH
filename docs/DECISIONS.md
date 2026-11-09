@@ -6656,3 +6656,85 @@ the reason D-088 gave: they are a bidirectional activation/inhibition design on
 one population, the best-shaped evidence in batch 2, and a control that fails on
 good data is reporting on itself. Nor is the null being weakened to pass -- its
 centre at +0.133 is the quantity the new rule measures against.
+
+
+## D-090 - The rule is calibrated, `established` is restored, and all four predictions held including the one I expected to fail
+
+D-089's predictions, scored:
+
+| | predicted | measured | |
+|---|---|---|---|
+| 1 | held-out rate <= 0.10 | **0.070** (`study_id`), **0.060** (`lab`) | met |
+| 2 | `study_id` stays `established` on a 0.025 margin I called fragile | +0.224 against +0.199 | met |
+| 3 | `lab`'s null is also well above zero | **+0.163** median | met |
+| 4 | *expected to fail:* `lab` survives the calibrated rule | +0.265 against +0.235 | **met** |
+
+**The old rule on the same held-out permutations: 0.640 on `study_id` and
+0.830 on `lab`.** So `established` is restored for both groupings under a rule
+whose firing rate on labels that cannot support it is 6-7% rather than 64-86%.
+
+**`lab` was both the worse grouping and the unchecked one.** D-057's headline is
+`lab`, `permutation_probe` ran only on `study_id`, and `lab` turns out to fire
+at 0.830 under the old rule -- the most miscalibrated number in the project was
+the one it quoted and the one nothing tested. The probe now runs for both.
+
+**Prediction 4 is the interesting one.** I expected `lab` to be the casualty:
+its delta is larger, and if its null centre rose in proportion the margin would
+vanish. It rose, from +0.133 to +0.163, and the delta rose further -- +0.265
+against a +0.235 threshold, a 0.030 margin where `study_id` has 0.025. Both
+clear, both thinly. **The finding is real and it is near the boundary**, and a
+reader should have that rather than the word `established` alone.
+
+### Amendment, made during implementation and before the rates were measured
+
+D-089 pre-registered the rule as **delta > null 95th AND McNemar p < 0.05**.
+That shares one test with the old rule and *replaces* the other, so it is **not
+uniformly stricter**: a slice with a large delta and a clustered interval still
+spanning zero would be called `established` where the old rule refused it.
+Calibrating one end while loosening the other is not what D-088 asked for.
+
+The rule is therefore the conjunction of **all three** -- delta above the
+threshold, interval excluding zero, McNemar p < 0.05. It can never upgrade a
+slice, and a conjunction with one more condition can only lower the firing
+rate, so calibration cannot be hurt by it. Measured: **identical** rates and
+verdicts, 0.070 and 0.060, because on this corpus every permutation clearing the
+threshold already has an interval excluding zero. The extra condition costs
+nothing here and removes the hazard anywhere else. Pinned by a property test
+over a grid rather than an example.
+
+### Why the check is a holdout and not a rate
+
+Scoring "how often does the new rule fire on permuted data" using the
+permutations that set its threshold is circular, and giving each permuted
+dataset its own 200 permutations is 40,000 runs. So the threshold is fitted on
+the first 100 permutations and the rate is measured on the held-out 100. The
+ceiling is 0.10 rather than 0.05 because a true 0.05 on 100 draws has a 95%
+upper bound near 0.10; 0.070 and 0.060 sit where a correctly calibrated rule
+should.
+
+Probe 3 keeps reporting the old rule's rate, unchanged, beside the new one. A
+control that found a real defect should stay in the artefact after the defect is
+fixed, or the next reader has no way to see what the fix was for.
+
+### What was not done
+
+* The null is unchanged. Its centre at +0.133 / +0.163 is what within-study
+  permutation legitimately produces -- D-056 chose that permutation to keep the
+  study clustering, and weakening it to move the centre toward zero would buy
+  the appearance of calibration by making the test easier.
+* `PMC8429727`'s five records are still in. D-088 and D-089 both refused to drop
+  them and the reason stands: they are a bidirectional design on one population,
+  and the rule, not the data, was what needed fixing.
+* `uncalibrated` is now a verdict, returned where no threshold could be fitted.
+  Nothing in the corpus reaches it today; it exists so that a slice without a
+  null cannot print `established`.
+
+**And the seventh instance of the same mistake.** `null_centre`'s docstring, in
+this module, already said: *"A reader who takes 'delta > 0' as evidence that the
+cell carries direction information is comparing against the wrong origin."*
+That is the whole of D-088's diagnosis and D-089's fix, written in the module
+before I measured four candidate mechanisms to arrive at it. After
+`find_paper`, `coverage.is_usable`, `fill_conditions`, the JATS parser's
+`last_author`, the D-053 report's id map and the generalisation report's own
+prose -- the rule I named in D-088 would have saved the four measurements if I
+had applied it to docstrings as well as to reports.
