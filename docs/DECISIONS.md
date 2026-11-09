@@ -6994,3 +6994,73 @@ both can place, where the two similarities compete on identical findings.
   does not predict function", and will be reported as such.
 * Several circuits rest on one or two experiments, so their fingerprints carry
   each injection's own idiosyncrasies -- placement, volume, spread.
+
+
+## D-094 - The validation has almost no power, and D-092's headline was stronger than its evidence
+
+D-093's predictions, scored -- then the finding that changes how all of them read.
+
+| | predicted | measured | |
+|---|---|---|---|
+| 1 | connectivity beats random neighbours | 0.427, at the null's 95th (0.427); p = 0.057 | not met (at, not above) |
+| 2 | distal beats all-targets | identical, 0.427 both | not met |
+| 3 | connectivity beats genes on shared circuits | **identical**, 0.418 both, p = 0.313 both | not met |
+| 4 | *expected to fail:* connectivity separates AgRP from POMC | POMC is AgRP's #2 at +0.651 against #1 at +0.658 | failed, as predicted |
+
+Prediction 4 behaved as written: AgRP and POMC converge on the PVH's MC4R neurons,
+and their distal projection profiles make them neighbours just as their genes did.
+
+### Why genes and connectivity scored identically
+
+Two different similarity measures do not agree to three decimal places unless the
+ranking is doing nothing. Counting, for each finding, how many other circuits have
+data on the same readout and direction of perturbation:
+
+| other circuits with data on that readout | findings | |
+|---|---|---|
+| none | 43 (35%) | abstains -- nothing to predict from |
+| exactly one | 40 (33%) | **any ranking picks it** |
+| two | 21 (17%) | ranking can matter |
+| three | 18 (15%) | ranking can matter |
+
+**Only 39 of 122 findings can be changed by the similarity ranking at all.** For
+the other two thirds the answer is fixed by *which circuits happen to have been
+measured on that readout*, not by how similar they are. The test is dominated by
+data availability.
+
+So:
+
+* **Connectivity's apparent edge was the circuit set.** D-093's full run (12
+  circuits, p = 0.057) and D-092's (15 circuits, p = 0.38) used different circuits
+  and therefore different nulls. On the 11 they share, the two are identical.
+* **D-092's headline is withdrawn.** "Similar genes do not mean similar function"
+  is stronger than the evidence. What the evidence supports is: *a
+  nearest-neighbour validation on this corpus cannot detect whether similar genes
+  mean similar function.* D-092's own "what it does not establish" section said a
+  weak effect could be invisible at this size; the headline and what I told the
+  user did not carry that through, and I said "genes show where a neuron comes
+  from, not what it does" as a conclusion. It was not one.
+* **The AgRP/POMC counterexample stands**, and connectivity reproduces it. Two
+  transcriptional and projection neighbours with opposite effects on feeding is a
+  real case against using either similarity alone. It is one pair, not a
+  measurement of how often that happens.
+
+### What would have power
+
+The design asks "does the *nearest* neighbour predict this finding", which wastes
+every circuit except one per finding. A better-powered test of the same hypothesis
+is pair-level: for every pair of circuits sharing at least one readout, does their
+similarity predict how often they agree in direction? That uses every overlapping
+pair rather than the single nearest, and asks the question directly.
+
+It is **not run here**. Inventing a new test after two null results and running it
+until something passes is the forking path this project exists to avoid. It needs
+its own pre-registration, written before it is run.
+
+### What this establishes
+
+The bottleneck for validating any circuit-to-function model on this corpus is not
+the choice of feature. It is that most readouts were measured on one or two
+circuits. That is the curation gap again, now with a number on it: **68% of
+findings cannot discriminate between hypotheses because nothing else was measured
+on them.**
