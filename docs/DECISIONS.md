@@ -6838,3 +6838,79 @@ findings and not 186 times.
   fingerprints average over heterogeneous cells and may sit near everything.
 * 15 circuits is a small validation set. A pass is evidence; it is not proof, and
   the confidence interval will be wide.
+
+
+## D-092 - Similar genes do not mean similar function: the blind model tells cell types apart and does not predict what they do
+
+D-091's predictions, scored. Nothing was tuned after the result.
+
+| | predicted | measured | |
+|---|---|---|---|
+| 1 | coverage is limited | 40 of 142 findings abstained (28%) | met |
+| 2 | **the blind fingerprint beats random neighbours** | **0.422** against a null median of 0.412, 95th 0.461; **p = 0.38** | **failed** |
+| 3 | accuracy is capped by the labels | 0.422 | consistent |
+| 4 | *expected to fail:* beat the global majority | 0.422 against 0.381 | see below |
+
+**The decisive prediction failed.** Across 102 findings on 15 circuits, choosing a
+circuit's neighbour by blind gene similarity predicts its effect on the body no
+better than choosing a neighbour at random. 43 of 102 correct, inside the
+shuffled distribution.
+
+**Prediction 4 cannot be credited to the model.** 0.422 does exceed the global
+majority's 0.381 -- but random neighbours reach 0.412, so whatever beats the
+global majority is borrowing *a* circuit's answer, not borrowing the *right* one.
+The two figures are also over different denominators (102 and 84 findings), so
+the comparison is weak even before that. The prediction I expected to fail did
+not fail, for a reason with nothing to do with the fingerprint, and the one that
+mattered did.
+
+### No bug, and the reason is visible
+
+The ranking is sensible: anatomically related circuits come out as neighbours --
+`lha_vgat` and `lha_vglut2` at +0.852, the PVH circuits together, `arc_agrp` and
+`arc_pomc` each other's first choice. The fingerprint captures where cells come
+from. That is what D-091's gate measured, and it holds.
+
+**It does not capture what they do, and the clearest instance is the textbook
+one.** `arc_agrp`'s nearest neighbour in blind gene space is `arc_pomc` --
+rank 1, similarity +0.544. Under activation, food intake:
+
+| | AgRP | POMC |
+|---|---|---|
+| food intake | **increase** | no change |
+| body weight | no change | no change |
+
+AgRP drives hunger and POMC drives satiety. They are developmental and
+transcriptional neighbours in the arcuate and they act on feeding in opposite
+directions. A model that says "like that one, so does what that one does" is
+wrong on exactly the pair the field knows best.
+
+### What this establishes
+
+* **The gate result stands.** A blind, data-chosen fingerprint identifies
+  HypoMap cell types reliably -- 83% at the coarse level, 60% to the exact
+  neighbour. That is a real and reusable representation.
+* **Transcriptional similarity is not a bridge to function on this data.** Gene
+  expression tracks lineage and location; physiological effect in the
+  hypothalamus is set at least as much by where a circuit projects and what it
+  releases onto its targets.
+* **This is what a blind validation is for.** Building the full framework on this
+  feature would have produced confident predictions for 465 cell types, every one
+  inheriting a link the papers do not support. It was cheap to find out first.
+
+### What it does not establish
+
+* That gene expression is useless for function. 102 findings on 15 circuits is a
+  small test; a weak effect could be invisible here, and 73% of records sit in a
+  cell where studies disagree, which compresses every model toward chance.
+* That a different use of the same data fails. Nearest-neighbour borrowing is
+  one design. A model predicting a readout from specific genes, rather than from
+  overall similarity, is a different hypothesis and is not tested here.
+
+### Where the bridge probably is
+
+Connectivity. Where a circuit projects determines which organ systems it can
+reach, and it is measured brain-wide without anyone choosing a favourite circuit
+-- the unbiased property the user's design requires. The corpus carries it on
+**13 of 722 records** and no vocabulary entry names a projection target. That is
+the gap this result points at.
