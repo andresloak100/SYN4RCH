@@ -7427,3 +7427,99 @@ measured, not by how similar they are.**
   similarity is one hypothesis. Specific genes or specific projection targets
   predicting specific readouts are different hypotheses, and none of them is
   tested here.
+
+
+## D-097 - Pre-registration: filling the shared readout panel
+
+**Written before any selected paper is read.** D-095 measured the pair test's data
+target: the 12 circuits mapped by connectivity, each measured on the same five
+readouts, would give it 0.74-0.87 power under the 80% family model in five of six
+partitions. This entry fixes the panel, the papers that will be read to fill it and
+how, before any of them is. The selection code and its output were committed first
+(d224e4a).
+
+### Where the papers are
+
+`analysis/panel_harvest.py` asked Europe PMC 108 questions: each of the 12 circuits
+crossed with 9 candidate readouts, one per physiological system. A paper counts if
+the circuit and the readout are in its title or abstract, a circuit-activation
+method appears anywhere in it, and it is open access and not a review. Every query
+and its hit count is in `reports/panel_harvest.md`. **351 papers came back, 286 of
+them cited by no curated record.** Nothing was read.
+
+### The panel, by a fixed rule
+
+`analysis/panel_select.py` calls a circuit covered on a readout if its activation
+finding is filled now or the harvest found a new paper for it, and takes the five
+readouts covering the most circuits; ties go to more new papers, then the alphabet.
+The rule uses where findings and papers exist and never what any of them says. A
+finding counts as filled if its direction is defined, which is the only use of a
+direction here.
+
+| readout | filled now | covered | |
+|---|---|---|---|
+| locomotor activity | 3 | 11 | panel |
+| food intake | 5 | 10 | panel |
+| wakefulness | 4 | 9 | panel |
+| core temperature | 1 | 9 | panel |
+| body weight | 3 | 7 | panel |
+| energy expenditure | 1 | 6 | |
+| corticosterone | 4 | 6 | |
+| blood glucose | 2 | 6 | |
+| heart rate | 2 | 6 | |
+
+The manipulation is circuit activation (`circuit_activity`, `increase`), the
+commonest in the corpus.
+
+**Of the 60 cells, 16 are filled now, 30 have papers to read and 14 have none.** The
+14 -- three each for `arc_kisspeptin` and `poa_galanin`, two each for `scn_vip` and
+`tmn_histamine`, one each for `arc_pomc`, `lha_mch`, `pvh_crh` and `vmh_sf1` -- can be
+filled only from closed-access papers or new experiments.
+
+### The reading set
+
+For every panel readout and every circuit not yet filled on it, the first three new
+papers in Europe PMC's relevance order: **53 papers**, listed with the cells that
+found them in `reports/panel_selection.md`. All 53 are read, and nothing stops early
+because of what the first ones contain. A few were read in an earlier pass and
+produced no record; they are read again under this protocol.
+
+### How they are read
+
+As the D-072 and D-087 batches were: one reader and one adversarial verifier per
+paper. The reader gets the paper's extraction units in Results, Abstract and
+unlabelled passages -- passages where a population, a method and an outcome term
+co-occur -- at most 40 per paper, and proposes every record they support, panel cell
+or not. **The reader is not told which circuits or readouts the panel needs.** A
+record the verifier finds fatally defective is dropped, not repaired. The verbatim
+gate decides admission, and every rejection is published.
+
+### What will be reported, and what will not
+
+* Records proposed, admitted and rejected, and how many of the 30 cells fill.
+* The pair test's power on the filled panel, measured as D-095 measured it, on
+  synthetic labels.
+* **No statistic relating similarity to agreement.** A test on the panel needs its
+  own pre-registration, written after this fill and before any such statistic is
+  computed.
+
+### Prediction
+
+**Between 10 and 18 of the 30 cells fill.** The search asks only that the circuit
+and the readout appear in a title or abstract. Many of these papers report the
+readout under inhibition, ablation or a molecular manipulation, some name another
+population that shares a marker (VIP neurons outside the SCN, GABAergic neurons
+outside the LHA), and some results sit in passages the unit builder cannot localise.
+
+### Named risks
+
+* **Open access only.** A paywalled paper is invisible here (CURATION_PROTOCOL 5),
+  and 14 cells have no open-access paper at all.
+* **A unit needs all three terms in one passage.** A Results paragraph whose
+  population was named two paragraphs earlier yields no unit, a recall cost the
+  protocol accepts to keep every quote self-contained.
+* **The searches are broader than the cells.** Wakefulness was searched with sleep
+  terms and core temperature with thermogenesis. A paper reporting only NREM sleep or
+  BAT thermogenesis fills a different cell, and a sleep result is never converted
+  into a wakefulness one.
+* **The relevance order is Europe PMC's**, not a random sample of the literature.
