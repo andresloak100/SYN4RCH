@@ -7802,3 +7802,85 @@ the same cell**. Epi-retro-seq (Zhou and colleagues, Nature 2023,
 doi:10.1038/s41586-023-06823-w) did this for some 33,000 neurons projecting to 24 targets,
 hypothalamic projection neurons among them. The same question asked there is a test this
 corpus cannot give, and it needs its own pre-registration.
+
+
+## D-101 - Pre-registration: does converting genes into a wiring-related programme reveal what the all-gene fingerprint missed?
+
+**Written before the test runs.** The code is `analysis/d101_programmes.py`, committed
+before this entry in dacff22, with its power output (`reports/d101_power.md`).
+
+### The idea, and the design that was abandoned first
+
+D-100 found no link between the all-gene fingerprint and wiring beyond location. The
+user's proposal: the wiring signal may be in the gene numbers but buried among genes
+unrelated to wiring, so convert the expression into a representation that brings it out.
+Two versions were built.
+
+**A learned conversion, abandoned before it touched the measured wiring.** Kernel ridge
+regression predicting each held-out population's wiring from location plus a gene
+programme, scored by the gain in held-out R-squared over location alone
+(`analysis/d101_conversions.py`). Its nulls failed on random wiring: relabelling the gene
+kernel passed every programme at the floor (p = 0.0033) in a dry run, and the
+Freedman-Lane residual relabelling passed 17-35% of 40 random datasets. The gain depends on
+how the gene kernel lines up with location, and neither null keeps that alignment while
+removing a gene-wiring link. **A learned conversion is not abandoned as an idea**: it needs
+far more than 73 examples to be judged, and moves to data measuring genes and projections
+in the same neurons.
+
+**The test run here: choosing the ingredients.** D-099's validated test, unchanged except
+for the gene similarity, which is computed from one of two programmes chosen from the Gene
+Ontology before any result (term plus all is_a and part_of descendants; annotations without
+NOT and not ND; GO release 2026-07-26):
+
+* **axon guidance + cell-cell adhesion**: GO:0007411 and GO:0098609 (GO's own replacement
+  for GO:0098742, obsolete in this release), 741 genes with variance in HypoMap;
+* **transcription factors**: GO:0003700, DNA-binding transcription factor activity, 1,326
+  genes.
+
+### The decision
+
+**The family is three tests**: D-099's all-gene decision 1 (p = 0.2057, already run) and
+the two programmes, each D-099's location-adjusted within-region correlation over the same
+86 pairs, with the same exact relabelling null (10,000 shuffles, seed 20261112). **A
+programme passes if its Holm-adjusted one-sided p < 0.05.** For a passing programme,
+transfer is judged as in D-099's decision 2.
+
+### Size and power, measured before running
+
+At the first Holm step (p < 0.0167), 400 synthetic datasets each:
+
+| synthetic wiring | guidance + adhesion | transcription factors |
+|---|---|---|
+| random, no structure | 0.015 | 0.018 |
+| no link | 0.013 | 0.020 |
+| position only, the real strength | 0.025 | 0.018 |
+| position only, much stronger | 0.045 | 0.033 |
+| shared cells only | 0.015 | 0.003 |
+| programme link, r about 0.15 | 0.163 | 0.170 |
+| programme link, r about 0.3 | 0.438 | 0.445 |
+| programme link, r about 0.4 | 0.748 | 0.807 |
+
+### Already seen
+
+* D-099's all-gene result: no link beyond location.
+* Computed from the genes alone in a dry run: over the 86 eligible pairs, programme
+  similarity correlates +0.87 (guidance and adhesion) and +0.82 (transcription factors)
+  with the all-gene similarity. The conversion reorders the similarities only modestly.
+
+### Prediction
+
+**Neither programme passes.** Both are largely redundant with the all-gene fingerprint,
+which showed nothing beyond location. If one passes, the conversion idea has its first
+support and the learned version is worth building on same-neuron data first.
+
+### The interpretation, fixed now
+
+* **A pass:** that programme's similarity tracks wiring beyond location within a region,
+  where all genes together did not -- the signal was buried, and this conversion brings it
+  out. Transfer judged as in D-099.
+* **A null:** these two biologically chosen views do not reveal a link the all-gene view
+  missed, at this data's power (a link of r about 0.4 is caught 75-81% of the time). It
+  says nothing about a learned conversion, or about same-neuron data.
+
+Not separately reviewed: the test is D-099's, which was; the new code is the programme
+representation and the Holm family, checked by the size runs above and a dry run.
