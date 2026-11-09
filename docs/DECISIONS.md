@@ -7737,3 +7737,68 @@ One review round, two reviewers who could not run the test. All findings were ad
   fourth already-seen pair is listed.
 The fixes were checked by the size and power runs above and by the random-wiring calibration
 rather than by a second review.
+
+
+## D-100 - Genes do not detectably predict hypothalamic wiring beyond location; location does
+
+D-099's test, run once from 657368f with every input matching its pinned hash. The full
+output is `reports/d099_result.md`. Nothing was tuned after it.
+
+| | predicted | measured | |
+|---|---|---|---|
+| decision 1 | pass | r = +0.124, null 95th +0.258, p = 0.21 | not met |
+| decision 2 | pass | gain +0.047, null 95th +0.049, p = 0.059 | not reached: decision 1 did not pass |
+| adjusted r | +0.15 to +0.45 | +0.124 | just below the range |
+
+**Read by the rule fixed in D-099: neither decision passes.** There is no strong link
+between the placed molecular fingerprints and wiring, and transfer by molecular match is
+not shown. A null here is weak evidence against a link at the level of cell types:
+placement blurs such a link to about r = 0.15, where the test detects it at most 27% of
+the time, and +0.124 is where both a blurred true link and no link at all would land.
+
+### What the secondary rows show, with no decision attached
+
+* **Location carries the wiring signal.** Across all pairs, closer injections project more
+  alike (r +0.33, p = 0.0001). Genes alone across all pairs give +0.105 (p = 0.059), and
+  genes themselves track location (+0.27).
+* **About 40% of the within-region association is position.** Without the location
+  adjustment the within-region correlation is +0.213 (p = 0.080); with it, +0.124.
+* **Regions disagree.** The correlation is positive in the PVH (+0.39 over 17 pairs), LHA
+  (+0.36 over 10), VMH (+0.86 over 5) and zona incerta (+0.59 over 5), flat in the
+  mammillary region and the arcuate (-0.05 over 19 and 17), and negative in the MPO (-0.58
+  over 6), where D-099 noted that gene similarity is diffuse. Leaving the PVH out takes the
+  adjusted r to +0.05.
+* **The better-placed populations point the same way and are too few to tell:** tier A and
+  B only, +0.42 over 17 pairs, p = 0.20.
+* **The transfer gain, +0.047 in wiring cosine at p = 0.059, is not a decision.** It is
+  recorded so that it is not read later as one.
+
+### What this establishes
+
+* **On population-level Cre tracing placed in HypoMap, molecular identity does not
+  detectably predict hypothalamic wiring beyond location.** The reconstruction model D-098
+  pointed at -- predicting untraced wiring from genes -- is not supported on this data.
+* **The binding limit is the placement, not the number of pairs.** 54 of 73 populations are
+  tier C, and a Cre line labels every cell expressing its driver. The test cannot see a
+  cell-level link through that blur.
+
+### What it does not establish
+
+* **That genes do not predict wiring.** The test is weak against exactly the link that
+  matters, and four regions point positive.
+* **That location predicts the wiring of an untraced cell type.** s2 measures association
+  across traced populations; prediction for a held-out one is a different test, not run.
+
+### Direction, set by the user
+
+Scientific development proceeds on the **mouse hypothalamus**, where wiring, positions and
+cell types are measured and a model can be graded honestly. The **human hypothalamus stays
+the ultimate objective**, reached by transfer once a mouse model has earned it.
+
+### What would answer the question properly
+
+Data without the placement blur: molecular identity and projection target measured **in
+the same cell**. Epi-retro-seq (Zhou and colleagues, Nature 2023,
+doi:10.1038/s41586-023-06823-w) did this for some 33,000 neurons projecting to 24 targets,
+hypothalamic projection neurons among them. The same question asked there is a test this
+corpus cannot give, and it needs its own pre-registration.
