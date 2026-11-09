@@ -7523,3 +7523,43 @@ outside the LHA), and some results sit in passages the unit builder cannot local
   BAT thermogenesis fills a different cell, and a sleep result is never converted
   into a wakefulness one.
 * **The relevance order is Europe PMC's**, not a random sample of the literature.
+
+
+## D-098 - The goal is a reconstruction of the human hypothalamus by cell type; the panel is paused before any paper was read
+
+**A change of direction, set by the user.** The model is no longer organised around
+predicting which organ a circuit influences. The goal is a reconstruction of the
+human hypothalamus at the level of its cell types -- each with its molecular
+identity, location, abundance, connections and, later, dynamics -- that can be
+perturbed to see how the network responds. Organ influence becomes an annotation
+read off that reconstruction later, not the label it is built around. Reconstructing
+every individual neuron, the electron-microscopy level, was considered and set
+aside: no hypothalamus, human or mouse, has been mapped at that level, and nothing in
+today's data could predict one faithfully.
+
+**Every property carries its provenance**, one of four:
+
+* **measured** -- observed in human tissue (for example a cell type's gene
+  expression in the human atlas);
+* **inferred** -- computed from human measurements by a stated method;
+* **transferred** -- carried from a homologous mouse cell type, and only where a
+  test in mouse supports carrying that property at all;
+* **unknown** -- none of the above, and shown as unknown rather than filled in.
+
+**What does not change.** Papers stay out of the model and are used only to check
+it. Tier B stays an annotation layer and never a training target. Measurements are
+pre-registered before they are made.
+
+**The panel fill (D-097) is paused before any paper was read.** Its 50 open-access
+full texts are retrieved and their extraction units built; no record has been
+proposed. D-097 stands as written and resumes unchanged if the physiological answer
+key is needed again. `analysis/panel_stage.py`, which retrieved and would stage
+those papers, is committed with this entry so the pause loses nothing.
+
+**The first milestone is a question whose answer decides what can be transferred:
+can a cell type's molecular identity predict its anatomical connectivity?** In mouse
+both are measured -- gene expression in HypoMap, projections in 214 cell-type-specific
+tracing experiments from 58 genetic lines -- so the question can be answered there.
+If it can, mouse wiring may be transferred to the human cell types that match, and
+labelled as such. If it cannot, human wiring stays unknown until it is measured. The
+test is pre-registered separately, with its power measured first.
