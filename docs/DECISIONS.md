@@ -7064,3 +7064,293 @@ the choice of feature. It is that most readouts were measured on one or two
 circuits. That is the curation gap again, now with a number on it: **68% of
 findings cannot discriminate between hypotheses because nothing else was measured
 on them.**
+
+
+## D-095 - Pre-registration: the pair-level test, and the power that says how little it can show
+
+**Written before the test runs.** The code is `analysis/d095_pair_test.py`,
+committed before this entry in 34766aa. Its `--power` mode produced every number in this
+entry's tables, saved as `reports/d095_power.md`, and computes no statistic that
+relates similarity to an observed finding. `--run` is executed once, after both
+commits are pushed. It refuses to start unless every data input matches the
+SHA-256 pinned in the script and the code and curated data are unmodified, and it
+prints the commit it ran from.
+
+Six reviewers read the design in two rounds before this entry was written. They
+could run `--power`, not `--run`. What they changed is listed at the end, and
+what they or I saw of the outcome data is listed under "Already seen".
+
+### The question
+
+D-094 proposed it: for every pair of circuits measured on the same readout under
+the same manipulation, does their similarity predict whether they agree in
+direction? It uses every compared pair. D-091's design used only each finding's
+nearest neighbour.
+
+### A defect in D-091 and D-093
+
+Both keyed a finding on `(readout, valence)`. Nothing in this project may key on
+polarity alone -- D-019, D-025, and `qc.keys.perturbation_key` exists to make it
+awkward -- and both scripts did:
+
+* **137 of the 490 circuit records are molecular**: a gene knocked out or
+  overexpressed inside the circuit. Their valence is honestly `unclear`, so every
+  molecular manipulation on a readout fell into one `unclear` cell, where a *Sirt1*
+  overexpression and a *Trp53* knockout counted as the same experiment. **24 of
+  D-092's 102 scored findings and 16 of D-094's 82 were such cells.**
+* **19 projection-specific records** -- terminals stimulated, not somata -- were
+  pooled with somatic ones, against D-050. 7 of D-092's scored findings and 5 of
+  D-094's contain one.
+
+Here a finding is keyed on `(readout, perturbation_key)` -- class, polarity and
+molecular target together -- over somatic records.
+
+**The correction is a correction, not a new test.** `--run` re-runs D-091 /
+D-093's procedure on the original key and on the corrected one, side by side,
+with D-091's exclusion set, candidates, tie rule, shuffles and seed, and prints
+no verdict. It is not new evidence: **70 of the 75 gene findings and 60 of the 65
+connectivity findings it scores have exactly the record set of a finding D-092
+or D-094 already scored**, and those results are published (p = 0.38 and
+0.057). Its null is also slightly liberal for connectivity: on synthetic labels
+with no link it rejects 6-7% of the time at a nominal 5%.
+
+### The pair test
+
+* **Records.** Somatic, a signed manipulation, direction increase, decrease or no
+  change, and **a wild-type or unstated genetic background**: 433 rows. 37 are set
+  aside: 16 with *Npy* loss of function in AgRP neurons; 12 *ob/ob* (8 AgRP, 4
+  POMC); 2 *Ay* (1 each); 7 pooling two genotypes, `mixed` under D-060 (5 AgRP, 2
+  orexin). A mutant background is a different animal. How this exclusion came to
+  be adopted is under "Already seen", and row (f) below puts the records back.
+* **Circuits.** Genes: the 15 D-091 places in HypoMap. Connectivity: the 12 D-093
+  matched to a tracing experiment, with D-093's feature unchanged.
+* **A comparison** is two circuits on one cell, each with a defined modal
+  direction; ties are skipped.
+* **Independence.** For each pair, every record from a study naming both circuits
+  anywhere in the corpus is dropped from both sides. Pairs sharing a HypoMap cell
+  type (D-066) or a tracing experiment are not compared. This is why no molecular
+  manipulation is compared: the 9 molecular cells measured in two circuits --
+  *Sirt1* and *Trp53*, each in AgRP and POMC -- each come from one paper that did
+  both.
+* **Statistic.** The correlation between a pair's similarity, as a rank over the
+  eligible pairs, and agreement (1 or 0), over all comparisons. Two "no change"
+  results agree.
+* **Null.** Mantel: the circuit labels of the similarity matrix are shuffled
+  10,000 times (seed 20261109) while the findings stay fixed. This controls for
+  circuit differences that are unrelated to a circuit's overall similarity. It
+  does not control for a pair-level factor that tracks similarity, or for a
+  circuit-level one that tracks how central a circuit sits -- see the risks.
+* **Decision.** **A feature passes if its two-sided p < 0.025**, Bonferroni over
+  genes and connectivity. An undefined statistic does not pass. Measured on
+  synthetic labels with no link, the test passes 1.9-2.9% of the time.
+
+### What the data allows
+
+| | genes | connectivity |
+|---|---|---|
+| circuits / in a comparison | 15 / 14 | 12 / 11 |
+| pairs eligible / compared | 102 / 40 | 66 / 29 |
+| comparisons | 73 | 59 |
+| comparisons per compared pair, median | 1 | 2 |
+| involving `lha_orexin` or `arc_agrp` | 48 | 41 |
+| with a rat record on one side | 9 | 8 |
+
+Every comparison is a circuit-activity manipulation.
+
+### Already seen
+
+Outcome information that was in hand before this entry, none of it a statistic
+relating similarity to agreement:
+
+* **D-092 published AgRP "increase" against POMC "no change"** for food intake
+  under activation. `arc_agrp`-`arc_pomc` is compared on four cells -- BAT
+  thermogenesis, corticosterone, food intake and plasma insulin -- and it is the
+  second most similar compared gene pair (rank 97 of 102; 57 of 66 by
+  connectivity). One of its four agreement values is therefore probably known.
+* **D-092 and D-094's nearest-neighbour results**, which is why the re-score above
+  is a correction and not a test.
+* **The first version of `--power` printed how many comparisons row (d) keeps**,
+  which revealed that 3 of 73 gene and 2 of 59 connectivity comparisons agree
+  because both sides are "no change". That count is now computed only in `--run`.
+* **The genotype exclusion followed a reviewer's report** that, recomputing each
+  circuit's own labels without the mutant-background records, 15 of 84 gene and
+  14 of 70 connectivity comparisons would change label or become undefined. The
+  reviewer computed no agreement and reported no direction; I saw the counts only.
+  D-060's condition key grounds the exclusion -- records with different
+  backgrounds are not comparable -- but the order of events is this one, so row
+  (f) shows the analysis with those records included.
+
+### Power, measured on synthetic labels before running
+
+Each model generates labels with a known link between similarity and function and
+puts them through the identical test, 300 times. Power counts passes in the
+modelled direction only. The family model is run on six partitions of the
+circuits (average and Ward linkage, cut into n/4, n/3 and n/2 families); a
+partition counts only if being in the same family tracks similarity rank at
+least 0.3 on the compared pairs. **Two gene partitions fail that** (Ward n/4 at
+-0.05, Ward n/3 at +0.15): they model no link at all, and their power, 0.00-0.03,
+is the test's false-positive rate rather than its power. All six connectivity
+partitions pass.
+
+| how function follows similarity | genes | connectivity |
+|---|---|---|
+| similarity sets the correlation between circuits (6 settings) | 0.00-0.03 | 0.01-0.03 |
+| a circuit does what its family does, 80% of the time | 0.07-0.36 | 0.05-0.30 |
+| the same, 100% of the time | 0.16-0.68 | 0.02-0.80 |
+| comparisons independent, agreement rising 40 points from least to most similar pair | 0.32 | 0.17 |
+| the same, falling 40 points | 0.28 | 0.24 |
+| rising 80 points | 0.92 | 0.82 |
+| falling 80 points | 0.91 | 0.80 |
+
+**The two features are in the same position.** Under the latent model neither
+test can see anything: its power equals its false-positive rate. Under strong
+links -- an 80-point gradient (0.80-0.92), or families followed without exception
+in some partitions (above 0.5 in two of four gene and three of six connectivity
+partitions) -- each would usually be seen. Moderate links are mostly missed.
+
+D-094 said the pair test is the better-powered design. That was asserted, not
+measured. Measured, on the same labels, D-091's nearest-neighbour design is
+stronger for connectivity in five of six partitions at 80% (at one-sided 0.0125:
+0.07-0.34 against 0.05-0.30), though part of that edge is its liberal null; for
+genes the pair test is stronger in three of the four aligned partitions. For a
+future test on new data the choice of design should be made by this simulation,
+not by argument.
+
+### What would give it power
+
+The 80% family model, with every eligible pair compared on the same five
+readouts, over partitions that track similarity:
+
+| circuits | comparisons | power |
+|---|---|---|
+| connectivity, the corpus's own 12 | 330 | 0.47-0.87 (0.74-0.87 in five of six) |
+| genes, the corpus's own 15 | 510 | 0.24-0.70 |
+| 15 random HypoMap cell types | 525 | 0.49-0.90 |
+| 30 random HypoMap cell types | 2,175 | 0.61-0.99 |
+| 60 random HypoMap cell types | 8,850 | 0.84-1.00 |
+
+**Under that model, the 12 circuits already mapped by connectivity, each measured
+on the same five readouts, would give this test reasonable power.** For genes, the
+corpus's 15 circuits do worse than 15 random cell types, because they are alike:
+their mean pairwise cosine is 0.255 against 0.016 for random types. What would
+help is circuits spread across the atlas, as well as more overlap. The latent
+model was not simulated for this target; under it, the current data give the test
+no power at all.
+
+### The interpretation, fixed now
+
+* **A null, for either feature**, argues against a strong link -- an 80-point
+  gradient (power 0.80-0.92), or families followed without exception where the
+  partition gives the test power (0.57-0.80 in five of ten partitions; 0.02-0.37
+  in the rest) -- and only weakly against a moderate one (40 points: 0.17-0.32;
+  80% families: 0.05-0.36). It says nothing about a link of the latent kind.
+* **A positive pass** means similar circuits agree more often; **a negative pass**
+  means similar circuits differ more often, which is not the same as doing
+  opposite things, since "increase" against "no change" counts as differing. Only
+  the independent model simulates a negative link (power 0.24-0.28 at 40 points,
+  0.80-0.91 at 80).
+* **A pass is evidence, not proof.** With no link, a feature passes about 2.5% of
+  the time, half in each direction, and at least one of the two passes about 5%.
+  Under the latent model a pass is about as likely without a link as with one.
+  Its size will be overestimated, and it would rest mostly on two circuits: 48 of
+  73 gene and 41 of 59 connectivity comparisons involve `lha_orexin` or
+  `arc_agrp`.
+* **A pass is not, on its own, a link between similarity and function.** `--run`
+  prints sensitivity rows beside the primary, with no decision of their own:
+  * (a) records from a laboratory naming both circuits dropped, D-087's seven
+    aliased laboratories merged: 66 gene and 52 connectivity comparisons left;
+  * (b) pairs in the same nucleus excluded: 60 and 49;
+  * (c1) `lha_orexin` left out: 42 and 31; (c2) `arc_agrp` left out: 52 and 42;
+  * (d) comparisons where both sides are "no change" dropped;
+  * (e) rat records dropped, unrecorded species kept: 74 and 60;
+  * (f) mutant and mixed backgrounds put back: 84 and 70;
+  * (g) genes only: the three tier-C broad-marker circuits left out: 55.
+
+  **A pass that changes sign or loses more than half its size under (a), (b),
+  (c1), (c2) or, for genes, (g) is reported as not separable from that factor**,
+  and the script prints that verdict itself.
+* **What `--run` prints, and the status of each line.** The two PRIMARY lines are
+  the only decisions. The sensitivity rows, the SECONDARY rows (both features on
+  the 11 circuits both place) and the eight CORRECTION lines print a statistic and
+  a p-value and no verdict, and the result entry will describe them as such. The
+  closing table of every compared pair is a diagnostic.
+
+### Predictions
+
+1. **Neither feature passes.** Expected from the power alone.
+2. **No prediction of sign.** The most similar compared pairs include textbook
+   opponents -- AgRP and POMC on feeding, MCH and orexin on sleep (connectivity
+   rank 60 of 66) -- and textbook allies, orexin and histamine on arousal (58 of
+   66). An earlier draft predicted a negative sign; it cited pairs that are not
+   compared, and AgRP-POMC's food-intake disagreement was already published.
+
+### Named risks
+
+* **Conditions are pooled.** In the primary rows sex is recorded on 50%, diet on
+  59%, challenge on 15%, age on 13% and genotype on 3%: 1.39 of five slots on
+  average. Two circuits can disagree because their studies ran under different
+  conditions, and at this size that cannot be separated out. Species is pooled
+  too; row (e) drops the rat records.
+* **Broad markers sit near everything.** `pvh_sim1`, `lha_vgat` and `lha_vglut2`
+  are tier-C mappings averaging 15 to 17 cell types each (D-091's own named risk),
+  and they are among the most central circuits by gene similarity. A tendency of
+  such circuits to agree with others, unrelated to function, could produce a gene
+  pass the Mantel null does not remove; a reviewer simulated false-positive rates
+  of 3.2-7.4% at a nominal 2.5% under that kind of tendency. Row (g), and its place
+  in the separability rule, address it.
+* **D-093's "distal" feature is not purely distal.** It keeps the hypothalamus's
+  ancestor structures and fibre tracts that cross it. It is kept unchanged so the
+  correction stays comparable to D-094. Removing the ancestors leaves the pairwise
+  ranking unchanged (Spearman 1.000 over the 66 pairs), and keeping grey matter
+  only leaves it nearly so (0.975).
+* **A circuit's label can differ between pairs**, because each pair drops its own
+  shared studies.
+* **The power models are assumptions.** They bracket a range; they do not measure
+  the true relationship.
+
+### What the reviews changed
+
+Round 1:
+
+* **Power came from one lopsided partition** -- one family of 10 of the 15 gene
+  circuits -- labelled "families of about 3". It now spans six partitions.
+* **"The pair design is better powered" was asserted, not measured.** It is now
+  measured, and it is not true in general.
+* **The data target was simulated on random cell types** and described as the
+  corpus's circuits. Both are now run.
+* **The re-score had narrowed D-091's study exclusion**, which would have let
+  AgRP's food-intake finding be predicted from POMC records in the same paper
+  (doi:10.1038/nature11270). It now uses D-091's set exactly.
+* **Mutant-background records were pooled into the labels.** They are out of the
+  primary.
+* **An undefined statistic would have printed PASS.** Fixed.
+* **The inputs were not pinned.** They are now.
+* **Two factual errors about the molecular records**: the *Sirt1* / *Trp53*
+  example was reversed, and "no gene was manipulated in two circuits" was false.
+
+Round 2:
+
+* **The corrected re-score was to be reported "with the same weight as the pair
+  test".** Most of its findings are D-092 and D-094's, with results already
+  published, and its null is liberal. It is now a correction with no verdict.
+* **Gene power was said to be at the floor** because of two partitions that model
+  no link. They are now flagged and set aside, and the reading of a null is the
+  same for both features.
+* **Power counted passes in the wrong direction.** It now counts only the modelled
+  direction, and each design's false-positive rate is measured.
+* **`--run` printed verdicts on lines this entry did not name.** It now prints
+  verdicts only on the two decisions, and every line is listed above.
+* **The genotype exclusion was not disclosed**, and its rationale was wrong in two
+  places (2 of the records are orexin's; AgRP-POMC is not the most similar
+  compared pair). Both corrected, disclosed above, and row (f) added.
+* **Row (e) mostly dropped records of unrecorded species.** It now drops rat
+  records only.
+* **The tier-C risk D-091 named had been dropped.** It is back, with row (g).
+* **`--power` read observed directions to count row (d).** That count now happens
+  only in `--run`, and what it revealed is disclosed.
+* **`--run` checked the data but not the code.** It now refuses on any
+  uncommitted change to the code or curated data.
+* **The `--power` output was going to a file git ignores.** It is now
+  `reports/d095_power.md`.
+* **The condition coverage, the "decisive" heading and "more circuits are
+  needed" were wrong.** All three are corrected above.
