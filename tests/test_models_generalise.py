@@ -411,3 +411,105 @@ class CLITest(unittest.TestCase):
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
+
+
+class CalibratedVerdictTest(unittest.TestCase):
+    """The rule D-089 calibrated, and the hazard found while implementing it.
+
+    FABRICATED TEST DATA - NEVER EVIDENCE.
+
+    D-088 withdrew `established` because the old rule -- a clustered interval
+    excluding zero AND McNemar p < 0.05 -- fired on 64% of permuted datasets on
+    `study_id` and 86% on `lab`. Both of its tests are against zero while this
+    null's delta median is +0.133, so the rule was sound for a question with the
+    wrong origin.
+    """
+
+    def _null(self, deltas, *, mcnemar=0.01, interval=True, observed=None):
+        from syn4rch.models.generalise import PermutationNull
+
+        items = tuple(
+            {"delta": d, "mcnemar_p": mcnemar, "interval": interval,
+             "verdict": "established" if interval and mcnemar < 0.05 else "suggestive"}
+            for d in deltas
+        )
+        return PermutationNull(
+            grouping="study_id", slice_name="s", n_permutations=len(deltas),
+            observed_delta=observed, deltas=tuple(deltas), items=items,
+        )
+
+    def _slice(self, delta, *, mcnemar=0.01, ci_low=0.05, ci_high=0.4):
+        from syn4rch.models.evaluate import ComparisonSlice
+
+        return ComparisonSlice(
+            name="s", description="", grouping="study_id", n_rows=100, n_groups=20,
+            accuracy=0.5, reference_accuracy=0.5 - delta, delta=delta,
+            ci={"ci_low": ci_low, "ci_high": ci_high}, mcnemar_p=mcnemar,
+        )
+
+    def test_the_threshold_is_the_95th_percentile_of_the_FIT_half_only(self):
+        """The holdout half must not influence the threshold it is scored against."""
+        fit = [0.0] * 100
+        holdout = [9.9] * 100
+        null = self._null(fit + holdout)
+        self.assertEqual(null.calibration_threshold, 0.0)
+
+    def test_the_rate_is_measured_on_the_HELDOUT_half_only(self):
+        """Scoring a rule on its own fitting set is the tautology this avoids."""
+        null = self._null([0.0] * 100 + [1.0] * 100, observed=1.0)
+        # threshold 0.0 from the fit half; every holdout delta clears it
+        self.assertEqual(null.calibration_threshold, 0.0)
+        self.assertEqual(null.holdout_rate, 1.0)
+
+    def test_too_few_permutations_gives_uncalibrated_and_never_established(self):
+        """A rule that cannot be checked must not produce the word."""
+        null = self._null([0.1] * 10, observed=0.9)
+        self.assertIsNone(null.calibration_threshold)
+        self.assertEqual(null.calibrated_verdict(self._slice(0.9)), "uncalibrated")
+        self.assertIsNone(null.holdout_rate)
+
+    def test_a_delta_below_the_null_is_not_established_however_good_its_p(self):
+        """The whole defect: +0.13 is what the null already produces."""
+        null = self._null([0.1 + i * 0.001 for i in range(200)], observed=0.12)
+        observed = self._slice(0.12, mcnemar=0.0001, ci_low=0.05, ci_high=0.2)
+        self.assertTrue(observed.interval_excludes_zero)
+        self.assertTrue(observed.row_test_significant)
+        self.assertEqual(observed.verdict, "established")  # the old rule
+        self.assertNotEqual(null.calibrated_verdict(observed), "established")
+
+    def test_the_rule_can_never_upgrade_a_slice_the_old_rule_refused(self):
+        """The hazard found while implementing, not while designing.
+
+        D-089 pre-registered `delta > threshold AND McNemar`, which SHARES one
+        test with the old rule and REPLACES the other -- so it was not uniformly
+        stricter. A slice with a big delta and an interval still spanning zero
+        would have been called `established` where the old rule refused it. The
+        rule is now the conjunction of all three, which can only reject more.
+        """
+        null = self._null([0.0] * 200, observed=0.9)
+        wide = self._slice(0.9, mcnemar=0.001, ci_low=-0.2, ci_high=1.5)
+        self.assertFalse(wide.interval_excludes_zero)
+        self.assertNotEqual(wide.verdict, "established")
+        self.assertNotEqual(null.calibrated_verdict(wide), "established")
+
+    def test_strictly_stricter_than_the_old_rule_over_a_grid(self):
+        """Property, not an example: no (delta, p, interval) is established by
+        the calibrated rule and not by the old one."""
+        null = self._null([0.1] * 200, observed=0.5)
+        for delta in (-0.5, 0.0, 0.05, 0.11, 0.3, 0.9):
+            for mcnemar in (0.001, 0.2):
+                for ci in ((0.01, 0.4), (-0.3, 0.6)):
+                    item = self._slice(delta, mcnemar=mcnemar, ci_low=ci[0], ci_high=ci[1])
+                    if null.calibrated_verdict(item) == "established":
+                        self.assertEqual(
+                            item.verdict, "established",
+                            "calibrated rule established (%s, %s, %s) where the "
+                            "old rule did not" % (delta, mcnemar, ci),
+                        )
+
+    def test_the_holdout_ceiling_is_above_the_nominal_rate_and_says_why(self):
+        from syn4rch.models import generalise as G
+
+        self.assertEqual(G.MAX_NULL_ESTABLISHED_RATE, 0.05)
+        self.assertGreater(G.MAX_HOLDOUT_ESTABLISHED_RATE, G.MAX_NULL_ESTABLISHED_RATE)
+        self.assertAlmostEqual(G.MAX_HOLDOUT_ESTABLISHED_RATE, 0.10)

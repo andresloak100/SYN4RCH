@@ -62,6 +62,7 @@ Python 3.10 compatible, standard library only.
 import argparse
 import dataclasses
 import json
+import math
 import os
 import random
 import sys
@@ -146,6 +147,12 @@ DEPTH_STRATA: Tuple[Tuple[str, int, Optional[int]], ...] = (
 #: rule is called miscalibrated. D-056 fixed this at 5%, the nominal level the
 #: rule's own McNemar threshold claims.
 MAX_NULL_ESTABLISHED_RATE = 0.05
+
+#: The holdout ceiling for the CALIBRATED rule (D-089). 0.05 is the rate the
+#: rule is built to have; the check runs on 100 held-out permutations, where a
+#: true 0.05 gives a 95% upper bound near 0.10, so a pass is read against 0.10
+#: and a rate near 0.05 is what is expected rather than merely tolerated.
+MAX_HOLDOUT_ESTABLISHED_RATE = 0.10
 
 
 @dataclass(frozen=True)
@@ -427,8 +434,18 @@ class PermutationNull:
     observed_verdict: str = "undefined"
     verdicts: Dict[str, int] = field(default_factory=dict)
     deltas: Tuple[float, ...] = ()
+    #: One record per permutation: ``delta``, ``mcnemar_p``, ``interval``,
+    #: ``verdict``. Stored so a candidate decision rule can be scored against
+    #: this null WITHOUT re-running it (D-089). A verdict tally alone cannot
+    #: answer "what would a different rule have done", which is the question
+    #: that arises the moment a rule turns out to be miscalibrated.
+    items: Tuple[Dict[str, Any], ...] = ()
     n_deltas_at_or_above_observed: int = 0
     seconds: Optional[float] = None
+    #: The verdict the CALIBRATED rule gives the observed slice. Set by
+    #: :func:`permutation_probe`, which is the only place holding both the null
+    #: and the observed slice; `calibrated_verdict` recomputes it for any slice.
+    observed_calibrated_verdict: str = "uncalibrated"
     note: str = ""
 
     @property
@@ -456,6 +473,99 @@ class PermutationNull:
         comparing against the wrong origin.
         """
         return _median(self.deltas)
+
+    #: Fraction of the permutations used to SET the threshold. The rest are
+    #: held out to measure the calibrated rule's firing rate, because scoring a
+    #: rule on the same draws that fixed its threshold is circular and giving
+    #: each permuted dataset its own null is 200 x 200 runs (D-089).
+    CALIBRATION_FRACTION = 0.5
+
+    def _split(self) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        rows = [r for r in self.items if r.get("delta") is not None]
+        cut = int(len(rows) * self.CALIBRATION_FRACTION)
+        return rows[:cut], rows[cut:]
+
+    @property
+    def calibration_threshold(self) -> Optional[float]:
+        """The delta a slice must exceed: the 95th percentile of the FIT half.
+
+        Against this null rather than against zero, which is the whole of the
+        D-088 defect. `null_centre` says why zero is the wrong origin.
+        """
+        fit, _ = self._split()
+        if len(fit) < 20:
+            return None
+        ordered = sorted(r["delta"] for r in fit)
+        index = min(len(ordered) - 1, int(math.ceil(0.95 * len(ordered))) - 1)
+        return ordered[index]
+
+    def _fires(self, row: Dict[str, Any]) -> bool:
+        threshold = self.calibration_threshold
+        if threshold is None or row.get("delta") is None:
+            return False
+        mcnemar = row.get("mcnemar_p")
+        return (
+            row["delta"] > threshold
+            and mcnemar is not None
+            and mcnemar < 0.05
+            and bool(row.get("interval"))
+        )
+
+    @property
+    def holdout_rate(self) -> Optional[float]:
+        """How often the CALIBRATED rule fires on permutations it never saw."""
+        _, holdout = self._split()
+        if not holdout or self.calibration_threshold is None:
+            return None
+        return sum(1 for r in holdout if self._fires(r)) / len(holdout)
+
+    @property
+    def holdout_rate_old_rule(self) -> Optional[float]:
+        """The same holdout, scored by the rule D-088 withdrew.
+
+        Reported beside `holdout_rate` so the contrast is in the artefact and
+        not only in a decision entry.
+        """
+        _, holdout = self._split()
+        if not holdout:
+            return None
+        return sum(1 for r in holdout if r.get("verdict") == "established") / len(holdout)
+
+    @property
+    def holdout_calibrated(self) -> Optional[bool]:
+        rate = self.holdout_rate
+        if rate is None:
+            return None
+        return rate <= MAX_HOLDOUT_ESTABLISHED_RATE
+
+    def calibrated_verdict(self, observed) -> str:
+        """`established` only where the delta clears this null's 95th percentile.
+
+        `uncalibrated` is returned where no threshold could be fitted: a rule
+        that cannot be checked must not produce the word `established` (D-089).
+        """
+        threshold = self.calibration_threshold
+        if threshold is None:
+            return "uncalibrated"
+        if observed.delta is None:
+            return "undefined"
+        row = observed.row_test_significant
+        interval = observed.interval_excludes_zero
+        clears = observed.delta > threshold
+        # All THREE, not the threshold in place of the interval. D-089
+        # pre-registered `delta > threshold AND McNemar`, which shares one test
+        # with the old rule and replaces the other -- so it is not uniformly
+        # stricter, and a slice with a large delta and an interval still
+        # spanning zero would be called `established` where the old rule refused
+        # it. Adding the interval back makes this rule strictly stricter than
+        # both, so it can never upgrade a slice, and a conjunction with one more
+        # condition can only lower the firing rate -- the calibration cannot be
+        # hurt by it. Amended in D-090 with the measured rates.
+        if clears and row and interval:
+            return "established"
+        if clears or row or interval:
+            return "suggestive"
+        return "no_difference"
 
     @property
     def empirical_p(self) -> Optional[float]:
@@ -489,6 +599,18 @@ class PermutationNull:
             ),
             "null_delta_p95": _quantile(self.deltas, 0.95),
             "null_delta_max": max(self.deltas) if self.deltas else None,
+            # D-089's calibration. The threshold is fitted on the first half of
+            # the permutations and the rates are measured on the held-out half,
+            # so `holdout_rate` is a real check rather than the tautology that
+            # scoring a rule on its own fitting set would be.
+            "calibration_threshold": self.calibration_threshold,
+            "calibration_fit_n": len(self._split()[0]),
+            "calibration_holdout_n": len(self._split()[1]),
+            "holdout_rate_calibrated_rule": self.holdout_rate,
+            "holdout_rate_old_rule": self.holdout_rate_old_rule,
+            "holdout_ceiling": MAX_HOLDOUT_ESTABLISHED_RATE,
+            "holdout_calibrated": self.holdout_calibrated,
+            "calibrated_verdict": self.observed_calibrated_verdict,
             "seconds": self.seconds,
             "note": self.note,
         }
@@ -537,6 +659,7 @@ def permutation_probe(
 
     started = time.time()
     verdicts: Dict[str, int] = {}
+    items: List[Dict[str, Any]] = []
     deltas: List[float] = []
     at_or_above = 0
     for index in range(n_permutations):
@@ -555,12 +678,20 @@ def permutation_probe(
             seed=seed + index,
         )
         verdicts[item.verdict] = verdicts.get(item.verdict, 0) + 1
+        items.append(
+            {
+                "delta": item.delta,
+                "mcnemar_p": item.mcnemar_p,
+                "interval": item.interval_excludes_zero,
+                "verdict": item.verdict,
+            }
+        )
         if item.delta is not None:
             deltas.append(item.delta)
             if observed.delta is not None and item.delta >= observed.delta:
                 at_or_above += 1
 
-    return PermutationNull(
+    built = PermutationNull(
         grouping=grouping,
         slice_name=HEADLINE_SLICE,
         n_permutations=n_permutations,
@@ -568,6 +699,7 @@ def permutation_probe(
         observed_verdict=observed.verdict,
         verdicts=verdicts,
         deltas=tuple(deltas),
+        items=tuple(items),
         n_deltas_at_or_above_observed=at_or_above,
         seconds=time.time() - started,
         note=(
@@ -577,6 +709,10 @@ def permutation_probe(
             "across studies. This is a check on the decision rule, not a "
             "p-value for the observed effect."
         ),
+    )
+    return dataclasses.replace(
+        built,
+        observed_calibrated_verdict=built.calibrated_verdict(observed),
     )
 
 
@@ -590,6 +726,10 @@ class GeneralisationResult:
     depth_grouping: str = ""
     depth_disagreements: int = 0
     permutation: Optional[Dict[str, Any]] = None
+    #: grouping -> that grouping's null (D-089). `permutation` stays as the
+    #: single study_id null so every existing reader of this artefact keeps
+    #: working; this is the addition.
+    permutations: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     settings: Dict[str, Any] = field(default_factory=dict)
     generated_at: Optional[str] = None
 
@@ -611,6 +751,7 @@ class GeneralisationResult:
                 ),
             },
             "permutation": self.permutation,
+            "permutations": dict(self.permutations),
         }
 
 
@@ -647,17 +788,25 @@ def run_generalisation(
         )
     strata = depth_probe(depth_run, n_bootstrap=n_bootstrap, seed=seed)
 
-    null = None
-    if n_permutations > 0:
-        null = permutation_probe(
-            dataset,
-            grouping="study_id",
-            n_permutations=n_permutations,
-            n_folds=n_folds,
-            n_bootstrap=n_bootstrap,
-            seed=seed,
-            fold_provider=fold_provider,
-        )
+    # Both groupings (D-089). The probe ran only on `study_id` while D-057's
+    # headline is `lab`, so the rule the project quotes had no calibration check
+    # of any kind -- and `lab` turned out to be the more miscalibrated of the
+    # two under the old rule, at 0.86 against study_id's 0.64.
+    nulls = {}
+    if n_permutations:
+        for probe_grouping in ("study_id", "lab"):
+            if probe_grouping in nulls or probe_grouping not in GROUPINGS:
+                continue
+            nulls[probe_grouping] = permutation_probe(
+                dataset,
+                grouping=probe_grouping,
+                n_permutations=n_permutations,
+                n_folds=n_folds,
+                n_bootstrap=n_bootstrap,
+                seed=seed,
+                fold_provider=fold_provider,
+            )
+    null = nulls.get("study_id") or (next(iter(nulls.values())) if nulls else None)
 
     return GeneralisationResult(
         dataset_description={
@@ -685,6 +834,7 @@ def run_generalisation(
         depth_grouping=depth_grouping,
         depth_disagreements=depth_run.depth_disagreements(),
         permutation=None if null is None else null.to_dict(),
+        permutations={g: n.to_dict() for g, n in nulls.items()},
         settings={
             "n_folds_requested": n_folds,
             "n_bootstrap": n_bootstrap,
@@ -878,6 +1028,53 @@ def render_markdown(result: GeneralisationResult) -> str:
     lines.append("")
 
     null = data.get("permutation")
+    nulls = data.get("permutations") or {}
+    if nulls:
+        lines.append("## Probe 3b - the calibrated rule (D-089)")
+        lines.append("")
+        lines.append(
+            "`established` now requires the observed delta to clear this null's "
+            "95th percentile, not zero. The threshold is fitted on the first "
+            "half of the permutations and the firing rates below are measured "
+            "on the **held-out** half, so this is a check and not the tautology "
+            "that scoring a rule on its own fitting set would be. The old rule "
+            "-- a clustered interval excluding zero AND McNemar p < 0.05 -- is "
+            "scored on the same holdout for contrast."
+        )
+        lines.append("")
+        header = [
+            "grouping", "observed", "null median", "null 95th (fit)",
+            "verdict (calibrated)", "holdout rate", "old rule's rate", "calibrated",
+        ]
+        rows = []
+        for probe_grouping in sorted(nulls):
+            n = nulls[probe_grouping]
+            rows.append([
+                "`%s`" % probe_grouping,
+                _signed(n.get("observed_delta")),
+                _signed(n.get("null_delta_median")),
+                _signed(n.get("calibration_threshold")),
+                "**%s**" % (n.get("calibrated_verdict") or "n/a"),
+                "%.4f" % (n["holdout_rate_calibrated_rule"] or 0.0)
+                if n.get("holdout_rate_calibrated_rule") is not None else "n/a",
+                "%.4f" % (n["holdout_rate_old_rule"] or 0.0)
+                if n.get("holdout_rate_old_rule") is not None else "n/a",
+                "**yes**" if n.get("holdout_calibrated") else "**no**",
+            ])
+        lines.append(_table(header, rows))
+        lines.append("")
+        lines.append(
+            "The ceiling is %.2f rather than 0.05: the rule is built to fire at "
+            "0.05, and on %d held-out permutations a true 0.05 has a 95%% upper "
+            "bound near 0.10, so a pass is read against 0.10 while a rate near "
+            "0.05 is what is expected."
+            % (
+                MAX_HOLDOUT_ESTABLISHED_RATE,
+                (nulls[sorted(nulls)[0]].get("calibration_holdout_n") or 0),
+            )
+        )
+        lines.append("")
+
     lines.append("## Probe 3 - is the `established` rule calibrated here?")
     lines.append("")
     if null is None:
