@@ -6914,3 +6914,83 @@ reach, and it is measured brain-wide without anyone choosing a favourite circuit
 -- the unbiased property the user's design requires. The corpus carries it on
 **13 of 722 records** and no vocabulary entry names a projection target. That is
 the gap this result points at.
+
+
+## D-093 - Pre-registration: does where a circuit projects predict what it does?
+
+**Written before the connectivity validation runs.** D-092 found that gene
+similarity identifies cell types but does not predict function, and pointed at
+connectivity as the likely bridge: where a circuit sends its axons determines
+which organ systems it can reach.
+
+### The data, and why it meets the blindness requirement
+
+The Allen Mouse Brain Connectivity Atlas: 2,331 anterograde tracing experiments,
+258 with their primary injection in the hypothalamus. Many use **Cre lines**, so
+the tracer labels one genetically defined cell type -- `Agrp-IRES-Cre` injected
+into the arcuate labels AgRP neurons' axons and nothing else. Each experiment
+reports projection density in 840 brain structures, in the CCFv3 coordinates the
+viewer already uses.
+
+It was produced by a systematic pipeline, not chosen because any paper made a
+circuit famous, so it is an input the model may see under D-091's rule. The
+papers stay the validation set.
+
+**Matched on the gene, not the construct name.** A first pass matching on the
+Cre line's name found 8 of 16 circuits. Four misses were naming:
+`Hcrt-IRES-Cre` against Allen's `Hcrt-Cre` (orexin, 55 records),
+`Sf1-Cre` against `Nr5a1-Cre` (one gene, two names), `Vgat-IRES-Cre` against
+`Slc32a1-IRES-Cre`, and `poa_galanin` failing a nucleus lookup of mine. Matched on
+the gene the line drives, **12 of 16 circuits carrying 462 of 490 records** have
+a cell-type tracing experiment in the right nucleus -- including `lha_orexin` and
+`vmh_sf1`, the two largest circuits the gene atlas could not place. The four left
+are genuine absences: `pvh_sim1` and `lha_vglut2` were injected outside their
+nucleus, and `pvh_trh` and `arc_ghrh` name no Cre line.
+
+### The confound, handled before the result
+
+Circuits injected into the same nucleus share dense labelling in nearby
+structures from local collaterals and injection spillover. That recreates the
+"same place, same answer" structure that sank gene similarity. So:
+
+* **Primary: distal targets only** -- every structure outside the hypothalamus.
+  Long-range projections to brainstem autonomic centres, the parabrachial nucleus,
+  periaqueductal grey and the like are what reach the periphery.
+* Secondary: all 840 structures.
+
+### The validation -- identical to D-091 except for the similarity
+
+A circuit's connectivity fingerprint is the mean projection density over its
+experiments. For each circuit held out entirely: rank every other circuit by
+connectivity similarity, exclude any sharing an experiment, exclude records from
+any study that also reported the held-out circuit, and predict each finding from
+the nearest neighbour with data on it. Ties in the truth are skipped. Same nulls:
+1,000 shuffles of the ranking, and the global majority.
+
+**Head-to-head with genes on the same circuits.** The connectivity set is 12
+circuits and the gene set 15, so the direct comparison is run on the circuits
+both can place, where the two similarities compete on identical findings.
+
+### Predictions
+
+1. **Connectivity neighbours beat random neighbours** -- above the 95th percentile
+   of the shuffle null. The decisive one, as in D-091.
+2. **Distal-only beats all-targets**, because local spillover reintroduces the
+   location effect.
+3. **On shared circuits, connectivity beats gene similarity.**
+4. **The one I expect to fail: connectivity separates AgRP from POMC.** They are
+   the textbook opposing pair, and they act on the *same* targets -- both
+   innervate the PVH's MC4R neurons, where AgRP antagonises the receptor and
+   POMC's alpha-MSH activates it. If that convergence dominates their projection
+   profiles, connectivity will make them neighbours just as genes did, and fail
+   on the same pair for a deeper reason: in this circuit, function is set by
+   *what is released* onto a target, not only by *where* it goes.
+
+### Named risks
+
+* 12 circuits, roughly 100 findings, and labels that disagree in 73% of records.
+  **A real but modest effect may not reach significance here.** A null result
+  would mean "not detectable at this size", which is weaker than "connectivity
+  does not predict function", and will be reported as such.
+* Several circuits rest on one or two experiments, so their fingerprints carry
+  each injection's own idiosyncrasies -- placement, volume, spread.
