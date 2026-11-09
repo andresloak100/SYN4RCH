@@ -7354,3 +7354,76 @@ Round 2:
   `reports/d095_power.md`.
 * **The condition coverage, the "decisive" heading and "more circuits are
   needed" were wrong.** All three are corrected above.
+
+
+## D-096 - Similar circuits agree no more often than dissimilar ones: a strong link is unlikely, a weak one is untested
+
+D-095's test, run once from a71a6e5 with every input matching its pinned hash.
+The full output is `reports/d095_result.md`. Nothing was tuned after it.
+
+| | predicted | measured | |
+|---|---|---|---|
+| 1 | neither feature passes | genes r = -0.045, p = 0.74; connectivity r = -0.011, p = 0.94 | met |
+| 2 | no prediction of sign | both slightly negative, both inside the middle of their nulls | - |
+
+**Similar circuits agree with each other no more often than dissimilar ones.**
+By gene similarity, the more similar half of the compared pairs agree on 42.4% of
+their comparisons and the less similar half on 42.5%. By connectivity, 35.1%
+against 36.4%. The null intervals for r run from about -0.27 to +0.26 (genes) and
+-0.29 to +0.30 (connectivity), and the observed values sit near their centres.
+
+### Read by the rule fixed in D-095
+
+* **A strong link is unlikely, for either feature.** Had function followed
+  similarity as an 80-point agreement gradient, the test would have seen it 80-92%
+  of the time; had every circuit done what its similarity family does, 57-80% of
+  the time in five of the ten partitions that model such a link (2-37% in the
+  other five).
+* **A moderate link is not ruled out.** The test would have missed most of them
+  (power 0.05-0.36), and it can see nothing of the latent kind.
+* **No sensitivity row moves the result.** Across laboratory exclusion,
+  same-nucleus pairs, leaving out orexin or AgRP, both-no-change, rat records,
+  mutant backgrounds and the tier-C markers, every |r| is at most 0.12 and every
+  p above 0.4. The separability rule has nothing to apply to.
+* **Secondary, no decision:** on the 11 circuits both features place, genes
+  r = -0.196 (p = 0.24) and connectivity r = -0.106 (p = 0.56).
+
+### The correction of D-092 and D-094, no decision
+
+The original key reproduces both published results exactly, which checks the
+harness: genes 0.422 (p = 0.381), connectivity 0.427 (p = 0.057), and 0.418
+(p = 0.313) for both features on the shared circuits.
+
+| | original key | corrected key |
+|---|---|---|
+| genes, 15 circuits (D-092) | 0.422 on 102 findings, p = 0.381 | 0.440 on 75, p = 0.297 |
+| connectivity, 12 circuits (D-094) | 0.427 on 82, p = 0.057 | 0.400 on 65, p = 0.085 |
+| genes, 11 shared circuits | 0.418 on 79, p = 0.313 | 0.387 on 62, p = 0.397 |
+| connectivity, 11 shared circuits | 0.418 on 79, p = 0.313 | 0.387 on 62, p = 0.397 |
+
+Corrected, connectivity again sits exactly at its null's 95th percentile (0.400),
+as D-094's did, and that null rejects 6-7% of the time at a nominal 5% (D-095).
+On the shared circuits genes and connectivity are still identical to three
+decimals under the corrected key. **D-094's diagnosis holds on the correct key:
+on these circuits the nearest-neighbour answer is set by which circuits were
+measured, not by how similar they are.**
+
+### What this establishes
+
+* **On this corpus, neither blind gene similarity nor projection similarity shows
+  any sign that similar hypothalamic circuits do the same things to the body.**
+  Two designs, two keys, two features: every result is null.
+* **The binding constraint is the data, now with a measured target.** 73 and 59
+  comparisons, a median of one or two per pair, most of them involving orexin or
+  AgRP. D-095's simulation says the 12 circuits already mapped by connectivity,
+  each measured on the same five readouts, would give this test 0.74-0.87 power
+  under the 80% family model in five of six partitions.
+
+### What it does not establish
+
+* **That similarity carries no information about function.** A moderate link
+  would usually be missed at this size.
+* **That function cannot be predicted from data the model may see.** Overall
+  similarity is one hypothesis. Specific genes or specific projection targets
+  predicting specific readouts are different hypotheses, and none of them is
+  tested here.
