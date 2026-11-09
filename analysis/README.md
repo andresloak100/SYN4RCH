@@ -9,6 +9,8 @@ these scripts may use numpy, scipy and anndata (D-001 binds `schema/` and `qc/`)
 | `extract_hypomap_means.py` | per-cell-type mean expression from HypoMap | D-091 input |
 | `fetch_connectivity.py` | Allen tracing experiments matched to circuits, projection densities | D-093 input |
 | `d095_pair_test.py` | the pair-level test, its power (`reports/d095_power.md`), and the D-092 / D-094 correction | D-095 |
+| `panel_harvest.py` | open-access papers per circuit and readout (`reports/panel_harvest.md`) | D-097 |
+| `panel_select.py` | the panel's five readouts and the papers to read (`reports/panel_selection.md`) | D-097 |
 
 Raw inputs live under `data/raw/`, which is not version controlled; each script
 says what it reads and caches.
