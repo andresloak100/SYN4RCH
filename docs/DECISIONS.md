@@ -7563,3 +7563,177 @@ tracing experiments from 58 genetic lines -- so the question can be answered the
 If it can, mouse wiring may be transferred to the human cell types that match, and
 labelled as such. If it cannot, human wiring stays unknown until it is measured. The
 test is pre-registered separately, with its power measured first.
+
+
+## D-099 - Pre-registration: the gate for predicting hypothalamic wiring -- does molecular identity carry connectivity beyond location?
+
+**Written before the test runs.** The code is `analysis/d099_gene_wiring.py`,
+committed before this entry in 6398fcb. Its `power` mode produced the numbers below
+(`reports/d099_power.md`) from the real gene fingerprints, pair structure and injection
+sites with synthetic wiring, and never relates genes to the measured wiring. `run` is
+executed once. It refuses to start unless every input matches the SHA-256 pinned in the
+script and the code is unmodified, and it prints the commit it ran from.
+
+### Why this question
+
+D-098 set the goal: a predictive reconstruction of the hypothalamus by cell type, in
+which wiring that has not been traced is predicted and labelled as such. A model that
+predicts wiring from molecular identity is only worth building if molecular identity
+carries information about wiring that location does not already supply. This test is
+that gate. Two results set the precedent. Timonidis, Bakker and Tiesinga (Neuroinformatics
+2020, doi:10.1007/s12021-020-09471-x) predicted cell-class-specific projections from the
+gene expression at each injection site, a median R-squared of 0.54 -- but expression at an
+injection site mostly encodes where the injection is, so that result does not separate
+genes from location. Sorensen, Gouwens and colleagues (preprint 2023,
+doi:10.1101/2023.11.25.568393; reported in Nature, 2026) found that a cortical neuron's
+transcriptome together with its location predicts its targets. The question here is the
+hypothalamus, at the level of cell-type populations, with location taken out.
+
+### The data -- both sides measured, neither from a paper
+
+* **Molecular identity:** D-091's blind fingerprints over HypoMap's 465 cell types, the
+  2,000 most variable genes, z-scored.
+* **Connectivity:** the Allen Mouse Brain Connectivity Atlas. Of 258 experiments with a
+  hypothalamic primary injection, 44 are wild type (no cell type) and 214 use a Cre line.
+* **A traced population** is (the gene its Cre line drives, the HypoMap region its
+  injection sits in), placed in HypoMap by D-065's `assign_population` with D-065's own
+  candidate definitions; `check-d065` reproduces all 23 comparable D-065 entries exactly.
+  For a Cre population the driver is the only declared marker. An Allen injection
+  structure is matched to a HypoMap region only where the match is unambiguous.
+* **73 populations from 117 experiments** (`reports/d099_populations.md`). Of the 214 Cre
+  experiments, 61 have a driver D-065's marker floor refuses to place, 35 are injected
+  outside any HypoMap region (19 in the posterior hypothalamus), and 1 names a driver
+  HypoMap lacks. Of the 73, 11 are placed at tier A, 8 at B, 54 at C.
+* **Wiring fingerprint:** the mean over a population's experiments of log(1 + projection
+  density) in the 663 grey-matter structures outside the hypothalamus -- no hypothalamic
+  structure, none of its ancestors, no fibre tract or ventricle -- unit-normalised.
+
+### Who is compared
+
+Two populations are compared only if they sit in the same HypoMap region and do not label
+the same cells: they share no placed cell type (D-066), and neither driver reaches a
+quarter of its own level in the other's placed cell types. **Of 225 same-region pairs, 86
+are eligible**: 98 share a placed cell type and 41 more are excluded by cross-expression.
+By region: mammillary 19, arcuate 17, PVH 17, LHA 10, MPO 6, VMH 5, zona incerta 5, DMH 3,
+AHN 2, SCH 1, LPO 1.
+
+### The two decisions
+
+**Decision 1 -- molecular identity predicts wiring within a region, location partialled
+out.** The correlation between gene similarity and wiring similarity (both cosine) over
+the eligible pairs, after both are centred within region and residualised on five location
+covariates: the closeness of the two injection sites (folded onto one hemisphere), Gaussian
+proximities at 250, 500 and 1,000 um, and whether they share an Allen injection structure.
+Null: gene labels shuffled among the populations of each region, 10,000 times (seed
+20261110). Every same-region pair is a candidate and, under each shuffle, a pair is scored
+if its shuffled populations do not overlap, so every shuffle scores the same 86 pairs.
+**Pass: one-sided p < 0.05.** One-sided because the hypothesis is directional -- similar
+cell types wire alike -- with prior evidence in cortex.
+
+**Decision 2 -- the transfer rule beats chance.** The rule a reconstruction would use:
+copy the wiring of the most gene-similar eligible population in the same region. Statistic:
+the mean, over populations with two or more eligible partners, of that neighbour's wiring
+cosine minus the mean cosine to all partners (tied neighbours averaged). Same null.
+**Transfer is supported only if decision 1 passes and this has one-sided p < 0.05.**
+
+### Size and power, measured before running
+
+Each model generates synthetic wiring with a regional component and noise, plus the stated
+term, and is put through the identical test 400 times:
+
+| synthetic wiring | mean adjusted r | decision 1 passes | transfer supported |
+|---|---|---|---|
+| no link | +0.01 | 0.060 | 0.020 |
+| genes, weak | +0.05 | 0.107 | 0.030 |
+| genes, moderate | +0.18 | 0.395 | 0.200 |
+| genes, strong | +0.38 | 0.880 | 0.650 |
+| genes, very strong | +0.52 | 0.993 | 0.882 |
+| position only, as strong as the real wiring's | | 0.085 | 0.045 |
+| position only, much stronger (38% explained) | +0.07 | 0.115 | 0.102 |
+| shared cells only | -0.04 | 0.025 | 0.010 |
+| a true link at the level of cell types, seen through the placements | +0.11 to +0.16 | 0.14-0.27 | 0.09-0.20 |
+
+On 300 draws of random wiring the three statistics reject at 0.060, 0.057 and 0.047 at a
+nominal 0.05. Within-region position is not small: in the real wiring, measured without the
+genes, location explains 14.7% of within-region wiring similarity (r +0.32 with injection
+closeness). Without the adjustment, position alone at the stronger setting (38% explained)
+would pass 58% of the time; with it, 12%.
+
+### The interpretation, fixed now
+
+* **Transfer supported (both decisions pass):** within a region, the Cre-defined
+  populations as placed whose genes are more similar wire more alike beyond what position
+  explains, and copying the wiring of the nearest molecular neighbour beats copying a random
+  one. The reconstruction model is worth building. This is a similarity relation between
+  populations, not a cell-by-cell wiring map.
+* **Decision 1 alone:** an association that position alone at the real strength would
+  produce 8.5% of the time, with no evidence that the transfer rule works. Reported as an
+  association; transfer not shown.
+* **Neither:** no strong link between the placed fingerprints and wiring. Because placement
+  blurs a true cell-level link to r of about 0.15 at most, a null is weak evidence against
+  such a link. The consequence is "transfer not shown", and human wiring stays unknown until
+  measured; this entry adopts no location-based substitute.
+
+### Secondary rows, no decision
+
+s1 genes over all pairs, location included; s2 location alone against wiring and against
+genes; s4 tier A and B only, relabelled among A and B; s5 all targets including the
+hypothalamus; s6 decision 1 with each region left out; s7 decision 1 without the location
+adjustment; and a per-region diagnostic. **If decision 1 passes and loses its sign or more
+than half its size when any one region is left out, the script reports it as not separable
+from that region.**
+
+### Already seen
+
+* D-095's tables printed gene and distal-connectivity similarities for four of these 86
+  pairs' circuits, from close but different fingerprints: Agrp-Pomc (genes +0.544,
+  connectivity +0.651), Agrp-Kiss1 (+0.375, +0.519), Hcrt-Pmch (+0.257, +0.705) and
+  Hcrt-Slc32a1 (+0.254 for D-065's lha_vgat; connectivity +0.755).
+* The reviewers measured, from genes and injection sites only, that gene similarity tracks
+  injection position within a region (r about +0.19 linear, stronger with kernels), and that
+  mammillary populations injected in the same Allen substructure are more alike. This
+  motivated the location adjustment.
+* The power run measured, from wiring and injection sites only, that location explains 14.7%
+  of within-region wiring similarity. A dry run printed that across all pairs, closer
+  populations have more similar genes (r +0.27).
+
+### Prediction
+
+**Both decisions pass, with an adjusted r between +0.15 and +0.45.** Hypothalamic cell
+identity is set by transcription factors that also set projection programmes, and the
+cortical result points the same way. The prediction would fail cleanly if decision 1's r is
+near zero or negative.
+
+### Named risks
+
+* **Placement.** 54 of 73 populations are tier C, and a Cre line labels every cell
+  expressing its driver, which can span several cell types. This blurs a true link (the last
+  row of the power table).
+* **Position.** Five covariates do not capture every way wiring can follow position; at the
+  real strength the residual false-pass rate of decision 1 is 8.5%.
+* **Diffuse similarity.** In some regions (the MPO) gene similarity is high for every pair
+  and not driven by identity genes; the per-region diagnostic shows each region's share.
+* **Mouse only.** A pass supports the reconstruction model; transfer to human cell types needs
+  the human-mouse match, a separate step with its own test.
+
+### What the review changed
+
+One review round, two reviewers who could not run the test. All findings were addressed:
+* **Location leaked into the pairs** (a blocker): the decision is now location-adjusted, and
+  the unadjusted version is s7.
+* **The "distal" filter removed no ancestor** (a blocker): the ontology stores a path as
+  acronyms and the filter compared ids. Fixed (663 structures, not 666) and asserted. **D-095
+  carried the same defect:** its "ancestors removed: Spearman 1.000" compared identical
+  features. D-095's primary was unaffected, since it used D-093's feature with ancestors by
+  design, but that sentence is withdrawn.
+* **The null was conservative** (size 0.02): eligibility now moves with the shuffled labels.
+* **Region share differed from D-065:** now D-065's definition, verified against the
+  committed mapping.
+* **Cre lines sharing cells without sharing a placed cell type were compared:** now excluded
+  by cross-expression.
+* **"Transfer supported" had no fixed criterion:** it is now decision 2.
+* **Smaller:** a hyphenated driver (Nkx2-1) was dropped; s4's null drew tier C fingerprints;
+  the separability verdict is now printed by the script; counts now use one denominator; a
+  fourth already-seen pair is listed.
+The fixes were checked by the size and power runs above and by the random-wiring calibration
+rather than by a second review.
