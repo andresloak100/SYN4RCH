@@ -6738,3 +6738,103 @@ before I measured four candidate mechanisms to arrive at it. After
 `last_author`, the D-053 report's id map and the generalisation report's own
 prose -- the rule I named in D-088 would have saved the four measurements if I
 had applied it to docstrings as well as to reports.
+
+
+## D-091 - Pre-registration: a model that never saw a paper, validated against papers
+
+**Written before the validation runs.** The design is the user's, stated directly:
+the model learns from data alone and *"NOT seeing the public papers — we will
+validate with them: prof X discovered this, and if our model without seeing it
+found it, it means it works."* The papers are the validation set, never the
+training signal.
+
+### Why papers cannot be the training signal
+
+They encode what people chose to study, not what exists. **One circuit,
+`arc_agrp`, is 189 of 722 records** — a quarter of all knowledge in the corpus
+about one cell type, because that is what got funded. 16 circuits have any
+record; HypoMap has 465 cell types. A model trained on the records learns
+AgRP's biology and calls it general.
+
+### The model, and the evidence that it can tell cell types apart
+
+HypoMap: 384,925 cells, 51,216 genes, 465 cell types at its finest level.
+Every cell type gets a fingerprint — its mean expression — whether anyone
+studied it or not.
+
+The genes are chosen **by the data**: the 2,000 most variable across the 465 cell
+types, mitochondrial and ribosomal genes dropped first as technical noise.
+Measured before writing this, on the same rule D-067 used (a nearest neighbour
+counts only if it holds in at least 95% of 200 gene resamples):
+
+| panel | genes | exact neighbour | medium (66 groups) | coarse (25) |
+|---|---|---|---|---|
+| hand-picked by me | 50 | 3% | 24% | 38% |
+| chosen by the data | 50 | 11% | 41% | 53% |
+| **chosen by the data** | **2,000** | **60%** | **72%** | **83%** |
+
+**At matched size the data-chosen genes beat the hand-picked ones at every
+level.** I had picked receptors, neuropeptides and transmitter genes because
+papers made them famous; only 11 of those 50 reach the data's own top 500. So
+hand-picking was not merely a leak of prior knowledge — it was worse. The user's
+insistence on blindness was right on the merits as well as on principle.
+
+**This shows the fingerprint can say "this cell type is like that one". It does
+not show that "like that one" means "does the same thing to the body".** That
+is the claim under test.
+
+### The validation
+
+A paper's circuit is located in HypoMap by D-065's mapping, which is tier B and
+marked `never_a_training_target`. That is the only point at which a paper's
+circuit name meets the atlas, and it happens at validation time only: to look up
+where prof X's circuit sits so its finding can be checked.
+
+15 of the 16 circuits holding records have a location, carrying 468 of 490
+usable records. `vmh_sf1` (22 records) has none and is lost.
+
+For each circuit P, held out entirely:
+
+1. Its blind fingerprint is the mean over its HypoMap cell types.
+2. Every other circuit Q is ranked by blind similarity to P.
+3. **Q is excluded if it shares any cell type with P** (D-066). Three pairs do,
+   all through `pvh_sim1`, whose marker covers most of the PVH:
+   `pvh_trh`, `pvh_oxt`, `lha_vglut2`.
+4. **Q's records are excluded if they come from any study that also reported P**,
+   so a paper studying two circuits cannot have one half predict the other.
+5. For each finding of P — a (readout, activate|inhibit) cell with a direction —
+   the prediction is the direction the nearest Q with data on that cell reports.
+6. A cell where P's own records tie has no defined truth and is skipped, not
+   scored.
+
+The unit is the finding, not the record, so AgRP's 186 records count as its
+findings and not 186 times.
+
+### What it must beat
+
+* **Random neighbours.** The same procedure with the similarity ranking
+  shuffled, 1,000 times. This is the decisive null: if the blind fingerprint
+  carries functional information, its neighbours must predict better than
+  arbitrary ones.
+* **The global majority** for that readout and direction of perturbation, across
+  the other circuits.
+
+### Predictions
+
+1. **Coverage is limited.** Many findings will have no other circuit with data
+   on the same readout, and abstain.
+2. **The blind fingerprint beats random neighbours**: observed accuracy above the
+   95th percentile of the 1,000-shuffle null.
+3. **Accuracy is capped by the labels.** 73% of records sit in a cell where
+   studies disagree, 44 of 65 such cells unexplained by the recorded conditions.
+4. **The one I expect to fail: beating the global majority.** Most readouts move
+   one dominant way under activation, so "guess the common direction" is strong,
+   and a nearest neighbour in gene space has to beat it, not merely beat chance.
+
+### Named risks
+
+* Three of the fifteen mappings are tier C -- `pvh_sim1`, `lha_vgat`,
+  `lha_vglut2` -- broad markers spanning 15 to 17 cell types each. Their
+  fingerprints average over heterogeneous cells and may sit near everything.
+* 15 circuits is a small validation set. A pass is evidence; it is not proof, and
+  the confidence interval will be wide.
