@@ -7923,3 +7923,55 @@ signal. The transfer gains (+0.021, -0.009) are not tested.
 The same question on data where genes and projection targets are measured **in the same
 neurons**, where a learned conversion can be trained and graded on thousands of examples.
 The search for that data is under way.
+
+## D-103 - What the mouse hypothalamus measures together, the conversions it allows, and two corrections
+
+The search D-102 announced is done (`reports/conversion_map.md`): five independent searches
+and a final pass that merged them and re-opened the key records. Nothing was tested.
+
+### What exists
+
+* **Identity and projection target measured in the same neurons, with a choice between
+  targets:** Epi-retro-seq (Zhou et al. 2023; 1,538 hypothalamic neurons, methylome, one of
+  10 targets, an Allen subclass per cell), Kim et al. 2019 (1,341 VMHvl cells, RNA, one of 4
+  targets), Rossi et al. 2021 (1,852 LHA cells, RNA, LHb or VTA), Li et al. 2026 (PVH, RNA,
+  spinal cord or parabrachial), Lewis et al. 2020 (146 PVN oxytocin cells) and Winter et al.
+  2023 (cervical or lumbar cord). **Every cell has exactly one target**: no hypothalamic
+  neuron has a measured vector of several targets alongside its genes.
+* **Complete single-neuron axons with a genetic tag:** Jiao et al. 2025, 7,180 neurons from
+  16 peptidergic populations, soma positions in CCFv3. No licence is stated.
+* **Nothing at scale measures a full transcriptome and a complete axon in the same
+  hypothalamic neuron.** The reconstruction has to chain conversions across that gap.
+
+### The conversions, in order
+
+1. **Epi-retro-seq: D-099's question with identity and target from the same nucleus.** The
+   Allen subclass on each cell converts to an RNA fingerprint and a 3D position through the
+   Allen atlas; the label table gives each subclass's projection profile over 10 targets;
+   D-099's statistic, location partialled. This removes the Cre-line matching that limited
+   D-100.
+2. **Kim 2019: a learned per-cell classifier inside one nucleus**, graded on held-out animals.
+3. **Jiao 2025: does the genetic tag add to exact soma position**, neuron by neuron.
+4. **HypoMap's 465 types to 3D position**, the spatial base of the map.
+
+Each is pre-registered before its projection labels enter an analysis. Seen so far: the
+Epi-retro-seq label table's counts per target and per subclass, and the paper's own
+published enrichment results. No statistic relating genes to projections has been computed
+on any of these datasets.
+
+### Corrections
+
+* **D-099 misdescribed Timonidis et al. 2020.** It says they predicted projections "from the
+  gene expression at each injection site". They predicted each injection's projection
+  strength into each of 428 target structures from that target's own bulk expression
+  profile, with folds over target structures that were not spatially blocked, and no
+  location baseline. D-099's conclusion stands for a different reason: a target's expression
+  profile also encodes where the target is, and nothing in the design separates the two.
+  The result supports the relational idea (a target's genes), not a cell's own genes
+  predicting its wiring. D-099's text is left as written; this entry corrects it.
+* **HypoMap resolves PVH coarsely.** Li et al. 2026 integrated HypoMap's 5,119 Sim1+ "PVH"
+  neurons with their own: seven Sim1+ clusters were almost entirely their cells, and many
+  HypoMap PVH cells express peri-PVH markers. D-099 placed PVH populations on HypoMap types,
+  so those placements are coarser than PVH's real subtypes.
+
+D-097's panel stays paused.
