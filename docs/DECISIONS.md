@@ -7884,3 +7884,42 @@ support and the learned version is worth building on same-neuron data first.
 
 Not separately reviewed: the test is D-099's, which was; the new code is the programme
 representation and the Holm family, checked by the size runs above and a dry run.
+
+
+## D-102 - Neither gene programme reveals a link to wiring; the bottleneck is the data, three times over
+
+D-101's test, run once from 51aa9e6 with every input matching its pinned hash
+(`reports/d101_result.md`). Nothing was tuned after it.
+
+| programme | predicted | measured | |
+|---|---|---|---|
+| axon guidance + cell-cell adhesion | no pass | r = -0.057, p = 0.65, Holm 1.00 | met |
+| transcription factors | no pass | r = -0.090, p = 0.79, Holm 1.00 | met |
+
+**Neither programme passes, and both point slightly negative.** Without the location
+adjustment their within-region correlations are +0.039 and +0.033, against +0.213 for the
+all-gene fingerprint (D-100). Narrowing the genes to the biologically wiring-related ones
+brings out less of a link, not more: on this data the conversion does not uncover a buried
+signal. The transfer gains (+0.021, -0.009) are not tested.
+
+### What this establishes
+
+* **Three views of the genes -- all of them, the guidance and adhesion programme, the
+  transcription-factor programme -- show no link to wiring beyond location**, on Cre-defined
+  populations placed in HypoMap.
+* **The likeliest limit is the data, not the choice of genes.** A Cre line labels a mixture
+  of cell types and an injection's projections average over that mixture; any gene view is
+  compared against the same blurred wiring.
+
+### What it does not establish
+
+* **That a learned conversion would fail.** It was not run: on 73 populations no null for
+  it held its size (D-101). It needs data with many more examples.
+* **That genes do not shape wiring.** The cortical results stand, and this test is weak
+  against a cell-level link (D-100).
+
+### What comes next
+
+The same question on data where genes and projection targets are measured **in the same
+neurons**, where a learned conversion can be trained and graded on thousands of examples.
+The search for that data is under way.
