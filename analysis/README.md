@@ -15,6 +15,7 @@ these scripts may use numpy, scipy and anndata (D-001 binds `schema/` and `qc/`)
 | `d099_gene_wiring.py` | traced cell types placed in HypoMap, and the gene-to-wiring gate test (`reports/d099_*.md`) | D-099 |
 | `d101_conversions.py` | gene programmes from GO; an abandoned held-out-prediction design, kept for the record | D-101 |
 | `d101_programmes.py` | D-099's test on the guidance/adhesion and transcription-factor programmes (`reports/d101_power.md`) | D-101 |
+| `d105_benchmark.py` | benchmark of frozen gene models trained outside the hypothalamus, scored once on 19 held-out hypothalamic subclasses (`reports/d105_*.md`; input from `fetch_epiretro.py`) | D-105 |
 
 Raw inputs live under `data/raw/`, which is not version controlled; each script
 says what it reads and caches.
