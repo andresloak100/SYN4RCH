@@ -35,7 +35,7 @@ electrophysiology.
 
 | dataset | measured together | neurons | access |
 |---|---|---|---|
-| Jiao et al. 2025, Nat Neurosci, doi:10.1038/s41593-025-01919-0 | T (15 Cre lines plus an orexin promoter virus) + soma L in CCFv3 + A | 7,180 from 166 male mice | digital-brain.cn portal (single SWC files without login); BSDC doi:10.12412/BSDC.1667278800.20003, 6.2 GB; cable-length matrix 13 MB. **No licence stated**: the BSDC licence field is empty and asks only for attribution (one search's "CC BY-NC-ND 4.0" was wrong); the NeuroXiv mirror is CC BY-NC 4.0 |
+| Jiao et al. 2025, Nat Neurosci, doi:10.1038/s41593-025-01919-0 | T (15 Cre lines plus an orexin promoter virus) + soma L in CCFv3 + A | 7,180 from 166 male mice | digital-brain.cn portal (single SWC files without login); BSDC doi:10.12412/BSDC.1667278800.20003, 6.2 GB; cable-length matrix 13 MB. **Licences differ by source**: the portal shows only "Copyright © 2023 Digital Brain. All Rights Reserved."; the BSDC record's details panel shows "License Agreement CC BY-NC-ND 4.0" (checked 2026-11-10, `reports/swc_access.md`; an earlier note here that the field was empty was wrong); the 18 Jiao SWCs in Zenodo 14588094 are CC BY 4.0; the NeuroXiv mirror is CC BY-NC 4.0 |
 | Li et al. 2024, Neuron, doi:10.1016/j.neuron.2023.12.022 | T (Oxt) + L + A; median eminence only (177) or widespread (87) | 264 from 3 brains; 106 are also in Jiao | same portal; none stated |
 | Janelia MouseLight | L + A (9 with a Cre label) | 77 in classic HY (97 with any HY soma) | NeuronBrowser; 2024 figshare items CC BY 4.0, 2017-2019 items CC BY-NC 4.0 |
 
