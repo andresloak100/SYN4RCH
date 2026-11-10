@@ -8264,3 +8264,81 @@ confidence. **Decision 2: not supported.**
 * **Position.** The surrogates assume position acts like one of the family's fields; the
   power table checks fields outside the family.
 * **One pooled dissection, one target per neuron, mouse only.**
+
+## D-105 - Pre-registration: do gene models learned outside the hypothalamus predict where hypothalamic cell types project?
+
+**Written before the test runs.** The code is `analysis/d105_benchmark.py`, committed before this entry in 705a9ed. Every model was trained and its predictions for the hypothalamus were saved (`data/interim/d105_predictions.npz`, SHA-256 77d4ddd7...) before any hypothalamic projection was read. `run` is executed once. It refuses unless the script is the committed version, the tree is clean and every input and frozen file matches the SHA-256 pinned in the script, and it writes a marker before it opens the hypothalamic rows.
+
+### Why this test
+
+D-100 and D-102 asked whether gene similarity tracks wiring similarity among hypothalamic populations and found nothing beyond location. D-104 asks the same question on Epi-retro-seq. This entry asks a different one, the "learned conversion" the project is built around: **can a model that learns the gene-to-projection rule in other brain regions predict the projections of hypothalamic cell types it has never seen?** Nothing is hand-picked: the models take all genes, and every choice was made on non-hypothalamic data.
+
+### Co-registration with D-104
+
+D-104 and D-105 are co-registered tests on the same 19 hypothalamic subclasses, run once and back to back after both entries are committed. Their primary decisions (D-104 Decision 1; D-105's benchmark comparison) are corrected together by Holm at family-wise alpha 0.05: the smaller one-sided p must be below 0.025, and the other then below 0.05. D-104 Decision 2 stays gated on D-104 Decision 1.
+
+### The data
+
+* **Training projections:** Zhou et al. 2023, Supplementary Table 2, every source except the hypothalamus: 27 sources in 7 divisions, 187 source-subclass units (at least 20 labelled neurons), with the 19 test subclasses removed from every source. Hypothalamic rows are dropped as the sheet is read.
+* **Test projections:** the hypothalamic neurons passing the authors' target filter, in the 19 subclasses of D-104 (at least 20 labelled neurons, at least half their MERFISH cells in the hypothalamus), over the 7 targets labelled in both sexes (PFC, MOB, STR, TH, SC, pons, medulla): 14 experiments.
+* **Genes:** Allen whole-brain 10x cluster means (MapMyCells reference), averaged into subclasses. Other mice's RNA.
+* **Position:** Allen MERFISH C57BL6J-638850 centroids in CCF.
+* **Profile:** a unit's log share of each target's labelled neurons (0.5 added), averaged over the two sexes' experiments, double-centred over units and targets.
+
+### The models, frozen
+
+All trained on all 27 non-hypothalamic sources, one coefficient set per target shared across sources:
+
+* **D (primary):** whole-brain PCA embedding (32 components of the Allen cluster means across the brain, learned without projection data) and a ridge head, lambda 0.3.
+* **O2:** D with a spatial target-kernel penalty, Kt = 0.5 I + 0.5 exp(-d / 2 mm).
+* **K:** untuned linear-kernel ridge on all principal components of the 2,000 most variable genes, lambda 1.
+* **B:** ridge on 10 gene principal components, lambda 1000 (D-104's s11 outside rule).
+* **A:** location only: the double-centred -log distance from a unit's centroid to each target's centroid, one shared coefficient.
+* **T1 (exploratory):** a masked autoencoder fine-tuned with a rank-4 adapter, average of six seeds (20-25).
+
+Rehearsal, leaving out each non-hypothalamic division in turn (`reports/d105_rehearsal.md`), mean r_unit over 7 divisions / over the 4 subcortical divisions: **D +0.228 / +0.161**, O2 +0.247 / +0.177, K +0.176 / +0.087, B +0.161 / +0.080, A +0.065 / +0.142, T1 +0.280 / +0.211. D's per-division values: amygdala-pallidum +0.22, hindbrain -0.01, hippocampal +0.38, isocortex +0.31, midbrain +0.11, olfactory +0.27, thalamus +0.33.
+
+How D was chosen: two rounds of rehearsal tried about 25 variants (ridge, reduced-rank regression, sparse models, neural bottlenecks, pretrained autoencoders, contrastive and adapter variants, fine-tuning, molecular-spatial fusion, alternative objectives, ensembles), each audited by two independent reviewers. No variant beat D by more than the noise of a 7-division mean (about 0.06-0.07) after correction for the number tried. D is deterministic and was the best-supported model; the others are kept as secondary rows.
+
+### Decision 1 (the only decision: the benchmark comparison named in the co-registration)
+
+**r_unit of D on the 19 units:** the weighted correlation between D's predicted and the measured profile, both double-centred and unit-normalised, unit weight sqrt(labelled neurons). **Null:** D's predicted rows permuted among units within five fixed spatial strata (Ward clusters of the 19 centroids, 3-4 units each), so a prediction is only swapped with a nearby unit's; 10,000 permutations, seed 20261110. **Pass:** one-sided p below the Holm threshold above, **and** r_D > max(r_A, 0).
+
+### Size and power, measured before running (`reports/d105_power.md`)
+
+Synthetic hypothalamic data with the real layout and 958 labelled neurons; every dataset scored exactly as `run` does.
+
+* Size at no true link: 0.017-0.027 at p < 0.025, with independent and spatially smooth truths (0.25-2 mm).
+* Pass rate at p < 0.025 by true r_unit: about 0.09 at 0.10, 0.14 at 0.14, 0.22-0.28 at 0.18, 0.29-0.41 at 0.23, 0.45-0.53 at 0.27, 0.64-0.79 at 0.37.
+* **Power is low.** At the rehearsal's subcortical level (about +0.15) a true link is found about one time in seven; a null result is weak evidence.
+
+### Readings, fixed now
+
+* **PASS:** models trained outside the hypothalamus predict hypothalamic cell types' projections, beyond location. The learned gene-to-projection conversion transfers to the hypothalamus and is worth building on.
+* If not PASS:
+  * **INSUFFICIENT EVIDENCE:** the noise ceiling (between-sex reliability of the measured profiles, computed without genes) is below 0.6, or the 95% interval of r_D (bootstrap over units, t multiplier) contains 0.38. The test could not have seen a moderate link.
+  * **NEGATIVE:** the ceiling is at least 0.8 and the interval's upper bound is below 0.25. Moderate transfer is unlikely.
+  * **NOT SHOWN:** anything else.
+
+### Secondary rows, no decision
+
+r_unit and stratum-permutation p for O2, K, B, A and T1 (T1's single seeds too); max-T over D, O2, K and B (its size can reach 0.06 under smooth truths); D's semi-partial correlation after removing A's prediction; top-target accuracy against chance 1/7; per-unit cosines. A's p is not calibrated under spatially smooth truths; only r_A enters the decision. A comparison between models cannot be decided at this size and is reported descriptively.
+
+### Already seen
+
+* No statistic relating any gene model's prediction to the measured hypothalamic projections has been computed.
+* From the hypothalamic label table, without genes: neuron counts per subclass and experiment (958 over the 14 primary experiments), sexes, methylation clusters (D-103, D-104's `tables`).
+* From D-104's `power`, without genes: the measured profiles' size (2.03); the share of their block-centred similarity D-104's 14 position covariates explain (21.0%); and how far the two sexes agree: r = 0.509 between female-only and male-only centred log shares, r = 0.267 on pair similarities (Spearman-Brown 0.421), fitting experiment noise tau 0.45 (sigma 2.27) in D-104's full power run. These were read by the D-104 session. D-105's reading thresholds (ceiling 0.6 and 0.8, interval bounds 0.38 and 0.25) were set by the protocol rehearsal on non-hypothalamic data before they were reported to this session. They bear on the readings: Spearman-Brown on r = 0.509 gives about 0.67, and D-105's ceiling uses a related but different statistic (the r_unit form over the 19 units' female-only and male-only profiles). If the ceiling lands near 0.67, the NEGATIVE reading (ceiling at least 0.8) is unlikely to be available, and a non-pass will most likely read NOT SHOWN or INSUFFICIENT EVIDENCE.
+* Gene expression and positions of the 19 subclasses (used, as allowed, for the frozen gene inputs, model A and the strata).
+
+### Prediction
+
+**D: r_unit about +0.15, plausible range -0.05 to +0.35; not a pass** (power about 0.15 at that level). The most likely reading is NOT SHOWN or INSUFFICIENT EVIDENCE. The prediction fails if D passes, or if r_D is below -0.10.
+
+### Named risks
+
+* **Transfer gap.** The hypothalamus is a new division with its own cell types; in rehearsal one division in seven (hindbrain) was not predicted at all.
+* **Genes by proxy.** Subclass-average RNA from other mice; methylation decided each neuron's subclass.
+* **Few units.** 19 subclasses; power as above.
+* **Selection.** D was chosen among about 25 variants on the same 7 divisions; its rehearsal score is optimistic, which is why the prediction is lower.
+* **One target per neuron, mouse only, one dissection** (as in D-104).
