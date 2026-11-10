@@ -7975,3 +7975,292 @@ on any of these datasets.
   so those placements are coarser than PVH's real subtypes.
 
 D-097's panel stays paused.
+
+## D-104 - Pre-registration: do a hypothalamic cell type's genes predict where its neurons project? D-099's question on same-nucleus data
+
+**Written before the test runs.** The code is `analysis/d104_epiretro.py` (inputs:
+`analysis/fetch_epiretro.py`; rehearsal and the frozen outside rule: `analysis/d104_rehearsal.py`),
+committed before this entry in 7700132. Its `power` mode produced the numbers below
+(`reports/d104_power.md`). It used the real gene fingerprints, positions and experiment
+totals, with synthetic projection data calibrated to the measured profiles read without
+genes. `dry` put one synthetic count table through the whole run.
+Neither relates genes to the measured hypothalamic projections. `run` is executed once. It
+refuses unless every input matches the SHA-256 pinned in the script and the code is
+committed, and it prints the commit it ran from.
+
+### Co-registration with D-105
+
+D-104 and D-105 are co-registered tests on the same 19 hypothalamic subclasses, run once and back to back after both entries are committed. Their primary decisions (D-104 Decision 1; D-105's benchmark comparison) are corrected together by Holm at family-wise alpha 0.05: the smaller one-sided p must be below 0.025, and the other then below 0.05. D-104 Decision 2 stays gated on D-104 Decision 1.
+
+### Why this test
+
+D-100 and D-102 found no link between genes and wiring beyond location, on Cre-line
+populations placed in HypoMap. They named the likely limit: a Cre line labels a mixture of
+cell types, so its projections are an average. D-103 found Epi-retro-seq (Zhou et al. 2023).
+There, each hypothalamic nucleus was labelled from one injected target, and its cell type was
+read from the same nucleus's methylome, so the matching step is gone. The question is
+D-099's: **do cell types whose genes are more alike send their neurons to more alike sets of
+targets, beyond what their positions explain?** D-105 asks the complementary question, with
+gene models trained outside the hypothalamus.
+
+### The data: three measured sources, none from a paper's conclusions
+
+* **Projections and cell type:** Zhou et al. 2023, Supplementary Table 2 (CC BY 4.0). These
+  are the 1,538 hypothalamic neurons the authors kept: non-neuronal nuclei removed and
+  experiments with fewer than 20 neurons dropped (their QC step 3). Their off-target filter
+  (QC step 4) was applied to isocortical sources only. The neurons come from 17 experiments,
+  10 targets each injected in its own mice, 7 of them labelled in both sexes. Each neuron's
+  subclass is the label of its methylation co-cluster (86 co-clusters, one Allen subclass
+  each), assigned by co-clustering with Allen 10x RNA.
+* **Genes:** Allen whole-brain 10x taxonomy cluster means (the MapMyCells reference),
+  averaged into each subclass weighted by its clusters' cells. The fingerprint uses the 2,000
+  most variable genes across the compared subclasses, z-scored. Mitochondrial,
+  ribosomal-protein and sex-linked genes (Xist, Tsix, Ddx3y, Eif2s3y, Uty, Kdm5d) are excluded.
+  This is the subclass's RNA in other mice, not these neurons' own RNA.
+* **Position:** the Allen MERFISH brain C57BL6J-638850, cells registered to CCFv3. A
+  subclass's position is its MERFISH cells inside the hypothalamus, folded across the
+  midline. Allen data are CC BY-NC 4.0: analysed here, not redistributed.
+
+### What is compared
+
+* **Units:** Allen subclasses with at least 20 labelled neurons over all 17 experiments and
+  at least half their MERFISH cells inside the CCF hypothalamus. That gives **19 subclasses,
+  1,112 neurons, 958 of them in the 14 primary experiments.** Three subclasses with 20 or more
+  neurons are left out because they are not hypothalamic by MERFISH: RE-Xi Nox4 Glut (139
+  neurons, 4% of its MERFISH cells in HY), RT-ZI Gnb3 Gaba (43, 3%) and NDB-SI-MA-STRv Lhx8
+  Gaba (27, 7%). They enter s7.
+* **Projection profile:** a subclass's share of each experiment's labelled neurons (0.5
+  added to every count), averaged over the target's experiments so the sexes weigh equally,
+  logged, then centred over targets and over subclasses. This removes a subclass's abundance
+  and a target's labelling depth. Primary targets: the 7 labelled in both sexes (PFC, MOB,
+  STR, TH, SC, pons, medulla). The three single-sex targets (AMY, PAL, VTA) would mix sex
+  differences in abundance into projection, so they enter s3.
+* **Pairs: all 171.** A pair would be excluded if the two subclasses share a quarter or more
+  of their methylation clusters; none does (the largest share is 0.20).
+* **Zones:** each subclass's plurality Allen hypothalamic zone among its MERFISH cells (PVZ
+  1, PVR 5, MEZ 7, LZ 6). PH-ant-LHA Otp Bsx Glut is a near-tie (472 cells in MEZ, 470 in LZ),
+  so s14 places it in LZ.
+
+### The two decisions
+
+**Decision 1: genes predict projection, position partialled out.** The statistic is the
+weighted correlation over the 171 pairs between gene similarity (cosine of fingerprints) and
+projection similarity (cosine of profiles). Both are first centred within zone-pair block and
+residualised on 14 covariates:
+
+* the distance between the two subclasses' centroids, and Gaussian proximities at 250, 500
+  and 1,000 µm;
+* how much their MERFISH cells intermingle at the same three scales;
+* the share of methylation clusters they have in common (the authors' finest clusters, L4,
+  266 among these neurons, histogram intersection). This is the route by which mislabelled
+  cells would make a gene-similar pair look alike in projection;
+* the six products of the two subclasses' standardised coordinates, which are what a linear
+  gradient of projection across the hypothalamus adds to a pair's similarity.
+
+Pair weight is 1/(1/n_i + 1/n_j), with n the labelled neurons in the experiments used.
+
+**Null: position-only surrogates.** Surrogate projection data are drawn with the real
+experiment totals and follow position only. Per subclass and target, the surrogate is noise
+plus b times a position field averaged over the subclass's MERFISH cells. The field comes
+from a family of six: stationary Gaussian fields of width 100, 250, 500 and 1,000 µm, a value
+per CCF structure, and a linear gradient. For each family member, b is set so that the
+covariates explain as much of the surrogates' similarity as of the data's. Where a member
+cannot reach that share, the top of its strength grid is used and the run prints which.
+
+The surrogates' noise matches the measured profiles in two ways, both read without genes:
+
+* their size;
+* how far the two sexes' experiments agree, through an experiment-level noise term tau
+  fitted jointly with the scale sigma.
+
+2,000 surrogates are drawn per member, and **the p-value is the largest over the family.
+Pass: one-sided p below the Holm threshold above.**
+
+D-099's null, gene labels shuffled within zone, does not hold its size here. When
+projections follow position more finely than the covariates capture, the residual gene and
+projection similarities share spatial structure that shuffling destroys (the partial-Mantel
+problem). The table below shows its false-pass rates. It is reported as s1.
+
+**Decision 2: the transfer rule beats the zone average.** The rule copies the profile of the
+most gene-similar subclass in the same zone, among partners sharing less than a quarter of
+their methylation clusters (all of them, here). The
+statistic is a mean over subclasses with two or more such partners: that neighbour's profile
+cosine minus the mean cosine to all partners. It is tested against the same surrogates.
+**Transfer is supported only if Decision 1 passes and this has one-sided p below 0.05.**
+
+**Mislabelling reading.** The run also computes the mean r that mislabelling alone would
+produce, with no link to genes, when 0, 5, 10, 20 or 30% of each subclass's cells are moved
+to gene-similar subclasses (probability ∝ exp(gene cosine / 0.1)). A pass is reported as
+**not separable from mislabelling** if the observed r is at or below the 20% value. The run
+prints the confusion rate that would give the observed r.
+
+### Size and power, measured before running
+
+The power mode draws synthetic counts with the real experiment totals, fitted to the
+measured profiles read without genes:
+
+* size 2.03;
+* the sexes agree at r = 0.51 on centred log shares, giving experiment noise tau 0.45 and
+  sigma 2.27;
+* the covariates explain 21.0% of the block-centred similarity, which matches a 500 µm field
+  of strength 0.84.
+
+The 100 µm and per-structure fields cannot reach that share; they are used at the top of
+their grid. Each model is put through the test 1,000 times. To make that affordable, the
+power mode draws the null once per family member at each grid strength (2,000 surrogates) and
+interpolates p; the run draws fresh surrogates at the exact strengths.
+
+| synthetic projections | mean r | passes p<0.05 | passes p<0.025 | D-099's null |
+|---|---|---|---|---|
+| no link, noise only | -0.00 | 0.007 | 0.004 | 0.042 |
+| position only: random bumps 250 / 500 / 1,000 µm | +0.00 / -0.01 / -0.01 | 0.008 / 0.009 / 0.014 | 0.005 / 0.002 / 0.003 | 0.049 / 0.038 / 0.056 |
+| bumps three times stronger, 250 / 1,000 µm | +0.01 / -0.03 | 0.012 / 0.003 | 0.003 / 0.001 | 0.059 / 0.028 |
+| bumps 500 µm at the matched strength | +0.00 | 0.014 | 0.005 | 0.062 |
+| smooth fields, strong: 100 / 250 / 1,000 µm | +0.02 / +0.01 / -0.03 | 0.026 / 0.025 / 0.005 | 0.014 / 0.011 / 0.002 | 0.069 / 0.069 / 0.031 |
+| per-structure field, strong | +0.05 | **0.047** | 0.020 | 0.146 |
+| outside the family: smooth 150 µm strong / 2,000 µm / bumps 100 µm strong | +0.01 / -0.01 / +0.02 | 0.019 / 0.019 / 0.023 | 0.011 / 0.008 / 0.012 | 0.066 / 0.055 / 0.080 |
+| linear gradients: dorsal-ventral / medial-lateral / 3D, 1.0 | +0.01 / -0.00 / -0.01 | 0.024 / 0.037 / 0.019 | 0.007 / 0.016 / 0.005 | 0.102 / 0.088 / 0.074 |
+| dorsal-ventral 0.75 + smooth 500 µm 0.74 | -0.00 | 0.017 | 0.006 | 0.055 |
+| matched position, experiment noise 0 / doubled | -0.00 / +0.00 | 0.009 / 0.009 | 0.004 / 0.003 | 0.048 / 0.053 |
+| matched + 5 / 10 / 20% of cells moved along shared clusters | +0.01 / +0.01 / +0.02 | 0.021 / 0.012 / 0.022 | 0.009 / 0.007 / 0.009 | 0.064 / 0.069 / 0.074 |
+| matched + 5 / 10 / 20 / 30% moved to gene neighbours | +0.03 / +0.06 / +0.12 / +0.17 | 0.027 / 0.063 / 0.137 / 0.255 | 0.013 / 0.024 / 0.079 / 0.148 | 0.093 / 0.167 / 0.289 / 0.435 |
+| matched + 20% moved to gene neighbours, broadly | +0.07 | 0.065 | 0.029 | 0.165 |
+| genes 0.5 / 0.75 / 1.0 + re-matched position | +0.04 / +0.08 / +0.10 | 0.034 / 0.079 / 0.114 | 0.012 / 0.037 / 0.061 | 0.121 / 0.192 / 0.232 |
+| genes 1.5 / 2.0 + re-matched position | +0.15 / +0.17 | 0.202 / 0.261 | 0.117 / 0.154 | 0.398 / 0.429 |
+| same-zone pairs only (46): noise / matched position / genes 1.0 | -0.00 / +0.01 / +0.12 | 0.012 / 0.012 / 0.055 | 0.007 / 0.008 / 0.031 | 0.053 / 0.055 / 0.143 |
+
+**How to read the table:**
+
+* Gene strength is the gene term's size relative to the noise term, with both scaled to the
+  same norm.
+* **The surrogate null holds its size against every position-only model**, including fields
+  outside its family. The worst false-pass rate is 0.047 at p<0.05 (within
+  Monte Carlo error of 0.05), under a strong per-structure field. That holds because each member takes its largest p at the matched
+  strength or any stronger one: with the p at the matched strength alone, this row passed
+  0.074.
+* D-099's null passes up to 15% of position-only datasets.
+* **Mislabelling towards gene neighbours mimics a link.** 20% gives a mean r of +0.12 and
+  passes 8% at p<0.025. Hence the mislabelling reading above.
+* **Power is low.** A link giving a mean r of about +0.15 passes 12% of the time at p<0.025
+  and 20% at p<0.05. A null result is weak evidence.
+* The transfer rule (Decision 2) passes at most 4.4% even at the strongest gene link.
+* **Each zone left out, for a uniform link (genes 1.5):** r changes by these ratios to the
+  full-set r, for reading s8. PVZ 1.00, PVR 1.18, MEZ 1.06, LZ 0.61.
+* **Mislabelling alone, no link:** mean r +0.000, +0.025, +0.057, +0.119 and +0.175 at 0, 5,
+  10, 20 and 30% of cells moved to gene neighbours.
+
+### The interpretation, fixed now
+
+* **Both pass:** hypothalamic cell types whose genes are more alike project more alike,
+  beyond position, measured in the same nuclei. Copying the projections of the nearest
+  molecular neighbour beats the zone average.
+* **Decision 1 alone:** an association beyond position; transfer not shown.
+* **Neither:** no detectable link at the subclass level. With the power above, a null rules
+  out only strong links; it is weak evidence against a moderate one.
+* **A pass that is not separable from mislabelling** is reported as such. It does not
+  count as evidence of a link.
+
+### Secondary rows, no decision
+
+* **s1:** D-099's null.
+* **s2:** zone blocks only (no position or shared-methylation covariates).
+* **s3:** all 10 targets. Each single-sex target is put on the two-sex scale using the
+  subclass's mean sex difference on the 7 two-sex targets. **s3u** is the same unadjusted. **s3f** and **s3m** use
+  female-only and male-only experiments on the 7 targets.
+* **s4:** centroids from the slab (CCF AP 5.0-7.4 mm, one reading of the dissection).
+* **s5:** the MERFISH panel's 500 genes as the fingerprint.
+* **s6:** subclasses with at least 40 labelled neurons.
+* **s7:** the three non-hypothalamic subclasses kept.
+* **s8:** each zone left out, read against the ratios a uniform link gives in the power run.
+* **s9:** all-pair Mantel correlations with nothing partialled (genes/projections,
+  closeness/projections, closeness/genes).
+* **s10:** same transmitter also partialled. Gene similarity tracks same-transmitter at r
+  +0.25.
+* **s11:** a ridge rule from genes to projections (10 gene principal components, lambda
+  1000), fitted on every non-hypothalamic source with the 19 subclasses removed and frozen in
+  `data/interim/d104_outside_rule.npz`. Reported as r_unit with a permutation p, a surrogate
+  p, and the same with a linear position trend removed. D-105's model B is this rule.
+* **s12:** each primary target left out.
+* **s13:** same-zone pairs only (46 pairs).
+* **s14:** PH-ant-LHA Otp Bsx Glut placed in LZ.
+* **s15:** cleanly clustered neurons only (methylation clusters at least 90% one subclass,
+  the neuron carrying the majority label, at least 10 such neurons per subclass).
+* **s16:** each subclass left out (r only).
+
+63% of the pair weight falls on pairs touching the five largest subclasses.
+
+### Rehearsal on the rest of the brain (`reports/d104_rehearsal.md`)
+
+The same similarity test was run on every non-hypothalamic division of the same dataset.
+The 19 subclasses were removed from every source, and gene labels were permuted within
+source, which is slightly liberal. With location partialled out (14 covariates):
+
+| division | r | p |
+|---|---|---|
+| isocortex | +0.44 | 0.0005 |
+| hindbrain | +0.36 | 0.006 |
+| midbrain | +0.13 | 0.18 |
+| amygdala-pallidum | -0.11 | 0.75 |
+| hippocampal | -0.50 | 0.85 |
+| thalamus | -0.48 | 0.65 |
+
+Thalamus and amygdala-pallidum are degenerate: 19 and 57 pairs, with position explaining 96%
+and 66% of their projection similarity. Olfactory has nothing to compare. Mean z is +0.97
+over all divisions and +0.66 over the four subcortical ones. **So the link exists in some
+regions and not in others; the hypothalamus could go either way.** That is why the
+prediction below is cautious.
+
+The s11 rule (ridge on 10 gene principal components, lambda 1000) was chosen by its mean
+leave-one-division-out r_unit, +0.161, the best of nine settings. Two subclasses left out of the
+primary comparison as non-hypothalamic, NDB-SI-MA-STRv Lhx8 Gaba and RT-ZI Gnb3 Gaba, are
+training units of the rule in other sources. They enter only s7, and s11 does not use them.
+
+### Already seen
+
+* **From the label table, without genes:** counts per experiment and per subclass, sexes,
+  methylation clusters, astrocyte shares and cluster purity (D-103's search, `tables`, and
+  earlier scouts). Also the paper's own published projection
+  enrichments for hypothalamic clusters (for example VMH Nr5a1 Glut to SC).
+* **From the measured projection profiles, read without genes** to calibrate the synthetic
+  data, during development:
+  * their size: 2.076 under an earlier unit rule, 2.026 now;
+  * the share of their block-centred similarity the covariates explain: 6.0% and 10.7% under
+    earlier covariate sets, 21.0% under the final 14;
+  * how far the two sexes agree: r 0.509 on centred log shares, 0.267 on pair similarities.
+* **Gene similarity, positions, zones and shared methylation clusters**, all without
+  projections. Gene similarity tracks same-transmitter at r +0.25.
+* **The rehearsal on non-hypothalamic sources**, with the 19 subclasses removed (above).
+* **What `dry` used:** the hypothalamic counts' marginals only (each subclass's total and
+  each experiment's total).
+* **No statistic relating gene similarity or a gene model's prediction to the measured
+  hypothalamic projections has been computed.**
+
+### Prediction
+
+**Decision 1: met if r is in [+0.10, +0.30], not met otherwise; r at or below 0
+contradicts it.** Hypothalamic subclasses differ in transmitter and in developmental
+transcription factors that also set projection programmes, and the paper reports
+projection-enriched clusters. Power at that size is modest, so a pass is not expected with
+confidence. **Decision 2: not supported.**
+
+### Named risks
+
+* **Contamination.** 37% of the sorted hypothalamic nuclei are astrocytes (933 of 2,542),
+  1% to 63% per experiment. They are removed from the neurons, but they show how much
+  off-target material was sorted.
+* **Direct infection near an injection.** The TH injection lies close to the hypothalamus;
+  139 RE-Xi Nox4 Glut neurons (left out as not hypothalamic) are the visible trace.
+* **Target-dependent virus uptake**, and labelling that is not the same as projection
+  strength.
+* **Mislabelling.** About 13% of the compared neurons carry a label other than their
+  methylation cluster's majority. Shared clusters are partialled; the mislabelling reading,
+  the power rows and s15 bound what remains.
+* **Straddling subclasses.** For example, BST-MPN Six3 Nrgn Gaba has only 56% of its MERFISH
+  cells in HY.
+* **Genes by proxy.** The fingerprint is the subclass's average RNA in other mice, while
+  methylation decided each neuron's subclass. A link between finer types within a subclass
+  is invisible.
+* **Few neurons per subclass**, spread over 14 experiments.
+* **Position.** The surrogates assume position acts like one of the family's fields; the
+  power table checks fields outside the family.
+* **One pooled dissection, one target per neuron, mouse only.**
