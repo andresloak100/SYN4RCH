@@ -8407,3 +8407,49 @@ hypothalamus has too few subclasses (19) for this design to confirm a link of th
 co-registered D-105 found the same pattern: positive, not significant. The next step is data
 with more units, either finer cell types or neuron-level gene and target measurements (D-105,
 "What comes next"), not a re-analysis of these 19 subclasses, which are now used.
+
+## D-107 - D-105 result: gene models transfer to the hypothalamus in the predicted direction, but the test cannot decide (insufficient evidence)
+
+**Run once** at commit 8e31fdc, as pre-registered in D-105; output verbatim in `reports/d105_result.md` (fa17340). Co-registered with D-104, run back to back (D-104 started before either output was read).
+
+### Decision 1
+
+* **Model D** (whole-brain PCA embedding, ridge head, trained only outside the hypothalamus) on the 19 hypothalamic subclasses: **r_unit = +0.204, one-sided p = 0.063** (within-strata permutation, 10,000 permutations).
+* Location-only model A: r_unit = -0.266, so r_D > max(r_A, 0) holds.
+* **Holm with D-104 Decision 1** (r +0.223, p 0.081): the smaller p (0.063) is not below 0.025, so **neither primary decision passes.**
+* Noise ceiling (between-sex reliability, no genes): Spearman-Brown 0.670 (r 0.503); the attainable r_D is about 0.82.
+* 95% interval of r_D: [-0.064, +0.472]. It contains 0.38, so by the rule fixed in D-105 the **reading is INSUFFICIENT EVIDENCE.**
+
+### Secondary rows (no decision)
+
+| model | r_unit | p | top-target hits (chance 1/7) |
+|---|---|---|---|
+| D | +0.204 | 0.063 | 5/19 |
+| O2 (D with target kernel) | +0.211 | 0.053 | 7/19 |
+| K (untuned all-gene ridge) | +0.136 | 0.228 | 4/19 |
+| B (ridge on 10 gene PCs) | +0.090 | 0.654 | 3/19 |
+| A (location only) | -0.266 | (uncalibrated) | 0/19 |
+| T1 (fine-tuned autoencoder, 6 seeds) | +0.077 | 0.228 | 4/19 |
+
+* Max-T over D, O2, K, B: family p 0.160.
+* D after removing location model A's prediction (semi-partial): +0.234, p 0.024 (secondary; not a decision).
+* D-104's s11 (the ancestor of B), reported by D-104: r_unit +0.095, p 0.20.
+* T1's single seeds: +0.080, +0.181, +0.163, +0.055, +0.055, -0.001.
+* Per unit, D predicts well for PVH-SO-PVa Otp Glut (cosine +0.90), MPN-MPO-PVpo Hmx2 Glut (+0.75), LHA-AHN-PVH Otp Trh Glut (+0.70), AVPV-MEPO-SFO Tbr1 Glut (+0.64), and badly for PVpo-VMPO-MPN Hmx2 Gaba (-0.71), AHN-SBPV-PVHd Pdrm12 Gaba (-0.69), BST-MPN Six3 Nrgn Gaba (-0.68), PH-ant-LHA Otp Bsx Glut (-0.51).
+
+### Against the prediction
+
+D-105 predicted r_unit about +0.15 (range -0.05 to +0.35) and no pass, with NOT SHOWN or INSUFFICIENT EVIDENCE the likely reading. **Met:** r_D +0.204 is inside the range, the test did not pass, and the reading is INSUFFICIENT EVIDENCE.
+
+### What this means
+
+* The models that transferred across non-hypothalamic divisions keep their sign and size in the hypothalamus (rehearsal: D +0.23 overall, +0.16 subcortical; here +0.20), and location alone does not transfer (-0.27). That is consistent with a modest transferable gene-to-projection rule, but **it is not established**: 19 subclasses cannot separate r about 0.2 from zero at the pre-registered level (power about 0.2-0.3 at that size).
+* The fine-tuned model T1, the best in rehearsal (+0.28), was among the worst here (+0.08): its rehearsal edge was selection, as the round-2 reviewers judged.
+* The bottleneck is the number of independent test units, not the model. More complex architectures are not the next step.
+* These 19 subclasses are no longer an untouched test set. Any model changed from here must be judged on new data.
+
+### Next
+
+1. Neuron-level inputs: Epi-retro-seq's own per-neuron methylomes instead of 19 subclass averages of other mice's RNA (finer units, same-cell measurements).
+2. A fresh hypothalamic test set: Rossi 2021 (lateral hypothalamus, retrograde-labelled single-cell RNA; `reports/paired_data_search.md`), or the Jiao 2025 reconstructions at the level of peptide populations.
+3. Non-cortical training data (thalamus, superior colliculus), since added cortex did not help subcortical transfer.
