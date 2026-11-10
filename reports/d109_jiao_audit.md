@@ -56,6 +56,26 @@ empty and asks only for attribution; an earlier search's "CC BY-NC-ND 4.0" is re
   lines 38-39: 264 Oxt neurons from 3 brains, 106 also in Jiao). Not yet verified here. Li must not be used
   as independent validation until the shared neurons are identified and removed.
 
+## Addendum (independent audit, 2026-11-10): three nucleus vocabularies that must not be mixed
+
+Reproduced on the label columns only:
+
+* `all_neuron_soma_infor.xlsx` (= Nature Source Data Fig. 2): 59 labels, the finest. Includes 1,316 `HY`
+  (unassigned), fibre-tract labels (fx 52, nst 32, och 11, mtt 10, mfb 9, opt 5, sup 5, pm 4, sm 4, mtg 2,
+  int 2) and the fine mammillary / tuberomammillary labels.
+* `All_soma_infor_HY_neurons.csv`: 50 labels. Differs from the xlsx on **375 neurons**: 358 collapsed to
+  `MBO` (TMv 79, MMl 75, SUM 56, MMm 55, LM 37, MMme 27, MMd 22, MMp 4, TMd 3) and 17 `FF` relabelled `ZI`.
+* `geno_location_labels.csv`: 16 labels. Differs from the xlsx on 2,518 neurons, 2,143 of them collapsed
+  to `others`.
+
+**Binding requirement for the protocol.** Choose ONE authoritative nucleus vocabulary and document a
+crosswalk to the other two and to the CCF ontology (`data/raw/atlas/structure_graph_1.json`); never mix
+them silently. Default: keep the fine xlsx label, unless source documentation supports a different
+aggregation. Any coordinate-derived nucleus assignment must be verified against a named annotation volume
+and registration convention (which CCF annotation version and resolution, which axis order and units)
+before it is used; until then it is labelled unverified and is not used as an input or hold-out key.
+The protocol must say how `HY` (unassigned) and fibre-tract labels are treated in the unseen-nucleus split.
+
 ## Scope
 
 Regional axon length is not a 3D path and not synaptic connectivity. Any tag effect is predictive, not causal.
