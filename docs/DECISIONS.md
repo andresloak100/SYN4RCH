@@ -8342,3 +8342,68 @@ r_unit and stratum-permutation p for O2, K, B, A and T1 (T1's single seeds too);
 * **Few units.** 19 subclasses; power as above.
 * **Selection.** D was chosen among about 25 variants on the same 7 divisions; its rehearsal score is optimistic, which is why the prediction is lower.
 * **One target per neuron, mouse only, one dissection** (as in D-104).
+
+## D-106 - D-104 result: a positive gene-to-projection link of the predicted size, not significant after Holm
+
+D-104's test was run once from 8e31fdc, after both D-104 (628658c) and D-105 (8e31fdc) were
+committed. D-105 ran first. Each run's output went to a file that was not read until both
+had started. The output is in `reports/d104_result.md`. Every input matched its pinned SHA-256.
+
+### Decision 1: not passed
+
+* **r = +0.223 over 171 pairs of 19 subclasses, one-sided p = 0.081.** p is the largest over
+  the six position fields, 2,000 surrogates each.
+* Under Holm with D-105 (primary p 0.063), the smaller p must be below 0.025. Neither is, so
+  **neither primary decision passes.**
+* The largest p came from the per-structure field (0.081), which cannot reach the measured
+  position share and was used at the top of its grid. The other fields gave p from 0.023
+  (500 µm) to 0.054 (100 µm).
+* **The prediction is met:** r lies in [+0.10, +0.30].
+* Mislabelling towards gene-similar subclasses would need more than 30% of cells moved to
+  produce this r with no link. So if the association is real, mislabelling does not explain
+  it.
+
+### Decision 2: not tested
+
+Decision 1 did not pass. For the record, the transfer gain was -0.029 (p 0.93): copying the
+nearest molecular neighbour did no better than the zone average.
+
+### Reading, as fixed in D-104: "Neither"
+
+There is no detectable link at the subclass level under the pre-registered rule. That is
+weak evidence against a moderate link. The observed r (+0.22) is at the size where the power
+run found the test passes only 12-15% of the time at p<0.025 (gene strength 1.5-2.0). The
+data look like a moderate link the test was too small to confirm. They do not show its
+absence.
+
+### Secondary rows, descriptive only
+
+* **Most variants stay positive, r +0.15 to +0.25:**
+  * D-099's null: p 0.069.
+  * Slab centroids: +0.23.
+  * MERFISH panel genes: +0.24, p 0.028.
+  * Same transmitter partialled: +0.21.
+  * PH-ant-LHA in LZ: +0.25.
+  * Cleanly clustered neurons only: +0.17.
+  * All 10 targets: +0.16 sex-adjusted, +0.18 unadjusted.
+  * Each subclass left out: +0.05 to +0.28; the lowest is without DMH-LHA Vgll2 Glut, the
+    largest subclass.
+* **The association leans on the lateral zone and on thalamus as a target:**
+  * Without LZ, r is +0.02. That is a ratio of 0.10, against 0.61 for a uniform link.
+  * Without MEZ, r is +0.41.
+  * Without the TH target, r is +0.07.
+* **The sexes differ:** r +0.33 in male-only experiments, +0.07 in female-only ones. Their
+  agreement (r 0.51) bounds how stable a profile is.
+* **The rule learned outside the hypothalamus (s11)** reaches r_unit +0.095 (permutation p
+  0.20, surrogate p 0.21; +0.090 with a linear position trend removed).
+* **Nothing partialled (Mantel):** genes/projections +0.23 (p 0.012), closeness/projections
+  +0.26 (p 0.002), closeness/genes +0.21 (p 0.011). Position is tied to both, as expected.
+
+### What this means for the project
+
+Same-nucleus data move the estimate from D-100's nothing beyond location to a positive r of
+about +0.2 beyond location, the size the rehearsal found in cortex and hindbrain. The
+hypothalamus has too few subclasses (19) for this design to confirm a link of that size. The
+co-registered D-105 found the same pattern: positive, not significant. The next step is data
+with more units, either finer cell types or neuron-level gene and target measurements (D-105,
+"What comes next"), not a re-analysis of these 19 subclasses, which are now used.
