@@ -1,8 +1,8 @@
 """Interface tests for analysis/prediction_viewer_export.py. Synthetic fixtures only; no biological data.
 
 The "winning" fixture's candidate is the hidden truth on purpose: only the export interface and its
-refusals are tested here, never a method. The fixture declares no upstream fit ([]): the referee as
-of SHA-256 eee1993e... rejects a training-animal list after its declaration is re-read from disk
+refusals are tested here, never a method. The fixture declares an upstream fit on its two training
+animals, which the referee accepts since its fix of 2026-11-11
 (reports/prediction_referee_interop_finding.md).
 """
 import importlib.util
@@ -71,7 +71,7 @@ def bundle(base, *, win=True, matched=True, excluded=("qx",), score=True):
                               "admission": "all fixture rows", "preprocessing": "50 um spacing", "clipping": "none"},
         "method_artifacts": {"method/protocol.txt": E.sha(method)},
         "splits": {"train": train, "validation": [{"id": "v1", "animal": "V", "soma_um": [0.0, 0.0, 0.0]}], "test": queries},
-        "excluded_ids": list(excluded), "test_excluded_animals": [], "upstream_fit_animals": [],
+        "excluded_ids": list(excluded), "test_excluded_animals": [], "upstream_fit_animals": ["A", "B"],
         "models": {"candidate": "candidate", "copy_baselines": list(E.COPIES), "matched_controls": controls},
         "config": dict(E.CONFIG)}
     E.freeze_declaration(base, declaration)
@@ -84,12 +84,12 @@ def bundle(base, *, win=True, matched=True, excluded=("qx",), score=True):
             relative = "predictions/%s/%s.npz" % (model, q["id"])
             E.save_tree(base / relative, tree)
             row = {"query_id": q["id"], "model": model, "path": relative, "sha256": E.sha(base / relative),
-                   "donor_ids": [copies["donor_proof"][source][q["id"]]], "upstream_fit_animals": []}
+                   "donor_ids": [copies["donor_proof"][source][q["id"]]], "upstream_fit_animals": ["A", "B"]}
             if model == "candidate":
                 row.update(hemisphere="Right" if q["id"] == "q1" else "Left", fallback=False, bulky=list(range(2000)))
             rows.append(row)
     E.seal_predictions(base, {"declaration_sha256": E.sha(base / "declaration.json"), "predictions": rows,
-                              "upstream_fit_animals": []})
+                              "upstream_fit_animals": ["A", "B"]})
     if score:
         E.score_once(base, lambda q: truth[q])
     return declaration
@@ -118,7 +118,7 @@ def test_passed_test_exports_three_labelled_layers_for_every_scored_neuron(tmp_p
         assert set(n["metrics"]) == {"candidate", *E.COPIES, "matched_uniform"}
         assert n["uncertainty"].startswith("uncalibrated")
         assert n["comparison"]["verdict"] == "prediction better on both measures"
-        assert n["layers"]["prediction"]["upstream_fit_animals"]["count"] == 0
+        assert n["layers"]["prediction"]["upstream_fit_animals"]["count"] == 2
         assert n["layers"]["prediction"]["provenance"]["fallback"] is False
         assert n["layers"]["prediction"]["provenance_fields_omitted_as_large"] == ["bulky"]
     assert {n["id"]: n["hemisphere"] for n in export["neurons"]}["q1"] == "Right"

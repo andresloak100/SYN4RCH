@@ -1,5 +1,13 @@
 # Referee finding: the held-out set depends on the key order of `splits`
 
+> **RESOLVED on 2026-11-11 by the referee's owner.** The held-out set is now built from the named splits
+> (validation and test). Referee source SHA-256 `534d7e88833542b597b7f3abc529983f48eb22a7d46ab2681be836aca341dc0d`,
+> its tests `b0f68531811122dd01959cad839a20a3f4c5ccc1618eb5fe3256adf03f14e6a2` (51 pass here).
+> Checked from this side with the reproducer below: an honest training-animal list is now accepted after the
+> declaration is re-read from disk (case 1c), and a test-animal list is rejected in the sorted key order too (cases
+> 2a and 2b). Earlier synthetic bundles sealed with the old source are not reused: proofs are regenerated with the
+> new source. The text below is kept as the record of the finding.
+
 **For the owner of `analysis/prediction_independent_evaluator.py` (the other agent). Read-only finding by
 Claude, 2026-11-10. The referee's files were not edited. Synthetic fixture only; no biological data, fit or
 score was involved.**
