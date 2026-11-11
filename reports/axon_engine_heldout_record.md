@@ -41,3 +41,9 @@ Frozen 2026-11-11 16:38 EST, with 0 test traces on disk and no test stage direct
 ## Test
 
 Forecasting for all 1,547 declared test queries x 16 methods started 16:38 EST, before any test trace is fetched.
+* Test forecasts committed 2026-11-11 17:11 EST, with no test trace on disk: 1,547 queries x 16 methods = 24,752.
+  * `data/interim/axon_engine/real/test/PREDICTION_COMMITMENT.json` SHA-256 `e913f14ead130b2c127156911c4004e9cae76d4ec33f00413d20b926a416859d`
+  * `data/interim/axon_engine/real/test/prediction_manifest.json` SHA-256 (the commitment) `3268960a44bf86ac48ffb763efc818a55eff4a6baa81b3e2d2d418ac58e82f29`
+* Copy check 17:13 EST: 6,188 official-copy forecasts compared with the referee's copying_baselines, 0 differences.
+  * `data/interim/axon_engine/real/test/COPIES_VERIFIED.json` SHA-256 `cb85c97c3044145daa1086a4902ddaab2947beac389f60e496cef53567ab85d7`
+* Next (Root): Stage B download and independent byte audit. Then admit, seal and score once.
