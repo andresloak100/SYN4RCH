@@ -76,6 +76,17 @@ and registration convention (which CCF annotation version and resolution, which 
 before it is used; until then it is labelled unverified and is not used as an input or hold-out key.
 The protocol must say how `HY` (unassigned) and fibre-tract labels are treated in the unseen-nucleus split.
 
+## Addendum: outside exposure and a parallel test (recorded 2026-11-10)
+
+* A separate agent (Codex) is running its own real-data test of a joint mathematical model against copying
+  on the same Jiao tables (`analysis/brm_real.py`, `reports/brm_real_protocol.md`). It reads D-109's S1 split
+  file read-only and does not edit D-109 files.
+* During that agent's schema inspection, **one raw regional axon-length profile (one neuron's row) was
+  displayed**. Reported: no statistic or design choice used its values. Recorded here as outside exposure.
+* D-109's protocol choices (metric, splits, baselines, models, controls, readings) must be fixed
+  independently of any BRM result. If BRM results become known before D-109 is frozen, D-109's protocol
+  must say so and list them under "Already seen".
+
 ## Scope
 
 Regional axon length is not a 3D path and not synaptic connectivity. Any tag effect is predictive, not causal.
