@@ -1,10 +1,12 @@
 # Predicting a hidden 3D axon, against copying: the biological protocol
 
-STATUS: DRAFT
-
-This line stays until the validation traces exist and the user has accepted the text. On the real cohort the
-engine refuses to commit any held-out forecast and to freeze while it is here; once it is removed the file's
-SHA-256 is pinned by the validation forecasts and by the freeze. No independent biological test has been run.
+Status: FINAL, 2026-11-11, accepted under the user's explicit authorization (relayed by the supervising agent) before
+any validation forecast. The validation traces are on disk and verified; the referee's full audit receipt and its
+owner's post-audit pin are committed (`reports/axon_engine_referee_audit_record.md`, commit 5a680a5); the general
+layer's run is on the anchor line; K stays 16. The development pass on all 101 training animals (919 queries, leave one
+animal out, engine d9eac6f2) finished before this line was written; its tables are
+`data/interim/axon_engine/real/develop/tables.md` (SHA-256 ec7fb737...) and nothing was tuned on them. This file's
+SHA-256 is now pinned by the validation forecasts and by the freeze. No independent biological test has been run.
 Written 2026-11-10, revised 2026-11-11 after an internal review, the other agent's read-only review
 (`reports/axon_engine_codex_review.md`) and the independent referee's contract; revised again on 2026-11-11 to
 connect the general reconstruction layer (candidate E7, section 6a), and once more on 2026-11-11 after the review
