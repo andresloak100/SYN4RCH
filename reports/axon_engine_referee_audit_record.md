@@ -25,4 +25,13 @@ added below before any validation forecast is committed.
 
 ## Audit receipt
 
-(not yet: audit not started)
+Pre-audit pin by the referee's owner: `data/interim/axon_trace_download_audit/referee_cache_pre_audit_pin.json`,
+SHA-256 `94bb1746886a0dee9d959e1ba7fa644355882ce445565b321ee8ee6f0a5fd2f5` (all six files, all 4,368 arbors and their arrays,
+sorted IDs, disjoint splits, no prior receipt, progress or mask). Helper `analysis/prediction_distance_cache.py` SHA-256
+`88461504a10fd92b8d093f82cf440bb82fa668f427c017644469b9c3bc2893c4`.
+
+Full audit started 2026-11-11 12:45 EST on this folder, 4 workers, the four thread variables at 1, `/opt/anaconda3/bin/python`
+(3.12.4) for every chunk; log `data/interim/axon_engine/logs/referee_audit.log`. Scope: the helper replays every D entry
+bitwise; F is checked by hash and structure only, so F values are not independently verified gold.
+
+Receipt: (pending)
