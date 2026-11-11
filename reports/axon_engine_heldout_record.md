@@ -19,6 +19,13 @@ Referee audit receipt `2eb4d2e4...` (record: `reports/axon_engine_referee_audit_
    (candidate_selected): 631.9 um / F1 0.2728 vs strongest copying control on distance C5 711.3 um (-79.4 um, paired
    95% bootstrap -108.2 to -50.2) and on F1 nearest 0.2243 (+0.0485, +0.0308 to +0.0672); beats its matched controls.
    Eligible also: E1, E2, E6. Validation is selection, not the test.
+   Caveats (stated before the test): 64 of 1,185 declared validation neurons (5.4%) were excluded by the mechanical rules,
+   and one whole validation brain sample has no scored neuron (24 of 25 scored). E4 beats its matched control E1 by only
+   0.009 um in distance and 0.00155 in F1, and both matched-control intervals cross zero: most of the gain over copying
+   comes from local donor selection; an added benefit of the regional state is not established. E7 was not eligible
+   (its distance did not beat its matched controls). Root's independent check of the arithmetic and the selection rule
+   passed: `data/interim/axon_engine/real/checks/validation_arithmetic_gate_check.json` SHA-256
+   `31b536a0290c4098aed33ab3641aff22e764edcb3ba88c6a4069b2d554d270a5`.
    * 8e1b4c2d7a762fc979879ee7938b14f5dd3a40b387d08e4f056c8b5a1bfb04fc  SCORE_COMPLETE.json
    * 42516e20b33d55b02d803332c1ca71a45df6f435fab8dd66aa5f88fbf2d1f908  metrics.json
    * beef20acbd06182b487d22758bb6509527556cde96207622fbc38ec2c807c790  engine_gate.json
