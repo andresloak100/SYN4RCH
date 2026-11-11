@@ -34,4 +34,26 @@ Full audit started 2026-11-11 12:45 EST on this folder, 4 workers, the four thre
 (3.12.4) for every chunk; log `data/interim/axon_engine/logs/referee_audit.log`. Scope: the helper replays every D entry
 bitwise; F is checked by hash and structure only, so F values are not independently verified gold.
 
-Receipt: (pending)
+Receipt: complete, 2026-11-11 15:39 EST (chunk 6). `data/interim/axon_engine/real/referee_cache/bundle/cache/full_audit.json`
+
+| item | value |
+|---|---|
+| receipt file SHA-256 | `2eb4d2e463723eae88a6e2321c870850f9146d9e1e20d0c79fba8d0f72589498` |
+| receipt content SHA-256 (`receipt_sha256`) | `8a60d8f5447f5b69d457f36b80b302d1b9c960ef9bd139bd11ec3d01c02216ac` |
+| schema / status | `referee_full_distance_audit_v1` / `complete` |
+| pairs verified | 9,537,528 of 9,537,528 (all upper-triangle D entries, bitwise) |
+| bitwise mismatches | 0 |
+| scope | `ALL_upper_triangle_D_bitwise;F_hash_and_structure_only` (F not independently recomputed) |
+| bound files | the six pre-audit pins above, unchanged |
+
+Independent post-audit verification by the referee's owner (actual loader):
+`data/interim/axon_trace_download_audit/referee_cache_independent_post_verification.json`, SHA-256
+`01f48bc5f71f0cdea43a1705538a8ed130266cb7fdd964275831411a7b0888ed` (verifier `analysis/referee_cache_post_audit_verify.py`,
+SHA-256 `b70b9bfe906c2455bccfbcb5d92878041fca8fd0d447a7c9cce7decbf066c9c7`). All six artifacts, five sources and the 4,368
+training NPZ bytes unchanged; the frozen loader accepted the cache; no test trace on disk.
+
+Post-audit pin by the referee's owner: `data/interim/axon_trace_download_audit/referee_cache_post_audit_pin.json`, SHA-256
+`f1b322653efb8e4e0fa2b3553b7810e73a11dfe5d1b26b24d370d7b6562c0ebb` (acceptance PASS, 2026-11-11).
+
+Committed before any validation forecast. Engine at this point: `analysis/axon_engine.py` SHA-256
+`d9eac6f220691b33adc729ecc24a39d3290418039b7717bb052900741da971a8` (commit 5bbd4dd).
