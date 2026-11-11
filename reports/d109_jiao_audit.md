@@ -87,6 +87,40 @@ The protocol must say how `HY` (unassigned) and fibre-tract labels are treated i
   independently of any BRM result. If BRM results become known before D-109 is frozen, D-109's protocol
   must say so and list them under "Already seen".
 
+## Addendum: what later verification changed, and status (2026-11-10, evening)
+
+This supersedes the lines above marked unresolved where it says so. Details and sources:
+`reports/d109_jiao_conventions.md`, `reports/swc_access.md`, `reports/swc_validation.md`.
+
+* **Licences.** The BSDC record's details panel shows "License Agreement CC BY-NC-ND 4.0"; the portal shows
+  only a copyright line ("All Rights Reserved"); the Zenodo record is CC BY 4.0. The note above that the BSDC
+  field is empty is superseded.
+* **Soma coordinates.** AP = CCF x, DV = y, ML = z, in micrometres on the 10 um ccf_2017 frame: shown by the
+  authors' code for sibling tables, inferred for the table used here. **Mirroring:** the authors reflect every
+  neuron whose soma has ML > 5,700 by ML' = 11,400 - ML (their notebook), and this was verified node by node
+  on SWC pairs: portal files keep the true hemisphere, Zenodo files are mirrored. That the published soma
+  table is the mirrored one is an inference from that rule and the ML range. The original hemisphere exists
+  only in the portal index and the SWC files.
+* **Outcome table.** Length unit: micrometres indicated, not resolved. Both hemispheres summed: indicated, not
+  stated. Of the 49 columns 25 are CCF leaves and 24 are parents; `MY` is an ancestor of `IO`, `NTS`, `PARN`
+  and `IRN`, so a double count is possible and unresolved. The 13 all-zero profiles are unexplained.
+* **Li et al. 2024.** Verified at the animal level: Li and Jiao share brains 195037 and 195038 (106 Jiao
+  neurons, 149 Li neurons); Li's third brain, 18696, is not in Jiao. "106" is that derived count; no published
+  statement of the overlap was found, and neuron-level identity is unresolved (68 ID-number matches, not
+  proven to be the same cells). Any use of Li must drop both shared brains whole. D-109 does not use Li.
+* **Exposure before the freeze.** (i) BRM (`analysis/brm_real.py`, another author, requested separately by the
+  user) scored predictions of this same 49-region table on D-109's S1 split on 2026-11-10 (run marker 19:28
+  local), after the D-109 design and review fixes were written and before D-109 was frozen. (ii) D-110 and
+  D-111 (another author) scored 3D axon geometry on 16 of the 37 downloaded SWC neurons. What the D-109
+  session knows of the BRM result: one sentence, that its model had lower held-out error than copying rules
+  and simple averages; no number. No D-109 choice used any of this. **D-109 is therefore not the first look
+  at these outcomes; if it is run, it is reported as a pre-specified but non-blind check.**
+* **Status.** Protocol (`reports/d109_protocol.md`), implementation (`analysis/d109_jiao.py`) and conventions
+  (`reports/d109_jiao_conventions.md`) are written and were reviewed three ways (leakage, protocol against
+  code, statistics on synthetic data). **Not frozen:** the review fixes need a confirming review, and the
+  choice of primary comparison is open (the tree model recovers almost none of a planted moderate tag effect
+  that ridge recovers). `run` refuses. No D-109 score exists.
+
 ## Scope
 
 Regional axon length is not a 3D path and not synaptic connectivity. Any tag effect is predictive, not causal.
