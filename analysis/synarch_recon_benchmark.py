@@ -6,7 +6,10 @@
     python3 -I analysis/synarch_recon_benchmark.py timing                 # one full fit at the real size, synthetic
     python3 -I analysis/synarch_recon_benchmark.py freeze --reviewed "..."   # pre-run declaration (after review)
     python3 -I analysis/synarch_recon_benchmark.py run --workers 6        # ONCE, only after the freeze
-    python3 -I analysis/synarch_recon_benchmark.py score | serving | demo | report | status
+    python3 -I analysis/synarch_recon_benchmark.py score | demo | report | status
+    python3 -I analysis/synarch_recon_benchmark.py serving                # RESTORE the all-training states of a
+                                                                          # finished run (the run itself fits them
+                                                                          # and its completion record binds them)
     python3 -I analysis/synarch_recon_benchmark.py abort --reason "..."   # set aside a freeze that was never run, or
                                                                           # a start that broke before any outcome-
                                                                           # derived file was written
@@ -684,28 +687,88 @@ def execute(ctx, *, workers=1, directory=None, log=say):
     return {"store": store, "fits": fits, "selection": selection, "seconds": time.time() - started}
 
 
-def fit_serving(world, *, workers=1, directory=None, log=say, ctx=None):
-    """After the benchmark is scored: one all-training state per chosen engine setting. Never scored; it is
-    what the API uses for units outside the training partition. A numerical failure is recorded, not fatal."""
-    out = Path(world.out)
-    if not (out / "run_complete.json").exists():
-        raise core.ReconError("all-training states are fitted only after the benchmark has completed")
-    verify_run(world)
-    ctx = ctx or build_context(world)
-    serving = core.read_json(out / "selection.json")["serving"]
-    settings = sorted({(s["representation"], s["components"]) for s in serving.values()})
+SERVING_KEY = "all_training_states"      # where run_complete.json holds the record of the all-training states
+
+
+def all_training_record(ctx, chosen, *, workers=1, directory=None, log=say, save_to=None):
+    """One all-training state per chosen engine setting: fitted on every training sample, never scored. It is
+    what the API uses for units outside the training partition.
+
+    Returns the record that the COMPLETION RECORD binds: per task the setting, the fingerprint of its state and
+    of its training groups, or why the fit failed. The step reads no new data and cannot change a metric, and it
+    never stops the benchmark: a numerical failure of a fit is recorded for that fit, and any other failure of
+    the step is recorded for every task it left without a state."""
+    folder = Path(save_to) if save_to is not None else Path(ctx.world.out) / "states"
+    settings = sorted({(s["representation"], s["components"]) for s in chosen.values()})
     log(f"all-training states: {len(settings)} fits")
-    fits = run_jobs(ctx, [("job_serving", r, k, out / "states") for r, k in settings], workers, directory)
+    try:
+        fits, stopped = run_jobs(ctx, [("job_serving", r, k, folder) for r, k in settings], workers, directory), None
+    except Exception as error:      # noqa: BLE001  (whatever happened here, the benchmark itself still completes)
+        fits, stopped = [], f"the all-training step did not finish: {error!r}"
     record = {"fits": fits, "tasks": {}}
-    for name, chosen in serving.items():
-        fit = next(f for f in fits if (f["representation"], f["components"]) ==
-                   (chosen["representation"], chosen["components"]))
-        record["tasks"][name] = {"representation": chosen["representation"], "components": chosen["components"],
+    for name, setting in chosen.items():
+        fit = next((f for f in fits if (f["representation"], f["components"]) ==
+                    (setting["representation"], setting["components"])), {"failed": stopped})
+        record["tasks"][name] = {"representation": setting["representation"], "components": setting["components"],
                                  "state_hash": fit.get("state_hash"), "failed": fit.get("failed"),
                                  "training_groups_sha256": fit.get("training_groups_sha256")}
-    record["run_complete_sha256"] = core.sha_file(out / "run_complete.json")     # the finished run these states serve
-    core.write_json(out / "serving.json", record)
     return record
+
+
+def serving_file_content(world):
+    """serving.json as the completion record determines it: the bound record of the all-training states, plus the
+    SHA-256 of the completion record it is a copy from. The file holds nothing of its own; the reconstruction API
+    never reads an expected fingerprint from it."""
+    out = Path(world.out)
+    complete = core.read_json(out / "run_complete.json")
+    if SERVING_KEY not in complete:
+        raise core.ReconError("the completion record of this run does not bind its all-training states (it was "
+                              "written by an earlier version of this layer); they cannot be served")
+    return dict(complete[SERVING_KEY], run_complete_sha256=core.sha_file(out / "run_complete.json"))
+
+
+def fit_serving(world, *, workers=1, directory=None, log=say, ctx=None):
+    """RESTORE the all-training states of a FINISHED run (the `serving` command).
+
+    The run itself fits these states, before it writes its completion record, and that record holds their
+    fingerprints. This command fits them again (it reads nothing new) and keeps a state file only if the state is
+    exactly the one the run recorded; it writes serving.json again when that copy is missing. It never changes
+    what the run recorded: a fit that failed in the run stays failed for that run, and a re-fit that gives
+    another state is refused and nothing is written."""
+    out = Path(world.out)
+    if not (out / "run_complete.json").exists():
+        raise core.ReconError("the all-training states are fitted by the run itself; they can be restored only "
+                              "after the benchmark has completed")
+    complete = verify_run(world)
+    if SERVING_KEY not in complete:
+        raise core.ReconError("the completion record of this run does not bind its all-training states (it was "
+                              "written by an earlier version of this layer); they cannot be restored")
+    bound = complete[SERVING_KEY]
+    wanted = {name: entry for name, entry in bound["tasks"].items() if not entry["failed"]}
+    if wanted:
+        ctx = ctx or build_context(world)
+        scratch = out / "states" / "restore_in_progress"
+        if scratch.exists():
+            shutil.rmtree(scratch)
+        try:
+            again = all_training_record(ctx, wanted, workers=workers, directory=directory, log=log, save_to=scratch)
+            for name, entry in wanted.items():
+                fitted = again["tasks"][name]
+                if fitted["state_hash"] != entry["state_hash"] \
+                        or fitted["training_groups_sha256"] != entry["training_groups_sha256"]:
+                    raise core.FrozenSourceChanged(
+                        f"the re-fitted all-training state of {name} is not the state that the finished run "
+                        f"recorded ({fitted['failed'] or fitted['state_hash']}); nothing was written")
+            for file in sorted(scratch.glob("*.npz")):
+                os.replace(file, out / "states" / file.name)
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
+    if not (out / "serving.json").exists():
+        core.write_json(out / "serving.json", serving_file_content(world), exclusive=True)
+    for name, entry in bound["tasks"].items():
+        if entry["failed"]:
+            log(f"{name}: the all-training fit failed in the run ({entry['failed']}); it stays failed for this run")
+    return core.read_json(out / "serving.json")
 
 
 def save_predictions(ctx, result):
@@ -986,7 +1049,11 @@ def write_evidence(world, metrics, config):
 
 def verify_run(world):
     """A FINISHED run: its completion record exists and every file it binds still has the recorded SHA-256
-    (the declaration, the prediction manifest, the fit records, the selection, the metrics and the evidence)."""
+    (the declaration, the prediction manifest, the fit records, the selection, the metrics and the evidence).
+
+    The record of the all-training states is INSIDE the completion record (SERVING_KEY). serving.json is a copy
+    of it; when that file exists it must be exactly the copy, so an edited serving.json makes the run fail this
+    check instead of passing next to an unchanged completion record."""
     out = Path(world.out)
     if not (out / "run_complete.json").exists():
         raise core.ReconError("no finished benchmark exists for this world (run_complete.json is missing)")
@@ -994,6 +1061,17 @@ def verify_run(world):
     for name, sha in record["sha256"].items():
         if not (out / name).exists() or core.sha_file(out / name) != sha:
             raise core.FrozenSourceChanged(f"{name} is not the file that the finished run recorded")
+    if (out / "serving.json").exists():
+        if SERVING_KEY not in record:
+            raise core.FrozenSourceChanged("serving.json exists, but the completion record of this run binds no "
+                                           "all-training states")
+        try:
+            copy = core.canonical(core.read_json(out / "serving.json"))
+        except ValueError:
+            copy = None
+        if copy != core.canonical(serving_file_content(world)):
+            raise core.FrozenSourceChanged("serving.json is not the record of the all-training states that the "
+                                           "finished run bound in its completion record")
     return record
 
 
@@ -1067,7 +1145,9 @@ DESIGN_KEYS = ("world", "synthetic", "config", "tasks", "comparators", "regions"
 # Files that exist only once outcomes have been used (predictions, scores, selection on scores).
 OUTCOME_FILES = ("predictions", "prediction_manifest.json", "predictions_complete.json", "fits.json", "selection.json",
                  "metrics.json", "evidence.json", "run_complete.json", "serving.json", "rescores")
-# Files that a finished run binds by SHA-256 in run_complete.json.
+# Files that a finished run binds by SHA-256 in run_complete.json. The record of the all-training states is not
+# among them because run_complete.json HOLDS it (SERVING_KEY); serving.json is a copy of that record, written
+# after the completion record, and verify_run compares the copy with it whenever the file exists.
 BOUND_FILES = ("pre_run_declaration.json", "prediction_manifest.json", "predictions_complete.json", "fits.json",
                "selection.json", "metrics.json", "evidence.json")
 
@@ -1178,16 +1258,28 @@ def verify_freeze(world):
     return frozen
 
 
-def finish(world, *, how, seconds=None, log=say):
-    """Score a run whose predictions are saved, and write its completion record (once).
+def finish(world, *, how, seconds=None, log=say, ctx=None, workers=1, directory=None):
+    """Finish a run whose predictions are saved: fit the all-training states, score, and write the completion
+    record (once).
 
-    run_complete.json binds by SHA-256 the declaration, the prediction manifest, the fit records, the selection,
-    the metrics and the evidence. The reconstruction API reads none of them unless they still match."""
+    Order: (1) the all-training states are fitted from the saved selection, before this call computes any
+    metric (they read no new data, are never scored and cannot change a metric); (2) the metrics and the
+    evidence are computed from the saved predictions; (3) run_complete.json is written. It binds by SHA-256 the
+    declaration, the prediction manifest, the fit records, the selection, the metrics and the evidence, and it
+    HOLDS the record of the all-training states: their settings, fingerprints and training groups. So every
+    expected fingerprint that the reconstruction API uses is behind the one anchor, the SHA-256 of
+    run_complete.json; (4) serving.json is written as a copy of that record."""
     out = Path(world.out)
     if (out / "run_complete.json").exists():
         raise core.ReconError("this run is already complete")
     if not (out / "predictions_complete.json").exists():
         raise core.ReconError("the predictions of this run were not saved completely; there is nothing to finish")
+    if (out / "serving.json").exists():
+        raise core.ReconError("serving.json exists although the run is not complete: it is written only as a copy "
+                              "of the completion record. Move it away and finish again; nothing was changed")
+    selection = core.read_json(out / "selection.json")
+    serving = all_training_record(ctx or build_context(world), selection["serving"], workers=workers,
+                                  directory=directory, log=log)
     if (out / "metrics.json").exists():             # interrupted between the first scoring and this record
         metrics = core.read_json(out / "metrics.json")
         if not (out / "evidence.json").exists():
@@ -1199,13 +1291,16 @@ def finish(world, *, how, seconds=None, log=say):
                     {"completed_utc": utc_now(), "completed_by": how, "seconds": seconds, "sha256": hashes,
                      "pre_run_declaration_sha256": hashes["pre_run_declaration.json"],
                      "metrics_sha256": hashes["metrics.json"], "evidence_sha256": hashes["evidence.json"],
-                     "deviations": core.read_json(out / "selection.json")["deviations"]}, exclusive=True)
+                     "deviations": selection["deviations"], SERVING_KEY: serving}, exclusive=True)
+    # a copy of what the completion record holds, for readers of the file; never a source of an expected fingerprint
+    core.write_json(out / "serving.json", serving_file_content(world), exclusive=True)
     return metrics
 
 
 def run(world, *, workers=1, directory=None, log=say, post=True):
-    """The single run: verify the freeze, write the exclusive start marker, fit, predict, save, score.
-    `post=False` skips the three steps that follow a finished benchmark (all-training states, demo, report)."""
+    """The single run: verify the freeze, write the exclusive start marker, fit, predict, save, fit the
+    all-training states, score, and write the completion record that binds all of it.
+    `post=False` skips the two steps that follow a finished benchmark (demo, report)."""
     out = Path(world.out)
     frozen = verify_freeze(world)
     declaration_sha = core.sha_file(out / "pre_run_declaration.json")
@@ -1223,12 +1318,12 @@ def run(world, *, workers=1, directory=None, log=say, post=True):
     core.write_json(out / "predictions_complete.json", {"utc": utc_now(), "predictions": manifest,
                                                          "table_sha256": ctx.table.sha256(),
                                                          "training_samples_sha256": ctx.partition.samples_sha256})
-    metrics = finish(world, how="run", seconds=result["seconds"], log=log)
+    metrics = finish(world, how="run", seconds=result["seconds"], log=log, ctx=ctx, workers=workers,
+                     directory=directory)
     log(f"run complete in {result['seconds']:.0f} s; run_complete.json sha256 "
         f"{core.sha_file(out / 'run_complete.json')}")
     # The benchmark is complete and stands. What follows reads no new data and can be repeated by hand.
-    for name, step in (("serving", lambda: fit_serving(world, workers=workers, directory=directory, log=log, ctx=ctx)),
-                       ("demo", lambda: demo(world, log=log)), ("report", lambda: report(world, log=log))):
+    for name, step in (("demo", lambda: demo(world, log=log)), ("report", lambda: report(world, log=log))):
         if not post:
             break
         try:
@@ -1251,6 +1346,8 @@ def status(world):
         except core.ReconError as error:
             info["freeze_matches_current_files"] = str(error)
     if info["run_complete.json"]:
+        # the anchor: compare it with the SHA-256 that `run` printed and that the report states in its first lines
+        info["run_complete_sha256"] = core.sha_file(out / "run_complete.json")
         try:
             verify_run(world)
             info["run_files_match_the_completion_record"] = True
@@ -1326,31 +1423,42 @@ def build_reconstructor(world, *, fold=None, policy=None, ctx=None, ledger=None)
 
     Nothing is served unless it is what the finished run recorded: the declaration still describes the code
     and the inputs, every file bound by run_complete.json has its recorded SHA-256, and every state file holds
-    exactly the state whose fingerprint and training groups were recorded when it was fitted."""
+    exactly the state whose fingerprint and training groups were recorded when it was fitted.
+
+    Where the EXPECTED fingerprint of a state comes from: for fold=k, selection.json, which run_complete.json
+    binds by SHA-256; for fold=None, the record of the all-training states INSIDE run_complete.json. Never
+    serving.json: that file is a copy, and verify_run refuses the run when the copy differs. The all-training
+    state of a task must also be the engine setting that the bound selection chose for it."""
     out = Path(world.out)
     if not (out / "run_complete.json").exists():
         raise core.ReconError("no benchmark evidence exists yet for this world")
     frozen = verify_freeze(world)
-    verify_run(world)
+    complete = verify_run(world)
     ctx = ctx or build_context(world)
     selection = core.read_json(out / "selection.json")
     serving = None
     if fold is None:
-        if not (out / "serving.json").exists():
-            raise core.ReconError("no all-training state exists yet; run the `serving` command")
-        serving = core.read_json(out / "serving.json")
-        if serving.get("run_complete_sha256") != core.sha_file(out / "run_complete.json"):
-            raise core.FrozenSourceChanged("serving.json was not written for this finished run")
+        if SERVING_KEY not in complete:
+            raise core.ReconError("the completion record of this run does not bind its all-training states (it "
+                                  "was written by an earlier version of this layer); they cannot be served")
+        serving = complete[SERVING_KEY]                 # the bound record itself
     states, cache = {}, {}
     for name in ctx.tasks:
         if fold is None:
             chosen = serving["tasks"][name]
             if chosen["failed"]:
                 raise core.ReconError(f"the all-training fit for {name} failed: {chosen['failed']}")
+            selected = selection["serving"][name]
+            if (chosen["representation"], chosen["components"]) != (selected["representation"], selected["components"]):
+                raise core.FrozenSourceChanged(f"the all-training state recorded for {name} is not the engine setting "
+                                               "that the selection of this run chose for it")
         else:
             chosen = selection["engine_used"][name][str(fold)]
         file = out / "states" / state_file("serving" if fold is None else f"outer{fold}", chosen["representation"],
                                            chosen["components"])
+        if fold is None and not file.exists():
+            raise core.ReconError(f"{file} is missing; the `serving` command restores the all-training states of a "
+                                  "finished run from its completion record")
         if file not in cache:
             cache[file] = mods.JointState.load(file, expected_hash=chosen["state_hash"])
         if cache[file].groups_sha256 != chosen["training_groups_sha256"]:
@@ -1452,7 +1560,13 @@ def _fmt(value, digits=3):
 
 
 def render_report(world):
+    """The results report, from the files of the run. For a FINISHED run they are read only if they are the
+    files that its completion record binds: the report states that record's SHA-256 in its first lines, and no
+    result may stand under that anchor that the anchor does not cover. (The table of API requests comes from
+    api_demo.json, which the `demo` command writes after the run; the report says that it is an illustration.)"""
     out = Path(world.out)
+    if (out / "run_complete.json").exists():
+        verify_run(world)
     metrics = core.read_json(out / "metrics.json")
     selection = core.read_json(out / "selection.json")
     fits = core.read_json(out / "fits.json")
@@ -1473,7 +1587,8 @@ def render_report(world):
         lines += ["Completion record of this run: `run_complete.json`, SHA-256 `"
                   + core.sha_file(out / "run_complete.json") + "`. It binds, by their SHA-256, the pre-run "
                   "declaration, the prediction manifest, the fit records, the selection, the metrics and the "
-                  "evidence that the reconstruction API reads.", ""]
+                  "evidence that the reconstruction API reads, and it holds the fingerprints of the all-training "
+                  "states that answer for units outside the training partition.", ""]
     lines += [
               "Unit of independence: the brain sample (the ID prefix). The paper reports 166 mice and the data hold "
               "166 sample IDs; no statement was found that no mouse gave two samples. Every sample carries one "
@@ -1580,7 +1695,8 @@ def render_report(world):
                          f"{'yes' if flags and all(flags.values()) else ('n/a' if not flags else 'no')} | "
                          f"{'descriptive only' if entry['descriptive_only'] else ''} |")
         lines.append("")
-    serving_fits = core.read_json(out / "serving.json")["fits"] if (out / "serving.json").exists() else []
+    complete = core.read_json(out / "run_complete.json") if (out / "run_complete.json").exists() else {}
+    serving_fits = complete.get(SERVING_KEY, {}).get("fits", [])
     every_fit = fits["engine_inner"] + fits["engine_outer"] + serving_fits
     not_converged = sum(1 for f in every_fit if "failed" not in f and any(not b["converged"] for b in f["diagnostics"]))
     failed = sum(1 for f in every_fit if "failed" in f)
@@ -1588,7 +1704,7 @@ def render_report(world):
     previous = declaration.get("supersedes")
     lines += ["## Fits", "",
               f"{len(fits['engine_inner'])} inner fits, {len(fits['engine_outer'])} outer fits, "
-              f"{len(serving_fits)} all-training fits (after scoring; never scored); {not_converged} stopped at the "
+              f"{len(serving_fits)} all-training fits (fitted before scoring; never scored); {not_converged} stopped at the "
               f"iteration limit, {failed} failed. Deviations from the selected setting: {len(selection['deviations'])}. "
               f"Freezes or starts set aside before any outcome-derived file existed: {len(set_aside)}"
               + ("".join(f" ({a['aborted_utc']}: {a['reason']}; run had started: {a['run_had_started']})"
@@ -1600,6 +1716,8 @@ def render_report(world):
     if demo_path.exists():
         demo_rows = core.read_json(demo_path)["requests"]
         lines += ["## The reconstruction API on one unit (states that never saw its brain sample)", "",
+                  "An illustration, written after the run by the `demo` command (`api_demo.json`); it is not a "
+                  "result of the benchmark and the completion record does not bind it.", "",
                   "| Request | Property | Outcome | Codes | Module |", "|---|---|---|---|---|"]
         for row in demo_rows:
             lines.append(f"| {row['request']} | {row['variable']} | {row['status']} | {', '.join(row['codes']) or '-'} | "

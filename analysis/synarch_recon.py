@@ -14,13 +14,19 @@ What this file holds
   * whole-brain-sample splits by a salted hash, and metrics aggregated per brain sample;
   * the reconstruction-request API: reconstruct(request) returns, per requested property, an
     INFERRED value with provenance or a structured REFUSAL;
-  * the provenance ledger and the ONE rule for inputs of a hidden-axon forecast (hidden_axon_problem):
-    every inferred input, whatever its variable name, is checked against what this layer itself issued.
+  * the provenance ledger and the ONE rule for the records of a request (hidden_axon_problem): EVERY inferred
+    input of EVERY request, whatever its variable name and whatever task the request looks like, is checked
+    against what this layer itself issued; and a forecast of hidden axon values takes only permitted inputs;
+  * ONE check of a record against its registered variable (record_problem): the record's own invariants as
+    the object is now, its statement of scale and frame, and its VALUE against the frame and domain it states
+    (a soma in the mirrored frame has ML <= 5,700; the loader applies the same rule to a training row).
 
 What the provenance checks can and cannot see: records are plain values and are not signed. An inferred
-value is accepted in a hidden-axon forecast only if this layer issued exactly that record (ledger) and
-every state in its ancestry is registered and excludes the query's group. A value that somebody re-enters
-by hand as a 'measured' record cannot be told apart from a measurement; no check here can.
+value is accepted only if this layer issued exactly that record (ledger) and every state in its ancestry is
+registered and excludes the query's group. A value that somebody re-enters by hand as a 'measured' record
+cannot be told apart from a measurement; no check here can. The training groups of a state object that is
+built in memory are taken on its word; only a state loaded against a fingerprint recorded at fit time is
+anchored (JointState.load).
 
 On import it verifies the SHA-256 of analysis/brm_joint.py (the unchanged joint mixture model)
 against the constant below and against the pin in data/interim/brm_template_method/frozen.json,
@@ -297,22 +303,174 @@ def statement_problem(spec, scale, transform, frame):
     return None
 
 
+@dataclass(frozen=True)
+class Bound:
+    """One bound of the registered DOMAIN of a variable, in its registered measurement units: the values the
+    variable can have in the frame and on the scale it states. `coordinate` None: every coordinate."""
+    coordinate: str | None
+    low: float | None
+    high: float | None
+    why: str                      # the statement the bound comes from, in words
+    tolerance: float = 0.0        # absolute, in registered units
+
+
+def _real(value):
+    """A plain real number: not text, not a boolean (neither is silently read as a number)."""
+    return isinstance(value, (int, float, np.integer, np.floating)) and not isinstance(value, (bool, np.bool_))
+
+
+def numeric_values(name, value, coordinates=()):
+    """A numeric value as a 1-D float array: ONE finite real number per coordinate (one number for a scalar).
+    Raises ScaleError for text, booleans, nested sequences, a wrong count and non-finite numbers."""
+    if isinstance(value, np.ndarray):
+        value = value.tolist() if value.ndim == 1 else None
+    items = tuple(value) if isinstance(value, (tuple, list)) else (value,)
+    if not all(_real(v) for v in items):
+        raise ScaleError(f"{name}: the value is not one plain number per coordinate")
+    if len(items) != max(1, len(coordinates)):
+        raise ScaleError(f"{name}: {len(items)} value(s) for {max(1, len(coordinates))} coordinate(s)")
+    values = np.array([float(v) for v in items], dtype=float)
+    if not np.isfinite(values).all():
+        raise ScaleError(f"{name}: non-finite value")
+    return values
+
+
+def _bound_on(bound, tag):
+    """(low, high, tolerance) of one bound on the scale that a value tag states: as registered for 'identity',
+    monotonically transformed (and without tolerance) for a value on the modelling scale. None: no limit."""
+    if tag == "identity":
+        return bound.low, bound.high, float(bound.tolerance)
+    return (None if bound.low is None else float(forward_transform(tag, bound.low)),
+            None if bound.high is None else float(forward_transform(tag, bound.high)), 0.0)
+
+
+def domain_limits(bounds, coordinates, tag="identity"):
+    """(low, high) arrays of the registered bounds for `coordinates` on the scale of the value tag; +-inf where
+    a coordinate has none. Used to truncate the ends of an interval at the bounds of the frame."""
+    names = tuple(coordinates) if coordinates else (None,)
+    low, high = np.full(len(names), -np.inf), np.full(len(names), np.inf)
+    for bound in bounds:
+        lo, hi, _ = _bound_on(bound, tag)
+        for position, coordinate in enumerate(names):
+            if bound.coordinate is None or bound.coordinate == coordinate:
+                low[position] = low[position] if lo is None else max(low[position], lo)
+                high[position] = high[position] if hi is None else min(high[position], hi)
+    return low, high
+
+
+def bounds_problem(name, bounds, values, coordinates=(), tag="identity", framed=True):
+    """None when numeric values lie inside the registered bounds of their variable; else which value does not.
+
+    THE one rule for a value against the frame and scale it states. A query record, a stored record, an
+    estimate that is about to be issued and a row of the training table all get their verdict here."""
+    names = tuple(coordinates) if coordinates else (None,)
+    for bound in bounds:
+        lo, hi, slack = _bound_on(bound, tag)
+        for position, coordinate in enumerate(names):
+            if bound.coordinate is not None and bound.coordinate != coordinate:
+                continue
+            value = float(values[position])
+            if (lo is not None and value < lo - slack) or (hi is not None and value > hi + slack):
+                label = name if coordinate is None else f"{name}: {coordinate}"
+                return (f"{label} = {value:g} lies outside the registered {'frame' if framed else 'scale'} of "
+                        f"the variable ({bound.why})")
+    return None
+
+
+def value_problem(spec, record):
+    """None when the VALUE of a record is one the variable can have under the statement the record makes.
+
+    Shape: a vector names registered coordinates, each once, with one finite plain number each; a scalar holds
+    one; other kinds carry no coordinates. Domain: inside the registered bounds of the variable (VariableSpec
+    .domain) on the scale of the value tag. The statement of a frame is otherwise only text: a soma in true
+    right-hemisphere coordinates would pass under the words 'mirrored to ML <= 5,700'. Here its number does not."""
+    coordinates = tuple(record.coordinates)
+    if spec.kind == "vector":
+        if not coordinates or len(set(coordinates)) != len(coordinates) \
+                or (spec.components and not set(coordinates) <= set(spec.components)) \
+                or (spec.n_components and len(coordinates) > spec.n_components):
+            return f"{spec.name}: the record's coordinates are not coordinates of the registered variable"
+    elif coordinates:
+        return f"{spec.name}: only a vector has coordinates"
+    if spec.kind not in ("vector", "continuous"):
+        return None
+    try:
+        values = numeric_values(spec.name, record.value, coordinates)
+    except ScaleError as error:
+        return str(error)
+    return bounds_problem(spec.name, spec.domain, values, coordinates, record.transform, framed=spec.frame is not None)
+
+
+def invariant_problem(record):
+    """None when a record, AS THE OBJECT IS NOW, still satisfies what its constructors enforce; else what is wrong.
+
+    Records are frozen dataclasses, and a frozen object can still be changed behind its constructor. So every
+    check that relies on a record re-runs the invariants of the record AND of the parts it is made of (its
+    uncertainty, its group, its source) on the objects as they are: a 'measured' record whose uncertainty names
+    a producing module or state is not a record."""
+    try:
+        if type(record) is not Observation:
+            return "not an observation record"
+        for part, kind in ((record.uncertainty, Uncertainty), (record.group, Group), (record.source, SourceRef)):
+            if type(part) is not kind:
+                return f"the record's {kind.__name__} is not a {kind.__name__}"
+        for item in (record, record.uncertainty, record.group, record.source):
+            if set(vars(item)) != set(type(item).__dataclass_fields__):     # e.g. a method replaced on the object
+                return "not a valid record (it carries attributes that are not record fields)"
+        replace(record.uncertainty)
+        replace(record.group)
+        replace(record)
+    except (TypeError, ValueError, AttributeError) as error:
+        return f"not a valid record ({error})"
+    return None
+
+
+def record_problem(spec, record):
+    """None when a record that holds a value is a well-formed record of the registered variable `spec`; else why
+    not. ONE check for every place that takes a record (the request API, the planner, the record store, the axon
+    adapter): its invariants as the object is now, its statement of scale and frame, and its value against the
+    shape and the domain of the variable."""
+    return (invariant_problem(record) or statement_problem(spec, record.scale, record.transform, record.frame)
+            or value_problem(spec, record))
+
+
+def estimate_problem(spec, estimate):
+    """None when every number of an estimate (point, median, interval ends) is a value the variable can have on
+    the scale and in the frame the estimate states; else which one is not. Nothing is issued under a frame's
+    statement that lies outside that frame: the record made from it would be refused as an input."""
+    if spec.kind not in ("vector", "continuous"):
+        return None
+    coordinates = tuple(estimate.coordinates)
+    parts = [("point", estimate.point)]
+    if estimate.median is not None:
+        parts.append(("median", estimate.median))
+    if estimate.interval:
+        parts += [("lower interval end", estimate.interval.get("lower")),
+                  ("upper interval end", estimate.interval.get("upper"))]
+    for what, value in parts:
+        try:
+            values = numeric_values(spec.name, value, coordinates)
+        except ScaleError as error:
+            return f"{what}: {error}"
+        problem = bounds_problem(spec.name, spec.domain, values, coordinates, estimate.transform,
+                                 framed=spec.frame is not None)
+        if problem:
+            return f"{what}: {problem}"
+    return None
+
+
 def model_values(spec, record):
     """The value of a record on the MODELLING scale of its variable, converted exactly once.
 
-    The record must state the registered scale and frame (statement_problem). A value tagged 'identity' is in
-    measurement units and is transformed once; a value tagged with the variable's modelling transform is
-    already there and is returned unchanged. Anything else raises ScaleError."""
-    problem = statement_problem(spec, record.scale, record.transform, record.frame)
+    The record must state the registered scale and frame (statement_problem) and hold a value the variable can
+    have there (value_problem). A value tagged 'identity' is in measurement units and is transformed once; a
+    value tagged with the variable's modelling transform is already there and is returned unchanged. Anything
+    else raises ScaleError."""
+    problem = statement_problem(spec, record.scale, record.transform, record.frame) or value_problem(spec, record)
     if problem:
         raise ScaleError(problem)
+    values = numeric_values(spec.name, record.value, tuple(record.coordinates))
     wanted = spec.transform if spec.transform in MODEL_SCALE_TEXT else "identity"
-    try:
-        values = np.atleast_1d(np.asarray(record.value, dtype=float))
-    except (TypeError, ValueError):
-        raise ScaleError(f"{spec.name}: the value is not numeric") from None
-    if not np.isfinite(values).all():
-        raise ScaleError(f"{spec.name}: non-finite value")
     if record.transform == "identity" and wanted != "identity":
         if wanted == "log10_1p" and (values < 0).any():
             raise ScaleError(f"{spec.name}: a negative value cannot be put on the scale log10(1 + value)")
@@ -322,17 +480,25 @@ def model_values(spec, record):
     return values
 
 
+def plain_label(value):
+    """The text of a categorical value, exactly as the digest of its record binds it: the characters of a string
+    (whatever a subclass makes of str()), str() of anything else."""
+    return str.__str__(value) if isinstance(value, str) else str(value)
+
+
 # ----------------------------------------------------------------------------------------------
 # identifiers
 # ----------------------------------------------------------------------------------------------
 
 
 def identifier_problem(value, what="identifier"):
-    """None for a usable identifier: a non-empty string without surrounding blanks or control characters."""
+    """None for a usable identifier: a non-empty string without surrounding blanks and without control,
+    format or other invisible characters ANYWHERE in it (Unicode category C: a zero-width space or a soft
+    hyphen would otherwise make a training sample look like a new one)."""
     if not isinstance(value, str) or not value:
         return f"{what} is empty or not a string"
-    if value != value.strip() or any(ord(ch) < 32 or ord(ch) == 127 for ch in value):
-        return f"{what} {value!r} has leading or trailing blanks or control characters"
+    if value != value.strip() or any(unicodedata.category(ch)[0] == "C" for ch in value):
+        return f"{what} {value!r} has leading or trailing blanks, or control or invisible characters"
     return None
 
 
@@ -388,6 +554,7 @@ class VariableSpec:
     predictor_ban: str | None = None  # reason, when the variable may never be a predictor
     measured_input_needs_declared_task: bool = False
     note: str = ""
+    domain: tuple = ()            # Bound entries: the values the variable can have in its stated frame and scale
 
 
 @dataclass(frozen=True)
@@ -469,6 +636,18 @@ JIAO_HYPOTHALAMIC = JIAO_REGIONS[:16]
 SOMA_AXES = ("AP", "DV", "ML")
 JIAO_FRAME = ("Allen CCFv3 (2017), 10 um grid, micrometres, as published: +AP posterior, +DV ventral, mirrored to "
               "ML <= 5,700 (axes, unit and mirroring are INFERRED for this table; reports/d109_jiao_conventions.md)")
+MIDLINE_ML = 5700.0
+CCF_EXTENT_UM = (13200.0, 8000.0, 11400.0)       # AP, DV, ML of the 10 um ccf_2017 grid (d109_jiao_conventions.md, 2)
+FRAME_TOLERANCE_UM = 1e-6                        # the loader's tolerance on the frame's bounds
+# What JIAO_FRAME says about a soma position, as numbers: inside the atlas volume, and on the mirrored side.
+SOMA_BOUNDS = (
+    Bound("AP", 0.0, CCF_EXTENT_UM[0], "the CCFv3 10 um grid spans AP 0 to 13,200 um", FRAME_TOLERANCE_UM),
+    Bound("DV", 0.0, CCF_EXTENT_UM[1], "the CCFv3 10 um grid spans DV 0 to 8,000 um", FRAME_TOLERANCE_UM),
+    Bound("ML", None, MIDLINE_ML, "the frame is mirrored to ML <= 5,700; a right-hemisphere soma is mirrored first: "
+          "ML' = 11,400 - ML", FRAME_TOLERANCE_UM),
+    Bound("ML", 0.0, None, "the CCFv3 10 um grid starts at ML 0", FRAME_TOLERANCE_UM),
+)
+LENGTH_BOUNDS = (Bound(None, 0.0, None, "a length is not negative"),)
 # Namespaces whose unit ID encodes its group (the Jiao neuron ID is <brain sample>_<n>; the loaders check it).
 _GROUP_RULES = {"jiao": "unit_prefix"}
 # The ONLY measured inputs of a hidden-axon forecast (reports/axon_dataset_plan.md, section 8, rule 4), and the
@@ -506,6 +685,12 @@ class Registry:
             raise RegistryError(f"variable {spec.name}: only vectors have coordinates")
         if len(set(spec.components)) != len(spec.components):
             raise RegistryError(f"variable {spec.name}: duplicate coordinate names")
+        for bound in spec.domain:
+            if type(bound) is not Bound or spec.kind not in ("vector", "continuous") \
+                    or (bound.coordinate is not None and bound.coordinate not in spec.components) \
+                    or (bound.low is not None and bound.high is not None and bound.low > bound.high) \
+                    or not bound.why or bound.tolerance < 0:
+                raise RegistryError(f"variable {spec.name}: a domain bound is malformed or names another coordinate")
         key = (spec.namespace, spec.name)
         if key in self.variables:
             raise RegistryError(f"variable {spec.name} is already registered in {spec.namespace}")
@@ -594,7 +779,7 @@ class Registry:
 def _seed_variables(registry, jiao):
     add = registry.add_variable
     add(VariableSpec("soma_position", "jiao", "vector", "um", "linear position", JIAO_FRAME, "identity", SOMA_AXES,
-                     note="published soma table; ML is the mirrored coordinate"))
+                     note="published soma table; ML is the mirrored coordinate", domain=SOMA_BOUNDS))
     add(VariableSpec("source_label", "jiao", "categorical", "label", "nominal", None, "none",
                      note="the brain sample's Cre line, or the orexin promoter label 'Wt(orexin)' (portal: 'Orexin'). "
                           "A genetic label, not measured gene expression; one label per brain sample, so a label "
@@ -608,7 +793,7 @@ def _seed_variables(registry, jiao):
                      "49 CCF acronyms (25 leaves, 24 parents; MY is the ancestor of IO, NTS, PARN, IRN)", "log10_1p",
                      JIAO_REGIONS, family="axon", measured_input_needs_declared_task=True,
                      note="published per-region axon length; the columns are not a partition and do not sum to the "
-                          "total axon length"))
+                          "total axon length", domain=LENGTH_BOUNDS))
     add(VariableSpec("axon_arbor", "jiao", "structured", "um", "rooted 3D tree",
                      "Allen CCFv3 (2017), mirrored-left frame, complete measured tree", "none", family="axon",
                      note="3D trace; produced only through the axon adapter"))
@@ -627,7 +812,8 @@ def _seed_variables(registry, jiao):
     add(VariableSpec("retrograde_target", "epiretro", "categorical", "label", "nominal", None, "none",
                      note="one sampled retrograde target per nucleus; other targets are unobserved, not negatives"))
     add(VariableSpec("methylation_global", "epiretro", "vector", "fraction", "fraction in [0, 1]", None, "identity",
-                     ("mCGFrac", "mCHFrac"), note="global fractions; no per-locus matrix exists locally"))
+                     ("mCGFrac", "mCHFrac"), note="global fractions; no per-locus matrix exists locally",
+                     domain=(Bound(None, 0.0, 1.0, "a fraction lies in [0, 1]"),)))
     add(VariableSpec("assigned_subclass", "epiretro", "categorical", "label", "nominal", None, "none",
                      note="assigned through methylome-RNA co-clustering: an inferred label, not measured RNA"))
     add(VariableSpec("gene_expression", "ABC_RNA", "vector", "log2(CPM+1)", "cluster mean", None, "identity",
@@ -801,11 +987,16 @@ class Observation:
                 raise ValueError("only inferred records carry a lineage")
             if self.derived_from:
                 raise ValueError("only inferred records are derived from other records")
-            if isinstance(self.source, SourceRef) and str(self.source.path).startswith(INFERRED_SOURCE_PREFIX):
+            if isinstance(self.source, SourceRef) and reconstruction_source(self.source):
                 raise ValueError(f"a record whose source is a reconstruction is 'inferred', not '{self.status}'")
 
     def key(self):
         return (self.namespace, self.grain, self.unit_id)
+
+
+def reconstruction_source(source):
+    """True when a source reference names a reconstruction (however the prefix is spelled)."""
+    return str(source.path).strip().casefold().startswith(INFERRED_SOURCE_PREFIX)
 
 
 def paired(a, b):
@@ -844,6 +1035,9 @@ class ObservationStore:
         return sum(len(v) for v in self._units.values())
 
     def add(self, record):
+        problem = invariant_problem(record)
+        if problem:
+            raise ValueError(problem)
         namespace = self.registry.namespace(record.namespace)
         if record.status == "reference":
             rule = self.registry.reference_rule(record.reference.from_namespace, record.namespace)
@@ -868,10 +1062,9 @@ class ObservationStore:
             None if record.group.group_id is None else identifier_problem(record.group.group_id, "group ID"))
         if problem:
             raise ValueError(f"{record.variable}: {problem}")
-        if record.coordinates and spec.components and not set(record.coordinates) <= set(spec.components):
-            raise ValueError(f"{record.variable}: coordinates outside the registered ones")
         if record.status != "missing":
-            problem = statement_problem(spec, record.scale, record.transform, record.frame)
+            # the statement of scale and frame, and the value against the shape and the domain it states
+            problem = record_problem(spec, record)
             if problem:
                 raise ScaleError(problem)
         slot = self._units[record.key()]
@@ -952,7 +1145,6 @@ REAL_PINS = {
 }
 SOMA_CSV_COLUMNS = ("file", "neurons", "geno", "location", "AP", "DV", "ML")     # never 'type' or 'name'
 SOMA_XLSX_COLUMNS = ("neurons", "location")                                       # never 'cluster' or 'Class'
-MIDLINE_ML = 5700.0
 
 
 @dataclass(frozen=True)
@@ -1123,7 +1315,8 @@ def read_regional_training(world, partition):
                 dropped += 1                      # sealed: never parsed, never stored
                 continue
             values = np.array(line[cut + 1:].rstrip("\r\n").split(","), dtype=float)
-            if values.shape != (len(world.regions),) or not np.isfinite(values).all() or (values < 0).any():
+            if values.shape != (len(world.regions),) or not np.isfinite(values).all() \
+                    or bounds_problem("regional_axon_length", LENGTH_BOUNDS, values, world.regions, framed=False):
                 raise ReconError(f"invalid regional row {full_id}")
             if full_id in lengths:
                 raise ReconError(f"duplicate regional row {full_id}")
@@ -1190,8 +1383,11 @@ def assemble_training_table(world, partition, soma_rows, fine_labels, lengths, a
             raise ReconError(f"table label and manifest label disagree for {neuron}")
         if fine_labels[neuron] != partition.neuron_soma_label[neuron]:
             raise ReconError(f"fine soma label and manifest soma label disagree for {neuron}")
-        if not all(math.isfinite(v) for v in row["soma"]) or row["soma"][2] > MIDLINE_ML + 1e-6:
-            raise ReconError(f"soma of {neuron} is not finite or not in the mirrored frame (ML <= 5,700)")
+        # the same rule a query record is held to (bounds_problem): inside the atlas volume, mirrored side
+        outside = None if all(math.isfinite(v) for v in row["soma"]) else "a coordinate is not finite"
+        outside = outside or bounds_problem("soma_position", SOMA_BOUNDS, row["soma"], SOMA_AXES)
+        if outside:
+            raise ReconError(f"soma of {neuron} is not finite or not in the mirrored frame (ML <= 5,700): {outside}")
         if row["full_id"] in by_full:
             raise ReconError(f"published full ID {row['full_id']} is not unique")
         if row["full_id"] != f"{neuron}_{row['geno']}_{fine_labels[neuron]}":
@@ -1534,16 +1730,22 @@ class ReconstructionRequest:
                                     "if it comes from another dataset")
             spec = registry.variable(namespace, variable)
             coordinates = ()
+
+            def number(v, variable=variable):
+                if not _real(v):                # text and booleans are not silently read as numbers
+                    raise ValueError(f"{variable}: {v!r} is not a plain number")
+                return float(v)
+
             if spec.kind == "vector":
                 if isinstance(value, Mapping):
                     coordinates = tuple(c for c in spec.components if c in value)
                     if len(coordinates) != len(value):
                         raise ValueError(f"{variable}: unknown coordinate names")
-                    value = tuple(float(value[c]) for c in coordinates)
+                    value = tuple(number(value[c]) for c in coordinates)
                 else:
-                    coordinates, value = tuple(spec.components), tuple(float(v) for v in value)
+                    coordinates, value = tuple(spec.components), tuple(number(v) for v in value)
             elif spec.kind == "continuous":
-                value = float(value)
+                value = number(value)
             records.append(Observation(spec_ns.species, namespace, spec_ns.grain, str(unit_id), group, variable,
                                        "measured", value, scale_statement(spec, "identity"), coordinates, spec.frame,
                                        source=SourceRef("request", None, str(unit_id)), transform="identity"))
@@ -1789,7 +1991,8 @@ class ProvenanceLedger:
 
 def _inferred_input_problem(registry, namespace, unit_key, group_id, record, ledger, resolve, state_inputs,
                             axon_hidden=True):
-    """Why an INFERRED record may not feed an answer about a unit whose axon is hidden; None when it may.
+    """Why an INFERRED record may not feed an answer about a unit; None when it may. Applied to every inferred
+    record of every request.
 
     The ancestry is read from the ledger (what the layer recorded when it issued each value), transitively.
     For the record and every inferred ancestor: it was issued here, unchanged, for this unit and group; its
@@ -1853,23 +2056,42 @@ def _inferred_input_problem(registry, namespace, unit_key, group_id, record, led
     return None
 
 
-def hidden_axon_problem(registry, namespace, unit_key, group_id, evidence, *, ledger, resolve, state_inputs=None,
-                        axon_hidden=True):
-    """Why `evidence` may not feed an answer about ONE unit whose axon is hidden; None when every record is
-    admissible. ONE rule for every caller.
+def carries_inferred_provenance(record, resolve=None):
+    """True when a record that does not say 'inferred' carries the provenance of an inferred value: evidence or a
+    lineage, an uncertainty that names a producing module, a state, training groups or a coverage flag (whatever
+    its kind says), a source that is a reconstruction, or a source hash that is a registered fitted state."""
+    u = record.uncertainty
+    if record.derived_from or record.lineage or u.kind == "inferred" or u.producing_module or u.state_hash \
+            or u.training_groups_hash or u.coverage or reconstruction_source(record.source):
+        return True
+    if resolve is None or not isinstance(record.source.sha256, str):
+        return False
+    return resolve(record.source.sha256) is not None
 
-    `axon_hidden=True`: a HIDDEN-AXON FORECAST. The axon adapter, and every conditional of the general layer
-    whose target is axon-derived and that is not declared as taking a measured profile (T1 and every undeclared
-    conditional with such a target):
-      * a measured record: a registered variable of the namespace, one of HIDDEN_AXON_INPUTS, not axon-derived,
-        a record of this unit and group, supplied under its own name, and carrying no inferred provenance;
-      * an inferred record, WHATEVER its variable name (a soma position or a source label can be inferred
-        from the hidden profile as well as anything else): _inferred_input_problem, transitively;
+
+def hidden_axon_problem(registry, namespace, unit_key, group_id, evidence, *, ledger, resolve, state_inputs=None,
+                        axon_hidden=True, declared_measured=()):
+    """Why `evidence` may not feed an answer about ONE unit; None when every record is admissible. ONE rule for
+    every caller and for EVERY request, whatever task the request has the shape of.
+
+    Every record: an observation record that still satisfies its own invariants as the object is now, a
+    registered variable of the namespace that is not banned, supplied under its own name, a record of this unit
+    and group. A record that says 'measured' or 'reference' carries no provenance of an inferred value.
+    Every INFERRED record, WHATEVER its variable name (a soma position or a source label can be inferred from the
+    hidden profile as well as anything else): _inferred_input_problem, transitively. It was issued by this
+    layer, unchanged, for this unit and group, by registered states that do not hold the unit's group; the
+    group is known. There is no task in which an inferred input is taken on its own word.
+
+    `axon_hidden=True`: the ANSWER is axon-derived, a forecast of hidden axon values (the axon adapter; T1; T4
+    and every other conditional whose target is axon-derived). Then also:
+      * a measured record is one of HIDDEN_AXON_INPUTS and not axon-derived. The only exception is a measured
+        record named in `declared_measured`: the measured part of the profile that the matched conditional is
+        DECLARED as taking (T4: the measured hypothalamic block). The exception is for that measured record
+        only; an inferred record under the same name gets none;
+      * every measured ancestor of an inferred record is one of HIDDEN_AXON_INPUTS and not axon-derived;
       * any other status is refused.
-    `axon_hidden=False`: every other conditional that is not a declared profile-input task. The same provenance
-    and state rule for every inferred record (issued here, for this unit, by registered states that do not hold
-    the unit's group, group known); the whitelist of measured inputs is not applied, because the answer is not
-    axon-derived.
+    `axon_hidden=False`: the answer is not axon-derived (T2, T3, undeclared conditionals with such a target); the
+    whitelist of measured inputs is not applied.
 
     `evidence` maps the name a record was supplied under to the record; `resolve(state_hash)` gives the training
     groups of a registered state or None; `state_inputs(state_hash)` optionally gives its declared inputs."""
@@ -1881,9 +2103,20 @@ def hidden_axon_problem(registry, namespace, unit_key, group_id, evidence, *, le
         if implied is not None and implied != group_id:
             return f"by its ID, unit {unit_key[2]} belongs to group {implied}, not to {group_id}"
     for name, record in evidence.items():
+        if type(record) is not Observation:
+            return f"what was supplied as {name} is not an observation record"
         variable = record.variable
         if variable != name:
             return f"a record of {variable} was supplied under the name {name}"
+        try:
+            laundered = record.status != "inferred" and carries_inferred_provenance(record, resolve)
+        except (AttributeError, TypeError):
+            laundered = True
+        if laundered:
+            return f"the {variable} record says '{record.status}' but carries the provenance of an inferred value"
+        problem = invariant_problem(record)
+        if problem:
+            return f"the {variable} record is {problem}"
         if record.status == "reference" and not axon_hidden:
             continue                                    # a population-level reference of the unit's own group
         if not registry.has_variable(namespace, variable):
@@ -1896,14 +2129,12 @@ def hidden_axon_problem(registry, namespace, unit_key, group_id, evidence, *, le
         if group_id is not None and record.group.group_id is not None and record.group.group_id != group_id:
             return f"the {variable} record is filed under group {record.group.group_id}, the query names {group_id}"
         if record.status == "measured":
-            if record.derived_from or record.lineage or record.uncertainty.kind == "inferred" \
-                    or str(record.source.path).startswith(INFERRED_SOURCE_PREFIX):
-                return f"the {variable} record says 'measured' but carries the provenance of an inferred value"
-            if axon_hidden and spec.family == "axon":
-                return (f"a measured {variable} of the query neuron is never an input to a hidden-axon forecast: "
-                        "the neuron's own axon, dendrite and regional profile are for scoring only")
-            if axon_hidden and variable not in HIDDEN_AXON_INPUTS:
-                return f"{variable} is not a permitted input of a hidden-axon forecast"
+            if axon_hidden and variable not in declared_measured:
+                if spec.family == "axon":
+                    return (f"a measured {variable} of the query neuron is never an input to a hidden-axon forecast: "
+                            "the neuron's own axon, dendrite and regional profile are for scoring only")
+                if variable not in HIDDEN_AXON_INPUTS:
+                    return f"{variable} is not a permitted input of a hidden-axon forecast"
         elif record.status == "inferred":
             # EVERY inferred input, including permitted names such as soma_position and source_label
             problem = _inferred_input_problem(registry, namespace, unit_key, group_id, record, ledger, resolve,
@@ -1980,6 +2211,11 @@ class Reconstructor:
         key = (request.namespace, request.grain, request.unit_id)
         seen, groups, own, references = set(), set(), {}, []
         for record in request.observed:
+            # the record's own invariants and those of its parts (uncertainty, group, source), on the objects as
+            # they are NOW: a frozen record can be changed behind its constructor
+            problem = invariant_problem(record)
+            if problem:
+                return refuse("invalid_request", f"an observed record is {problem}")
             mine = record.key() == key
             group_reference = (record.status == "reference" and record.namespace == request.namespace)
             if not mine and not group_reference:
@@ -2003,11 +2239,9 @@ class Reconstructor:
                 groups.add(record.group.group_id)
             if record.status == "missing":
                 continue
-            try:
-                replace(record)                 # the record's own invariants, checked again on the object as it is now
-            except (TypeError, ValueError) as error:
-                return refuse("invalid_request", f"{record.variable}: not a valid record ({error})")
-            problem = statement_problem(spec, record.scale, record.transform, record.frame)
+            # its statement of scale and frame, and its VALUE against the shape and the domain (frame) of the
+            # registered variable: a number outside the frame the record states is not a value of that variable
+            problem = statement_problem(spec, record.scale, record.transform, record.frame) or value_problem(spec, record)
             if problem:
                 return refuse("invalid_request", problem)
             own[record.variable] = record
@@ -2040,8 +2274,9 @@ class Reconstructor:
                 return refuse("unidentifiable_cross_modal",
                               f"no population-level reference alignment of {record.variable} from "
                               f"{link.from_namespace} to {request.namespace} is declared in the data contract")
-            problem = statement_problem(registry.variable(link.from_namespace, record.variable), record.scale,
-                                        record.transform, record.frame)
+            reference_spec = registry.variable(link.from_namespace, record.variable)
+            problem = statement_problem(reference_spec, record.scale, record.transform, record.frame) \
+                or value_problem(reference_spec, record)
             if problem:
                 return refuse("invalid_request", problem)
         if stated is None and effective is not None:
@@ -2051,7 +2286,7 @@ class Reconstructor:
     def reconstruct(self, request):
         level = request.interval_level or self.policy.interval_level
         blanket, effective = self._check_request(request)
-        evidence = {r.variable: r for r in effective.observed if r.status != "missing"}
+        evidence = {} if blanket is not None else {r.variable: r for r in effective.observed if r.status != "missing"}
         asked = Counter(t.variable for t in request.requested)
         properties = {}
         for target in request.requested:
@@ -2134,26 +2369,6 @@ class Reconstructor:
         module, refusal = first_refusal
         return PropertyResult(target.variable, target.coordinates or (), "refused", refusal=refusal, module=module.name)
 
-    def _inferred_input_notices(self, variable, record, group_id):
-        """What the ledger says about an inferred input of a DECLARED profile-input task (there the measured
-        profile is an input by declaration, so the input is flagged, not refused)."""
-        facts = self.ledger.ancestry(record)
-        if facts is None:
-            return [Notice("inferred_input_unverified",
-                           f"{variable} was not issued by this layer, or it (or one of its ancestors) was changed "
-                           "since: its provenance is only what the record says about itself", variable)]
-        notices = []
-        for fact in facts:
-            if fact.state_groups is None:
-                notices.append(Notice("inferred_input_unverified",
-                                      f"the training groups of the state that produced {fact.variable} are not known "
-                                      "to this layer", variable))
-            elif id_in(group_id, fact.state_groups):
-                notices.append(Notice("group_in_training_state",
-                                      f"the state that produced the inferred {fact.variable} holds other units of "
-                                      "this unit's group", variable))
-        return notices
-
     def _gate(self, request, target, plan, level, observed):
         registry, module = self.registry, plan.module
         key = (request.namespace, request.grain, request.unit_id)
@@ -2213,37 +2428,41 @@ class Reconstructor:
                         return refuse("forbidden_input",
                                       f"the inferred {variable} descends from a measured {ancestor}, which is "
                                       "an input only in tasks declared as taking it")
-        # 3. The unit's axon is hidden in every request that is not one of the declared profile-input tasks.
-        #    ONE rule then covers every record of the request, used by the module or not: an inferred input,
-        #    whatever its name, must be a value this layer issued for this unit, by registered states that do
-        #    not hold the unit's group; and when the answer itself is axon-derived (a hidden-axon FORECAST), the
-        #    measured inputs and the measured ancestors are held to the whitelist.
-        if not declared:
-            problem = hidden_axon_problem(registry, request.namespace, key, group_id, observed, ledger=self.ledger,
-                                          resolve=self.resolve_state, axon_hidden=spec.family == "axon")
-            if problem:
-                return refuse("forbidden_input", problem)
-        else:
-            for variable in used_inferred:
-                for notice in self._inferred_input_notices(variable, observed[variable], group_id):
-                    if notice not in notices:
-                        notices.append(notice)
+        # 3. ONE rule covers every record of EVERY request, used by the module or not, whatever task the request
+        #    has the shape of: an inferred input, whatever its name, must be a value this layer issued for this
+        #    unit, by registered states that do not hold the unit's group. When the answer itself is axon-derived
+        #    (a forecast of hidden axon values: T1, T4, undeclared conditionals with such a target), the measured
+        #    inputs and the measured ancestors are also held to the whitelist. The ONLY exception is the MEASURED
+        #    part of the profile that the matched conditional is declared as taking (T4's measured block). A
+        #    request that has the shape of a declared profile-input task but holds no measured profile gets no
+        #    exception at all: its inferred 'profile' is an inferred input like any other.
+        taken = ()
+        if declared:
+            taken = tuple(v for v, _ in plan.conditional.requires
+                          if needs_declaration(v) and v in observed and observed[v].status == "measured")
+        problem = hidden_axon_problem(registry, request.namespace, key, group_id, observed, ledger=self.ledger,
+                                      resolve=self.resolve_state, axon_hidden=spec.family == "axon",
+                                      declared_measured=taken)
+        if problem:
+            return refuse("forbidden_input", problem)
         if plan.unit_in_training:
             return refuse("leakage_guard", "this unit is part of the module state; use a state that does not contain it")
         if evidence.status.startswith(BLOCKED_PREFIX):
             return refuse("not_validated", evidence.status)
         degraded = any(n.code in ("out_of_support", "conditioned_on_inferred_input", "conditioned_on_reference_input",
                                   "group_in_training_state", "group_unknown", "interval_level_not_benchmarked",
-                                  "evidence_not_linked", "inferred_input_unverified")
+                                  "evidence_not_linked")
                        for n in notices)
 
         def inferred(estimate, *, coverage, baseline_level=False, training_groups=None, **override):
             fields = dict(common)
             fields.update(override)
-            # every answer states the registered scale and frame of its variable, in the planned coordinates
+            # every answer states the registered scale and frame of its variable, in the planned coordinates,
+            # and every number in it (point, median, interval ends) is a value the variable can have there
             problem = statement_problem(spec, estimate.scale, estimate.transform, estimate.frame)
             if problem is None and tuple(estimate.coordinates) != tuple(plan.coordinates):
                 problem = f"{target.variable}: the answer's coordinates are not the planned ones"
+            problem = problem or estimate_problem(spec, estimate)
             if problem:
                 return refuse("invalid_estimate", f"the answer of {fields['module']} was withheld: {problem}")
             # this inference first, then the whole lineage of every inferred input: nothing is erased

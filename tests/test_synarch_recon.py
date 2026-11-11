@@ -67,10 +67,13 @@ def tasks(registry, layout):
 
 
 def planted_rows(n, seed, prefix="u", groups=40):
-    """An exact latent-class world: class -> soma (Gaussian), label (table), log-lengths (Gaussian)."""
+    """An exact latent-class world: class -> soma (Gaussian), label (table), log-lengths (Gaussian).
+    A MIRRORED cohort, like the published table: a soma beyond the midline is mirrored (ML' = 11,400 - ML), so
+    every ML is <= 5,700 (about 2% of the neurons of the most medial class are affected)."""
     rng = np.random.default_rng(seed)
     cls = rng.integers(0, 4, n)
     soma = CENTRES[cls] + rng.normal(0, SD_SOMA, (n, 3))
+    soma[:, 2] = core.MIDLINE_ML - np.abs(core.MIDLINE_ML - soma[:, 2])
     y = LEVELS[cls] + rng.normal(0, SD_LEVEL, (n, 6))
     label = np.array([LABELS[rng.choice(3, p=TABLE[c])] for c in cls], dtype=object)
     cont = {f"soma_position:{a}": soma[:, j] for j, a in enumerate(core.SOMA_AXES)}
@@ -1518,7 +1521,16 @@ def test_benchmark_pipeline_runs_once_and_is_bound_to_its_freeze(planted_world, 
     complete = core.read_json(out / "run_complete.json")
     assert set(complete["sha256"]) == set(bench.BOUND_FILES) and complete["completed_by"] == "run"
     assert complete["sha256"]["metrics.json"] == core.sha_file(out / "metrics.json")
-    assert core.read_json(out / "serving.json")["run_complete_sha256"] == core.sha_file(out / "run_complete.json")
+    # the completion record HOLDS the record of the all-training states; serving.json is a copy of it
+    bound = complete[bench.SERVING_KEY]
+    assert set(bound["tasks"]) == {"T1", "T2", "T3", "T4"} and all(e["state_hash"] for e in bound["tasks"].values())
+    assert core.read_json(out / "serving.json") == dict(bound, run_complete_sha256=core.sha_file(out / "run_complete.json"))
+    for name, entry in bound["tasks"].items():                 # each fitted on every training sample
+        file = out / "states" / bench.state_file("serving", entry["representation"], entry["components"])
+        state = mods.JointState.load(file, entry["state_hash"])
+        assert set(state.groups) == set(ctx.rows.group) and state.groups_sha256 == entry["training_groups_sha256"]
+        assert [entry["representation"], entry["components"]] == [selection["serving"][name][k]
+                                                                  for k in ("representation", "components")]
     copy = tmp_path / "copy"
     shutil.copytree(Path(world.manifest).parent, copy)
     twin = core.synthetic_world(copy)
@@ -1654,16 +1666,36 @@ def test_a_failed_all_training_fit_does_not_touch_the_benchmark(bare_world, monk
     assert (out / "run_complete.json").exists() and set(metrics["tasks"]) == {"T1", "T2", "T3", "T4"}
     serving = core.read_json(out / "serving.json")
     assert all("planted failure" in entry["failed"] for entry in serving["tasks"].values())
+    assert core.read_json(out / "run_complete.json")[bench.SERVING_KEY]["tasks"] == serving["tasks"]
     with pytest.raises(core.ReconError, match="all-training fit"):
         bench.build_reconstructor(world)
     held_out, _ = bench.build_reconstructor(world, fold=0)          # out-of-fold states are unaffected
     assert len(held_out.describe()) == 2
+    # The record of the all-training states is part of the completion record. By hand they can be RESTORED, not
+    # changed: a fit that failed in the run stays failed for that run, and no file of the run is rewritten.
     monkeypatch.undo()
-    repaired = bench.fit_serving(world, log=lambda *a: None)        # repeatable by hand, reads nothing new
-    assert all(entry["failed"] is None and entry["state_hash"] for entry in repaired["tasks"].values())
-    bench.build_reconstructor(world)
+    before = {name: core.sha_file(out / name) for name in ("run_complete.json", "serving.json", "metrics.json")}
+    kept = bench.fit_serving(world, log=lambda *a: None)
+    assert all("planted failure" in entry["failed"] for entry in kept["tasks"].values())
+    assert before == {name: core.sha_file(out / name) for name in before} and not list((out / "states").glob("serving_*"))
+    with pytest.raises(core.ReconError, match="all-training fit"):
+        bench.build_reconstructor(world)
+    bench.verify_run(world)
     with pytest.raises(core.ReconError):
         bench.fit_serving(bench.make_synthetic_world(Path(world.manifest).parent.parent / "other", "null", seed=9))
+    # any OTHER failure of the step is recorded too, for every task it left without a state: the step never
+    # stops the benchmark
+    ctx = bench.build_context(world)
+    chosen = {"T1": {"representation": "log", "components": 1}, "T2": {"representation": "log", "components": 2}}
+
+    def broken_pool(*args, **kwargs):
+        raise RuntimeError("the worker pool died")
+
+    monkeypatch.setattr(bench, "run_jobs", broken_pool)
+    record = bench.all_training_record(ctx, chosen, log=lambda *a: None)
+    assert record["fits"] == [] and set(record["tasks"]) == {"T1", "T2"}
+    for entry in record["tasks"].values():
+        assert entry["state_hash"] is None and "did not finish" in entry["failed"] and "pool died" in entry["failed"]
 
 
 def test_failed_fit_is_recorded_and_the_next_setting_is_used(bare_world, monkeypatch):
@@ -1758,16 +1790,19 @@ def test_axon_adapter_is_blocked_and_rejects_a_measured_profile(registry, layout
 # ==============================================================================================
 #
 # One focused test per item of the three acceptance criteria. Every test below FAILS on a copy of the code in
-# which only that criterion's fix is switched off, and PASSES on the code as it is; both runs, and the three
-# switching-off edits, are saved under data/interim/synarch_recon/fix_evidence/.
+# which only that criterion's fix is switched off, and PASSES on the code as it is; both runs, and the
+# switching-off edits, are saved under data/interim/synarch_recon/fix_evidence/round2/ (for the code as it is
+# now; fix_evidence/ itself holds the same proof for the code of the first round).
 #
-#   K1  provenance and transitive ancestry are validated for EVERY inferred input of a hidden-axon forecast,
-#       including inferred soma positions and source labels; hidden measured-axon ancestry and producing states
-#       that contain the query's brain sample are refused.
-#   K2  every record states its scale and frame; a value reaches the modelling scale by exactly one conversion;
-#       a mismatch is refused.
-#   K3  the fingerprint of a saved state binds the support ranges and every other answer-affecting item;
-#       tampering is rejected.
+#   K1  provenance and transitive ancestry are validated for EVERY inferred input of EVERY request, including
+#       inferred soma positions and source labels; hidden measured-axon ancestry and producing states that
+#       contain the query's brain sample are refused.            K1a-K1f; second round: K1g, K1h, K1i
+#   K2  every record states its scale and frame, and its value lies in the frame it states; a value reaches
+#       the modelling scale by exactly one conversion; a mismatch is refused.
+#                                                                  K2a-K2e; second round: K2f, K2g
+#   K3  the fingerprint of a saved state binds the support ranges and every other answer-affecting item, the
+#       expected fingerprint of every served state is behind the completion record; tampering is rejected.
+#                                                                  K3a-K3d and the run files; second round: K3e
 #
 # Everything here is synthetic.
 
@@ -1927,12 +1962,14 @@ def test_K1c_transitive_chain_profile_to_soma_to_label_is_refused(registry, chai
         refused = c.held_out.reconstruct(c.ask({"soma_position": c.soma, "source_label": label_record}, [target]))[target]
         assert refused.status == "refused" and refused.refusal.code == "forbidden_input", target
     # the chain cannot be shortened: a record refuses a truncated lineage, and a lineage cut behind the
-    # constructor is no longer the record that was issued
+    # constructor is refused as well (the record's invariants are checked again on the object as it is; and it
+    # is no longer the record that was issued)
     with pytest.raises(ValueError, match="incomplete"):
         dataclasses.replace(label_record, lineage=label_record.lineage[:1])
     cut = dataclasses.replace(label_record)
     object.__setattr__(cut, "lineage", label_record.lineage[:1])
-    with pytest.raises(core.ForbiddenInputError, match="changed after it was issued"):
+    assert c.ledger.fact(cut) is None and c.ledger.fact(label_record) is not None
+    with pytest.raises(core.ForbiddenInputError, match="lineage is incomplete|changed after it was issued"):
         c.adapter.check_inputs(c.group, {"source_label": cut})
     emptied = dataclasses.replace(label_record)
     object.__setattr__(emptied, "lineage", ())
@@ -1978,13 +2015,23 @@ def test_K1d_inferred_input_from_a_state_that_holds_the_query_brain_sample_is_re
     assert "contains the query's brain sample" in refused.refusal.reason
     admitted = c.lenient_B.reconstruct(c.ask({"regional_axon_length": profile_B}, ["source_label"]))["source_label"]
     assert admitted.status == "inferred" and "conditioned_on_inferred_input" in admitted.codes()
-    # In a DECLARED profile-input task the input is flagged instead, and the flag of the earlier step is not lost.
-    from_label = c.with_A.reconstruct(c.ask({"source_label": c.label}, ["regional_axon_length"]))
+    # The rule has no exception for a request that has the shape of a DECLARED profile-input task: what is
+    # supplied there as the 'profile' is an inferred value like any other, held to the same state rule. The
+    # same chain by state B is answered, flagged, and without the coverage flag.
+    from_label_A = c.with_A.reconstruct(c.ask({"source_label": c.label}, ["regional_axon_length"]))
+    profile_by_A = from_label_A["regional_axon_length"].to_observation(from_label_A.request)
+    for reason in ("is not registered", "contains the query's brain sample"):
+        declared = c.chained.reconstruct(c.ask({"regional_axon_length": profile_by_A}, ["soma_position"]))["soma_position"]
+        assert declared.status == "refused" and declared.refusal.code == "forbidden_input"
+        assert declared.conditional == "T2b_soma_from_profile" and declared.estimate is None
+        assert reason in declared.refusal.reason
+        c.chained.module("axon_arbor_adapter").register_state(c.state_A)      # known to that layer from now on
+    from_label_B = c.lenient_B.reconstruct(c.ask({"source_label": c.label}, ["regional_axon_length"]))
     flagged = c.chained.reconstruct(c.ask(
-        {"regional_axon_length": from_label["regional_axon_length"].to_observation(from_label.request)},
+        {"regional_axon_length": from_label_B["regional_axon_length"].to_observation(from_label_B.request)},
         ["soma_position"]))["soma_position"]
     assert flagged.status == "inferred" and flagged.conditional == "T2b_soma_from_profile"
-    assert "group_in_training_state" in flagged.codes() and not flagged.coverage_validated
+    assert "conditioned_on_inferred_input" in flagged.codes() and not flagged.coverage_validated
     # a registration that leaves the sample out is not believed; nor can a registration be silently replaced
     without = [g for g in c.state_A.groups if g != c.group]
     liar = mods.AxonArborAdapter(registry, ledger=c.ledger)
@@ -2027,8 +2074,9 @@ def test_K1e_missing_unregistered_or_unverifiable_provenance_and_unknown_group_a
     for target in ("axon_arbor", "regional_axon_length"):                           # the adapter, and T1
         refused = c.held_out.reconstruct(c.ask({"soma_position": c.soma, "source_label": looks_clean}, [target]))[target]
         assert refused.status == "refused" and refused.refusal.code == "forbidden_input", target
-    # ... and an answer that is not axon-derived (the label from a hand-made 'inferred' profile) is refused as well,
-    # while a declared profile-input task takes it and says that it could not verify it
+    # ... and an answer that is not axon-derived (the label from a hand-made 'inferred' profile) is refused as well;
+    # so is a request that has the shape of a declared profile-input task: no task takes an inferred input on its
+    # own word
     made_up = c.handmade("regional_axon_length", tuple(c.profile[r] for r in REGIONS), (("soma_position", "measured"),),
                          coordinates=REGIONS, state_hash=c.state_B.state_hash(), groups_hash=c.state_B.groups_sha256)
     unverified = c.lenient_B.reconstruct(c.ask({"regional_axon_length": made_up}, ["source_label"]))["source_label"]
@@ -2037,8 +2085,9 @@ def test_K1e_missing_unregistered_or_unverifiable_provenance_and_unknown_group_a
     from_label = c.handmade("regional_axon_length", tuple(c.profile[r] for r in REGIONS), (("source_label", "measured"),),
                             coordinates=REGIONS, state_hash=c.state_B.state_hash(), groups_hash=c.state_B.groups_sha256)
     declared = c.chained.reconstruct(c.ask({"regional_axon_length": from_label}, ["soma_position"]))["soma_position"]
-    assert declared.status == "inferred" and "inferred_input_unverified" in declared.codes()
-    assert not declared.coverage_validated
+    assert declared.status == "refused" and declared.refusal.code == "forbidden_input"
+    assert declared.conditional == "T2b_soma_from_profile"
+    assert "not issued by this reconstruction layer" in declared.refusal.reason
     # issued, then changed: another value, or a lineage rewritten behind the constructor
     with pytest.raises(core.ForbiddenInputError, match="changed after it was issued"):
         c.adapter.check_inputs(c.group, {"source_label": dataclasses.replace(clean, value=other_value)})
@@ -2109,6 +2158,249 @@ def test_K1f_a_legitimate_chain_passes_the_check_and_the_adapter_stays_blocked(r
     assert twin.status == "refused" and twin.refusal.code == "forbidden_input"
     with pytest.raises(core.ForbiddenInputError):
         c.adapter.check_inputs(c.group, {"soma_position": c.m_soma, "source_label": dirty})
+
+
+# ---------------------------------------------------------------------------------------------- K1, second round
+#
+# Three ways in which a forbidden input still got through the first fix (found by an independent attack on it).
+# Each test below fails on a copy of the code in which only its repair is switched off
+# (data/interim/synarch_recon/fix_evidence/round2/).
+
+
+def test_K1g_a_request_shaped_like_a_declared_profile_task_gets_no_exception_for_inferred_inputs(registry, chain):
+    """[K1 g] A request with the SHAPE of task T4 (regions outside the block from the block inside + soma + label)
+    that holds no measured profile at all: its three inputs are INFERRED. It is a forecast of hidden axon
+    regions. The first fix skipped the whole provenance rule for every conditional declared as taking a measured
+    profile, without looking whether a measured profile was there: so this forecast was answered from inputs
+    inferred by a state that holds the neuron's brain sample, and from hand-built records that nobody issued.
+    Now the rule applies to every inferred input of every request; only the MEASURED profile block of a declared
+    task is an input by declaration."""
+    c = chain
+    outside = REGIONS[3:]
+    t4 = "T4_outside_block_from_inside_block_soma_label"
+
+    def issued(layer, observed, target):
+        hop = layer.reconstruct(c.ask(observed, [target]))
+        name = target if isinstance(target, str) else target[0]
+        assert hop[name].status == "inferred", hop[name]
+        return hop[name].to_observation(hop.request)
+
+    def three(layer):          # inside block <- measured soma; soma <- measured label; label <- measured soma
+        return {"regional_axon_length": issued(layer, {"soma_position": c.soma}, ("regional_axon_length", INSIDE)),
+                "soma_position": issued(layer, {"source_label": c.label}, "soma_position"),
+                "source_label": issued(layer, {"soma_position": c.soma}, "source_label")}
+
+    by_A, by_B = three(c.with_A), three(c.lenient_B)
+    assert {r.status for r in by_A.values()} == {"inferred"}
+    assert all(r.uncertainty.state_hash == c.state_A.state_hash() for r in by_A.values()) and c.group in c.state_A.groups
+    # 1. the reported case: three inputs inferred by a state that holds the query's brain sample
+    answer = c.held_out.reconstruct(c.ask(by_A, [("regional_axon_length", outside)]))["regional_axon_length"]
+    assert answer.conditional == t4                               # the request did match the declared task's shape
+    assert answer.status == "refused" and answer.refusal.code == "forbidden_input" and answer.estimate is None
+    assert "contains the query's brain sample" in answer.refusal.reason
+    # 2. three hand-built 'inferred' records that the layer never issued; the soma value was computed from the
+    #    neuron's WHOLE measured profile (task T2), and the records say nothing of it
+    t2 = c.held_out.reconstruct(c.ask({"regional_axon_length": c.profile, "source_label": c.label}, ["soma_position"]))
+    state, groups = c.state_B.state_hash(), c.state_B.groups_sha256
+    forged = {"soma_position": c.handmade("soma_position", tuple(t2["soma_position"].estimate.point),
+                                          (("source_label", "measured"),), coordinates=core.SOMA_AXES,
+                                          state_hash=state, groups_hash=groups),
+              "source_label": c.handmade("source_label", "B", (("soma_position", "measured"),), state_hash=state,
+                                         groups_hash=groups),
+              "regional_axon_length": c.handmade("regional_axon_length", tuple(c.profile[r] for r in INSIDE),
+                                                 (("soma_position", "measured"),), coordinates=INSIDE,
+                                                 state_hash=state, groups_hash=groups)}
+    answer = c.held_out.reconstruct(c.ask(forged, [("regional_axon_length", outside)]))["regional_axon_length"]
+    assert answer.conditional == t4 and answer.status == "refused" and answer.refusal.code == "forbidden_input"
+    assert "not issued by this reconstruction layer" in answer.refusal.reason
+    # 3. the same holds when the profile block IS measured (the true task T4) and soma and label are inferred:
+    #    a declared task takes its measured block by declaration, and nothing else on its word
+    block = {r: c.profile[r] for r in INSIDE}
+    for inputs, reason in ((by_A, "contains the query's brain sample"), (forged, "not issued by this reconstruction layer")):
+        observed = {"regional_axon_length": block, "soma_position": inputs["soma_position"],
+                    "source_label": inputs["source_label"]}
+        answer = c.held_out.reconstruct(c.ask(observed, [("regional_axon_length", outside)]))["regional_axon_length"]
+        assert answer.conditional == t4 and answer.status == "refused" and answer.refusal.code == "forbidden_input"
+        assert reason in answer.refusal.reason
+    # 4. what stays permitted. The true task with measured inputs: answered, coverage flag kept, no notice.
+    measured_t4 = c.held_out.reconstruct(c.ask({"regional_axon_length": block, "soma_position": c.soma,
+                                                "source_label": c.label},
+                                               [("regional_axon_length", outside)]))["regional_axon_length"]
+    assert measured_t4.status == "inferred" and measured_t4.conditional == t4
+    assert measured_t4.coverage_validated and not measured_t4.codes()
+    #    The same shapes with inputs inferred by state B, which never saw the brain sample: answered, each inferred
+    #    input flagged, and no coverage claimed.
+    for observed in (by_B, {"regional_axon_length": block, "soma_position": by_B["soma_position"],
+                            "source_label": by_B["source_label"]}):
+        legit = c.held_out.reconstruct(c.ask(observed, [("regional_axon_length", outside)]))["regional_axon_length"]
+        assert legit.status == "inferred" and legit.conditional == t4 and not legit.coverage_validated
+        assert legit.codes() == {"conditioned_on_inferred_input"}
+        assert {n.variable for n in legit.notices} == {v for v, r in observed.items() if isinstance(r, core.Observation)}
+    #    And an inferred value under the name of the profile is never taken for the measured block: the exception
+    #    is for a measured record only.
+    assert core.hidden_axon_problem(registry, "jiao", ("jiao", "neuron", c.unit), c.group,
+                                    {"regional_axon_length": by_A["regional_axon_length"]}, ledger=c.ledger,
+                                    resolve=c.held_out.resolve_state, axon_hidden=True,
+                                    declared_measured=("regional_axon_length",))
+    # 5. an issued value whose statement of scale is rewritten afterwards is no longer the record that was issued.
+    #    In a request shaped like a declared task it used to be flagged only, and was then converted a second time.
+    hop = c.lenient_B.reconstruct(c.ask({"source_label": c.label}, ["regional_axon_length"]))
+    as_issued = hop["regional_axon_length"].to_observation(hop.request)
+    spec = registry.variable("jiao", "regional_axon_length")
+    relabelled = dataclasses.replace(as_issued, scale=core.scale_statement(spec, "identity"), transform="identity")
+    taken = c.chained.reconstruct(c.ask({"regional_axon_length": as_issued}, ["soma_position"]))["soma_position"]
+    assert taken.status == "inferred" and taken.conditional == "T2b_soma_from_profile"
+    rewritten = c.chained.reconstruct(c.ask({"regional_axon_length": relabelled}, ["soma_position"]))["soma_position"]
+    assert rewritten.status == "refused" and rewritten.refusal.code == "forbidden_input"
+    assert "changed after it was issued" in rewritten.refusal.reason
+
+
+def test_K1h_a_record_that_says_measured_but_names_a_producing_state_is_refused(registry, chain):
+    """[K1 h] A record whose status says 'measured' while its uncertainty names the module, the state and the
+    training groups that produced its value (its uncertainty KIND still says 'none stated'). The value here is
+    the source label that was inferred WITH the neuron's measured profile (task T3). The first fix looked at the
+    uncertainty's kind only, and re-validated the record but not its uncertainty: the adapter accepted the
+    record, and T1 answered from it with the coverage flag and no notice."""
+    c = chain
+    t3 = c.held_out.reconstruct(c.ask({"soma_position": c.soma, "regional_axon_length": c.profile}, ["source_label"]))
+    dirty = t3["source_label"].to_observation(t3.request)
+
+    def relabelled(**fields):
+        """A 'measured' record of the dirty value whose uncertainty carries `fields` behind the constructor."""
+        record = c.ask({"source_label": dirty.value}, []).observed[0]
+        uncertainty = core.Uncertainty("none_stated")
+        for name, value in fields.items():
+            object.__setattr__(uncertainty, name, value)
+        object.__setattr__(record, "uncertainty", uncertainty)
+        return record
+
+    u = dirty.uncertainty
+    forged = relabelled(producing_module=u.producing_module, state_hash=u.state_hash,
+                        training_groups_hash=u.training_groups_hash, coverage="unvalidated")
+    assert forged.status == "measured" and forged.value == dirty.value and forged.uncertainty.kind == "none_stated"
+    assert forged.uncertainty.state_hash == c.state_B.state_hash() and not forged.lineage and not forged.derived_from
+    with pytest.raises(core.ForbiddenInputError, match="says 'measured' but carries"):   # as issued it was refused too
+        c.adapter.check_inputs(c.group, {"soma_position": c.m_soma, "source_label": forged})
+    with pytest.raises(core.ForbiddenInputError, match="descends from a measured regional_axon_length"):
+        c.adapter.check_inputs(c.group, {"soma_position": c.m_soma, "source_label": dirty})
+    for target in ("axon_arbor", "regional_axon_length"):                               # the adapter, and T1
+        answer = c.held_out.reconstruct(c.ask({"soma_position": c.soma, "source_label": forged}, [target]))[target]
+        assert answer.status == "refused" and answer.refusal.code == "invalid_request" and answer.estimate is None
+        assert "only inferred values carry" in answer.refusal.reason
+    with pytest.raises(ValueError, match="only inferred values carry"):
+        core.ObservationStore(registry).add(forged)
+    assert "only inferred values carry" in core.invariant_problem(forged)
+    # each of the four provenance fields alone is enough
+    for name, value in (("producing_module", "joint_mixture"), ("state_hash", u.state_hash),
+                        ("training_groups_hash", u.training_groups_hash), ("coverage", "validated")):
+        one = relabelled(**{name: value})
+        with pytest.raises(core.ForbiddenInputError, match="says 'measured' but carries"):
+            c.adapter.check_inputs(c.group, {"source_label": one})
+        refused = c.held_out.reconstruct(c.ask({"soma_position": c.soma, "source_label": one},
+                                               ["regional_axon_length"]))["regional_axon_length"]
+        assert refused.status == "refused" and refused.refusal.code == "invalid_request", name
+    # the same family: a source that is a reconstruction, however the prefix is spelled; a source whose hash is a
+    # fitted state of this layer; a part of the record that is not what it should be
+    for path in ("Reconstruct:joint_mixture", " RECONSTRUCT:joint_mixture"):
+        with pytest.raises(ValueError, match="'inferred', not 'measured'"):
+            measured("source_label", dirty.value, unit=c.unit, group=c.group, source=core.SourceRef(path, None, c.unit))
+    from_state = measured("source_label", dirty.value, unit=c.unit, group=c.group,
+                          source=core.SourceRef("tables/labels.csv", c.state_B.state_hash(), c.unit))
+    with pytest.raises(core.ForbiddenInputError, match="says 'measured' but carries"):
+        c.adapter.check_inputs(c.group, {"source_label": from_state})
+    refused = c.held_out.reconstruct(c.ask({"soma_position": c.soma, "source_label": from_state},
+                                           ["regional_axon_length"]))["regional_axon_length"]
+    assert refused.status == "refused" and refused.refusal.code == "forbidden_input"
+    hijacked = c.ask({"source_label": c.label}, []).observed[0]
+    object.__setattr__(hijacked, "key", lambda: ("jiao", "neuron", c.unit))        # a method replaced on the object
+    assert "not record fields" in core.invariant_problem(hijacked)
+    with pytest.raises(core.ForbiddenInputError):
+        c.adapter.check_inputs(c.group, {"source_label": hijacked})
+    not_a_group = c.ask({"source_label": c.label}, []).observed[0]
+    object.__setattr__(not_a_group, "group", (c.group, "brain_sample"))
+    assert core.invariant_problem(not_a_group)
+    assert c.held_out.reconstruct(core.ReconstructionRequest(
+        "jiao", "neuron", c.unit, c.m_soma.group, (c.m_soma, not_a_group),
+        (core.Target("regional_axon_length"),)))["regional_axon_length"].refusal.code == "invalid_request"
+    # the plain measured label, from a table, is what it says it is
+    plain = measured("source_label", c.label, unit=c.unit, group=c.group,
+                     source=core.SourceRef("tables/labels.csv", "ab" * 32, c.unit))
+    assert core.invariant_problem(plain) is None
+    assert c.adapter.check_inputs(c.group, {"soma_position": c.m_soma, "source_label": plain})
+    answered = c.held_out.reconstruct(c.ask({"soma_position": c.soma, "source_label": plain},
+                                            ["regional_axon_length"]))["regional_axon_length"]
+    assert answered.status == "inferred" and answered.coverage_validated
+
+
+def test_K1i_a_state_whose_training_units_contradict_its_group_list_is_refused(registry, layout, tasks, planted):
+    """[K1 i] Whether a state holds the query's brain sample is read from the state's group list. A Jiao unit ID
+    names its brain sample (<brain sample>_<n>); the first fix enforced that for the query and never for a
+    state's own units. A state fitted on rows whose units are '<sample>_<n>' but whose group column says 'zz'
+    lists no such sample: a label it inferred for a new neuron of that sample passed as coming from a state that
+    'excludes' the sample, and its direct answer carried no seen-group notice. Such rows and such a state are
+    now refused where a state enters the layer: a module, and the adapter's register."""
+    rows = planted["rows"]
+    sample = str(rows.group[0])
+    relabelled = mods.Rows(rows.unit.copy(), np.where(rows.group == sample, "zz", rows.group), dict(rows.cont),
+                           dict(rows.cat))
+    hidden = sum(str(u).startswith(sample + "_") for u in relabelled.unit)
+    state_M, _ = mods.fit_joint(relabelled, layout, components=2, seed=1, budget={"n_init": 1, "max_iter": 30, "tol": 1e-5})
+    assert hidden > 0 and sample not in state_M.groups and "zz" in state_M.groups       # what the list hides
+    assert sum(u.startswith(sample + "_") for u in state_M.units) == hidden
+    with pytest.raises(core.ReconError, match="by its ID it belongs to"):                # as a module's state
+        mods.JointMixtureModule(registry, layout, states={n: state_M for n in tasks}, train=relabelled, tasks=tasks)
+    with pytest.raises(core.RegistryError, match="cannot be shown to exclude"):          # in the adapter's register
+        mods.AxonArborAdapter(registry).register_state(state_M)
+    assert "not in both" in mods.group_naming_problem(registry, "jiao", sorted(state_M.units), state_M.groups)
+    # two neurons of two brain samples exchange their group: the SET of groups is unchanged, the rows are wrong,
+    # and a comparator that excludes 'the query's own brain sample' would copy from it
+    i, j = 0, int(np.flatnonzero(rows.group != rows.group[0])[0])
+    exchanged_groups = rows.group.copy()
+    exchanged_groups[[i, j]] = rows.group[[j, i]]
+    exchanged = mods.Rows(rows.unit.copy(), exchanged_groups, dict(rows.cont), dict(rows.cat))
+    assert set(exchanged.group) == set(rows.group)
+    assert mods.group_naming_problem(registry, "jiao", exchanged.unit, exchanged.group, aligned=True)
+    with pytest.raises(core.ReconError, match="by its ID it belongs to"):
+        mods.JointMixtureModule(registry, layout, states={n: planted["state"] for n in tasks}, train=exchanged,
+                                tasks=tasks)
+    # consistent rows and their state are accepted as before; a namespace whose IDs name no group has no rule
+    assert mods.group_naming_problem(registry, "jiao", rows.unit, rows.group, aligned=True) is None
+    assert mods.group_naming_problem(registry, "jiao", sorted(planted["state"].units), planted["state"].groups) is None
+    mods.JointMixtureModule(registry, layout, states={n: planted["state"] for n in tasks}, train=rows, tasks=tasks)
+    assert mods.AxonArborAdapter(registry).register_state(planted["state"]) == planted["state"].state_hash()
+    assert mods.group_naming_problem(registry, "epiretro", ["n1", "n2"], ["experiment_7"]) is None
+
+
+def test_identifiers_with_invisible_characters_and_malformed_adapter_records_are_refused(registry, chain):
+    """Hardening next to K1. An identifier with a zero-width space, a byte-order mark, a soft hyphen, a joiner
+    or a C1 control character anywhere in it is refused: with one of them a training sample looked like a new
+    one. And the adapter refuses a record whose coordinates are not coordinates of its variable."""
+    c = chain
+    for invisible in ("​", "﻿", "­", "‍", "\u0080", "\x00", "\x7f"):
+        spelled = c.group[:2] + invisible + c.group[2:]
+        assert core.identifier_problem(spelled) and core.identifier_problem(spelled + "_99999", "the unit ID")
+        answer = c.with_A.reconstruct(c.ask({"soma_position": c.soma, "source_label": c.label},
+                                            ["regional_axon_length"], unit=f"{spelled}_99999",
+                                            group=spelled))["regional_axon_length"]
+        assert answer.status == "refused" and answer.refusal.code == "invalid_request", repr(invisible)
+        with pytest.raises(core.ForbiddenInputError):
+            c.adapter.check_inputs(spelled, {"soma_position": c.m_soma, "source_label": c.m_label})
+    assert core.identifier_problem(c.group) is None and core.identifier_problem("001 CLA-EPd-CTX Car3 Glut") is None
+    six = measured("soma_position", tuple(c.profile[r] for r in REGIONS), REGIONS, unit=c.unit, group=c.group)
+    with pytest.raises(core.ForbiddenInputError, match="not coordinates of the registered variable"):
+        c.adapter.check_inputs(c.group, {"soma_position": six, "source_label": c.m_label})
+    lettered = measured("hemisphere", ("L",) * 6, REGIONS, unit=c.unit, group=c.group)
+    with pytest.raises(core.ForbiddenInputError, match="only a vector has coordinates"):
+        c.adapter.check_inputs(c.group, {"hemisphere": lettered})
+    bare = measured("soma_position", c.soma, (), unit=c.unit, group=c.group)
+    with pytest.raises(core.ForbiddenInputError, match="not coordinates of the registered variable"):
+        c.adapter.check_inputs(c.group, {"soma_position": bare})
+
+    class Shouting(str):                    # a label whose str() is not its characters
+        def __str__(self):
+            return "B"
+
+    assert core.plain_label(Shouting("A")) == "A" and core.plain_label(7) == "7"
 
 
 def lineage_roots_of(record):
@@ -2405,6 +2697,224 @@ def test_K2e_the_inferred_input_warning_is_kept_and_nothing_is_called_validated(
     np.testing.assert_allclose(chained.estimate.point, _model_means(planted["state"], dict(zip(fields, record.value)),
                                                                     layout.fields_of("soma_position")), rtol=1e-9)
     assert _conditioning(module, layout, ask, "regional_axon_length") == list(made["regional_axon_length"].estimate.point)
+
+
+# ---------------------------------------------------------------------------------------------- K2, second round
+#
+# The conversion itself held under attack. What did not: the FRAME of a record was validated as text only.
+
+
+class FixedSomaModule(core.Module):
+    """A registered module that answers 'soma position from the source label' with one fixed point."""
+    namespace, grain, kind, name = "jiao", "neuron", "estimator", "fixed_soma"
+    STATE, GROUPS = "e" * 64, ("some_other_sample",)
+
+    def __init__(self, registry, point):
+        self.registry, self.point = registry, tuple(point)
+        self.conditional = core.Conditional("fixed_soma_from_label", "soma_position", None, (("source_label", None),))
+
+    def produces(self):
+        return ("soma_position",)
+
+    def conditionals(self):
+        return (self.conditional,)
+
+    def evidence_for(self, conditional_name):
+        return core.ValidationEvidence("exploratory_supported", benchmark=POINTER)
+
+    def state_groups(self, state_hash):
+        return frozenset(self.GROUPS) if state_hash == self.STATE else None
+
+    def plan(self, request, target, evidence, policy):
+        return core.Plan(self, target, core.SOMA_AXES, self.conditional, (("source_label", "measured"),))
+
+    def provenance(self, plan):
+        return {"state_hash": self.STATE, "training_groups_hash": core.ids_sha(self.GROUPS), "training_groups": self.GROUPS}
+
+    def estimate(self, plan, level):
+        spec = self.registry.variable("jiao", "soma_position")
+        return core.Estimate("soma_position", "vector", core.SOMA_AXES, core.scale_statement(spec), self.point,
+                             transform="identity", frame=spec.frame)
+
+
+def mirrored_cohort(registry):
+    """A small MIRRORED cohort (every ML <= 5,700) with a class of neurons at the midline, and its state."""
+    regions = ("PVH", "DMH", "ZI")
+    layout = mods.jiao_layout(registry, regions)
+    rng = np.random.default_rng(7)
+    n = 900
+    cls = rng.integers(0, 3, n)                              # classes at the midline, 140 um and 1,500 um lateral
+    raw = np.array([5690.0, 5560.0, 4200.0])[cls] + rng.normal(0, 1.0, n) * np.array([40.0, 40.0, 160.0])[cls]
+    cont = {"soma_position:AP": rng.normal(6400, 120, n), "soma_position:DV": rng.normal(6100, 120, n),
+            "soma_position:ML": core.MIDLINE_ML - np.abs(core.MIDLINE_ML - raw)}
+    logs = np.array([[3.6, 1.0, 2.0], [1.0, 3.6, 2.0], [2.0, 2.0, 3.6]])[cls] + rng.normal(0, 0.2, (n, 3))
+    cont.update({f"regional_axon_length:{r}": np.maximum(logs[:, j], 0.02) for j, r in enumerate(regions)})
+    group = np.array([f"s{i % 30:02d}" for i in range(n)])
+    rows = mods.Rows(np.array([f"{g}_{i:04d}" for i, g in enumerate(group)]), group, cont,
+                     {"source_label": np.array(["Cre"] * n, dtype=object)})
+    state, _ = mods.fit_joint(rows, layout, components=3, seed=1, budget={"n_init": 3, "max_iter": 200, "tol": 1e-7})
+    return regions, layout, rows, state
+
+
+def test_K2f_a_value_outside_the_frame_its_record_states_is_refused(registry, bare_world):
+    """[K2 f] A record states its frame in words, and the words were all that was checked. A soma in TRUE
+    right-hemisphere coordinates (ML > 5,700) carried the registered statement 'mirrored to ML <= 5,700' and
+    was answered at the unmirrored number: with coverage claimed and no notice, as long as it lay inside the
+    state's support margin. The value is now held to the frame it states, by the one rule the loader applies to
+    a training row: by the request API, the planner, the record store and the axon adapter; and nothing the
+    layer issues under a frame's statement lies outside that frame."""
+    regions, lay, rows, state = mirrored_cohort(registry)
+    tasks = mods.build_tasks(lay, registry, regions[:1])
+    evidence = {t.conditional().name: core.ValidationEvidence("exploratory_supported", task=k, benchmark=POINTER,
+                                                              coverage_validated=True) for k, t in tasks.items()}
+    api = core.Reconstructor(registry)
+    module = api.register(mods.JointMixtureModule(registry, lay, states={k: state for k in tasks}, train=rows,
+                                                  tasks=tasks, evidence=evidence))
+    adapter = api.register(mods.AxonArborAdapter(registry))
+    spec = registry.variable("jiao", "soma_position")
+
+    def t1(ml):
+        ask = core.ReconstructionRequest.from_values(
+            registry, namespace="jiao", unit_id="q1_0001", group_id="q1", requested=["regional_axon_length"],
+            observed={"soma_position": (6400.0, 6100.0, ml), "source_label": "Cre"})
+        return ask, api.reconstruct(ask)["regional_axon_length"]
+
+    low, high = state.ranges["soma_position:ML"]
+    beyond = core.MIDLINE_ML + 75.0                         # 75 um into the right hemisphere, NOT mirrored
+    assert high <= core.MIDLINE_ML and state.support_margin * (high - low) > 75.0
+    assert not state.outside_range("soma_position:ML", beyond)          # the support check alone lets it through
+    ask, refused = t1(beyond)
+    soma, label = ask.observed
+    assert "mirrored to ML <= 5,700" in soma.frame and soma.value[2] == beyond
+    assert core.statement_problem(spec, soma.scale, soma.transform, soma.frame) is None      # its words are right
+    assert refused.status == "refused" and refused.refusal.code == "invalid_request" and refused.estimate is None
+    assert "ML = 5775 lies outside the registered frame" in refused.refusal.reason           # its number is not
+    assert "ML = 5775 lies outside the registered frame" in core.value_problem(spec, soma)
+    assert "ML' = 11,400 - ML" in refused.refusal.reason                # and the reason says what to do
+    plan = module.plan(ask, ask.requested[0], {o.variable: o for o in ask.observed}, api.policy)
+    assert isinstance(plan, core.Refusal) and plan.code == "invalid_request"
+    with pytest.raises(core.ScaleError, match="outside the registered frame"):
+        core.model_values(spec, soma)
+    with pytest.raises(core.ScaleError, match="outside the registered frame"):
+        core.ObservationStore(registry).add(soma)
+    with pytest.raises(core.ForbiddenInputError, match="outside the registered frame"):
+        adapter.check_inputs("q1", {"soma_position": soma, "source_label": label}, "q1_0001")
+    far = dataclasses.replace(soma, value=(6400.0, 6100.0, 9000.0))     # no support range exists in these two
+    with pytest.raises(core.ScaleError):
+        core.ObservationStore(registry).add(far)
+    with pytest.raises(core.ForbiddenInputError):
+        adapter.check_inputs("q1", {"soma_position": far, "source_label": label}, "q1_0001")
+    # at the midline, and mirrored (ML' = 11,400 - ML), the same neuron is answered as before
+    answers = {}
+    for ml in (core.MIDLINE_ML, 2 * core.MIDLINE_ML - beyond):
+        ask_ok, answers[ml] = t1(ml)
+        assert answers[ml].status == "inferred" and answers[ml].coverage_validated and not answers[ml].codes()
+        assert adapter.check_inputs("q1", dict(zip(("soma_position", "source_label"), ask_ok.observed)), "q1_0001")
+        core.ObservationStore(registry).add(ask_ok.observed[0])
+    # what was returned before the fix: the model at the unmirrored number, far from the mirrored neuron's answer
+    query = mods.Rows(np.array(["q"]), np.array(["q1"]),
+                      {f"soma_position:{a}": np.array([v]) for a, v in zip(core.SOMA_AXES, (6400.0, 6100.0, beyond))},
+                      {"source_label": np.array(["Cre"], dtype=object)})
+    at_the_wrong_number = mods.engine_predict(state, tasks["T1"], query)["point"][0]
+    assert np.abs(at_the_wrong_number - np.array(answers[2 * core.MIDLINE_ML - beyond].estimate.point)).max() > 0.5
+    # the loader gives a training row the same verdict, by the same function
+    assert "outside the registered frame" in core.bounds_problem("soma_position", core.SOMA_BOUNDS,
+                                                                 (6400.0, 6100.0, beyond), core.SOMA_AXES)
+    partition = core.TrainingPartition(bare_world)
+    soma_rows, _ = core.read_soma_training(bare_world, partition)
+    fine, _ = core.read_fine_labels_training(bare_world, partition)
+    core.assemble_training_table(bare_world, partition, soma_rows, fine, None)
+    neuron = sorted(soma_rows)[0]
+    moved = dict(soma_rows)
+    moved[neuron] = dict(soma_rows[neuron], soma=soma_rows[neuron]["soma"][:2] + (beyond,))
+    with pytest.raises(core.ReconError, match="mirrored frame.*ML = 5775 lies outside the registered frame"):
+        core.assemble_training_table(bare_world, partition, moved, fine, None)
+    # the other statements of the frame and of the scales are numbers too: the atlas volume, a length, a fraction
+    for value in ((6400.0, 6100.0, -10.0), (14000.0, 6100.0, 5000.0), (6400.0, 8200.0, 5000.0)):
+        outside = dataclasses.replace(soma, value=value)
+        assert "outside the registered frame" in core.value_problem(spec, outside)
+        with pytest.raises(core.ForbiddenInputError):
+            adapter.check_inputs("q1", {"soma_position": outside, "source_label": label}, "q1_0001")
+    profile_spec = registry.variable("jiao", "regional_axon_length")
+    negative = measured("regional_axon_length", (10.0, -1.0, 10.0), regions)
+    assert "DMH = -1 lies outside the registered frame" in core.value_problem(profile_spec, negative)
+    fraction = core.Observation("m", "epiretro", "nucleus", "n1", core.Group("e1", "experiment", "test"),
+                                "methylation_global", "measured", (0.8, 1.5), "fraction in [0, 1]; fraction",
+                                ("mCGFrac", "mCHFrac"), transform="identity")
+    with pytest.raises(core.ScaleError, match="mCHFrac = 1.5 lies outside the registered scale"):
+        core.ObservationStore(registry).add(fraction)
+    core.ObservationStore(registry).add(dataclasses.replace(fraction, value=(0.8, 0.02)))
+    # a value that is not one plain number per coordinate is a refusal, not an exception out of reconstruct()
+    for bad in ((("1.0", "2.0", "3.0")), ((1.0, 2.0), (3.0, 4.0), (5.0, 6.0)), (True, 1.0, 2.0), (1.0, 2.0, float("inf"))):
+        shaped = dataclasses.replace(soma, value=bad)
+        answer = api.reconstruct(dataclasses.replace(ask, observed=(shaped, label)))["regional_axon_length"]
+        assert answer.status == "refused" and answer.refusal.code == "invalid_request", bad
+    with pytest.raises(ValueError, match="not a plain number"):
+        core.ReconstructionRequest.from_values(registry, namespace="jiao", unit_id="q1_0001", group_id="q1",
+                                               observed={"soma_position": ("6400", "6100", "5000")}, requested=[])
+    # ESTIMATES. The interval of a soma estimate is cut at the midline (the fitted mixture has a tail beyond it;
+    # no soma of the mirrored frame lies there), the point is not moved, and the answer is what it was otherwise.
+    medial = int(np.flatnonzero(rows.cont["soma_position:ML"] > 5690.0)[0])
+    lengths_um = {r: float(10 ** rows.cont[f"regional_axon_length:{r}"][medial] - 1) for r in regions}
+    t2 = api.reconstruct(core.ReconstructionRequest.from_values(
+        registry, namespace="jiao", unit_id="q1_0002", group_id="q1", requested=["soma_position"],
+        observed={"regional_axon_length": lengths_um, "source_label": "Cre"}))["soma_position"]
+    raw = mods.engine_predict(state, tasks["T2"], rows.take([medial]), level=0.9, median=True)
+    assert raw["upper"][0][2] > core.MIDLINE_ML                         # the uncut interval does leave the frame
+    assert t2.status == "inferred" and t2.estimate.interval["upper"][2] == core.MIDLINE_ML
+    assert "cut at the bounds of the registered frame" in t2.estimate.note and t2.coverage_validated
+    np.testing.assert_allclose(t2.estimate.point, raw["point"][0], rtol=1e-9)
+    np.testing.assert_allclose(t2.estimate.interval["lower"], raw["lower"][0], rtol=1e-9)
+    np.testing.assert_allclose(t2.estimate.interval["upper"][:2], raw["upper"][0][:2], rtol=1e-9)
+    assert max(t2.estimate.point[2], t2.estimate.median[2]) <= core.MIDLINE_ML
+    # ... and a module whose POINT lies beyond the midline has its answer withheld; one inside is issued
+    for point, code in (((6400.0, 6100.0, beyond), "invalid_estimate"), ((6400.0, 6100.0, 5625.0), None)):
+        layer = core.Reconstructor(registry)
+        layer.register(FixedSomaModule(registry, point))
+        answer = layer.reconstruct(request(registry, {"source_label": "A"}, ["soma_position"]))["soma_position"]
+        if code is None:
+            assert answer.status == "inferred" and answer.estimate.point == point
+            assert core.value_problem(spec, answer.to_observation(request(registry, {}, []))) is None
+        else:
+            assert answer.status == "refused" and answer.refusal.code == code and answer.estimate is None
+            assert "point: soma_position: ML = 5775 lies outside the registered frame" in answer.refusal.reason
+    assert core.estimate_problem(spec, dataclasses.replace(t2.estimate, interval=dict(
+        t2.estimate.interval, upper=(9000.0, 7000.0, beyond)))).startswith("upper interval end")
+
+
+def test_K2g_a_registry_that_disagrees_with_the_layout_of_a_state_is_refused(registry, layout, tasks, planted):
+    """[K2 g] The ONE conversion is decided by the module's registry; the state was fitted on the scale its own
+    layout records. Nothing checked that the two agree: with a registry that models the profile on its own scale
+    and a state fitted on log10(1 + length), a measured length conditioned unconverted and the state's log
+    numbers were issued labelled as micrometres. A module now refuses such a registry at construction."""
+    state = planted["state"]
+    assert {f[4] for f in state.layout.fields if f[1] == "regional_axon_length"} == {"log10_1p"}
+    key = ("jiao", "regional_axon_length")
+
+    def changed(**fields):
+        other = core.Registry.from_contract()
+        other.variables[key] = dataclasses.replace(other.variables[key], **fields)
+        return other
+
+    other = changed(transform="identity")
+    assert other.variable(*key).transform == "identity"
+    problem = mods.layout_problem(other, layout)
+    assert "regional_axon_length:ARH" in problem and "'log10_1p' in the layout" in problem and "'identity' in the registry" in problem
+    with pytest.raises(core.ReconError, match="disagrees with the field layout of its states"):
+        mods.JointMixtureModule(other, layout, states={n: state for n in tasks}, train=planted["rows"], tasks=tasks)
+    # what it would do: the same record, 300 um per region, conditions at 300 instead of log10(301)
+    record = measured("regional_axon_length", (300.0,) * 6, REGIONS)
+    assert core.model_values(other.variable(*key), record).tolist() == [300.0] * 6
+    np.testing.assert_allclose(core.model_values(registry.variable(*key), record), np.log10(301.0))
+    # a registry in which a field's coordinates or its kind differ is refused as well
+    for other in (changed(components=REGIONS[:5] + ("ZZZ",)), changed(kind="categorical", components=())):
+        assert mods.layout_problem(other, layout)
+        with pytest.raises(core.ReconError, match="disagrees with the field layout of its states"):
+            mods.JointMixtureModule(other, layout, states={n: state for n in tasks}, train=planted["rows"], tasks=tasks)
+    # the registry the layout was made from is accepted, also as a fresh object
+    assert mods.layout_problem(registry, layout) is None and mods.layout_problem(core.Registry.from_contract(), layout) is None
+    mods.JointMixtureModule(core.Registry.from_contract(), layout, states={n: state for n in tasks},
+                            train=planted["rows"], tasks=tasks)
 
 
 # ---------------------------------------------------------------------------------------------- K3
@@ -2833,19 +3343,254 @@ def test_run_files_around_the_states_are_bound_to_the_finished_run(planted_world
         core.write_json(out / name, record, pretty=name.startswith("pre_run"))
         with pytest.raises(core.ReconError):
             bench.build_reconstructor(changed, fold=0)
-    # 5. all-training states that were written for another finished run
+        with pytest.raises(core.FrozenSourceChanged, match=name):          # nor is a report rendered from them
+            bench.render_report(changed)
+    # 5. serving.json is a copy of the record that the completion record holds: a copy that says it belongs to
+    #    another finished run is an edited file of this run, and then nothing is served, for any fold
     foreign, out = twin("serving")
     serving = core.read_json(out / "serving.json")
     serving["run_complete_sha256"] = "0" * 64
     core.write_json(out / "serving.json", serving)
-    with pytest.raises(core.FrozenSourceChanged, match="serving.json"):
-        bench.build_reconstructor(foreign)
-    bench.build_reconstructor(foreign, fold=0)                        # the out-of-fold states are not affected
+    for fold in (None, 0):
+        with pytest.raises(core.FrozenSourceChanged, match="serving.json"):
+            bench.build_reconstructor(foreign, fold=fold)
+    (out / "serving.json").unlink()                                   # without the copy the bound record still serves
+    for fold in (None, 0):
+        bench.build_reconstructor(foreign, fold=fold)
     # 6. the code is no longer the frozen code
     real_hashes = bench.code_hashes
     monkeypatch.setattr(bench, "code_hashes", lambda: dict(real_hashes(), **{"analysis/synarch_recon_modules.py": "x"}))
     with pytest.raises(core.FrozenSourceChanged, match="code_sha256"):
         bench.build_reconstructor(clean, fold=0)
+
+
+# ---------------------------------------------------------------------------------------------- K3, second round
+#
+# The fingerprint of a state held under attack. What did not: for the all-training states the EXPECTED
+# fingerprint came from serving.json, a file that nothing bound.
+
+
+def _edit_saved_range(file):
+    """What an editor who knows the algorithm does to a saved state: widen ONE support range and rewrite the
+    hash stored in the same file. Returns (the state's fingerprint before, after)."""
+    head, arrays = _read_saved(file)
+    before = head["state_hash"]
+    head["ranges"]["soma_position:AP"][1] += 1e6
+    head = _rehash(head, arrays)
+    _write_saved(file, head, arrays)
+    return before, head["state_hash"]
+
+
+def test_K3e_the_all_training_states_are_bound_by_the_completion_record(planted_world, tmp_path, monkeypatch):
+    """[K3 e] The all-training states answer for units outside the training partition. Their expected
+    fingerprints were read from serving.json, which was written after run_complete.json and bound by nothing: a
+    state with one widened support range was served once the copy of its fingerprint in serving.json was
+    replaced too, while the documented anchor (the SHA-256 of run_complete.json) and `status` still verified.
+    A request that had been refused as out of support was then answered.
+
+    Now the run fits these states before it scores, and its completion record HOLDS their record. The API takes
+    every expected fingerprint from behind that one anchor; serving.json is a copy that must be exactly the copy;
+    by hand the states can be restored, never changed."""
+    world, _ = planted_world
+    source = Path(world.manifest).parent
+    quiet = lambda *a: None                                                          # noqa: E731
+
+    def twin(name):
+        shutil.copytree(source, tmp_path / name)
+        return core.synthetic_world(tmp_path / name), tmp_path / name / "out"
+
+    def bound(out):
+        return core.read_json(out / "run_complete.json")[bench.SERVING_KEY]
+
+    def state_path(out, entry):
+        return out / "states" / bench.state_file("serving", entry["representation"], entry["components"])
+
+    def answers(w):
+        """T1 for a new neuron: in the middle of the training somas, and 20% of the AP range above them."""
+        r, ctx = bench.build_reconstructor(w)
+        soma = ctx.table.soma
+        low, high = soma[:, 0].min(), soma[:, 0].max()
+        found = []
+        for ap in (np.median(soma[:, 0]), high + 0.2 * (high - low)):
+            ask = core.ReconstructionRequest.from_values(
+                ctx.registry, namespace="jiao", unit_id="999999_001", group_id="999999", requested=["regional_axon_length"],
+                observed={"soma_position": (float(ap), float(np.median(soma[:, 1])), float(np.median(soma[:, 2]))),
+                          "source_label": str(ctx.table.label[0])})
+            answer = r.reconstruct(ask)["regional_axon_length"]
+            found.append(answer.status if answer.refusal is None else answer.refusal.code)
+        return found
+
+    clean, out = twin("clean")
+    anchor = core.sha_file(out / "run_complete.json")
+    assert answers(clean) == ["inferred", "out_of_support"]
+    assert bench.status(clean)["run_files_match_the_completion_record"] is True
+    assert bench.status(clean)["run_complete_sha256"] == anchor          # `status` shows the anchor
+    assert core.read_json(out / "serving.json") == dict(bound(out), run_complete_sha256=anchor)
+
+    # (a) the reported break: one saved item of the all-training state edited, the hash stored in that file
+    #     rewritten, and the copy of the fingerprint in serving.json replaced. Nothing the anchor covers changes.
+    edited, out = twin("edited")
+    entry = bound(out)["tasks"]["T1"]
+    old, new = _edit_saved_range(state_path(out, entry))
+    assert old == entry["state_hash"] != new
+    with pytest.raises(core.FrozenSourceChanged, match="not the expected state"):
+        bench.build_reconstructor(edited)                               # the state file alone: refused before, too
+    text = (out / "serving.json").read_text()
+    assert old in text
+    (out / "serving.json").write_text(text.replace(old, new))
+    assert core.sha_file(out / "run_complete.json") == anchor
+    for fold in (None, 0):
+        with pytest.raises(core.FrozenSourceChanged, match="serving.json is not the record"):
+            bench.build_reconstructor(edited, fold=fold)
+    with pytest.raises(core.FrozenSourceChanged, match="serving.json is not the record"):
+        bench.verify_run(edited)
+    with pytest.raises(core.FrozenSourceChanged):
+        bench.fit_serving(edited, log=quiet)
+    report = bench.status(edited)["run_files_match_the_completion_record"]
+    assert report is not True and "serving.json" in report             # `status` says it as well
+    (out / "serving.json").unlink()                                     # and without the copy: the expected state is
+    with pytest.raises(core.FrozenSourceChanged, match="not the expected state"):    # the bound one, not the file's
+        bench.build_reconstructor(edited)
+
+    # (b) no state edited by hand: serving.json points task T1 at ANOTHER genuine all-training state, of a
+    #     setting that the selection of this run did not choose (fitted by the layer's own job)
+    swapped, out = twin("swapped")
+    ctx = bench.build_context(swapped)
+    entry = bound(out)["tasks"]["T1"]
+    other = next((r, k) for r, k in bench.engine_grid(ctx.config) if (r, k) != (entry["representation"], entry["components"]))
+    fit = bench.job_serving(ctx, other[0], other[1], out / "states")
+    assert fit["state_hash"] and fit["state_hash"] != entry["state_hash"]
+    serving = core.read_json(out / "serving.json")
+    serving["tasks"]["T1"].update(representation=other[0], components=other[1], state_hash=fit["state_hash"],
+                                  training_groups_sha256=fit["training_groups_sha256"])
+    core.write_json(out / "serving.json", serving)
+    assert core.sha_file(out / "run_complete.json") == anchor
+    with pytest.raises(core.FrozenSourceChanged, match="serving.json is not the record"):
+        bench.build_reconstructor(swapped)
+
+    # (c) WHERE THE GUARANTEE ENDS, shown rather than claimed: an editor who also rewrites the completion record
+    #     makes every file agree again. The edited state is then served, under ANOTHER SHA-256 of
+    #     run_complete.json: the anchor that `run` printed and the report states is what detects it.
+    rewritten, out = twin("rewritten")
+    old, new = _edit_saved_range(state_path(out, bound(out)["tasks"]["T1"]))
+    complete = core.read_json(out / "run_complete.json")
+    for task_entry in complete[bench.SERVING_KEY]["tasks"].values():
+        if task_entry["state_hash"] == old:
+            task_entry["state_hash"] = new
+    core.write_json(out / "run_complete.json", complete)
+    core.write_json(out / "serving.json", bench.serving_file_content(rewritten))
+    assert answers(rewritten) == ["inferred", "inferred"]              # the widened range answers what was refused
+    assert core.sha_file(out / "run_complete.json") != anchor
+    #     ... and even then the all-training state of a task must be the setting that the bound selection chose
+    pointed, out = twin("pointed")
+    fit = bench.job_serving(bench.build_context(pointed), other[0], other[1], out / "states")
+    complete = core.read_json(out / "run_complete.json")
+    complete[bench.SERVING_KEY]["tasks"]["T1"].update(representation=other[0], components=other[1],
+                                                      state_hash=fit["state_hash"],
+                                                      training_groups_sha256=fit["training_groups_sha256"])
+    core.write_json(out / "run_complete.json", complete)
+    core.write_json(out / "serving.json", bench.serving_file_content(pointed))
+    bench.verify_run(pointed)
+    with pytest.raises(core.FrozenSourceChanged, match="not the engine setting that the selection"):
+        bench.build_reconstructor(pointed)
+
+    # (d) by hand the all-training states are RESTORED from the completion record, never changed
+    lost, out = twin("lost")
+    files = sorted({state_path(out, e) for e in bound(out)["tasks"].values()})
+    for file in files:
+        file.unlink()
+    (out / "serving.json").unlink()
+    with pytest.raises(core.ReconError, match="is missing"):
+        bench.build_reconstructor(lost)
+    bench.build_reconstructor(lost, fold=0)                             # the out-of-fold states are not affected
+    real_fit = mods.fit_joint
+
+    def reseeded(rows, layout, *, components, seed, budget, representation="log"):
+        return real_fit(rows, layout, components=components, seed=seed + 1, budget=budget, representation=representation)
+
+    monkeypatch.setattr(mods, "fit_joint", reseeded)                    # a re-fit that is not the recorded state
+    with pytest.raises(core.FrozenSourceChanged, match="not the state that the finished run recorded"):
+        bench.fit_serving(lost, log=quiet)
+    assert not any(f.exists() for f in files) and not (out / "serving.json").exists()
+    assert not (out / "states" / "restore_in_progress").exists()
+    monkeypatch.setattr(mods, "fit_joint", real_fit)
+    restored = bench.fit_serving(lost, log=quiet)
+    assert restored == dict(bound(out), run_complete_sha256=anchor) and all(f.exists() for f in files)
+    assert answers(lost) == ["inferred", "out_of_support"] and core.sha_file(out / "run_complete.json") == anchor
+    with pytest.raises(core.ReconError, match="only after the benchmark has completed"):
+        bench.fit_serving(bench.make_synthetic_world(tmp_path / "never_run", "null", size="tiny", seed=9), log=quiet)
+
+    # (e) the order of the run: the all-training states exist before the first metric is computed, and the
+    #     completion record and its copy are written after it, also without the steps that follow a run
+    fresh = bench.make_synthetic_world(tmp_path / "order", "planted", size="tiny", seed=6)
+    bench.freeze(fresh, "synthetic", log=quiet)
+    seen, real_score = {}, bench.score
+
+    def watched(w, log=quiet):
+        folder = Path(w.out)
+        seen["states"] = sorted(p.name for p in (folder / "states").glob("serving_*.npz"))
+        seen["files"] = {name: (folder / name).exists() for name in ("metrics.json", "run_complete.json", "serving.json")}
+        return real_score(w, log=log)
+
+    monkeypatch.setattr(bench, "score", watched)
+    bench.run(fresh, log=quiet, post=False)
+    folder = Path(fresh.out)
+    assert seen["files"] == {"metrics.json": False, "run_complete.json": False, "serving.json": False}
+    assert seen["states"] == sorted({state_path(folder, e).name for e in bound(folder)["tasks"].values()})
+    assert (folder / "serving.json").exists() and not (folder / "api_demo.json").exists()
+    bench.verify_run(fresh)
+    bench.build_reconstructor(fresh)
+
+
+def test_K3f_state_files_and_derived_lookups(registry, layout, tasks, planted, tmp_path):
+    """Smaller defects next to K3. A stored member that is not an array is a changed file, not a crash; a state
+    is written to exactly the path it is given; the lookups that are derived from a state cannot be edited in
+    place, and a state in which one of them was replaced has no fingerprint and answers no request."""
+    import zipfile
+
+    state = planted["state"]
+    path = state.save(tmp_path / "state.npz")
+    raw = tmp_path / "raw_member.npz"
+    with zipfile.ZipFile(path) as source, zipfile.ZipFile(raw, "w") as target:
+        for member in source.namelist():
+            if member == "a0.npy":
+                target.writestr("a0", b"not an array")
+            else:
+                target.writestr(member, source.read(member))
+    assert "64-bit floating point" in _rejected(raw, state.state_hash())
+    odd = state.save(tmp_path / "state_without_suffix")
+    assert odd == tmp_path / "state_without_suffix" and odd.exists()
+    assert not (tmp_path / "state_without_suffix.npz").exists()
+    assert mods.JointState.load(odd, state.state_hash()).state_hash() == state.state_hash()
+    loaded = mods.JointState.load(path, state.state_hash())
+    with pytest.raises(TypeError):
+        loaded._model_block["soma_position:AP"] = 1
+    with pytest.raises(TypeError):
+        loaded._kind["soma_position:AP"] = "hurdle"
+    assert loaded.state_hash() == state.state_hash()
+    for name, value in (("units_folded", frozenset()), ("groups_folded", frozenset()), ("groups_sha256", "0" * 64),
+                        ("_kind", dict(loaded._kind)), ("_model_block", {}),
+                        ("units", frozenset({"x_1"})), ("groups", ("zz",))):     # the lists they are derived from
+        forced = mods.JointState.load(path, state.state_hash())
+        object.__setattr__(forced, name, value)                         # past the read-only guard
+        with pytest.raises(core.FrozenSourceChanged, match="derived lookup"):
+            forced.state_hash()
+    # a training unit spelled in another case is recognised through the folded identifiers; with them emptied
+    # behind the guard the state no longer answers at all
+    used = mods.JointState.load(path, state.state_hash())
+    module = mods.JointMixtureModule(registry, layout, states={n: used for n in tasks}, train=planted["rows"],
+                                     tasks=tasks, evidence=evidence_for(tasks, "exploratory_supported"))
+    r = core.Reconstructor(registry)
+    r.register(module)
+    rows = planted["rows"]
+    observed = {"soma_position": [float(rows.cont[f"soma_position:{a}"][0]) for a in core.SOMA_AXES],
+                "source_label": rows.cat["source_label"][0]}
+    shouted = request(registry, observed, ["regional_axon_length"], unit=str(rows.unit[0]).upper(),
+                      group=str(rows.group[0]).upper())
+    assert r.reconstruct(shouted)["regional_axon_length"].refusal.code == "leakage_guard"
+    object.__setattr__(used, "units_folded", frozenset())
+    with pytest.raises(core.FrozenSourceChanged, match="derived lookup"):
+        r.reconstruct(shouted)
 
 
 # ----------------------------------------------------------------------------------------------

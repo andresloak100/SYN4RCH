@@ -15,6 +15,12 @@
     rejects a measured regional profile as input, and admits an inferred input, whatever its variable name,
     only after the provenance check of the core (hidden_axon_problem). It does not import the axon engine.
 
+Where a state enters the layer (a JointMixtureModule, the adapter's register) three things are checked that a
+state cannot say about itself: the registry agrees with the field layout the state was fitted on
+(layout_problem: the one conversion of a record is the registry's); every training row is filed under the brain
+sample its own ID names, and the state's group list is exactly those groups (group_naming_problem: the list
+decides whether a state holds a query's brain sample); the state is still the registered one on every request.
+
 Nothing here opens a data file. Rows arrive as arrays from analysis/synarch_recon.py loaders.
 """
 from __future__ import annotations
@@ -148,6 +154,50 @@ class Rows:
 def jiao_layout(registry, regions):
     return FieldLayout.from_registry(registry, "jiao", ("soma_position", "source_label", "regional_axon_length"),
                                      {"regional_axon_length": tuple(regions)})
+
+
+def layout_problem(registry, layout):
+    """None when a field layout says about its variables exactly what `registry` says; else what differs.
+
+    A state is fitted on the scale its layout records, and a record is converted to the scale the registry
+    states. The ONE conversion is right only when the two agree, so a module refuses a registry whose kind,
+    coordinates or MODELLING TRANSFORM of a field differ from the layout of its states."""
+    try:
+        coordinates = {v: layout.coordinates_of(v) for v in layout.variables if layout.coordinates_of(v)}
+        expected = FieldLayout.from_registry(registry, layout.namespace, layout.variables, coordinates)
+    except core.ReconError as error:
+        return str(error)
+    if expected == layout:
+        return None
+    for mine, theirs in zip(layout.fields, expected.fields):
+        if tuple(mine) != tuple(theirs):
+            return (f"field {mine[0]} is {mine[3]} with modelling transform '{mine[4]}' in the layout, and "
+                    f"{theirs[3]} with '{theirs[4]}' in the registry")
+    return "the layout does not hold the fields that the registry gives for its variables"
+
+
+def group_naming_problem(registry, namespace, units, groups, *, aligned=False):
+    """None when units are filed under the groups that their own IDs name; else what is wrong. Applies where
+    the namespace's unit IDs name their group (Jiao: <brain sample>_<n>); elsewhere there is nothing to check.
+
+    aligned=True : units[i] is filed under groups[i] (training rows): each must be the group its ID names;
+    aligned=False: `groups` is the group LIST of a state: it must be exactly the groups its units name.
+    Without this a state whose units are 's00_<n>' could list its groups as 'zz', and every check that asks
+    whether a state holds the query's brain sample would be answered by the list."""
+    units = [str(u) for u in units]
+    named = [registry.implied_group(namespace, u) for u in units]
+    if not named or named[0] is None:
+        return None
+    if aligned:
+        for unit, group, name in zip(units, groups, named):
+            if str(group) != name:
+                return f"unit {unit} is filed under group {group}, but by its ID it belongs to {name}"
+        return None
+    listed, by_id = {str(g) for g in groups}, set(named)
+    if listed != by_id:
+        return (f"by their IDs the training units belong to {len(by_id)} groups, the group list names "
+                f"{len(listed)}; not in both: {', '.join(sorted(listed ^ by_id)[:5])}")
+    return None
 
 
 def rows_from_table(table, layout):
@@ -349,7 +399,10 @@ class JointState:
 
     A state is READ-ONLY once built (its arrays, mappings and attributes cannot be changed in place), and it
     is checked against the form a fitted state must have. Its fingerprint, state_hash(), is computed from
-    exactly what save() writes and is recomputed on every call (it is never cached).
+    exactly what save() writes and is recomputed on every call (it is never cached). The lookups that are
+    derived from the saved items (block of a field, encoding of a field, folded identifiers) are read-only
+    too, and every fingerprint computation checks that they still follow from the saved items: a state in
+    which one of them was replaced behind the guard has no fingerprint and answers no request.
 
     WHAT THE FINGERPRINT BINDS (everything in a saved state that can change an answer, a refusal or a notice):
        1. the state format and the layer's schema name;
@@ -371,7 +424,10 @@ class JointState:
           seen-group notice, the coverage flag and the query-group exclusion of a hidden-axon forecast).
     NOT in a state, and therefore not in its fingerprint: the policy and the interval level (run-time settings,
     returned with every result), the task definitions and the validation evidence (bound by the pre-run
-    declaration and by run_complete.json), the comparator bank (it has its own hash, TaskBaselines).
+    declaration and by run_complete.json), the comparator bank (it has its own hash, TaskBaselines), and WHICH
+    state answers for a fold or for a unit outside the training partition, with the fingerprint that is expected
+    there: selection.json and the record of the all-training states, both behind the SHA-256 of
+    run_complete.json (synarch_recon_benchmark.build_reconstructor).
     """
 
     def __init__(self, *, layout, encoding, field_meta, blocks, settings, units, groups, ranges, support_margin=None,
@@ -399,20 +455,29 @@ class JointState:
         self.quantile_iterations = QUANTILE_ITERATIONS if quantile_iterations is None else quantile_iterations
         self.model = model                      # the JointModel object, when just fitted (never saved)
         self._validate()
-        self._model_block = {f: i for i, b in enumerate(self.blocks) for f in b["fields"]}
-        self._kind = {}
-        for name, _, _, kind, _ in layout.fields:
-            self._kind[name] = "categorical" if kind == "categorical" else self.encoding[name]
-        self.units_sha256 = core.ids_sha(sorted(self.units))
-        self.groups_sha256 = core.ids_sha(self.groups)
-        self.units_folded = frozenset(core.fold_id(u) for u in self.units)
-        self.groups_folded = frozenset(core.fold_id(g) for g in self.groups)
+        derived = self._derive()
+        self._model_block = types.MappingProxyType(derived["_model_block"])
+        self._kind = types.MappingProxyType(derived["_kind"])
+        for name in ("units_sha256", "groups_sha256", "units_folded", "groups_folded"):
+            object.__setattr__(self, name, derived[name])
         self._sealed = True
 
     def __setattr__(self, name, value):
         if self.__dict__.get("_sealed"):
             raise AttributeError("a JointState is read-only once built; fit or load another state instead")
         object.__setattr__(self, name, value)
+
+    def _derive(self):
+        """The lookups that follow from the saved items and are kept for speed: which block a model field is in,
+        how a logical field is encoded, the folded identifiers and the two identifier digests. They are not
+        saved; _saved() recomputes them and refuses a state in which one of them no longer follows."""
+        kind = {}
+        for name, _, _, field_kind, _ in self.layout.fields:
+            kind[name] = "categorical" if field_kind == "categorical" else self.encoding[name]
+        return {"_model_block": {f: i for i, b in enumerate(self.blocks) for f in b["fields"]}, "_kind": kind,
+                "units_sha256": core.ids_sha(sorted(self.units)), "groups_sha256": core.ids_sha(self.groups),
+                "units_folded": frozenset(core.fold_id(u) for u in self.units),
+                "groups_folded": frozenset(core.fold_id(g) for g in self.groups)}
 
     def _validate(self):
         """The form every fitted state has. A loaded file that does not have it is not a state."""
@@ -537,7 +602,22 @@ class JointState:
     # -- fingerprint, save, load ---------------------------------------------------------------
     def _saved(self):
         """Everything that is saved, in its saved form: (head without the hash, arrays in index order).
-        The fingerprint covers exactly this, so no saved item can change without changing it."""
+        The fingerprint covers exactly this, so no saved item can change without changing it. The derived
+        lookups (_derive) are not saved; here they are recomputed, and a state in which one of them was replaced
+        in memory has no fingerprint any more."""
+        if self.__dict__.get("_sealed"):
+            try:
+                derived = self._derive()
+            except Exception as error:      # noqa: BLE001  (a state forced into another form in memory)
+                raise core.FrozenSourceChanged("this state no longer has the form of a state: it was changed in "
+                                               f"memory ({type(error).__name__})") from None
+            for name, value in derived.items():
+                kept = self.__dict__.get(name)
+                if type(kept) is not (types.MappingProxyType if name.startswith("_") else type(value)) \
+                        or (dict(kept) if name.startswith("_") else kept) != value:
+                    raise core.FrozenSourceChanged(f"the derived lookup {name.lstrip('_')} of this state no longer "
+                                                   "follows from what the state holds: the state was changed in "
+                                                   "memory behind its read-only guard")
         index, arrays = [], []
         for bi, b in enumerate(self.blocks):
             index.append([bi, "weights", None])
@@ -565,21 +645,26 @@ class JointState:
         return self._fingerprint(*self._saved())
 
     def save(self, path):
+        """Write the state to exactly `path` (through an open file, so that no suffix is appended to the name)
+        and return that path: load(save(p), fingerprint) reads the file back whatever p is called."""
         head, arrays = self._saved()
         head["state_hash"] = self._fingerprint(head, arrays)
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        np.savez(path, head=np.array(core.canonical(head)), **{f"a{i}": a for i, a in enumerate(arrays)})
+        with open(path, "wb") as handle:
+            np.savez(handle, head=np.array(core.canonical(head)), **{f"a{i}": a for i, a in enumerate(arrays)})
         return path
 
     @classmethod
     def load(cls, path, expected_hash):
         """Read a saved state; refuse anything that is not exactly the EXPECTED state as save() writes it.
 
-        `expected_hash` is required: the fingerprint that was recorded elsewhere when the state was made (the
-        fit record, selection.json, serving.json). The hash stored inside the file only shows that the file
-        agrees with itself, and anybody who edits the file can rewrite it; so a state is never loaded on the
-        file's own word. A file that holds another state, however consistent, is refused."""
+        `expected_hash` is required: the fingerprint that was recorded elsewhere when the state was made (in a
+        finished run: selection.json, or the record of the all-training states inside run_complete.json). The
+        hash stored inside the file only shows that the file agrees with itself, and anybody who edits the file
+        can rewrite it; so a state is never loaded on the file's own word. A file that holds another state,
+        however consistent, is refused. The expected fingerprint is only as good as where the caller took it
+        from: it must itself be bound (build_reconstructor takes it from behind the completion record)."""
         def bad(why):
             raise core.FrozenSourceChanged(f"{path}: {why}")
 
@@ -608,7 +693,7 @@ class JointState:
         if not isinstance(index, list) or set(stored) != {f"a{i}" for i in range(len(index))}:
             bad("the stored arrays are not the ones the index lists")
         arrays = [stored[f"a{i}"] for i in range(len(index))]
-        if any(a.dtype != np.dtype("<f8") for a in arrays):
+        if any(not isinstance(a, np.ndarray) or a.dtype != np.dtype("<f8") for a in arrays):
             bad("a stored array is not 64-bit floating point")
         if cls._fingerprint(head, arrays) != recorded:          # 1. the file as written
             bad("stored state does not reproduce its recorded hash")
@@ -1227,7 +1312,9 @@ class JointMixtureModule(core.Module):
 
     `train` are the rows the states were fitted on: the comparators that give baseline-level answers use
     exactly these rows, so the leakage guard and the training-group provenance of a state describe the
-    comparator bank too. A module whose rows are not those of its states is refused at construction.
+    comparator bank too. A module whose rows are not those of its states is refused at construction. So is a
+    registry that disagrees with the field layout of the states (kind, coordinates or modelling transform of a
+    field), and so are rows or states whose units are not filed under the brain sample their own IDs name.
     """
     kind = "estimator"
 
@@ -1244,6 +1331,16 @@ class JointMixtureModule(core.Module):
         self._conditionals = {t.conditional().name: t for t in self.tasks.values()}
         self.vote_alpha, self.logistic_max_iter = vote_alpha, logistic_max_iter
         self._baselines = {}
+        # the registry converts a record to the modelling scale; the states were fitted on the scale their layout
+        # records: the two must say the same about every field, or the one conversion is the wrong one
+        problem = layout_problem(registry, layout)
+        if problem:
+            raise core.ReconError(f"the registry of this module disagrees with the field layout of its states: {problem}")
+        # every training row is filed under the brain sample its own ID names: the group list of a state decides
+        # whether the state holds a query's brain sample, so it may not be a free-standing claim
+        problem = group_naming_problem(registry, layout.namespace, train.unit, train.group, aligned=True)
+        if problem:
+            raise core.ReconError(f"the training rows of this module are not usable: {problem}")
         train_units = frozenset(str(u) for u in train.unit)
         train_groups = tuple(sorted({str(g) for g in train.group}))
         self._registered, self._state_groups, self._bank_groups = {}, {}, {}
@@ -1253,6 +1350,9 @@ class JointMixtureModule(core.Module):
             if state.units != train_units or state.groups != train_groups:
                 raise core.ReconError(f"the comparator rows are not the rows state {key} was fitted on: the units or "
                                       "brain samples differ, so a baseline-level answer could not be guarded")
+            problem = group_naming_problem(registry, layout.namespace, sorted(state.units), state.groups)
+            if problem:
+                raise core.ReconError(f"state {key} cannot be shown to exclude a query's brain sample: {problem}")
             self._registered[key] = state.state_hash()
             self._state_groups[self._registered[key]] = frozenset(state.groups)
 
@@ -1311,10 +1411,11 @@ class JointMixtureModule(core.Module):
             v_spec = registry.variable(self.namespace, variable)
             # every record states its scale and frame; its value reaches the modelling scale by ONE conversion
             if v_spec.kind == "categorical":
-                problem = core.statement_problem(v_spec, record.scale, record.transform, record.frame)
+                problem = core.statement_problem(v_spec, record.scale, record.transform, record.frame) \
+                    or core.value_problem(v_spec, record)
                 if problem:
                     return core.Refusal("invalid_request", problem)
-                values[variable] = str(record.value)
+                values[variable] = core.plain_label(record.value)     # the text the record's digest binds
             else:
                 try:
                     values[variable] = core.model_values(v_spec, record)
@@ -1476,6 +1577,19 @@ class JointMixtureModule(core.Module):
                                  probabilities={c: float(p) for c, p in zip(classes, proba)},
                                  prediction_set=_prediction_set(classes, proba, level), note=note,
                                  transform="identity", frame=spec.frame)
+        # point, median and interval are on the MODELLING scale; the estimate says so by tag, text and frame
+        tag = spec.transform if spec.transform in core.MODEL_SCALE_TEXT else "identity"
+        if lower is not None:
+            # The ends of an interval are held to the bounds of the registered frame and scale of the variable
+            # (a soma in the mirrored frame: ML <= 5,700; a length: >= 0). The fitted mixture has Gaussian tails
+            # beyond a bound, but no value of the variable lies there: cutting the interval at the bound removes
+            # nothing that could be the truth, so its coverage is unchanged. The point is never moved.
+            low, high = core.domain_limits(spec.domain, coordinates, tag)
+            cut = [np.minimum(np.maximum(np.asarray(end, dtype=float), low), high) for end in (lower, upper)]
+            if not (np.array_equal(cut[0], lower) and np.array_equal(cut[1], upper)):
+                note += ("; interval ends cut at the bounds of the registered frame of the variable (no value of "
+                         "the variable lies beyond them)")
+            lower, upper = cut
         interval = None if lower is None else {"level": level, "lower": tuple(float(v) for v in lower),
                                                "upper": tuple(float(v) for v in upper)}
         original = None
@@ -1487,8 +1601,6 @@ class JointMixtureModule(core.Module):
             if lower is not None:
                 original["lower"] = tuple(float(v) for v in core.inverse_transform("log10_1p", lower))
                 original["upper"] = tuple(float(v) for v in core.inverse_transform("log10_1p", upper))
-        # point, median and interval are on the MODELLING scale; the estimate says so by tag, text and frame
-        tag = spec.transform if spec.transform in core.MODEL_SCALE_TEXT else "identity"
         return core.Estimate(variable, spec.kind, tuple(coordinates), core.scale_statement(spec, tag),
                              tuple(float(v) for v in point),
                              None if median is None else tuple(float(v) for v in median), interval,
@@ -1634,11 +1746,18 @@ class AxonArborAdapter(core.Module):
     * never inputs: any measured axon-derived value of the unit (its regional profile, in whole or in part,
       or its trace), and anything that descends from one. A measured regional profile is rejected with
       ForbiddenInputError;
+    * a record that says 'measured' but names a producing module or state, or whose source is a reconstruction
+      or a fitted state of the layer, is refused; so is a record whose coordinates are not those of its
+      variable or whose value lies outside the frame it states (core.record_problem);
+    * a state is registered only if its group list is the list of brain samples that its own training units
+      name (group_naming_problem);
     * this file does not import the axon engine.
 
-    Limit that no check here can remove: records are not signed. A value that somebody re-enters by hand as
-    a 'measured' record is taken as a measurement. The guarantee covers measured records as the loaders make
-    them and inferred records exactly as reconstruct() issued them.
+    Limits that no check here can remove: records are not signed. A value that somebody re-enters by hand as
+    a 'measured' record, with a source that looks like a table, is taken as a measurement. The guarantee covers
+    measured records as the loaders make them and inferred records exactly as reconstruct() issued them. And
+    the training units and groups of a state object that is built in memory are taken on its word; only a
+    state loaded against a fingerprint that was recorded when it was fitted is anchored.
     """
     kind = "adapter"
     STATUS = "blocked: independent validation pending"
@@ -1692,6 +1811,11 @@ class AxonArborAdapter(core.Module):
             state_hash, groups = state.state_hash(), frozenset(str(g) for g in state.groups)
             if training_groups is not None and frozenset(str(g) for g in training_groups) != groups:
                 raise core.RegistryError("the declared training groups are not the groups of the state")
+            # where a unit ID names its brain sample, the group list of a state must be the groups its own
+            # training units name: a state whose units are 's00_<n>' does not exclude brain sample s00
+            problem = group_naming_problem(self.registry, self.namespace, sorted(getattr(state, "units", ())), groups)
+            if problem:
+                raise core.RegistryError(f"this state cannot be shown to exclude a query's brain sample: {problem}")
         else:
             if training_groups is None:
                 raise core.RegistryError("register a state object, or a state hash with its training groups")
@@ -1717,7 +1841,11 @@ class AxonArborAdapter(core.Module):
         forecast of ONE unit (core.hidden_axon_problem: the same rule the general layer applies).
 
         `evidence` maps variable names to records. They must all be records of one unit (the pairing rule),
-        of `unit_id` when it is given, and each must state the registered scale and frame of its variable."""
+        of `unit_id` when it is given, and each must be a well-formed record of its registered variable
+        (core.record_problem): its own invariants, the registered scale and frame, registered coordinates, and
+        a value inside the frame it states (a soma beyond the midline is not in the mirrored frame)."""
+        if any(type(record) is not core.Observation for record in evidence.values()):
+            raise core.ForbiddenInputError("what was supplied is not a set of observation records")
         keys = {record.key() for record in evidence.values()}
         if len(keys) > 1:
             raise core.ForbiddenInputError("the supplied records belong to different units: "
@@ -1737,8 +1865,7 @@ class AxonArborAdapter(core.Module):
                                                state_inputs=self._inputs_of)
         if problem is None:
             for variable, record in evidence.items():
-                problem = core.statement_problem(self.registry.variable(self.namespace, variable), record.scale,
-                                                 record.transform, record.frame)
+                problem = core.record_problem(self.registry.variable(self.namespace, variable), record)
                 if problem:
                     break
         if problem:

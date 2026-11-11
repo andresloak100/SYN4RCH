@@ -1,8 +1,6 @@
 # SYNARCH reconstruction layer: masked-variable benchmark protocol
 
-**Status: DRAFT. Written 2026-11-10 by the builder; revised 2026-11-11 by the fixer after a full review, the other
-agent's review and three attacks on the first fixes (section 20). NOT frozen. Nothing has been fitted or scored on
-real outcomes.** This file becomes binding when
+**Status: FINAL, 2026-11-11. Written 2026-11-10 by the builder; revised 2026-11-11 after a full review, the other agent's review and two rounds of independent attacks (section 20); a third, fresh attack found no break. Frozen by `freeze`, which pins this file. Nothing had been fitted or scored on real outcomes when this line was written.** This file becomes binding when
 `python3 -I analysis/synarch_recon_benchmark.py freeze --reviewed "..."` writes
 `data/interim/synarch_recon/pre_run_declaration.json`. That declaration holds the SHA-256 of this file, of the
 code, of the tests and of every input, the folds, the grids and the seeds. `run` then checks all of them again
@@ -68,7 +66,9 @@ asks the library for columns C to D only and refuses if a foreign column lies be
 library streams the sheet, so other cells pass through its parser but are never returned to this code.
 
 **What was read from the real cohort before the freeze** (builder 2026-11-10; fixer 2026-11-11, the same reads
-again through the test file and the `inputs` command):
+again through the test file and the `inputs` command; in the second round of fixes only through the two
+real-cohort tests of the test file, which load the training rows and check identifiers, counts and that the rows
+are valid records):
 
 * the manifest, and the allowed input columns of the two soma tables, training rows only;
 * the header of the regional table;
@@ -106,6 +106,24 @@ The 49 columns are not a partition of the brain and do not sum to the axon lengt
 PARN and IRN. 10 of the 4,448 training profiles are zero in all 49 regions; they stay in training and scoring.
 Every method's regional prediction is clipped at zero from below (the same rule for all).
 
+**What a frame and a scale say, as numbers.** A statement of a frame is otherwise only text. So the registry
+holds, per variable, the bounds that its frame and scale state, and one function holds every value to them: a
+training row in the loader, a record in a request, in the record store and at the axon adapter, and every number
+the API issues.
+
+* `soma_position`: inside the CCFv3 10 um volume (AP 0 to 13,200, DV 0 to 8,000, ML from 0), and on the mirrored
+  side, **ML <= 5,700** (tolerance 1e-6 um, the loader's). A soma given in true right-hemisphere coordinates is
+  refused with the reason and the rule (ML' = 11,400 - ML); it is not answered at the unmirrored number.
+* `regional_axon_length`: not negative (on both scales).
+
+These rules change no prediction and no score of the benchmark. The loader already refused a training soma with
+ML > 5,700 and a negative length; it now applies the whole rule, and all 4,448 training rows still load (checked
+by the real-cohort test, inputs only: AP 4,621 to 8,298, DV 4,735 to 7,288, ML 3,683 to 5,699.15). The
+benchmark's predictions are not passed through the rules. In the API an interval end is cut at a bound (no value
+of the variable lies beyond it, so coverage is unchanged) and an answer whose point lies outside its frame is
+withheld (`invalid_estimate`); the benchmark does not clip soma predictions, so a comparator that extrapolates
+beyond the midline is scored as it is and its API answer for such a neuron is withheld.
+
 ## 6. The four tasks
 
 Each neuron is predicted once, by states fitted on other brain samples.
@@ -117,9 +135,11 @@ Each neuron is predicted once, by states fitted on other brain samples.
 | **T3** | source label | soma position + the measured regional profile |
 | **T4** | the 33 regions outside the hypothalamus (MRN ... OLF) | the 16 measured hypothalamic regions (ARH ... ME) + soma position + source label |
 
-T1 is the only hidden-axon forecast: nothing derived from the neuron's axon is an input. T2, T3 and T4 are
-**declared** as taking a measured profile; the API accepts a measured profile as input in these three conditionals
-only, and the axon adapter rejects it always.
+T1 is the forecast of an entirely hidden axon: nothing derived from the neuron's axon is an input. T2, T3 and T4
+are **declared** as taking a measured profile; the API accepts a measured profile as input in these three
+conditionals only, and the axon adapter rejects it always. T4 is still a forecast of hidden axon regions: besides
+its measured block it takes only the inputs that T1 may take. In none of the four tasks is an inferred input
+taken on its own word (section 19).
 
 T4's block was fixed without outcomes: the first 16 published columns are exactly the descendants of HY among the
 49 (checked against the local CCF ontology), and MY with its four descendants lies entirely in the hidden block,
@@ -289,13 +309,16 @@ here: independent confirmation does not exist.
 one another. Every other interval in the report (other metrics, single comparators, source labels: about ninety)
 is an unadjusted description and decides nothing. How often the rule calls at least one of the four tasks
 supported when there is nothing to learn was measured on no-signal synthetic worlds with the frozen pipeline
-(`nullrate` command; outputs `data/interim/synarch_recon/synthetic/nullrate_tiny.json` and `nullrate_real.json`):
+(`nullrate` command; outputs `data/interim/synarch_recon/synthetic_round2/nullrate_tiny.json` and
+`nullrate_real.json`):
 
 * **Small shape (32 training samples, about 450 neurons, 8 regions; the complete small grid, K in {1, 2, 4})**: 200 worlds, 800 task results. **Worlds with at least one task called supported: 0 of 200.** With the interval rule alone, without the minimum gain, it would have been 6 of 200 (task results: T1 3, T2 0, T3 0, T4 3; their gains over the best comparator: T1: 0.30%, 0.30%, 0.44%; T4: 0.26%, 0.35%, 1.00%).
   Largest gain over the best comparator in any of these worlds: T1 0.58%, T2 0.54%, T3 13.47%, T4 1.00%. The engine beat every always-reported baseline *by any amount* in 99 (T1), 63 (T2), 90 (T3), 87 (T4) of 200 worlds, and *clearly* in 0 (T1), 0 (T2), 0 (T3), 0 (T4).
 * **Real shape (101 training samples, 4,448 neurons, 49 regions, the real label counts; every declared setting except that the engine's grid stops at K = 4, because the three largest values take most of a run's time)**: 8 worlds, 32 task results. **Worlds with at least one task called supported: 0 of 8.** With the interval rule alone, without the minimum gain, it would have been 0 of 8 (task results: T1 0, T2 0, T3 0, T4 0; their gains over the best comparator: none).
   Largest gain over the best comparator in any of these worlds: T1 0.00%, T2 0.00%, T3 7.23%, T4 0.00%. The engine beat every always-reported baseline *by any amount* in 4 (T1), 3 (T2), 5 (T3), 4 (T4) of 8 worlds, and *clearly* in 0 (T1), 0 (T2), 0 (T3), 0 (T4).
 * One further no-signal world at the real shape with the complete grid (K up to 16; section 17): no task supported.
+* Both simulations were run again with the code of the second round (same seeds): the summaries and the task
+  results of every world are identical to those of the first round's code.
 
 What these numbers say and do not say. Zero observed is not zero: with 200 worlds the chance of at least one false 'supported' among the four tasks is below about 1.5% at the small shape (95% bound, rule of three). The real shape was simulated 8 times with a shortened grid and once with the complete grid, which bounds little by itself; what it adds is the size of chance differences there. For T1, T2 and T4 the largest gain over the best comparator in any no-signal world was 1.00% at the small shape and 0.00% at the real shape, below the minimum of 2%: for these three tasks the minimum gain is what removes the narrow-interval artefact. For T3 the minimum gain protects nothing, at either shape: accuracy near chance level moves by several percent of itself by chance (largest gain in a no-signal world: 13.5% at the small shape, 7.2% at the real shape); there it was the requirement that all six intervals exclude zero that held, in each of the 209 worlds. 'By any amount' the engine beats every always-reported baseline in about half of the no-signal worlds: a comparison of means without a margin says nothing, which is why the verdict of a task is the clear comparison.
 
@@ -315,7 +338,7 @@ exploratory benchmark". It is not a claim of calibration.
 
 The flag applies to answers from measured inputs inside the training support, at level 0.90, for units of brain
 samples outside the state. The API drops it otherwise (unseen label, input outside the training range, inferred
-or unverified input, evidence that could not condition, unknown or seen brain sample, another level).
+input, evidence that could not condition, unknown or seen brain sample, another level).
 
 ## 14. Breakdown by source label
 
@@ -343,22 +366,38 @@ python3 -I analysis/synarch_recon_benchmark.py status
   inputs and the data contract, library versions. (A synthetic world's declaration pins the code and the tests
   but not this file: the protocol binds the real cohort.)
 * `run` refuses unless the declaration matches the current files exactly, writes an exclusive start marker, and
-  refuses a second start. It saves every out-of-fold prediction and state before any metric is computed
-  (`predictions/`, `states/`, `fits.json`, `selection.json`), then scores from the saved predictions
-  (`metrics.json`, `evidence.json`, each written once) and writes `run_complete.json`, which binds by SHA-256 the
-  declaration, the prediction manifest, the fit records, the selection, the metrics and the evidence. The
-  benchmark is then complete and stands. `run` prints the SHA-256 of `run_complete.json`.
-* Three steps follow in the same command; they read no new data, cannot change a metric, and can be repeated by
-  hand (`serving`, `demo`, `report`): (1) one all-training state per task, with the engine setting chosen most
-  often over the five folds (ties: earlier in the declared order); it is never scored, it is what the API uses
-  for units outside the training partition, and its evidence is this benchmark; `serving.json` records each
-  state's fingerprint and the SHA-256 of the `run_complete.json` it belongs to; a numerical failure there is
-  recorded and changes nothing else; (2) the API demonstration (`api_demo.json`) on one predetermined unit, the
-  first neuron of outer fold 0 in ID order, answered by states that never saw its sample; (3) the report.
+  refuses a second start. In this order:
+  1. it saves every out-of-fold prediction and state (`predictions/`, `states/`, `fits.json`, `selection.json`);
+  2. it fits **one all-training state per task**, with the engine setting chosen most often over the five folds
+     (ties: earlier in the declared order). These states are never scored; they are what the API uses for units
+     outside the training partition, and their evidence is this benchmark. The step reads no new data and cannot
+     change a metric. It never stops the benchmark: a numerical failure of a fit, or any other failure of the
+     step, is recorded for the tasks it leaves without a state;
+  3. only then it computes the metrics from the saved predictions (`metrics.json`, `evidence.json`, each
+     written once);
+  4. it writes `run_complete.json`. This record binds by SHA-256 the declaration, the prediction manifest, the
+     fit records, the selection, the metrics and the evidence, **and it holds the record of the all-training
+     states**: per task the setting, the state's fingerprint, the hash of its training groups, or the reason it
+     failed. `serving.json` is then written as a copy of that record (plus the SHA-256 of the completion record
+     it was copied from).
+  The benchmark is then complete and stands. `run` prints the SHA-256 of `run_complete.json`: **that one number
+  is the anchor** of everything the API serves; `status` shows it and the results report states it.
+* Two steps follow in the same command; they read no new data, cannot change a metric, and can be repeated by
+  hand (`demo`, `report`): the API demonstration (`api_demo.json`; an illustration, not bound) on one
+  predetermined unit, the first neuron of outer fold 0 in ID order, answered by states that never saw its
+  sample; and the report, which is rendered only from files that still match the completion record.
+* The `serving` command **restores** the all-training states of a finished run: it fits them again and keeps a
+  state file only if the state is exactly the one the completion record holds; it rewrites `serving.json` from
+  that record when the copy is missing. It never changes what the run recorded: an all-training fit that failed
+  in the run stays failed for that run.
 * The reconstruction API over a finished run (`build_reconstructor`) serves nothing unless: the declaration still
-  matches code and inputs; every file bound by `run_complete.json` has its recorded hash; every state file holds
-  exactly the state whose fingerprint and training groups were recorded when it was fitted, made with the
-  declared reader settings; `serving.json` belongs to this `run_complete.json`.
+  matches code and inputs; every file bound by `run_complete.json` has its recorded hash; `serving.json`, if it
+  exists, is exactly the copy of the record that `run_complete.json` holds; every state file holds exactly the
+  state whose fingerprint and training groups were recorded when it was fitted, made with the declared reader
+  settings. **The expected fingerprint of a state is always taken from behind the anchor**: from
+  `selection.json` for the out-of-fold states, from the record inside `run_complete.json` for the all-training
+  states (never from `serving.json`); and the all-training state of a task must be the setting that the bound
+  selection chose for it.
 * The results are independent of the number of workers (tested).
 * All outputs are under `data/interim/synarch_recon/`. Nothing is committed, downloaded or uploaded.
 
@@ -370,8 +409,9 @@ python3 -I analysis/synarch_recon_benchmark.py status
   outcomes have been used and the run stands. The declaration, the start marker and fitted but unscored states
   move to `aborted/<time>/`, are listed in the next declaration and in the report, and nothing is deleted. What
   the abort record says about existing files is computed, not assumed.
-* A run that was interrupted after its predictions were saved is finished, not restarted: `score` computes the
-  metrics from the saved predictions and writes the completion record.
+* A run that was interrupted after its predictions were saved is finished, not restarted: `score` fits the
+  all-training states (again, if the interruption came after them; the fits are seeded, so they are the same
+  states), computes the metrics from the saved predictions and writes the completion record.
 * **After a STARTED run was set aside, the next freeze must be the same benchmark.** Tasks, comparators, grids,
   metrics settings, minimum gain, salt, folds, inputs and reader settings are compared with the declaration that
   was set aside, and any difference is refused. Only code and protocol text may differ (the repair of the
@@ -386,18 +426,20 @@ python3 -I analysis/synarch_recon_benchmark.py status
 
 ## 17. Synthetic checks before the freeze
 
-Same code path, same file formats, synthetic cohorts (`synthetic` command; outputs under
-`data/interim/synarch_recon/synthetic/`; the builder's runs of the draft code are kept in
+Same code path, same file formats, synthetic cohorts (`synthetic` command; outputs of the code as it is now under
+`data/interim/synarch_recon/synthetic_round2/`; the runs of the first round's code are kept in
+`data/interim/synarch_recon/synthetic/`, the builder's runs of the draft code in
 `data/interim/synarch_recon/synthetic_builder_draft/`):
 
 * a world where soma, label and profile share latent classes with zero inflation, and a world where they are
   independent, at a small size and at the real size (101 training samples, 4,448 neurons, 49 regions, the real
   label counts, a region that is always zero, all-zero profiles, a duplicated soma, labels with one sample);
 * in the independent world every task must end `no_better_than_baseline`;
-* unit tests (71, all passing) cover the pairing rule, statuses and lineage, refusals, sealing canaries, folds,
+* unit tests (79, all passing) cover the pairing rule, statuses and lineage, refusals, sealing canaries, folds,
   baselines on a toy set, metric aggregation, equality with `JointModel.infer()`, recovery of planted
-  conditionals, the axon adapter, the freeze and the single run, and the three review blockers of section 19
-  (one focused test per item, each shown to fail without its fix).
+  conditionals, the axon adapter, the freeze and the single run, and the review blockers of section 19 (one
+  focused test per item, each shown to fail without its fix: 16 tests for the first round's repairs, 6 for the
+  second round's).
 
 Results of the synthetic runs with the final code (seed 0; primary metric of the engine against the best
 comparator, with the relative gain; full tables in each world's `out/results.md`). "supported" is
@@ -419,17 +461,23 @@ comparator, with the relative gain; full tables in each world's `out/results.md`
   against the best one (KNN) its gain is 1.56% and the interval of the difference includes zero; it is not
   called supported.
 * In the independent world at the real size K = 1 was chosen in 5 of 5 folds (T1), 3 of 5 folds (T2), 1 of 5 folds (T3), 5 of 5 folds (T4).
-* Run time at the real size with 4 workers on a busy machine: 5 min 16 s for the shared-classes world (187 engine fits, 0 at the iteration limit), 17 min 5 s for the
+* Run time at the real size with 4 workers on a busy machine (second round; the machine was busier than in the
+  first): 6 min 24 s for the shared-classes world (187 engine fits, 0 at the iteration limit), 20 min 36 s for the
   independent one (194 engine fits, 27 at the iteration limit: EM converges slowly on noise; these fits are counted, never extended).
-  One fit on 3,467 rows, one process: `log` (53 fields) 1.2 / 2.7 / 3.4 / 5.3 / 5.0 / 7.2 s for K = 1 / 2 / 4 / 8 / 12 / 16;
-  `hurdle` (102 fields) 4.1 / 4.8 / 4.7 / 7.1 / 12.9 / 22.0 s (`timing` command, the same busy machine).
+  One fit on 3,467 rows, one process: `log` (53 fields) 1.4 / 2.9 / 3.9 / 6.7 / 5.5 / 8.2 s for K = 1 / 2 / 4 / 8 / 12 / 16;
+  `hurdle` (102 fields) 6.4 / 6.6 / 6.1 / 12.1 / 18.8 / 28.2 s (`timing` command, the same busy machine).
+* **The second round's repairs changed no number.** The four worlds were run again with the same seeds: in each
+  of them `metrics.json` and `selection.json` are byte-identical to the run with the first round's code, the
+  evidence per task is identical, and so are the fingerprints of the all-training states. The repairs change
+  what the API accepts and where it takes an expected fingerprint from; they change no prediction and no score.
 * The results do not depend on the number of workers: the two small worlds were run with 1 and with 3 workers;
   metrics, every saved prediction array and every selection are identical
-  (`data/interim/synarch_recon/synthetic/workers_check.txt`).
+  (`data/interim/synarch_recon/synthetic_round2/workers_check.txt`); so are the fingerprints of the
+  all-training states.
 * No-signal simulations of the status rule: section 12 (`nullrate_tiny.json`, `nullrate_real.json`).
-* These runs used `analysis/synarch_recon.py` `5ad109dd...`, `analysis/synarch_recon_modules.py` `ed0d90fa...`,
-  `analysis/synarch_recon_benchmark.py` `c899dd6a...`, `tests/test_synarch_recon.py` `a2c7285d...` (full hashes in
-  `synthetic/code_at_run.sha256` and in each synthetic `pre_run_declaration.json`). A synthetic declaration
+* These runs used `analysis/synarch_recon.py` `43b37405...`, `analysis/synarch_recon_modules.py` `20916c27...`,
+  `analysis/synarch_recon_benchmark.py` `9a71de6d...`, `tests/test_synarch_recon.py` `0d9e7f35...` (full hashes in
+  `synthetic_round2/code_at_run.sha256` and in each synthetic `pre_run_declaration.json`). A synthetic declaration
   does not pin this file (section 15), so filling in this section after the runs changes nothing they bind.
 
 ## 18. Decisions taken after the reviews, and what the next reviewer may still change before the freeze
@@ -446,19 +494,36 @@ Taken (each is one setting in `CONFIG`, declared and frozen with the rest):
    (section 13).
 7. The fine soma label is loaded but is not an input anywhere.
 
+8. (Second round.) No task takes an inferred input on its own word: in the declared profile-input tasks an
+   unverifiable inferred input, or one from a state that holds the neuron's brain sample, is refused, not
+   flagged (section 19, K1).
+9. (Second round.) A soma position is held to the atlas volume and to the mirrored side by one rule, the
+   loader's; an API answer whose point lies outside its frame is withheld, and the ends of an interval are cut
+   at the frame's bounds (sections 5 and 19, K2).
+10. (Second round.) The run fits the all-training states before it scores and its completion record holds their
+    record (section 15).
+
 Still a choice for the reviewer of this revision: the value of the minimum gain (2%); whether T3 and T4 are worth
-their place among four decisions.
+their place among four decisions; and whether soma predictions should be clipped into the frame for every method
+in the benchmark too, as regional predictions are clipped at zero (today they are not: an out-of-frame point is
+scored as it is in the benchmark and withheld by the API). In the four synthetic worlds no point of the engine
+and no point of MEAN, IDENTITY, COPY or KNN left the frame; the ridge reference did for 6 of 452 neurons of the
+small shared-classes world (largest ML 6,089) and for none in the other three worlds.
 
 ## 19. Rules of the reconstruction API that every answer goes through
 
 These rules are code, with one focused regression test per item (`tests/test_synarch_recon.py`, section
 "Regression: review blockers K1 K2 K3"); each test fails on a copy of the code with that fix switched off and
-passes on the code as it is (`data/interim/synarch_recon/fix_evidence/`).
+passes on the code as it is. The proof for the code as it is now, ten repairs with both runs of each, is in
+`data/interim/synarch_recon/fix_evidence/round2/` (`summary.json`).
 
-**K1. What may feed an answer about a neuron whose axon is hidden.** The axon is hidden in every request that is
-not one of the three declared profile-input tasks (T2, T3, T4). One rule (`hidden_axon_problem`) is applied to
-every record of such a request, whether the answering module uses it or not:
+**K1. What may feed an answer.** One rule (`hidden_axon_problem`) is applied to every record of **every**
+request, whether the answering module uses the record or not, and whatever task the request has the shape of:
 
+* every record is an observation record that still satisfies its own invariants, checked again on the object as
+  it is (a frozen record can be changed behind its constructor). A record that says "measured" while its
+  uncertainty names a producing module, a state, training groups or a coverage flag, or whose source is a
+  reconstruction or a fitted state of this layer, is refused;
 * an inferred record, **whatever its variable name** (a soma position or a source label can be inferred from the
   hidden profile as well as anything else), is admitted only if (i) this layer itself issued exactly that record
   (it is in the layer's ledger of issued values; any change of unit, value, scale statement, producing state or
@@ -466,36 +531,48 @@ every record of such a request, whether the answering module uses it or not:
   inference and every inference behind it, transitively: the producing state is registered now, with the training
   groups the layer recorded when it issued the value; those groups do not contain the query's brain sample; the
   brain sample is known;
-* when the answer itself is axon-derived (a **hidden-axon forecast**: T1, every undeclared conditional with an
-  axon-derived target, and the axon adapter), a measured record must be one of: soma position, source label, fine
-  soma label, hemisphere, reconstruction type (`reports/axon_dataset_plan.md`, section 8), and so must every
-  measured ancestor of an inferred record; the neuron's own measured profile or trace is refused, and so is
-  everything that descends from it;
+* when the answer itself is axon-derived (a **forecast of hidden axon values**: T1, T4, every undeclared
+  conditional with an axon-derived target, and the axon adapter), a measured record must be one of: soma
+  position, source label, fine soma label, hemisphere, reconstruction type (`reports/axon_dataset_plan.md`,
+  section 8), and so must every measured ancestor of an inferred record; the neuron's own measured profile or
+  trace is refused, and so is everything that descends from it. The one exception is the **measured** block of
+  the profile that a declared task takes by declaration (T4: the 16 measured hypothalamic regions). It is an
+  exception for that measured record only: an inferred record under the same name gets none;
 * anything else is refused: missing, unregistered or unverifiable provenance, another status.
 
-In the three declared profile-input tasks the measured profile is an input by declaration, so an inferred input
-is flagged there instead of refused: `conditioned_on_inferred_input` always, `inferred_input_unverified` when this
-layer did not issue it, `group_in_training_state` when a state behind it holds the unit's brain sample. In every
-task, nothing may descend from the requested property itself.
+**There is no task in which an inferred input is taken on its own word.** The first fix exempted the three
+declared profile-input tasks (an inferred input was only flagged there), and the exemption was decided by the
+shape of the request: a request shaped like T4 that held no measured profile at all was answered from inputs
+inferred by a state that held the neuron's brain sample, and from hand-built records. The exemption is gone. An
+admitted inferred input is still flagged `conditioned_on_inferred_input` and its answer carries no coverage
+flag. In every task, nothing may descend from the requested property itself.
 
 A direct answer by a state that holds other neurons of the unit's brain sample is returned with the notice
 `group_in_training_state` and without the coverage flag (a neuron that is itself in the state is refused). Used
-as an INPUT of a hidden-axon request, such an answer is refused by the rule above.
+as an INPUT of any request, such an answer is refused by the rule above.
 
 Identity: a Jiao neuron's brain sample is the prefix of its ID, and a request that names another one is refused;
-identifiers with surrounding blanks are refused; a sample spelled in another case is still that sample. A value
-inferred for one neuron cannot be made a record of another. Comparators that copy donors exclude the query's own
-brain sample by the training rows' spelling.
+identifiers with surrounding blanks, or with a control or invisible character anywhere (a zero-width space, a
+soft hyphen), are refused; a sample spelled in another case is still that sample. A value inferred for one neuron
+cannot be made a record of another. Comparators that copy donors exclude the query's own brain sample by the
+training rows' spelling. **A state enters the layer** (a module, the adapter's register) only if every training
+row is filed under the brain sample that its own ID names and the state's group list is exactly those samples:
+that list decides whether a state holds a query's brain sample, so it may not be a free-standing claim. (A
+brain-sample ID therefore holds no underscore; the loader checks this for the training samples.)
 
 The axon adapter declares `axon_arbor` with status **`blocked: independent validation pending`**. Nothing passed
-to it unblocks it: not a backend, not an evidence object. It imports no axon engine.
+to it unblocks it: not a backend, not an evidence object. It imports no axon engine. It also refuses a record
+whose coordinates are not those of its variable or whose value lies outside the frame it states.
 
-**Limit, stated plainly:** records are not signed. A value that somebody re-enters by hand as a "measured" record,
-or a neuron that is presented under a made-up ID, cannot be told from the real thing by any check in this layer.
-The guarantee covers measured records as the loaders make them, inferred records exactly as `reconstruct()` issued
-them in the running process, and the IDs as given. The ledger is written by `reconstruct()` only and lives in
-memory: an inferred value that was saved and reloaded in another process is not admitted where the axon is
-hidden; it has to be inferred again.
+**Limits, stated plainly.** Records are not signed. A value that somebody re-enters by hand as a "measured"
+record with a source that looks like a table, or a neuron that is presented under a made-up ID, cannot be told
+from the real thing by any check in this layer. The guarantee covers measured records as the loaders make them,
+inferred records exactly as `reconstruct()` issued them in the running process, and the IDs as given. The ledger
+is written by `reconstruct()` only and lives in memory: an inferred value that was saved and reloaded in another
+process is not admitted anywhere; it has to be inferred again. And the training units and groups of a state
+object that is **built in memory** are taken on its word: someone who rebuilds a state through its constructor
+with the parameters of one fit and the unit list of another is not detected. Only a state that is loaded against
+a fingerprint recorded when it was fitted is anchored (K3); every state of the benchmark is.
 
 **K2. Scale and frame.** Every record that holds a value states its scale in one way: a required value tag
 (`identity`: the registered measurement scale and units; `log10_1p`: already on the modelling scale) and the one
@@ -508,6 +585,18 @@ An inferred input is still flagged (`conditioned_on_inferred_input`: its uncerta
 answer never carries the coverage flag. An inferred input computed only from measurements that the same request
 supplies adds no information and is ignored, and said to be; an inferred value of a zero-inflated region is
 refused as evidence under the presence/level encoding (it is a mean over "absent" and "present").
+
+The conversion held under the second attack. What did not: a frame was validated as text only. **The value of a
+record is now held to the frame and scale it states** (section 5; one function for the loader's training rows
+and for every record): a soma beyond the midline under the statement "mirrored to ML <= 5,700" is refused, by
+the same four places, where before it was answered at the unmirrored number with the coverage flag whenever it
+lay inside the state's support margin (5% of the training range). A value must be one plain finite number per
+registered coordinate: text and booleans are not read as numbers, and a malformed value is a refusal, not an
+error. Nothing is issued outside the frame it states: an answer whose point lies beyond a bound is withheld
+(`invalid_estimate`), and the ends of an interval are cut at the bound (the fitted mixture has tails beyond it;
+no value of the variable lies there, so coverage is unchanged). A module is built only with a registry that
+agrees with the field layout of its states about every field (kind, coordinates, modelling transform): the one
+conversion is the registry's, and the state was fitted on the scale its layout records.
 
 **K3. Identity of a saved state.** A fitted state is read-only, and its fingerprint is computed from exactly
 what is saved, in an encoding that cannot be made to collide, and is never cached. It binds every item that can
@@ -531,18 +620,34 @@ change an answer, a refusal or a notice:
 11. the training units and the training groups, as lists.
 
 Loading refuses any file that is not exactly a state as it is saved (one changed item, an unknown or missing
-entry, a malformed or missing range, a non-canonical text). And a state is never loaded on the file's own word:
-the hash stored in a file only shows that the file agrees with itself, and whoever edits the file can rewrite it.
-The caller must name the fingerprint it expects (the one recorded in `selection.json` or `serving.json` when the
-state was fitted), and any other state, however consistent, is refused. A module also refuses a state that is no
-longer the one it was registered with, and keeps a read-only copy of the comparator rows.
+entry, a malformed or missing range, a non-canonical text, a stored member that is not an array). And a state is
+never loaded on the file's own word: the hash stored in a file only shows that the file agrees with itself, and
+whoever edits the file can rewrite it. The caller must name the fingerprint it expects, and any other state,
+however consistent, is refused. A module also refuses a state that is no longer the one it was registered with,
+and keeps a read-only copy of the comparator rows. The lookups that are derived from a state's saved items are
+read-only too and are derived again at every fingerprint computation: a state that was changed in memory behind
+its read-only guard has no fingerprint and answers no request.
+
+**Where the expected fingerprint comes from.** The fingerprint itself held under the second attack. What did
+not: for the all-training states the API read the expected fingerprint from `serving.json`, a file written after
+the completion record and bound by nothing. A state with one widened support range was served once the copy of
+its fingerprint in `serving.json` was replaced too, while the SHA-256 of `run_complete.json` and the `status`
+command still verified; a request that had been refused as out of support was then answered. Now the run fits
+the all-training states before it scores, the completion record holds their record, and the API takes every
+expected fingerprint from behind that one anchor (section 15): `selection.json` for the out-of-fold states, the
+record inside `run_complete.json` for the all-training states. `serving.json` is a copy that must be exactly
+the copy, and the all-training state of a task must be the setting the bound selection chose.
 
 Not part of a state, and so not in its fingerprint: the policy and the interval level (run-time settings,
 returned with every result); the task definitions and the benchmark evidence (bound by the pre-run declaration
 and by `run_complete.json`, section 15); the comparator bank, whose own hash binds its rows, the comparator that
-answered and every setting of it. What file hashes cannot detect: somebody who rewrites every file of a finished
-run consistently, `run_complete.json` included. The anchor is the SHA-256 of `run_complete.json`, which `run`
-prints and the results report states in its first lines.
+answered and every setting of it.
+
+**Where the guarantee ends.** Somebody who also rewrites `run_complete.json`, consistently with every other
+file, is not detected by the files themselves: every file then agrees again. What detects it is the SHA-256 of
+`run_complete.json`, which changes: `run` prints it, `status` shows it and the results report states it in its
+first lines. Keep that number outside the output folder. (Test `test_K3e_...` shows both halves: the edit that
+is refused, and the consistent rewrite that is served under another anchor.)
 
 ## 20. What changed after the reviews (2026-11-11)
 
@@ -559,3 +664,29 @@ tested on synthetic data.
   baseline-level answer is guarded by, and reports, the comparator bank that made it; a reference value attaches
   only to the unit's own group; one unit has one group; a variable is requested once.
 * Wording: sections 7 and 13.
+
+**Second round.** Three fresh, independent attackers then broke those fixes in six places, each with a
+reproducer on synthetic data. All six are repaired, each with a focused test that fails without its repair and
+passes with it (`fix_evidence/round2/`). No reported break was wrong.
+
+| | What still got through | Repair |
+|---|---|---|
+| K1 | A request shaped like task T4 but holding no measured profile was answered from inputs inferred by a state that held the neuron's brain sample, and from hand-built records | the provenance rule applies to every inferred input of every request; only the measured block of a declared task is an input by declaration (section 19, K1) |
+| K1 | A record that said "measured" while its uncertainty named a producing module and state was accepted, and T1 answered from it with the coverage flag | a record's invariants and those of its parts are checked again on the objects as they are; such a record is refused |
+| K1 | A state whose training units were named `<sample>_<n>` while its group list did not hold that sample was registered | rows and states enter the layer only if units are filed under the brain sample their IDs name |
+| K2 | A soma in true right-hemisphere coordinates was answered at the unmirrored number under the statement "mirrored to ML <= 5,700" | the value of a record is held to the frame and scale it states, by the loader's rule (sections 5 and 19, K2) |
+| K2 | A module accepted a registry that disagreed with the layout of its states about the modelling scale | refused at construction |
+| K3 | The expected fingerprint of an all-training state was read from `serving.json`, which nothing bound | the completion record holds the record of the all-training states; the run fits them before it scores (sections 15 and 19, K3) |
+
+Smaller points closed with them: identifiers with invisible characters; coordinates and value shape of a record
+at the adapter; text and booleans read as numbers; a malformed vector raising an error instead of a refusal;
+interval ends beyond the midline; a state file member that is not an array; a state saved under a name without
+suffix; derived lookups of a state edited in memory; the report rendered from files that no longer match the
+completion record.
+
+What these repairs change for a caller: in the declared profile-input tasks an inferred input that the layer
+did not issue, or that a state holding the neuron's brain sample produced, is now refused instead of flagged
+(the notice `inferred_input_unverified` no longer exists); a soma with ML > 5,700 is refused with the reason and
+the mirroring rule; `serving.json` no longer decides anything, and the `serving` command restores states instead
+of fitting them for the first time. No prediction and no score of the benchmark changes: the synthetic worlds
+give the same metrics, to the last byte, as with the code of the first round (section 17).
