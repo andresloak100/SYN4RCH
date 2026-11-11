@@ -120,6 +120,8 @@ This supersedes the lines above marked unresolved where it says so. Details and 
   code, statistics on synthetic data). **Not frozen:** the review fixes need a confirming review, and the
   choice of primary comparison is open (the tree model recovers almost none of a planted moderate tag effect
   that ridge recovers). `run` refuses. No D-109 score exists.
+* **Parked (2026-11-10, user instruction).** D-109 is not to be frozen or run. The three reviews and the
+  writer's response are preserved in `reports/d109_parked.md`.
 
 ## Scope
 
