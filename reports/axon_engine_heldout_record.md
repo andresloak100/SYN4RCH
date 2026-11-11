@@ -15,3 +15,12 @@ Referee audit receipt `2eb4d2e4...` (record: `reports/axon_engine_referee_audit_
    0 unavailable at source. `ADMISSION_COMPLETE.json` `557ec889df327dbdab75fc29b10f9add9122f18ecfa98cff8439fed73c734186`,
    `TRUTH_OPENED.json` `2ef6941e9ddbb09486095d89c39035ec341953a1e599629775f0b8335fb1d418`,
    `truth_ingestion_log.json` `68ead63594e458d7a745c74ae630a6c4f4b5055f772b45ca4c909273182e9e37`.
+4. Scored ONCE 16:37 EST: 1,121 of 1,185 queries, 24 of 25 animals. Selected: **E4_local_kernel_regional**
+   (candidate_selected): 631.9 um / F1 0.2728 vs strongest copying control on distance C5 711.3 um (-79.4 um, paired
+   95% bootstrap -108.2 to -50.2) and on F1 nearest 0.2243 (+0.0485, +0.0308 to +0.0672); beats its matched controls.
+   Eligible also: E1, E2, E6. Validation is selection, not the test.
+   * 8e1b4c2d7a762fc979879ee7938b14f5dd3a40b387d08e4f056c8b5a1bfb04fc  SCORE_COMPLETE.json
+   * 42516e20b33d55b02d803332c1ca71a45df6f435fab8dd66aa5f88fbf2d1f908  metrics.json
+   * beef20acbd06182b487d22758bb6509527556cde96207622fbc38ec2c807c790  engine_gate.json
+   * 6935aabeb8ae6ccd262c1d84fe0cf8747723b69af4afb20a43c8ad6cf9afeba2  frozen_gate.json
+   * 6e8279cd8ee1910a92ab7fd8800ae8d86758f6b6fe9986ed977dcd21c57d4956  tables.md
