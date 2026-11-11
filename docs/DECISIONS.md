@@ -8453,3 +8453,51 @@ D-105 predicted r_unit about +0.15 (range -0.05 to +0.35) and no pass, with NOT 
 1. Neuron-level inputs: Epi-retro-seq's own per-neuron methylomes instead of 19 subclass averages of other mice's RNA (finer units, same-cell measurements).
 2. A fresh hypothalamic test set: Rossi 2021 (lateral hypothalamus, retrograde-labelled single-cell RNA; `reports/paired_data_search.md`), or the Jiao 2025 reconstructions at the level of peptide populations.
 3. Non-cortical training data (thalamus, superior colliculus), since added cortex did not help subcortical transfer.
+
+## D-108 - Development result: neither an automatic search for transformations nor atlas-derived 3D features improves on model D; a 3D brain and two conversion modules are kept
+
+**Not a pre-registered test.** Development on the 27 non-hypothalamic Epi-retro-seq sources only (nested leave-one-division-out, as in D-105's rehearsal); no hypothalamic projection row was read. In each part, the rules, replicate counts and nulls were written into the report before its real-label run. Code and reports: 03a3a3e (Phase 1: `analysis/d108_discovery.py`, `d108_prims.py`, `d108_symbolic.py`, `reports/d108_phase1.md`) and df69fd6 (3D: `analysis/d108_3dbrain.py`, `d108_3d.py`, `reports/d108_3d.md`). Each part was audited independently and reproduced exactly.
+
+### Why
+
+After D-107 the direction was: do not fix the conversions by hand; let an algorithm discover which transformations of the available measurements predict projections, and then let it do so inside a brain assembled in 3D from atlas data.
+
+### Phase 1: an open search over transformations
+
+* **Library:** 66 terms: gene bases (D's own recipe among them, autoencoder and NMF latents, nonlinear expansions), measured and gene-inferred location, an optional inferred-methylation node, and four target encodings including source x target interactions. Greedy selection of up to 3 terms, scored inside the training divisions only (47,971 possible pipelines).
+* **Result** (mean r_unit over the 7 held-out divisions): **search -0.062; D +0.228**; K +0.176; B +0.161; A +0.065. Search minus D: -0.290, better in 1 of 7 divisions, sign-flip p 0.992. Declared verdict: **search beats D: NO.**
+* **Nulls:** on shuffled labels (60 full searches) the search averages -0.009 (95th percentile +0.118), so the real search is no better than chance (p 0.754). With D as the truth (60 searches) the search still loses to D by 0.072 on average: the cost of searching when the simple model is right.
+* **Overfitting:** the chosen pipelines scored 0.35 to 0.50 inside the training divisions and below zero outside; 16 different terms were chosen over the 7 folds, none more than twice.
+* **Planted controls** (true r 0.40, 8 replicates each): gene x measured location recovered in 6 of 8; the chain genes -> inferred location -> distance to target in 8 of 8; an NMF x target-gene-profile rule in 2 of 8. A planted methylation route was never recovered (0 of 16), and a realistic small gain over D was not detectable.
+* **Symbolic layer** (19,020 expressions of depth up to 2): chosen formulas +0.026 against +0.031 for the best single variable. No formula beats the simpler alternative.
+* **Limit noted by the audit:** chains and interactions are pre-built terms the search chooses among; this is selection, not program synthesis.
+
+### 3D: a constrained search inside an assembled brain
+
+* **The 3D brain,** from Allen MERFISH cells: 206 real cell clouds (the 187 training units and the 19 hypothalamic subclasses, atlas cells only), a tract occupancy map (320,454 tract-labelled cells, 3,940 tract voxels at 200 um, 14 usable tract structures), and a voxel route graph with route costs to the 24 targets. Hemispheres are folded at the midline; 26% of voxels are filled from neighbouring sections; tracts are candidate corridors, not measured axon routes. No projection-derived anatomy is used.
+* **Seven feature families** (basic distance, cloud geometry, neighbourhood, source-target compatibility, corridor access, route cost, gene-inferred placement). The search may add at most 3 families to D.
+* **Result:** D +0.228; D + basic location +0.189; **D + 3D-search +0.168** (better than D in 0 of 7 divisions, 3 ties); D + all families +0.071. Declared verdict for every 3D model: **NO GAIN.** The prediction written before the run (similar to D or slightly better) did not hold.
+* **Nulls:** on shuffled labels the search still added a family in 94% of folds, so its entry rule is too permissive. With D as the truth, adding families costs 0.031 (search) and 0.075 (all).
+* **Planted controls passed:** a planted route-cost rule was selected in 7 of 7 folds in every replicate and then beat D (+0.319 against +0.182); a planted neighbourhood rule was selected in 6 of 7 folds in every replicate but gave no gain over D.
+* **Audit notes:** the declared "reliably chosen" rule could never be met (its bar was 7 of 7); the within-source label shuffle is weak for sources with 2 or 3 units; feature scales were set over all units (label-free).
+
+### What is kept
+
+* **M1, genes -> location:** out-of-fold R2 0.79 / 0.76 / 0.68 (x, y, z); error 0.78 mm against 1.65 mm for the mean, on 325 subclasses held out in rotating groups, from genes alone. Not tested on whole held-out regions.
+* **M2, genes -> division composition:** out-of-fold R2 0.67.
+* **The 3D brain** (`data/interim/d108_3d_brain.npz`, rebuilt bit for bit by `analysis/d108_3dbrain.py`), and the search engine with its nulls and planted controls.
+
+### Reading
+
+* With about 150 projection-labelled units, a search over transformations selects patterns that do not transfer. The limit is independent evidence, not the mathematics; a fixed simple recipe (D) is more reliable.
+* Atlas position, neighbourhood and tract geometry add nothing to D for projection profiles on these data. That does not make space irrelevant: the atlas says where cells sit, not how their axons travel.
+* These seven divisions have now served more than 25 model variants. Further gains on them are exploratory, not confirmation.
+
+### Data notes
+
+* Rossi et al. 2021 (GSE169176, 191,692,800 bytes, SHA-256 a5f45cf2db6a670c47c8ea524699b77d4fc2520e5abde76881d1bec2c5beb67f) is downloaded as a future fresh hypothalamic check. Its contents are unread.
+* The Liu et al. 2023 cell-group methylation / RNA pair was examined and not downloaded: its RNA is Allen 10x cells pooled onto methylome groups by integration, not a same-cell measurement.
+
+### Next
+
+Measured axon geometry (Jiao et al. 2025): a region-level benchmark (D-109; audit in `reports/d109_jiao_audit.md`) and a measured 3D prototype of individual neurons (`reports/swc_prototype.md`, 6f9d70f). A held-out trajectory model must beat copying the nearest measured neuron from another animal.
