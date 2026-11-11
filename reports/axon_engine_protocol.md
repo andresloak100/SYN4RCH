@@ -6,8 +6,14 @@ This line stays until the validation traces exist and the user has accepted the 
 engine refuses to commit any held-out forecast and to freeze while it is here; once it is removed the file's
 SHA-256 is pinned by the validation forecasts and by the freeze. No independent biological test has been run.
 Written 2026-11-10, revised 2026-11-11 after an internal review, the other agent's read-only review
-(`reports/axon_engine_codex_review.md`) and the independent referee's contract. Implementation:
-`analysis/axon_engine.py`, `analysis/axon_engine_cli.py`; tests `tests/test_axon_engine.py`.
+(`reports/axon_engine_codex_review.md`) and the independent referee's contract; revised again on 2026-11-11 to
+connect the general reconstruction layer (candidate E7, section 6a), and once more on 2026-11-11 after the review
+and three attacks of that connection (the referee's audited training distance cache, the development pair budget,
+the thread variables, the library key, the run registration and the protocol anchor line), and a last time on
+2026-11-11 after a second round of attacks (a forged audit receipt, a forged run brought in through the registration,
+the thread check, the anchor line's form). Implementation:
+`analysis/axon_engine.py`, `analysis/axon_engine_cli.py`, `analysis/synarch_axon_bridge.py`; tests
+`tests/test_axon_engine.py`, `tests/test_synarch_axon_bridge.py`.
 
 Binding documents, none of them changed here: the locked cohort plan `reports/axon_dataset_plan.md` (commit
 c96b167) with its amendment 1 `reports/axon_dataset_plan_amendment_1.md` (commit c659eac: no clipping) and its
@@ -16,7 +22,9 @@ address and the download belongs to the other agent, this engine downloads nothi
 source does not serve; no test trace on disk before the freeze); the listing contract
 `reports/axon_engine_ingestion_fields.md`; the referee's contract `reports/prediction_independent_evaluation_contract.md` with its code
 `analysis/prediction_independent_evaluator.py`; the other agent's frozen prototype `analysis/brm_template.py`
-with its freeze record.
+with its freeze record; the general reconstruction layer `analysis/synarch_recon.py`,
+`analysis/synarch_recon_modules.py`, `analysis/synarch_recon_benchmark.py` with its rules
+`reports/synarch_recon_protocol.md` (candidate E7 reads that layer and changes nothing in it).
 
 ## 1. Question
 
@@ -52,8 +60,11 @@ on these animals is not a confirmatory population claim.
   that model's design (its form, its grid of component counts) and its reported accuracy; outcome-only summaries
   of the table were printed (for example the count of all-zero profiles); and one raw profile was displayed.
   This engine loads the regional rows of training animals only (section 3) and refits that model class on them,
-  but the model class itself is inherited with that exposure. It touches the candidates F1, F2, E4 and E5. The
-  controls and the candidates E1, E2, E3 and E6 use no regional information.
+  but the model class itself is inherited with that exposure. It touches the candidates F1, F2, E4 and E5.
+  Candidate E7 carries the same kind of exposure through another door: the general reconstruction layer fits and
+  compares its models on the regional rows of training animals only, but its design was written after the same
+  earlier work was read (`reports/synarch_recon_protocol.md`, section 2), and its own benchmark is exploratory.
+  The controls and the candidates E1, E2, E3 and E6 use no regional information.
 * **Inputs of test animals that were looked at.** No outcome of a test animal was used. Their soma positions and
   source labels (permitted inputs, not outcomes) were summarised twice before the engine's settings were written
   down: in the plan's section 4 (distance from held-out somas to the nearest training soma) and by the first
@@ -86,11 +97,17 @@ dendrite, or regional profile.
   only when its stored parameters, its proof, the state manifest and the planned fitting and served sets agree;
   the bytes of the state and proof files are pinned by every forecast manifest and by the freeze, and the freeze
   fits the all-training state again and requires the same hash.
+* **Inferred inputs from the general reconstruction layer (E7 only).** The query's 49-region profile as that layer
+  infers it from the table soma and the source label. It reaches the engine only through the bridge
+  (`analysis/synarch_axon_bridge.py`, section 6a): permitted measured inputs in, the layer's own issued value out,
+  both passed through the layer's axon adapter. The query's measured profile is never offered to the layer, not
+  even for a training neuron in development.
 * **Donors.** Canonical arbors of training animals; for a training query, of other training animals.
 * **Automatic checks, every forecast, every method:** the query's animal is neither in its regional state nor
-  among its donors; no validation or test animal is in any state or donor set. A prediction log (query, state ID,
-  hash of the donor animal set) is written into the manifest and re-checked before the commitment and again
-  before any truth is opened.
+  among its donors; no validation or test animal is in any state or donor set. The same holds for the state of
+  the general layer that E7 consults. A prediction log (query, state ID, hash of the donor animal set, the
+  general-layer state and the hash of its animal list) is written into the manifest and re-checked before the
+  commitment and again before any truth is opened.
 * **Stage guard.** `develop` opens training traces only. `predict` (validation or test) opens no held-out trace
   and runs with the held-out traces absent from the machine. Held-out traces are opened first by `admit`, after
   the committed forecasts have been verified and bound to the method on disk (section 7).
@@ -98,7 +115,11 @@ dendrite, or regional profile.
 ## 4. Ingestion and the truth that is scored
 
 Plan section 9 with amendments 1 and 2, applied mechanically to every trace, donors and truth alike; every
-violated rule is logged; no rule consults a model, a forecast or an error.
+violated rule is logged; no rule consults a model, a forecast or an error. The training library records the
+fingerprint of the code that made it (the exact source of every ingestion function and constant and the two
+inclusion numbers of the configuration) and is used only by an engine with the same fingerprint; another engine
+file with the same ingestion code reuses it. The committed engine (git f46a87e) that built the full-cohort library
+has the same fingerprint as this one, checked from git by a test.
 
 1. Tree: node 1 is the soma (type 1, parent -1); every parent exists; one connected tree; no cycle.
 2. Soma within 5 um of the table soma after the frame rule.
@@ -173,7 +194,7 @@ forecast and truth, and `f1_200`, the F1 of cable within 200 um. Scored per neur
 then over animals. Lower distance and higher F1 are better. The referee's metric module gives the same numbers
 bit for bit (checked on every validation score and on every pair of the local library).
 
-## 6. Methods: seven copying controls, two frozen candidates, six engine candidates
+## 6. Methods: seven copying controls, two frozen candidates, seven engine candidates
 
 All are deterministic, take only the permitted inputs, and are computed by the engine for every declared query
 of every stage. Fixed settings; the SHA-256 of the configuration block is pinned by every manifest and by the freeze.
@@ -188,7 +209,7 @@ development: minus the query's own animal).
 | `nearest`, `peptide_nearest` | the whole library (the second: its neurons with the query's source label) |
 | `medoid`, `peptide_medoid` | the whole library, all pairs (the second: its neurons with the query's source label) |
 | C1, C4, C5, F1, F2 (frozen prototype) | the whole library, handed to the unmodified `predict_policy` |
-| E1 to E6 | the 16 nearest neurons of the whole library by table-soma distance |
+| E1 to E7 | the 16 nearest neurons of the whole library by table-soma distance |
 
 **All-pairs cache.** The soma-centred `distance_um` and `1 - f1_200` between every two library arbors, by the
 frozen `geometry_metrics` with the lower neuron ID first (exactly what the frozen `pair_costs` computes), stored
@@ -218,7 +239,44 @@ its own two functions; on small pools trees and records are bit-identical with a
   computation and `copies-check` must then show exact equality with `copying_baselines` on the whole stage
   **before any truth is opened**. At the test the referee recreates the four copies once more inside its seal.
   In development (leave one animal out, one pool per animal) the referee's function is called for the first
-  animals within a budget of 80,000 pairs; today that is every animal.
+  animals within a budget of 80,000 pairs. The budget holds for the first animal too: when even its pool is over
+  the budget, nothing is sent to the referee in development and the manifest says "no development API verification
+  (pair budget)". This changes only a redundant development check, never a forecast or a donor pool. On the
+  37 local traces every pool is within the budget; on the full library (4,368 donors, about 9.5 million pairs per
+  pool) none is.
+* **The referee's audited training distance cache.** Validation and test always check the four copies against the
+  referee in full: inline for a small pool, otherwise by `copies-check`, and again inside its seal. On the exact
+  declared training pool (the whole library, nothing removed, nothing reordered) the referee may reuse the
+  engine's all-pairs cache through its own audited helper (`analysis/prediction_distance_cache.py`; its contract,
+  section "Optional exact training-distance cache"), never for a development pool. Steps:
+  1. `referee-cache --prepare` (after the all-pairs cache is complete) copies the five cache files and every
+     training arbor into `<world out>/referee_cache/bundle` and writes `draft_declaration.json` there: the three
+     splits with known metadata only, the descriptor (schema `referee_training_distance_cache_v1`, the six relative
+     paths of the contract) and the six files as method artifacts, the audit receipt's hash a placeholder. No
+     held-out arbor is in the bundle.
+  2. The lead runs the referee's own audit, which replays every pair bit for bit:
+     `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 python3 -I analysis/prediction_distance_cache.py --base BUNDLE --declaration draft_declaration.json --workers 4 --minutes 30`
+     (repeated until it says `complete`). Only its COMPLETE receipt (`cache/full_audit.json`) unlocks the loader.
+     The receipt checks only itself: anyone who can write the bundle can make one without running the audit. The
+     lead's audit run is the real guarantee. The engine adds two checks of its own. (a) The bundle's five cache
+     files must be byte for byte the files of the engine's own completed all-pairs cache and the hashes its draft
+     pinned when the bundle was prepared; otherwise the bundle is never used. (b) Through the audited cache the
+     referee and the engine's replica read the same matrix, so any difference between the referee's four copies
+     and the replica's is an error: nothing is overwritten and nothing is committed. (Without the cache the
+     referee recomputes every pair, and a difference is still replaced by the referee's copy and counted.)
+  3. From then on the receipt's SHA-256 is in the method pins of every manifest, in the commitment, in the freeze
+     and in the seal record; the referee's declaration carries the descriptor and binds all six files among its
+     method artifacts. A receipt or cache file changed after a commitment makes `admit` refuse; a receipt that does
+     not agree with its files is never used.
+  4. On the real cohort no validation or test forecast is committed while the receipt is missing.
+  Without a bundle the referee recomputes every pair, exactly as before. The copies are bit-identical with and
+  without the cache (tested on a synthetic world).
+* **Thread variables.** Every process that calls the referee runs with `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
+  `MKL_NUM_THREADS` and `VECLIB_MAXIMUM_THREADS` set to 1: the referee's audit records them and its loader refuses
+  another runtime. The command line sets them before numpy is imported. The engine refuses to load the referee
+  unless (1) the four are 1 now, (2) they were 1 when the engine module started (read before numpy and before any
+  other module that might set them), and (3) every numerical thread pool that is really loaded runs one thread
+  (threadpoolctl). Setting the variables after numpy was imported is therefore refused.
 * `C1_medoid_copy` and `medoid` are the same rule in two arithmetics (the frozen function sums left to right, the
   referee uses a matrix product). They give the same neuron except at floating-point ties. Both are controls; the
   frozen prototype is not changed to force agreement.
@@ -244,6 +302,7 @@ neighbourhood donors under the query's regional state. D = the cached soma-centr
 | E4 | r_j k_j | weighted medoid | regional | yes | E1 and E2 |
 | E5 | r_j k_j l_j | weighted medoid | label and regional | yes | E1 and E2 |
 | E6 | as E2 | the E2 template, pruned: a vertex stays if at least 0.25 of the other neighbours' weight has cable within 200 um of it, or if it leads to such a vertex | no | no | |
+| E7 | (a_j / A) k_j s_j, with s_j from the query's INFERRED regional profile (section 6a); E2's weights when there is none | weighted medoid | inferred regional profile | yes (the general layer's) | E1 and E2 |
 
 The template is attached to the query soma by the frozen `compact_attachment` at 500 um; if unsupported, at
 1,000 um; if unsupported, the template is translated. For E6 the neighbours are attached the same way before
@@ -251,10 +310,143 @@ support is counted, no vertex is moved, and the unpruned template is returned wh
 would remain. Every fallback is recorded with its reason. E6 is the only method whose output is not a whole
 measured arbor. F1 is matched to C4, F2 to C5.
 
-**Candidate family (declared when the validation forecasts are made, pinned by the freeze).** `all`: the eight
-candidates. `no_fitted_state`: E1, E2, E3 and E6 only, the candidates that use no regional state and so carry none
-of the exposure of section 2. All eight are always forecast, scored and reported; the gate may select only a
-member of the declared family. The default is `all`; choosing the other is the user's decision before validation.
+**Candidate family (declared when the validation forecasts are made, pinned by the freeze).** `all`: the nine
+candidates (F1, F2, E1 to E7). `no_fitted_state`: E1, E2, E3 and E6 only, the candidates that use no fitted state
+(neither the engine's regional state nor a state of the general layer) and so carry none of the exposure of
+section 2. All nine are always forecast, scored and reported; the gate may select only a member of the declared
+family. The default is `all`; choosing the other is the user's decision before validation.
+
+### 6a. E7 and the bridge to the general reconstruction layer
+
+**What E7 is.** E2 with one more factor. The neighbourhood, a_j, A and the kernel k_j are exactly E2's. The new
+factor s_j says how well neighbour j's MEASURED regional profile agrees with the query's regional profile as the
+general reconstruction layer INFERS it from the query's table soma and source label:
+
+* p = the inferred profile of the query; q_j = the measured profile of neighbour j (a training row, from the
+  engine's sealed loader). Both are brought to the layer's model scale, log10(1 + length), by the layer's single
+  conversion function, each exactly once and according to the value tag it states: the inferred profile arrives
+  on that scale and is not converted again; a profile in published units would be converted once.
+* Regions are matched by NAME, never by position; a missing, unknown or duplicated name is an error.
+* d_j = Euclidean distance between p and q_j over the 49 regions; tau = the median of d_j over the neighbourhood;
+  s_j = exp(-d_j^2 / (2 tau^2)); if tau is 0 every s_j is 1.
+* Weights proportional to (a_j / A) k_j s_j; template = the weighted medoid on the cached pair distance;
+  attachment ladder and its fallbacks as for E1 to E5.
+
+**Where the inferred profile comes from.** Only from the bridge, `analysis/synarch_axon_bridge.py`. For one query
+the bridge (1) makes the measured records of the permitted inputs and nothing else (table soma, source label in
+the soma table's spelling, soma label, hemisphere, reconstruction type), each with the registered scale text,
+value tag and frame; (2) asks the layer for the profile from soma and source label (the layer's declared task
+T1) through its own request function, under the layer's default policy, on a reconstructor that the layer's own
+`build_reconstructor` makes over a finished, verified run; (3) turns the answer into the layer's own inferred
+record and passes the measured records and that record through the layer's axon adapter. What the adapter
+states is what E7 uses. The adapter's status stays `blocked: independent validation pending`: nothing here
+unblocks it, and no backend is called.
+
+**Which state answers.** For a validation or test query: the layer's all-training states. For a training query
+(development): the states of the layer's outer fold that holds the query's brain sample, which were fitted
+without it. The bridge picks the fold itself and refuses any state that holds the query's brain sample or a
+validation or test brain sample.
+
+**Which value is used.** Whatever the layer issues under its default policy, and nothing else: its engine's
+estimate where its own benchmark supports the engine, otherwise the flagged baseline-level value of its best
+comparator. Which of the two, and which comparator, is recorded in every E7 forecast row. When the layer refuses
+(for example a soma outside the range its state was fitted on), or its adapter does not admit the value, there is
+no inferred profile. The bridge never works around a refusal.
+
+**Fallback.** Without an inferred profile E7 uses E2's weights (every s_j = 1). The forecast row then says
+`fallback` with the reason code (`no_inferred_profile:<code>`; the code is the layer's refusal code, or
+`general_layer_run_missing` when no finished run exists), and the E7 array is bit-identical to E2's. Such a row
+can never help E7 through the gate, because E7 must beat E2 on both measures.
+
+**The three guarantees of the layer, in this context** (tests: `tests/test_synarch_axon_bridge.py`):
+
+* *K1, what may feed the forecast.* The query's measured profile, whole or in part, is refused as evidence before
+  the layer is asked. An inferred value is admitted only if the layer itself issued exactly that record for this
+  neuron, from a registered state that never saw the neuron's brain sample, with permitted measured ancestors
+  only, transitively. A value that descends from the measured profile, a hand-made "inferred" record and a value
+  issued for another neuron are refused.
+* *K2, scale and frame.* Every value states its scale, tag and frame and is converted exactly once. A soma with a
+  missing or wrong frame, a soma outside the frame it states, a profile in other units and a record whose scale
+  text contradicts its tag are refused. A profile that does not state the registered scale stops the forecast;
+  it is not silently dropped.
+* *K3, identity of the states.* A state file changed in any item that can change an answer (support ranges,
+  settings, a parameter, the training groups), with or without its stored hash rewritten, is refused; so is an
+  edited file of the finished run. Every E7 forecast row names the fingerprint of the state that was consulted,
+  and it is the fingerprint the finished run recorded.
+
+**What is pinned, place by place.**
+* The method pins of every manifest (so `admit` refuses when one of them changed after the forecasts were
+  committed) and the freeze hold everything: the bridge file and the three code files of the layer; the SHA-256 of
+  the layer's `run_complete.json` and of its declaration, selection and evidence; the fingerprint and the file
+  hash of every T1 state of the run (all-training and every outer fold).
+* The referee's method artifacts (test bundle) hold the bridge file and the layer's code, the completion record,
+  the declaration, selection and evidence files, the all-training T1 state file (the state that answers test
+  queries) and the engine's registration file. They do not hold the outer-fold state files; those are pinned by the
+  method pins and the freeze.
+* The state manifest (`state_manifest.json`) holds the registration only: the run's SHA-256, its declaration's
+  SHA-256, the state fingerprints and the code hashes at registration.
+
+**Registration of the run.** A finished run is registered (`states/general_layer.json`) only by a step that
+builds or looks at it on purpose: the development stage, the `layer` command (it
+registers the finished run on first sight; it is not read-only) and, on a synthetic world, the step that builds the run. A validation or test
+stage never registers a run: without a registration, or with a run or a state that differs from it, it refuses.
+The layer's own file checks cannot tell a finished run from one whose every file was rewritten consistently.
+
+**Anchor of the run.** The registration alone is not enough: it is a file in the engine's own output folder, and
+editing it, or deleting it and running development again, used to let a forged run in. Every stage, development
+included, therefore also requires the run to be the ANCHORED one, and refuses any other run before a forecast.
+* Real cohort: the protocol's single anchor line (below). While it holds the placeholder, development relies on the
+  registration; a held-out forecast that uses a run needs the line.
+* Synthetic worlds: `<world>/data/general_layer_anchor.json`, next to the world's own description and outside the
+  engine's output folder. Only the step that BUILDS the run with the layer's own benchmark (`layer --build`, the
+  synthetic pipeline) writes it, and only when it has just built the run (it builds only when no finished run is on
+  disk). A run that is found on disk, rather than built by that step, is never anchored and never used. A world
+  built again from scratch gets the new run's anchor; the earlier entry stays in the file's history. The anchor
+  is in the method pins of every manifest and in the referee's method artifacts, so an anchor changed after the
+  forecasts makes `admit` refuse.
+* Limit: someone who can write the world's own folder (synthetic) or the accepted protocol (real cohort) can still
+  name another run. These anchors move the trust from the engine's output folder to the world's description and to
+  the person who accepts the protocol; they are not a signature.
+
+**Real cohort.** The engine never freezes, runs, scores or serves the layer's benchmark; it reads a finished run.
+* No finished run: in development E7 is fallback-only (`general_layer_run_missing`), recorded. A held-out
+  forecast with the family `all` is refused, because E7 could not be what it is declared to be. With the family
+  `no_fitted_state` held-out forecasts are made, E7 is forecast with E2's weights and cannot be selected.
+* A finished run: before a held-out forecast that uses it is committed (with either family), the SHA-256 of its
+  `run_complete.json` must be written on this file's single anchor line, the next line below:
+
+**general layer run_complete.json SHA-256: (not written yet)**
+
+  The engine reads only that line. It must be one whole line, in exactly that spelling, with the 64 lower-case hex
+  digits of the run on disk in place of the placeholder and nothing else on the line. The engine refuses this file
+  if the anchor phrase stands anywhere else: inside a sentence (also one that rejects the run), in an HTML comment,
+  in a code block, or in another letter case. A mention of the SHA-256 value anywhere else does not count, and a
+  second anchor line is refused. State on 2026-11-11: the layer's owner completed its single run on the real
+  cohort at 08:29 (its `run_complete.json` begins `eaa635c2b723`; the full value is deliberately not written here).
+  Writing it on the anchor line is part of accepting this protocol, which is not done.
+
+**Limits of E7, stated now.**
+* The layer's benchmark is exploratory and its adapter is blocked. E7 is a candidate like the others: it claims
+  nothing unless it passes the gate and the test of section 7.
+* In development (training queries) the state that computes the inferred profile never saw the query's brain
+  sample, but the layer's verdict for the profile forecast (its engine or a comparator, and which one) comes from
+  its benchmark over all training samples, the query's own among them. For validation and test queries nothing
+  of the query enters, neither a state nor the verdict.
+* E7 outputs a measured arbor, like E1 to E5. The inferred profile only changes which neighbour is chosen.
+
+**Limits against a writer of this machine's files, and what stands in for a signature (2026-11-11).** Records,
+receipts and completion files are self-hashed, not signed. The last attack round showed that someone who rewrites
+the engine's own output files and recomputes their self-hashes can (a) corrupt the native pair cache away from its
+24 spot-checked pairs and present a forged audit receipt, and (b) on synthetic worlds only, re-anchor a forged or
+re-converted general-layer run. On the real cohort these are closed by procedure, not by code:
+* The referee's full independent audit of the training distance cache is run from a fresh, root-controlled folder
+  that holds only the bundle and the draft declaration, with no receipt, progress or verified mask from anywhere
+  else. It recomputes all 9,537,528 pairs. The referee's owner pins the bundle before the recompute and the
+  receipt after it.
+* Before any validation forecast is committed, the hashes of the native cache's `COMPLETE.json`, of the audit
+  bundle and of the audit receipt are committed to git, together with the full general-layer run hash on the
+  anchor line above. A later change to any of them is then visible in git and makes the engine refuse.
+* The real cohort never uses a converted layer world: it reads the layer's own real run.
 
 **One permitted change before the protocol is finalised, on training animals only.** K may be reset once to 8 or
 32 by the development pass on the complete training library (`develop`, leave one animal out), choosing the K with
@@ -265,13 +457,15 @@ before this file loses its DRAFT line. Nothing else is tuned, and nothing at all
 
 Order of the steps of a held-out stage, each run once:
 
-1. `predict`: forecasts for every declared query by all fifteen methods, then the manifest and its SHA-256 (the
+1. `predict`: forecasts for every declared query by all sixteen methods, then the manifest and its SHA-256 (the
    **commitment**). Opens no held-out trace. Resumable until the commitment exists (the frozen prototype on the
    whole library is slow); a partial run made by another method is discarded.
-2. `copies-check`: only when the pool was too large for the inline call (section 6).
+2. `copies-check`: only when the pool was too large for the inline call (section 6); it calls the referee's
+   `copying_baselines` on the whole stage, through the audited training distance cache when its receipt exists.
 3. `admit`: verifies that the committed forecasts are complete, unchanged and **were made by the method on disk
-   now** (engine and frozen code, configuration, this protocol, cohort tables, training traces and library,
-   all-pairs cache, regional state and proof bytes); only then writes the opened marker and opens the held-out
+   now** (engine, bridge and frozen code, the general layer's code, configuration, this protocol, cohort tables,
+   training traces and library, all-pairs cache, regional state and proof bytes, the general layer's finished run
+   and the files of its states); only then writes the opened marker and opens the held-out
    traces, applies rules 1 to 6 and rule 8 and writes the exclusion log and the canonical truth with hashes. It
    reads no forecast. An admission that died may be completed on the same commitment and the same trace files; nothing else
    is ever resumed.
@@ -285,8 +479,8 @@ four official copies are the referee's (section 6). A started validation scoring
 * **Frozen gate.** The unmodified `brm_template.select_policy` on the five frozen policies.
 * **Engine gate.** A candidate of the declared family is eligible when it beats every one of the seven controls
   on both measures on the whole admitted validation set, and, if conditional, its matched controls as well (F1:
-  C4; F2: C5; E3, E4, E5: E1 and E2). A frozen candidate is admitted only if the frozen gate itself selected that
-  policy. Among eligible candidates: lowest distance, then highest F1, then the order F1, F2, E1 ... E6.
+  C4; F2: C5; E3, E4, E5, E7: E1 and E2). A frozen candidate is admitted only if the frozen gate itself selected that
+  policy. Among eligible candidates: lowest distance, then highest F1, then the order F1, F2, E1 ... E7.
 * **Nothing eligible:** the verdict is **"no method beyond copying"**, and that is the result. The gate then also
   records a *descriptive reference*, the family member with the lowest validation distance (then highest F1, then
   the fixed order), only so that the referee's single candidate slot can be filled if the test is run to report
@@ -295,9 +489,12 @@ four official copies are the referee's (section 6). A started validation scoring
 **Freeze.** Written once, after validation and before any test step. On the real cohort it refuses while any test
 neuron is listed on disk (amendment 2: the test traces are fetched only after the freeze). It verifies again that
 the validated forecasts belong to the method on disk, fits the all-training regional state again and requires the stored hash,
-and pins: engine and frozen code hashes, this protocol, the cohort tables, the configuration, the training trace
-listing and library fingerprint, the all-pairs cache, the regional state (hash and file bytes), both gates, the
-family, the selected candidate (or the descriptive reference) and the validation admission. It records the
+verifies the general layer's finished run again through the bridge (it does not fit the layer's states again:
+that benchmark runs once and is its owner's), and pins: engine, bridge and frozen code hashes, the general
+layer's code hashes, this protocol, the cohort tables, the configuration, the training trace listing and library
+fingerprint, the all-pairs cache, the regional state (hash and file bytes), the general layer's completion
+record and state files, both gates, the family, the selected candidate (or the descriptive reference) and the
+validation admission. It records the
 referee's hashes and whether the referee on disk can seal the planned test bundle, how many test traces were
 already on disk, and which pinned dependencies the commit does not hold. The real freeze also needs engine,
 protocol and tests committed and unmodified.
@@ -311,20 +508,27 @@ protocol and tests committed and unmodified.
    library, admitted validation queries, admitted test queries; known metadata only: id, animal, table soma,
    source label as `peptide`, soma label as `nucleus`), every other cohort neuron in `excluded_ids`, the animals the
    plan keeps out of validation and test in `test_excluded_animals`, the training trees with path and SHA-256, the
-   roles, the geometry contract, the method artifacts (engine, frozen sources, tests, this protocol, the freeze,
-   both gates, state and proof files, cache record, the engine's commitment and admission records) and the
-   referee's evaluation settings (seed 20261110, 10,000 bootstrap samples, soma tolerance 5 um). Then
-   `copying_baselines`, then every committed forecast file of the admitted queries copied byte for byte, then
-   `seal_predictions`, which recreates the four copies by itself.
+   roles, the geometry contract, the method artifacts (engine, bridge, frozen sources, the general layer's code,
+   tests, this protocol, the freeze, both gates, state and proof files, the general layer's completion record,
+   declaration, selection, evidence and all-training T1 state, cache record, the engine's commitment and
+   admission records) and the
+   referee's evaluation settings (seed 20261110, 10,000 bootstrap samples, soma tolerance 5 um), and, when the
+   audit receipt exists, the training distance cache descriptor with its six files. Then `copying_baselines`, but
+   only when the pool is at most 250,000 pairs (a larger pool was checked by `copies-check`), then every committed
+   forecast file of the admitted queries copied byte for byte, then `seal_predictions`, which recreates the four
+   copies by itself (through the declared cache when there is one).
 4. `score --stage test`: the referee's `score_once`, once. The verdict and the tables are read from its result.
 
 Roles in the referee's declaration: `candidate` = the frozen selection (or the descriptive reference);
 `copy_baselines` = `nearest`, `medoid`, `peptide_nearest`, `peptide_medoid`, `C1_medoid_copy`;
-`matched_controls` = C4 and C5 always, plus the matched controls of a conditional candidate. Forecast rows carry
-`donor_ids` (the one copied neuron; the 16 neighbours for E1 to E6; the selected template for the frozen attached
-policies, whose whole pool is recorded once by hash) and `upstream_fit_animals` (the training animals of the
-regional state for F1, F2, E4, E5; an empty list otherwise). The same list is in the declaration and the manifest
-when the bundle holds such a method. The candidates that were not selected stay outside the referee's bundle;
+`matched_controls` = C4 and C5 always, plus the matched controls of a conditional candidate (E1 and E2 for E3,
+E4, E5 and E7). Forecast rows carry `donor_ids` (the one copied neuron; the 16 neighbours for E1 to E7; the
+selected template for the frozen attached policies, whose whole pool is recorded once by hash),
+`upstream_fit_animals` (the training animals of the regional state for F1, F2, E4, E5; for E7 the training brain
+samples of the general layer's state that was consulted, on fallback rows too, because that state's support
+decides the fallback; an empty list otherwise) and `hemisphere` (the query's true hemisphere from the index,
+permitted metadata; the local viewer export reads it). E7 rows also carry the bridge's provenance record. The
+union of the lists is in the declaration and the manifest when the bundle holds such a method. The candidates that were not selected stay outside the referee's bundle;
 after the referee has finished the engine scores their committed forecasts for the record only (no claim, no selection).
 
 **Verdict.** Success: the selected candidate is better on both animal-mean measures than every copy baseline and
@@ -350,12 +554,17 @@ For every query and every method: an arbor NPZ written by the frozen `save_arbor
 mirrored-left frame, um; `parent` N int, root first with -1, parents before children; `types` N int), rooted
 exactly at the known soma, edges at most 50 um, at `predictions/<method>/<query>.npz`. One manifest per stage
 (JSON) with, per forecast: query ID, animal, full ID, part; the known soma used; source label and soma label;
-method name and role; requested and executed policy, fallback and reason; the selected donor and the donor ID
-list; the SHA-256 of the donor pool (lists stored once); regional state ID and hash and the hash of its animal
-list; NPZ path, NPZ SHA-256, a content hash of the three arrays, node count. Once per manifest: the method pins
+hemisphere and reconstruction type; method name and role; requested and executed policy, fallback and reason;
+the selected donor and the donor ID list; the SHA-256 of the donor pool (lists stored once); regional state ID
+and hash and the hash of its animal list; for E7 the bridge's provenance record (used or not and why; engine-level
+or baseline-level value and which comparator; the layer's codes; the fingerprint of the state that was
+consulted and the hash of its training groups; the SHA-256 of the layer's completion record; a digest of the
+code hashes; the adapter's status) and the weights; NPZ path, NPZ SHA-256, a content hash of the three arrays,
+node count. Once per manifest: the method pins
 (section 7), the training ID list and its SHA-256, the library fingerprint, the cohort manifest hash, engine,
-frozen and referee code hashes, the configuration, the regional states, the animals behind every upstream fit,
-where the four official copies came from, the prediction log. The manifest lists every declared query times every
+frozen and referee code hashes, the configuration, the regional states, the general layer's pins and how many E7
+forecasts used an engine-level value, a baseline-level value or fell back (and why), the animals behind every
+upstream fit, where the four official copies came from, the prediction log. The manifest lists every declared query times every
 method; its SHA-256 is the commitment. The referee's bundle for the test is in `test/referee/`.
 
 ## 10. Order of work and commands
@@ -364,7 +573,11 @@ method; its SHA-256 is the commitment. The referee's bundle for the test is in `
 python3 -I analysis/axon_engine_cli.py status
 python3 -I analysis/axon_engine_cli.py ingest --stage validate      # training library; needs all training traces
 python3 -I analysis/axon_engine_cli.py cache --minutes 14           # all-pairs cache; repeat until complete
+python3 -I analysis/axon_engine_cli.py referee-cache --prepare      # training-only bundle + draft declaration for the referee
+#   the lead: OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 python3 -I
+#   analysis/prediction_distance_cache.py --base BUNDLE --declaration draft_declaration.json --workers 4 --minutes 30 (repeat)
 python3 -I analysis/axon_engine_cli.py states
+python3 -I analysis/axon_engine_cli.py layer                        # the general layer's finished run for E7; registers it on first sight
 python3 -I analysis/axon_engine_cli.py develop --per-animal 10 --minutes 14   # training only; the one permitted choice of K
 #   finalise this protocol (remove the DRAFT line); commit engine + protocol + tests
 python3 -I analysis/axon_engine_cli.py predict --stage validate --minutes 14  # repeat until committed; needs no validation trace
@@ -393,9 +606,10 @@ stage A = training and validation; stage B = test, after the freeze); this engin
 
 **Cost at full size** (measured on the 37 local arbors and projected; `reports/axon_engine_report.md` has the
 figures): the all-pairs cache and the frozen prototype's forecasts take hours of processor time and are resumable;
-the referee's `copying_baselines` recomputes all 9,890,128 pairs in one process each time it is called (once per
-`copies-check`, once inside its seal) and cannot be resumed or fed a cache. That part is the referee's own; its
-contract says full-cohort runtime has not been demonstrated.
+without the audited cache the referee's `copying_baselines` recomputes every pair of the pool in one process each
+time it is called (once per `copies-check`, once inside its seal). With it, the referee's helper replays every pair
+once, resumably, and the referee then reads the audited matrix. Its contract says full-cohort runtime has not been
+demonstrated.
 
 ## 11. What a result could and could not say
 
@@ -403,6 +617,9 @@ contract says full-cohort runtime has not been demonstrated.
   not gene expression, not causes.
 * Every method here outputs a measured arbor, or a pruned one. None grows new branches. A success would show
   that the choice of which measured arbor to use (or what to keep of it) carries information beyond copying.
+* A success of E7 would show that a regional profile inferred from soma position and source label helps to choose
+  the measured arbor. It would not validate the general layer's regional forecasts, whose own benchmark stays
+  exploratory, and it would not unblock the layer's axon adapter.
 * 40 test animals (brain sample IDs); subgroup tables are descriptive.
 * Labels, animals and batches are confounded.
-* Regional-conditional candidates inherit the exposure of section 2.
+* Regional-conditional candidates, E7 among them, inherit the exposure of section 2.

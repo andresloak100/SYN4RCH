@@ -12,7 +12,9 @@ What this module does and does not do on import: it verifies the pinned SHA-256 
 agent's frozen prototype (analysis/brm_template.py and its dependencies) against both the freeze
 record data/interim/brm_template_method/frozen.json and the constants below, then imports those
 modules read-only. It reads no trace and no regional row on import. The independent referee
-(analysis/prediction_independent_evaluator.py) is loaded read-only on first use and never edited.
+(analysis/prediction_independent_evaluator.py) is loaded read-only on first use and never edited. So is the bridge
+to the general reconstruction layer (analysis/synarch_axon_bridge.py), which gives candidate E7 the query's
+regional profile as that layer infers it from permitted inputs; the layer's own files are never edited here.
 
 Evidence boundary (plan sections 7 and 8):
   * a forecast takes only the query's table soma (mirrored-left frame), source label, soma label,
@@ -34,6 +36,7 @@ import importlib.util
 import json
 import math
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -43,6 +46,13 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
+# The four thread variables as they were when this module started, read BEFORE numpy and before any brm_* module is
+# imported (analysis/brm_real.py sets them to '1' on import, after numpy is already loaded, so a later read of
+# os.environ proves nothing; round-2 finding). require_thread_variables() checks these values and the thread pools.
+_THREAD_ENV_AT_IMPORT = {_v: os.environ.get(_v) for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+                                                           "VECLIB_MAXIMUM_THREADS")}
+_NUMPY_LOADED_BEFORE_ENGINE = "numpy" in sys.modules
 
 import numpy as np
 
@@ -231,6 +241,17 @@ MARKER_TYPES = (10, 11, 12)
 STAGES = ("develop", "validate", "test")
 PART_OF_STAGE = {"develop": "train", "validate": "validation", "test": "test"}
 
+# The bridge to the general reconstruction layer (loaded lazily, see `bridge()`), and that layer's three code files.
+# The engine edits none of the three; it pins their bytes wherever it pins its own.
+BRIDGE_FILE = "analysis/synarch_axon_bridge.py"
+BRIDGE_TEST_FILE = "tests/test_synarch_axon_bridge.py"
+LAYER_CODE_FILES = ("analysis/synarch_recon.py", "analysis/synarch_recon_modules.py", "analysis/synarch_recon_benchmark.py")
+LAYER_RUN_MISSING = "general_layer_run_missing"
+# Synthetic worlds: the anchor of the general layer's finished run, the synthetic counterpart of the protocol's anchor
+# line. Written once, next to the world's own description (<world>/data/world.json, outside the engine's output folder),
+# by the step that BUILDS the run (`layer --build`, the synthetic pipeline), and nowhere else (round-2 finding).
+LAYER_ANCHOR_FILE = "general_layer_anchor.json"
+
 
 # Copying controls. The four official ones are the referee contract's (exact names); the engine obtains them
 # from the referee's own copying_baselines and keeps an independent replica that must agree with it.
@@ -241,7 +262,8 @@ COPY_BASELINES = OFFICIAL_COPIES + ("C1_medoid_copy",)      # one measured neuro
 ATTACHMENT_CONTROLS = ("C4_uniform_attach_500", "C5_uniform_attach_1000")     # referee role matched_controls, always
 FROZEN_CANDIDATES = ("F1_conditional_attach_500", "F2_conditional_attach_1000")
 ENGINE_CANDIDATES = ("E1_local_uniform", "E2_local_kernel", "E3_local_kernel_label",
-                     "E4_local_kernel_regional", "E5_local_kernel_label_regional", "E6_local_consensus")
+                     "E4_local_kernel_regional", "E5_local_kernel_label_regional", "E6_local_consensus",
+                     "E7_local_kernel_inferred_profile")
 CANDIDATES = FROZEN_CANDIDATES + ENGINE_CANDIDATES
 METHODS = CONTROLS + CANDIDATES
 FROZEN_POLICY_OF = {"C1_medoid_copy": "baseline", "C4_uniform_attach_500": "uniform_anchor_500",
@@ -256,11 +278,16 @@ MATCHED_CONTROLS = {
     "E3_local_kernel_label": ("E1_local_uniform", "E2_local_kernel"),
     "E4_local_kernel_regional": ("E1_local_uniform", "E2_local_kernel"),
     "E5_local_kernel_label_regional": ("E1_local_uniform", "E2_local_kernel"),
+    "E7_local_kernel_inferred_profile": ("E1_local_uniform", "E2_local_kernel"),
 }
 # Methods whose forecast arrays depend on the numbers of a fitted regional state. The frozen baseline and
 # uniform policies consult the state for membership checks only: their arrays do not depend on it (tested).
-USES_FITTED_STATE = ("F1_conditional_attach_500", "F2_conditional_attach_1000",
-                     "E4_local_kernel_regional", "E5_local_kernel_label_regional")
+USES_REGIONAL_STATE = ("F1_conditional_attach_500", "F2_conditional_attach_1000",
+                       "E4_local_kernel_regional", "E5_local_kernel_label_regional")
+# The method whose forecast depends on a state of the GENERAL RECONSTRUCTION LAYER (through the bridge): the state
+# decides the inferred profile, and also whether there is one (its support ranges decide a refusal).
+USES_LAYER_STATE = ("E7_local_kernel_inferred_profile",)
+USES_FITTED_STATE = USES_REGIONAL_STATE + USES_LAYER_STATE
 FAMILIES = {"all": CANDIDATES, "no_fitted_state": tuple(c for c in CANDIDATES if c not in USES_FITTED_STATE)}
 USER_LABEL = {"C1_medoid_copy": "C1", "medoid": "C1 by the referee's rule", "nearest": "C2", "peptide_nearest": "C3",
               "C4_uniform_attach_500": "C4", "C5_uniform_attach_1000": "C5", "peptide_medoid": "same-label representative"}
@@ -280,6 +307,9 @@ METHOD_TEXT = {
     "E4_local_kernel_regional": "local medoid, kernel times the frozen conditional (regional) weights",
     "E5_local_kernel_label_regional": "local medoid, kernel times label factor times frozen conditional weights",
     "E6_local_consensus": "the E2 template with the cable that fewer than a quarter of its (kernel-weighted) neighbours share within 200 um pruned away: not a copy of any single neuron",
+    "E7_local_kernel_inferred_profile": ("local medoid, kernel times the similarity between each neighbour's measured regional profile and the "
+                                         "query's regional profile as the general reconstruction layer infers it from soma position and "
+                                         "source label; E2's weights when that layer issues no value"),
 }
 
 
@@ -299,9 +329,10 @@ CONFIG = {
         "marker_types": list(MARKER_TYPES),
         "axon_rule": "all cable that is not dendrite and not the soma; a marker takes the type of its nearest non-marker ancestor",
         "terminal_marker_twigs": "kept as axon cable (plan rule; the frozen extractor drops them)",
-        "non_axon_connectors": ("ancestors of axon nodes that are not axon (a marker inside a path; a dendritic stem that an axon "
-                                "leaves) are kept as connector geometry of the scored tree and their length is logged; rule 6 "
-                                "counts axon cable only"),
+        "non_axon_connectors": ("an ancestor of an axon node that is not axon itself (the dendritic stem of an axon that leaves a "
+                                "dendrite; a marker between the soma and the first axon node) is kept as connector geometry of the "
+                                "scored tree and its length is logged; a marker inside an axon path is axon by inheritance (the "
+                                "plan's axon rule), not a connector; rule 6 counts axon cable only"),
         "atlas_box_um": BOX.tolist(),
         "clipping": ("none (plan amendment 1): truth, donors and forecasts are complete trees in the same full coordinate "
                      "domain; the length of cable outside the atlas box is logged per neuron and reported per part, and is "
@@ -318,7 +349,7 @@ CONFIG = {
         "nearest, peptide_nearest": "the whole library (peptide_nearest: its neurons with the query's source label)",
         "medoid, peptide_medoid": "the whole library, all pairs (peptide_medoid: its neurons with the query's source label)",
         "C1, C4, C5, F1, F2": "the whole library, handed to the unmodified frozen predict_policy; pair costs read from the pinned all-pairs cache",
-        "E1 to E6": "the K nearest neurons of the whole library by table-soma distance",
+        "E1 to E7": "the K nearest neurons of the whole library by table-soma distance",
         "sampled panels": "none",
     },
     "pair_cache": {"what": "soma-centred distance_um and 1 - f1_200 between every two library arbors, frozen geometry_metrics, lower neuron ID first",
@@ -332,7 +363,9 @@ CONFIG = {
         "heldout_inline_api_pair_limit": 250000,
         "above_the_limit": "forecasts carry the replica; `copies-check` must then show exact equality with copying_baselines before any truth is opened",
         "develop_api_pair_budget": 80000,
-        "develop": "replica for every query; copying_baselines is called for the first held-out animals (ID order) within the pair budget",
+        "develop": ("replica for every query; copying_baselines is called for the first held-out animals (ID order) within the pair "
+                    "budget, the first animal included: when even its pool is over the budget nothing is sent and the manifest says "
+                    "'no development API verification (pair budget)'"),
     },
     "out_of_fold": {"folds": 5, "salt": "SYN4RCH-axon-engine-oof-2026-11-10",
                     "rule": "training animals dealt to folds in SHA-256 order inside each source label"},
@@ -341,10 +374,40 @@ CONFIG = {
                "attachment_ladder_um": [500.0, 1000.0], "attachment_last_resort": "translation of the same template",
                "consensus_radius_um": 200.0, "consensus_min_support": 0.25, "consensus_min_cable_um": 1000.0,
                "neighbour_distance": "Euclidean between table somas; ties by neuron ID"},
+    "general_layer": {
+        "candidate": "E7_local_kernel_inferred_profile",
+        "bridge": BRIDGE_FILE, "layer_code": list(LAYER_CODE_FILES),
+        "inferred_input": ("the query's regional axon-length profile (the layer's declared task T1: from table soma position and "
+                           "source label), asked through Reconstructor.reconstruct under the layer's DEFAULT policy"),
+        "reconstructor": ("only synarch_recon_benchmark.build_reconstructor over a finished, verified run of the layer: the "
+                          "all-training serving states for a query outside the training partition; the states of the layer's outer "
+                          "fold k for a training query of fold k (development)"),
+        "admission": ("the measured records of the permitted inputs and the layer's own inferred record pass AxonArborAdapter.plan "
+                      "(check_inputs) and query_for of that same reconstructor; the adapter stays 'blocked: independent validation "
+                      "pending'"),
+        "value_used": ("whatever the layer issues under its default policy: its engine's estimate, or a flagged baseline-level "
+                       "value of its best comparator; which one is recorded per forecast. Nothing when the layer refuses"),
+        "similarity": ("p = the inferred profile, q_j = neighbour j's MEASURED profile (training rows of the sealed loader), both on "
+                       "the layer's model scale by its single conversion function, each converted exactly once according to its own "
+                       "stated value tag; regions matched by name; d_j = Euclidean distance over the regions; tau = median of d_j "
+                       "over the neighbourhood; s_j = exp(-d_j^2 / (2 tau^2)); every s_j is 1 when tau is 0"),
+        "weights": "(a_j / A) k_j s_j; neighbourhood, a_j, A and k_j exactly as E2; weighted medoid; attachment ladder as E1 to E5",
+        "fallback": ("when the bridge returns no inferred profile E7 uses E2's weights (s_j = 1); the forecast row says fallback "
+                     "with the layer's reason code, and the array is bit-identical to E2's"),
+        "no_finished_run": ("reason 'general_layer_run_missing'. On the real cohort a held-out forecast with the family 'all' is "
+                            "refused without a verified finished run; in development, on synthetic worlds and with the family "
+                            "'no_fitted_state' E7 is then fallback-only, recorded"),
+        "pinned": ("SHA-256 of run_complete.json and of the files it binds, the fingerprints and file hashes of the T1 states that "
+                   "answer, the bridge file and the three code files of the layer: in the method pins of every manifest, in the "
+                   "state manifest, in the freeze and among the referee's method artifacts"),
+        "real_cohort_anchor": ("the SHA-256 of the layer's run_complete.json must be written in the engine's protocol before a "
+                               "held-out forecast that uses it is committed"),
+    },
     "controls": list(CONTROLS), "official_copy_controls": list(OFFICIAL_COPIES), "frozen_controls": list(FROZEN_CONTROLS),
     "frozen_candidates": list(FROZEN_CANDIDATES), "engine_candidates": list(ENGINE_CANDIDATES),
     "matched_controls": {k: list(v) for k, v in MATCHED_CONTROLS.items()},
-    "uses_fitted_state": list(USES_FITTED_STATE), "families": {k: list(v) for k, v in FAMILIES.items()},
+    "uses_fitted_state": list(USES_FITTED_STATE), "uses_regional_state": list(USES_REGIONAL_STATE),
+    "uses_general_layer_state": list(USES_LAYER_STATE), "families": {k: list(v) for k, v in FAMILIES.items()},
     "gate": ("a candidate of the declared family is eligible when its animal-mean distance is strictly lower AND its "
              "animal-mean F1 strictly higher than EVERY control (the four official copies, the frozen baseline and both "
              "frozen uniform-attachment controls) on the whole admitted validation set; a conditional candidate must also "
@@ -367,19 +430,146 @@ CONFIG = {
 CONFIG_SHA = digest(CONFIG)
 SUBGROUP_SPEC_SHA = digest(CONFIG["subgroups"])
 
-ENGINE_FILES = ("analysis/axon_engine.py", "analysis/axon_engine_cli.py")
-REFEREE_FILES = {"evaluator": "analysis/prediction_independent_evaluator.py", "geometry_math": "analysis/brm_geometry_audit.py"}
+ENGINE_FILES = ("analysis/axon_engine.py", "analysis/axon_engine_cli.py", BRIDGE_FILE)
+# The referee's own list of its source files (its source_hashes()); its owner added the training distance cache on
+# 2026-11-11 at about 08:25. The engine only reads these files, and checks that the referee's list equals this one.
+REFEREE_FILES = {"evaluator": "analysis/prediction_independent_evaluator.py", "geometry_math": "analysis/brm_geometry_audit.py",
+                 "training_distance_cache": "analysis/prediction_distance_cache.py"}
 REFEREE_CONTRACT = "reports/prediction_independent_evaluation_contract.md"
 REFEREE_FINDING = "reports/prediction_referee_interop_finding.md"
+# Every process that calls the referee runs with exactly these four thread variables set to 1 (late item L6): the
+# referee's audit of the training distance cache records them, and its loader refuses a different runtime. The command
+# line sets them before numpy is imported; referee() refuses to load the referee without them.
+THREAD_VARIABLES = ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS")
+# The referee's optional audited training distance cache (its contract, section 'Optional exact training-distance cache'):
+# the six relative paths inside a bundle, exactly as the contract writes them. The engine prepares the bundle from its own
+# completed all-pairs cache (`referee-cache --prepare`); the referee's helper audits every pair (the lead runs it); only
+# its COMPLETE receipt unlocks the loader. It is used ONLY for the exact declared training pool (validation and test
+# copies, `copies-check`, the seal), never for a leave-one-animal-out development pool.
+REFEREE_CACHE_DESCRIPTOR = {"schema": "referee_training_distance_cache_v1", "index_path": "cache/index.json",
+                            "complete_path": "cache/COMPLETE.json", "distance_path": "cache/D.npy", "f1_path": "cache/F.npy",
+                            "mask_path": "cache/K.npy", "audit_path": "cache/full_audit.json"}
+REFEREE_CACHE_PATH_KEYS = ("index_path", "complete_path", "distance_path", "f1_path", "mask_path", "audit_path")
+REFEREE_CACHE_FOLDER = "referee_cache/bundle"
+REFEREE_CACHE_RECEIPT_PLACEHOLDER = "PENDING_full_audit_receipt_sha256 (written by the referee's helper; replaced at the freeze)"
+REFEREE_CACHE_AUDIT_COMMAND = ("OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 python3 -I "
+                               "analysis/prediction_distance_cache.py --base {bundle} --declaration draft_declaration.json "
+                               "--workers 4 --minutes 30   (repeat to resume; only its COMPLETE receipt unlocks the loader)")
 
 
 def engine_code_sha(root=ROOT):
     return {relative: sha_file(Path(root) / relative) for relative in ENGINE_FILES if (Path(root) / relative).exists()}
 
 
+def general_layer_code_sha(root=ROOT):
+    """The three code files of the general reconstruction layer (another owner's), as they are on disk now."""
+    return {relative: sha_file(Path(root) / relative) for relative in LAYER_CODE_FILES if (Path(root) / relative).exists()}
+
+
 def code_hashes(root=ROOT):
     return {"engine": engine_code_sha(root), "frozen": dict(FROZEN_PINS["source_sha256"]),
-            "freeze_record_sha256": FROZEN_PINS["freeze_record_sha256"]}
+            "freeze_record_sha256": FROZEN_PINS["freeze_record_sha256"], "general_layer": general_layer_code_sha(root)}
+
+
+# ----------------------------------------------------------------------------------------------
+# the training library is keyed to the code that MAKES it (review finding 1), not to the whole engine file
+# ----------------------------------------------------------------------------------------------
+
+# Every function, class and constant that ingestion (read, extract, check, resample, hash, save) runs or reads; the
+# fix round's test checks that this list is closed under what these functions call. CONFIG is read for two numbers only.
+INGESTION_FUNCTIONS = ("sha_file", "Exclusion", "frame_is_true_hemisphere", "unavailable_log", "read_swc", "tree_structure",
+                       "outside_box_cable", "extract_axon", "canonical_arbor", "arbor_sha", "ingest_trace", "_ingest_task",
+                       "alternate_copies")
+INGESTION_CONSTANTS = ("PINNED_SOURCES", "FREEZE_RECORD_SHA", "MIDLINE_ML", "MIRROR_ML", "BOX", "STEP", "ALLOWED_TYPES",
+                       "DENDRITE_TYPES", "MARKER_TYPES", "RULE_TEXT", "UNAVAILABLE_FRAME")
+INGESTION_CONFIG_KEYS = ("soma_tolerance_um", "min_axon_cable_um")
+
+
+def ingestion_code_sha(text):
+    """SHA-256 of the exact source text of every ingestion function, class and constant (and of the two inclusion numbers
+    of CONFIG), read from the text of an engine file. Two engine files with the same value make the same library."""
+    import ast
+    tree = ast.parse(text)
+    parts = {}
+
+    def keep(name, node):
+        if name in parts:
+            raise EngineError(f"ingestion code: '{name}' is defined twice")
+        parts[name] = ast.get_source_segment(text, node)
+
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and node.name in INGESTION_FUNCTIONS:
+            keep(node.name, node)
+        elif isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            name = node.targets[0].id
+            if name in INGESTION_CONSTANTS:
+                keep(name, node)
+            elif name == "CONFIG" and isinstance(node.value, ast.Dict):
+                for key, value in zip(node.value.keys, node.value.values):
+                    if isinstance(key, ast.Constant) and key.value == "inclusion" and isinstance(value, ast.Dict):
+                        for k, v in zip(value.keys, value.values):
+                            if isinstance(k, ast.Constant) and k.value in INGESTION_CONFIG_KEYS:
+                                keep(f"CONFIG.inclusion.{k.value}", v)
+    expected = set(INGESTION_FUNCTIONS) | set(INGESTION_CONSTANTS) | {f"CONFIG.inclusion.{k}" for k in INGESTION_CONFIG_KEYS}
+    if set(parts) != expected:
+        raise EngineError(f"ingestion code: not found in the engine text: {sorted(expected - set(parts))}")
+    return digest(parts)
+
+
+INGESTION_CODE_SHA = ingestion_code_sha(Path(__file__).read_text())
+# Engine files that built a library before the library recorded its ingestion code fingerprint, with the fingerprint of
+# their ingestion code. e575ddc3... is git f46a87e (the committed engine), which built the full-cohort training library
+# data/interim/axon_engine/real/ingestion_log.json. The fix round's test recomputes this value from git and checks it
+# equals the current one; if the ingestion code ever changes, that library is refused again (run `ingest`).
+LEGACY_INGESTION_ENGINES = {"e575ddc32d5d5e71b30a88744a012e509ee68ce6953f6d5f37596cd676df7d23": "837fdd3598628d61c8d4988fd274b74639c481089735df01cfa7eb82f96858da"}
+
+
+def ingestion_record_problem(record):
+    """Why an ingestion log was not made by the ingestion code and rules of this engine (None when it was)."""
+    if record.get("rules") != jsonable(RULE_TEXT):
+        return "the training library was built under other inclusion rule texts; run `ingest`"
+    key = record.get("ingestion_code_sha256")
+    if key is None:
+        key = LEGACY_INGESTION_ENGINES.get(record.get("engine_sha256"))
+    if key != INGESTION_CODE_SHA:
+        return ("the training library was built by other ingestion code (its ingestion code fingerprint is not the one of "
+                "this engine)")
+    return None
+
+
+_BRIDGE = {}
+
+
+def bridge():
+    """The bridge to the general reconstruction layer (analysis/synarch_axon_bridge.py), imported from its own
+    file on first use. It imports the layer; the engine itself never does. Nothing of it is edited or patched here."""
+    module = _BRIDGE.get("module")
+    if module is None:
+        name = "synarch_axon_bridge"
+        module = sys.modules.get(name)
+        if module is None:
+            spec = importlib.util.spec_from_file_location(name, ROOT / BRIDGE_FILE)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[name] = module
+            spec.loader.exec_module(module)
+        if (module.BRIDGE_FILE, tuple(module.LAYER_CODE_FILES), module.RUN_MISSING) != (BRIDGE_FILE, LAYER_CODE_FILES, LAYER_RUN_MISSING):
+            raise EngineError("the bridge does not declare the files and the reason code this engine pins")
+        _BRIDGE["module"] = module
+    return module
+
+
+@contextmanager
+def layer_errors(what):
+    """The general layer's refusals as the engine's own: a leak stays a leak, everything else is an EngineError."""
+    B = bridge()
+    try:
+        yield B
+    except EngineError:
+        raise
+    except B.BridgeLeak as leak:
+        raise LeakError(f"general reconstruction layer ({what}): {leak}") from leak
+    except B.core.ReconError as refused:
+        raise EngineError(f"general reconstruction layer ({what}): {refused}") from refused
 
 
 def referee_hashes(root=ROOT):
@@ -390,8 +580,100 @@ def referee_hashes(root=ROOT):
 _REFEREE = {}
 
 
+def thread_pools():
+    """[(library, threads)] of the numerical thread pools loaded in this process, or None when threadpoolctl is absent."""
+    try:
+        import threadpoolctl
+    except ImportError:
+        return None
+    return [(str(p.get("internal_api")), int(p.get("num_threads") or 0)) for p in threadpoolctl.threadpool_info()]
+
+
+def require_thread_variables():
+    """Refuse a referee call from a process that does not run with the four thread variables at exactly 1 (late item L6).
+
+    Three checks (round-2 finding: os.environ alone proves nothing, because importing this module loads
+    analysis/brm_real.py, which writes '1' into all four after numpy is loaded): (1) the values NOW; (2) the values
+    when this module started, read before numpy and before any brm_* import; (3) the thread pools that are really
+    loaded (threadpoolctl): every one must run one thread. Without threadpoolctl, a process that had loaded numpy
+    before this module is refused, because its pools cannot be checked."""
+    wrong = [name for name in THREAD_VARIABLES if os.environ.get(name) != "1"]
+    if wrong:
+        raise EngineError("every process that calls the referee runs with " + " ".join(f"{v}=1" for v in THREAD_VARIABLES) +
+                          "; here " + ", ".join(f"{v}={os.environ.get(v)!r}" for v in wrong) +
+                          ". The command line sets them before numpy is imported; set them when the engine is used as a library")
+    early = [name for name in THREAD_VARIABLES if _THREAD_ENV_AT_IMPORT.get(name) != "1"]
+    if early:
+        raise EngineError("the four thread variables were not all 1 when the engine was imported (" +
+                          ", ".join(f"{v}={_THREAD_ENV_AT_IMPORT.get(v)!r}" for v in early) + "): they are set later only by "
+                          "an imported module, after numpy chose its thread pools. Set " +
+                          " ".join(f"{v}=1" for v in THREAD_VARIABLES) + " before numpy is imported")
+    pools = thread_pools()
+    if pools is None:
+        if _NUMPY_LOADED_BEFORE_ENGINE:
+            raise EngineError("numpy was loaded before the engine and threadpoolctl is not installed, so the thread pools "
+                              "cannot be checked; import the engine first, with the four thread variables set to 1")
+        return
+    many = [(lib, n) for lib, n in pools if n != 1]
+    if many:
+        raise EngineError(f"the numerical thread pools of this process do not run one thread each ({many}): the four thread "
+                          "variables were set after numpy was imported. Set " + " ".join(f"{v}=1" for v in THREAD_VARIABLES) +
+                          " before numpy is imported")
+
+
+ANCHOR_PHRASE = "run_complete.json sha-256"
+ANCHOR_LINE = re.compile(r"[ \t]*\*\*general layer run_complete\.json SHA-256: ([0-9a-f]{64}|\(not written yet\))\*\*[ \t]*")
+
+
+def protocol_anchor_value(protocol):
+    """See Engine.protocol_anchor. Refuses a protocol whose anchor phrase stands anywhere but on one anchor line."""
+    text = Path(protocol).read_text() if protocol and os.path.exists(protocol) else ""
+    lines = text.split("\n")
+    hidden = [False] * len(lines)                    # inside an HTML comment or a fenced code block
+    comment = fence = False
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        starts_hidden = comment or fence
+        if not comment and re.match(r"(```|~~~)", stripped):
+            fence = not fence
+            hidden[i] = True
+            continue
+        if not fence:
+            rest, inside = line, comment
+            while rest:
+                if inside:
+                    end = rest.find("-->")
+                    if end < 0:
+                        break
+                    rest, inside = rest[end + 3:], False
+                    hidden[i] = True
+                else:
+                    start = rest.find("<!--")
+                    if start < 0:
+                        break
+                    rest, inside = rest[start + 4:], True
+                    hidden[i] = True
+            comment = inside
+        hidden[i] = hidden[i] or starts_hidden or comment or fence
+    values = []
+    for i, line in enumerate(lines):
+        if ANCHOR_PHRASE not in line.lower():
+            continue
+        match = ANCHOR_LINE.fullmatch(line)
+        if hidden[i] or match is None:
+            raise EngineError(f"the protocol {protocol}, line {i + 1}: the anchor phrase of the general layer's finished run "
+                              "stands outside an anchor line (in a sentence, in an HTML comment or in a code block, or in "
+                              "another spelling). It may stand only on one whole line, exactly '**general layer "
+                              "run_complete.json SHA-256: <64 hex digits>**' or with the placeholder '(not written yet)'")
+        values.append(match.group(1))
+    if len(values) > 1:
+        raise EngineError(f"the protocol {protocol} has more than one anchor line for the general layer's finished run")
+    return values[0] if values and re.fullmatch(r"[0-9a-f]{64}", values[0]) else None
+
+
 def referee():
     """The independent referee, imported read-only from its own file on first use."""
+    require_thread_variables()
     module = _REFEREE.get("module")
     if module is None:
         name = "axon_engine_independent_referee"
@@ -965,7 +1247,8 @@ def outside_summary(entries):
 
 
 def connector_summary(entries):
-    """Per part: non-axon connector geometry kept in the scored trees (markers inside a path; dendritic stems)."""
+    """Per part: non-axon connector geometry kept in the scored trees (a dendritic stem that an axon leaves; a marker
+    between the soma and the first axon node). A marker inside an axon path is axon by inheritance, not a connector."""
     kept = [e for e in entries if e.get("status", "included") == "included"]
     stems = [e for e in kept if e.get("dendrite_connector_nodes", 0) > 0]
     return {"neurons": len(kept), "neurons_with_connector_nodes": int(sum(e.get("connector_nodes", 0) > 0 for e in kept)),
@@ -1606,9 +1889,59 @@ class StateBook:
                 if meta.get("cache_key") == self._key(state_id):
                     states[state_id] = meta["entry"]
         value = {"schema": SCHEMA, "world": self.engine.world.name, "states": states,
-                 "fold_of_training_animal": dict(sorted(self.fold.items()))}
+                 "fold_of_training_animal": dict(sorted(self.fold.items())),
+                 # the finished run of the general reconstruction layer that E7 reads, as first seen (None: none seen)
+                 "general_layer": self.layer_registration()}
         write_json(Path(self.engine.world.out) / "state_manifest.json", value, pretty=True)
         return value
+
+    # -- the general reconstruction layer's finished run, as this engine first saw it ----------------------
+    def layer_registration(self):
+        path = self.dir / "general_layer.json"
+        return read_json(path) if path.exists() else None
+
+    def register_layer(self, run, *, create=True):
+        """Register the finished run that E7 reads, or check it against the registration. With create=False (every
+        held-out stage) nothing is written: a missing registration or a state not registered yet is refused.
+
+        `run` is the bridge's description of the run on disk (run_pins with every state). The first time a
+        finished run is seen its completion record's SHA-256 and the fingerprints of its T1 states are written
+        down; from then on another run_complete.json, or another state under a registered name, is refused. A state
+        that did not exist yet (the all-training serving state is fitted after the run) may be added once."""
+        path = self.dir / "general_layer.json"
+        known = self.layer_registration()
+        states = {key: entry["state_hash"] for key, entry in run["states"].items()}
+        if known is None and not create:
+            raise EngineError(
+                f"the general layer's finished run on disk (run_complete.json {run['run_complete_sha256'][:16]}...) has no "
+                f"registered finished run in this world's state manifest ({path}): a held-out stage never registers a run. "
+                "Look at the run and register it in development (`layer`, or the develop stage) before any held-out forecast")
+        if known is None:
+            record = {"schema": SCHEMA, "layer_world": run["world"], "task": run["task"],
+                      "run_complete_sha256": run["run_complete_sha256"],
+                      "pre_run_declaration_sha256": run["pre_run_declaration_sha256"], "state_fingerprints": states,
+                      "code_sha256_at_registration": {**general_layer_code_sha(), BRIDGE_FILE: sha_file(ROOT / BRIDGE_FILE)},
+                      "registered_utc": utc_now()}
+            self.dir.mkdir(parents=True, exist_ok=True)
+            try:
+                write_json(path, record, exclusive=True, pretty=True)
+                return record
+            except FileExistsError:                 # another process of the same run registered it first
+                known = read_json(path)
+        if known["run_complete_sha256"] != run["run_complete_sha256"]:
+            raise EngineError("the general layer's run_complete.json is not the one registered in this world's state manifest "
+                              f"({path}): a finished run is never replaced; a forged or second completion record is refused")
+        changed = sorted(key for key, sha in states.items() if key in known["state_fingerprints"] and known["state_fingerprints"][key] != sha)
+        if changed:
+            raise EngineError(f"the general layer's T1 state of {', '.join(changed)} is not the state registered in {path}")
+        added = {key: sha for key, sha in states.items() if key not in known["state_fingerprints"]}
+        if added and not create:
+            raise EngineError(f"the general layer's states {sorted(added)} are not registered in {path}; a held-out stage never "
+                              "registers one (register them in development with `layer`)")
+        if added:
+            known["state_fingerprints"].update(added)
+            write_json(path, known, pretty=True)
+        return known
 
     def get(self, state_id):
         state = self._states.get(state_id)
@@ -2087,7 +2420,180 @@ class Engine:
         self._profiles = self._profile_audit = None
         self._library = self._cache = None
         self._donors, self._scopes = {}, {}
+        self._layer = self._layer_pins = None             # the bridge session of this world, and what it pins
+        self._referee_cache_used = None                   # receipt SHA-256 of the audited cache in the last referee call
         self.stage_dir = self.out / stage
+
+    # -- the general reconstruction layer, through the bridge ------------------------------------------
+    def layer_anchor_path(self):
+        """Synthetic worlds: <world>/data/general_layer_anchor.json (None on the real cohort, whose anchor is the protocol)."""
+        return None if self.world.kind == "real" else Path(self.world.manifest).parent / LAYER_ANCHOR_FILE
+
+    def layer_anchor_key(self):
+        """The engine output folder the anchor entry belongs to, relative to the world folder when it lies inside it (so a
+        copied world keeps its anchor), else absolute: several engine outputs over one world each build their own run."""
+        world_dir = Path(self.world.manifest).parent.parent.resolve()
+        out = Path(self.world.out).resolve()
+        try:
+            return out.relative_to(world_dir).as_posix()
+        except ValueError:
+            return out.as_posix()
+
+    def layer_anchor(self):
+        """The run this world anchors: {'source', 'run_complete_sha256' (None: nothing anchored), 'state_fingerprints'}.
+        Real cohort: the protocol's single anchor line. Synthetic: this engine output's entry in the world's anchor file."""
+        if self.world.kind == "real":
+            return {"source": f"protocol anchor line ({self.world.protocol})", "run_complete_sha256": self.protocol_anchor(),
+                    "state_fingerprints": None}
+        path, key = self.layer_anchor_path(), self.layer_anchor_key()
+        entry = (read_json(path).get("runs", {}).get(key) if path.exists() else None) or {}
+        return {"source": f"{path} [{key}]", "run_complete_sha256": entry.get("run_complete_sha256"),
+                "state_fingerprints": entry.get("state_fingerprints"), "file_sha256": sha_file(path) if path.exists() else None}
+
+    def write_layer_anchor(self, run):
+        """Synthetic worlds, called only by the step that has just BUILT the run with the layer's own benchmark (it builds
+        only when no finished run is on disk): write its anchor. A world copied without its engine output and built
+        again from scratch gets the new run's anchor; the earlier entry is kept in the file's history. A run that is
+        found on disk, rather than built by this step, is never anchored."""
+        path, key = self.layer_anchor_path(), self.layer_anchor_key()
+        record = read_json(path) if path.exists() else {"schema": SCHEMA, "what": (
+            "the finished run of the general reconstruction layer that the build step made for each engine output of this "
+            "synthetic world; the synthetic counterpart of the protocol's anchor line"), "runs": {}, "history": []}
+        known = record["runs"].get(key)
+        if known is not None and known["run_complete_sha256"] != run["run_complete_sha256"]:
+            record.setdefault("history", []).append({"engine_output": key, **known, "replaced_utc": utc_now(),
+                                                     "why": "the build step built a new run from scratch (no run was on disk)"})
+        record["runs"][key] = {"run_complete_sha256": run["run_complete_sha256"],
+                               "state_fingerprints": {k: e["state_hash"] for k, e in run["states"].items()},
+                               "anchored_utc": utc_now()}
+        write_json(path, record, pretty=True)
+        return record["runs"][key]
+
+    def check_layer_anchor(self, run):
+        """Every stage (development too): a finished run that is used must be the run this world anchors. On the real
+        cohort an empty anchor line leaves development to the registration (held-out stages need the line: see
+        require_general_layer); on a synthetic world a run without an anchor was not built by the build step and is refused."""
+        anchor = self.layer_anchor()
+        sha = anchor["run_complete_sha256"]
+        if sha is None:
+            if self.world.kind == "real":
+                return anchor
+            raise EngineError(
+                f"the general layer's finished run on disk (run_complete.json {run['run_complete_sha256'][:16]}...) is not anchored "
+                f"for this world ({anchor['source']}): on a synthetic world only the step that builds the run (`layer --build`, the "
+                "synthetic pipeline) anchors it, and a run it did not build is never used")
+        if sha != run["run_complete_sha256"]:
+            raise EngineError(
+                f"the general layer's finished run on disk (run_complete.json {run['run_complete_sha256'][:16]}...) is not the run "
+                f"anchored for this world ({sha[:16]}..., {anchor['source']}): a forged or second completion record is refused")
+        changed = sorted(k for k, h in (anchor["state_fingerprints"] or {}).items()
+                         if k in run["states"] and run["states"][k]["state_hash"] != h)
+        if changed:
+            raise EngineError(f"the general layer's T1 states {changed} are not the states anchored in {anchor['source']}")
+        return anchor
+
+    def layer_pins(self, *, fresh=False):
+        """Everything of the general layer that E7's forecasts depend on, read from disk (the bridge's run_pins
+        over every state of the finished run), and held against this world's registration of that run.
+        {'run': None, 'reason': 'general_layer_run_missing'} when no finished run exists."""
+        if self._layer_pins is None or fresh:
+            with layer_errors("the finished run") as B:
+                pins = B.run_pins(self.world, folds="all")
+            registered = self.states.layer_registration()
+            if pins["run"] is None:
+                if registered is not None:
+                    raise EngineError("this world's state manifest registers a finished run of the general layer "
+                                      f"({registered['run_complete_sha256'][:16]}...), and no finished run is on disk now")
+            else:
+                # a run is registered only in development (and by `layer` and the synthetic build, which use it); a
+                # held-out stage only checks the run against the registration and never writes one. Either way the run
+                # must be the one the world anchors (round-2 finding: an edited registration, or a registration deleted
+                # and re-made in development, no longer lets a forged run through)
+                if registered is not None and registered["run_complete_sha256"] != pins["run"]["run_complete_sha256"]:
+                    self.states.register_layer(pins["run"], create=False)     # refuses: not the registered run
+                anchor = self.check_layer_anchor(pins["run"])
+                self.states.register_layer(pins["run"], create=self.stage == "develop")
+                pins = {**pins, "anchor": {k: anchor[k] for k in ("source", "run_complete_sha256")}}
+                if self.stage != "develop" and "serving" not in pins["run"]["states"]:
+                    raise EngineError("the completion record of the general layer's finished run binds no usable all-training "
+                                      "state for the profile forecast: held-out queries cannot be answered by it")
+            self._layer_pins = pins
+        return self._layer_pins
+
+    def layer_run_on_disk(self):
+        """The bridge's description of the finished run on disk, read only: nothing is registered or checked here."""
+        with layer_errors("the finished run") as B:
+            return B.run_pins(self.world, folds="all")
+
+    def protocol_anchor(self):
+        """The general layer's run_complete.json SHA-256 written on the protocol's single anchor line, or None when the
+        anchor line holds the placeholder (or the protocol has no anchor line).
+
+        The anchor line is one whole line, exactly '**general layer run_complete.json SHA-256: <value>**' (lower case,
+        no other text on it; leading and trailing blanks allowed), where <value> is 64 lower-case hex digits or the
+        placeholder '(not written yet)'. Round-2 finding: the phrase is refused anywhere else, in any letter case:
+        inside a sentence (also one that rejects the run), inside an HTML comment or inside a fenced code block, so a
+        line that a reader does not see, or that says the opposite, can never be read as the acceptance."""
+        return protocol_anchor_value(self.world.protocol)
+
+    def layer_session(self):
+        """The bridge session of this world, built once per engine: reconstructors over a verified finished run of
+        the general layer, or the recorded absence of a run. A run that exists and does not verify is refused."""
+        if self._layer is None:
+            self.layer_pins()
+            registered = self.states.layer_registration()
+            with layer_errors("opening the finished run") as B:
+                self._layer = B.open_session(self.world, heldout_groups=self.cohort.heldout_animals,
+                                             expected_run_complete_sha256=None if registered is None
+                                             else registered["run_complete_sha256"])
+        return self._layer
+
+    def layer_answer(self, row):
+        """The query's inferred regional profile as a permitted query input (bridge Answer), or the reason there is
+        none. The bridge is given the cohort row only: identity, part, table soma, labels, hemisphere, type."""
+        with layer_errors(f"query {row.neuron}"):
+            return self.layer_session().infer(row)
+
+    def require_general_layer(self):
+        """Real cohort, held-out stages. E7 may enter the gate only with a verified finished run of the general layer:
+        without one, the family 'all' is refused (with 'no_fitted_state' E7 is forecast with E2's weights and cannot
+        be selected). A run that IS used must be the one whose completion record the accepted protocol names."""
+        if self.world.kind != "real":
+            return
+        run = self.layer_run_on_disk()["run"]
+        if run is None:
+            self.layer_pins(fresh=True)                  # refuses when a registered run has disappeared
+            if self.family == "all":
+                raise EngineError(
+                    "the candidate family 'all' holds E7, which needs a finished, verified run of the general reconstruction "
+                    f"layer, and none exists for this cohort ({LAYER_RUN_MISSING}). Nothing is forecast. Next step: the layer's "
+                    "owner completes its single run and its serving states; or the family 'no_fitted_state' is declared, in "
+                    "which E7 is forecast with E2's weights and can never be selected")
+            return
+        if self.protocol_anchor() != run["run_complete_sha256"]:
+            raise EngineError(
+                f"the general layer's finished run (run_complete.json SHA-256 {run['run_complete_sha256']}) is not named on the "
+                f"protocol's anchor line in {self.world.protocol} (one line 'general layer run_complete.json SHA-256: <64 hex "
+                "digits>'): the SHA-256 is written there, and nowhere else counts, before a held-out forecast that uses the run "
+                "is committed")
+        self.layer_pins(fresh=True)                      # the registration made in development, checked, never written here
+        with layer_errors("the serving state"):
+            self.layer_session().layer(None)             # declaration against code and inputs, bound files, the serving state
+
+    def layer_upstream_lists(self, logs):
+        """{SHA-256 of the list: sorted training brain samples} of every general-layer state that was consulted."""
+        lists = {}
+        session = None
+        for key in sorted({log["general_layer"]["fold"] for log in logs if log["general_layer"]["fold"] is not None}):
+            session = session or self.layer_session()
+            with layer_errors(f"state {key}"):
+                state = session.layer(None if key == "serving" else int(key[len("outer"):]))[2]
+            groups = sorted(str(g) for g in state.groups)
+            lists[ids_sha(groups)] = groups
+        for log in logs:
+            if log["general_layer"]["state_animals_sha256"] not in (None, *lists):
+                raise EngineError(f"prediction log: the general-layer state of query {log['query']} is not a state of the finished run")
+        return lists
 
     # -- small helpers ---------------------------------------------------------------------
     def say(self, text):
@@ -2152,7 +2658,8 @@ class Engine:
         log_path = self.out / "ingestion_log.json"
         code = engine_code_sha().get("analysis/axon_engine.py")
         previous = read_json(log_path) if log_path.exists() else {}
-        entries = previous.get("neurons", {}) if previous.get("engine_sha256") == code else {}
+        # entries are reused when the earlier library was made by the same ingestion code (review finding 1)
+        entries = previous.get("neurons", {}) if previous and ingestion_record_problem(previous) is None else {}
         jobs, kept = [], {}
         for neuron in self.cohort.part_neurons["train"]:
             copy = self.store.choose(neuron)
@@ -2186,8 +2693,8 @@ class Engine:
                             "other_copies": sorted([c["file"], c["sha256"]] for c in self.store.copies[neuron] if c is not copy)})
                 kept[neuron] = log
         kept = dict(sorted(kept.items()))
-        record = {"schema": SCHEMA, "world": self.world.name, "engine_sha256": code, "rules": RULE_TEXT,
-                  "listing_sha256": digest(self.training_listing()), "neurons": kept}
+        record = {"schema": SCHEMA, "world": self.world.name, "engine_sha256": code, "ingestion_code_sha256": INGESTION_CODE_SHA,
+                  "rules": RULE_TEXT, "listing_sha256": digest(self.training_listing()), "neurons": kept}
         write_json(log_path, record, pretty=True)
         self._library = self._cache = None
         self._donors, self._scopes = {}, {}
@@ -2200,8 +2707,9 @@ class Engine:
         if not log_path.exists():
             return "the training library has not been built"
         record = read_json(log_path)
-        if record.get("engine_sha256") != engine_code_sha().get("analysis/axon_engine.py"):
-            return "the training library was built by another version of the engine"
+        problem = ingestion_record_problem(record)
+        if problem:
+            return problem
         listing = self.training_listing()
         if record.get("listing_sha256") != digest(listing) or sorted(record["neurons"]) != [row[0] for row in listing]:
             return (f"the training library holds {len(record['neurons'])} neurons but {len(listing)} training traces are listed "
@@ -2372,10 +2880,134 @@ class Engine:
                 "peptide": row.source_label or None, "nucleus": row.soma_label or None}
 
     def referee_copies(self, scope, neurons):
-        """The referee's own copying_baselines on this donor pool and these queries (known metadata only)."""
+        """The referee's own copying_baselines on this donor pool and these queries (known metadata only). On the exact
+        declared training pool of a held-out stage, with a COMPLETE audit receipt, through the referee's audited
+        training distance cache (late item L6); otherwise the referee recomputes every pair, as before."""
         Ref = referee()
+        donors, cached = self.referee_training_donors(scope)
+        self._referee_cache_used = None if cached is None else self.referee_cache_state()["receipt_sha256"]
+        return Ref.copying_baselines(donors, [self.known_row(n) for n in neurons], **(cached or {}))
+
+    # -- the referee's audited training distance cache (late item L6) -----------------------------------
+    def referee_cache_dir(self):
+        return self.out / REFEREE_CACHE_FOLDER
+
+    def referee_training_donors(self, scope):
+        """(donor records for the referee, the keyword arguments of its audited cache or None). The cache is offered only
+        for the EXACT declared training pool (the whole library, ID order) of a held-out stage, and only with a COMPLETE
+        audit receipt; never for a development pool."""
         donors = [{**self.known_row(n), "arbor": as_tree(self.donor(n)["arbor"])} for n in scope["ids"]]
-        return Ref.copying_baselines(donors, [self.known_row(n) for n in neurons])
+        if self.stage == "develop" or scope["exclude_animal"] is not None or list(scope["ids"]) != list(self.library["ids"]):
+            return donors, None
+        if self.referee_cache_state()["status"] != "complete":
+            return donors, None
+        bundle = self.referee_cache_dir()
+        for d in donors:
+            d["arbor_path"] = f"training/{d['id']}.npz"
+            d["arbor_sha256"] = sha_file(bundle / d["arbor_path"])
+        return donors, {"cache_base": bundle, "training_distance_cache": dict(REFEREE_CACHE_DESCRIPTOR)}
+
+    def referee_cache_state(self):
+        """What the method pins of the referee's audited training distance cache: 'absent', 'prepared_audit_pending',
+        'other_library' (prepared for another training library; never used) or 'complete' with the receipt's SHA-256 and
+        the hashes of the five cache files. A complete receipt whose files changed afterwards is refused."""
+        bundle = self.referee_cache_dir()
+        draft_path = bundle / "draft_declaration.json"
+        if not draft_path.exists():
+            return {"status": "absent"}
+        draft = read_json(draft_path)
+        out = {"bundle": str(bundle.relative_to(self.out)), "draft_sha256": sha_file(draft_path),
+               "library_fingerprint": draft["engine"]["library_fingerprint"], "pair_cache_sha256": draft["engine"]["pair_cache_sha256"]}
+        if draft["engine"]["library_fingerprint"] != self.library["fingerprint"]:
+            return {**out, "status": "other_library"}
+        files = {k: sha_file(bundle / REFEREE_CACHE_DESCRIPTOR[k]) for k in REFEREE_CACHE_PATH_KEYS if k != "audit_path"}
+        # Round-2 finding: the receipt is a self-digest that anyone who can write the bundle can make without running
+        # the audit. So the five cache files must ALSO be byte for byte the files the engine copied from its own
+        # completed, verified all-pairs cache (and the hashes its draft pinned when it prepared the bundle): a bundle
+        # whose matrix was changed, with or without a matching receipt, is never used.
+        native = self.cache
+        pinned = {k: draft.get("method_artifacts", {}).get(REFEREE_CACHE_DESCRIPTOR[k]) for k in files}
+        own = {k: sha_file(native.dir / Path(REFEREE_CACHE_DESCRIPTOR[k]).name) for k in files}
+        differ = sorted(k for k in files if not (files[k] == pinned[k] == own[k]))
+        if differ or draft["engine"].get("pair_cache_sha256") != native.sha256:
+            raise EngineError(f"the audited training distance cache in {bundle}: the files {differ or ['(draft record)']} are not "
+                              "byte for byte the engine's own completed all-pairs cache and the hashes its draft pinned when the "
+                              "bundle was prepared; it is never used (prepare a fresh bundle and have it audited)")
+        receipt_path = bundle / REFEREE_CACHE_DESCRIPTOR["audit_path"]
+        if not receipt_path.exists():
+            return {**out, "status": "prepared_audit_pending"}
+        try:
+            receipt = read_json(receipt_path)
+            body = {k: v for k, v in receipt.items() if k != "receipt_sha256"}
+            ok = (receipt.get("status") == "complete" and receipt.get("receipt_sha256") == digest(body)
+                  and receipt["binding"]["files_sha256"] == files
+                  and receipt["binding"]["library_fingerprint"] == self.library["fingerprint"]
+                  and receipt["pairs_verified"] == receipt["pairs_expected"] == receipt["binding"]["pairs"])
+        except (ValueError, KeyError, TypeError):
+            ok = False
+        if not ok:
+            raise EngineError(f"the audited training distance cache in {bundle} does not agree with its audit receipt (a file "
+                              "changed after the audit, or the receipt is not a complete one); it is never used. The referee's "
+                              "helper audits a fresh bundle")
+        return {**out, "status": "complete", "receipt_sha256": sha_file(receipt_path), "files_sha256": files,
+                "pairs_verified": receipt["pairs_verified"]}
+
+    def require_referee_training_cache(self):
+        """Real cohort, held-out stages: no validation (or test) commitment while the audit receipt is missing."""
+        if self.world.kind != "real" or self.stage == "develop":
+            return None
+        state = self.referee_cache_state()
+        if state["status"] != "complete":
+            raise EngineError(
+                f"the referee's audited training distance cache has no COMPLETE audit receipt (status '{state['status']}'): on "
+                "the real cohort no held-out forecast is committed before it exists. Next steps: `referee-cache --prepare` "
+                "(after the all-pairs cache is complete), then the lead runs " +
+                REFEREE_CACHE_AUDIT_COMMAND.format(bundle=self.referee_cache_dir()))
+        return state
+
+    def prepare_referee_cache(self):
+        """From the engine's own completed all-pairs cache: a TRAINING-only bundle for the referee's helper (the five cache
+        files, every training arbor, nothing held out) and an unfrozen draft declaration (the three splits with known
+        metadata only, the descriptor, the six method artifacts with the receipt's hash as a placeholder). Never
+        overwrites an audited bundle. The audit itself is run by the lead, with the helper's own command."""
+        cache, lib = self.cache, self.library            # a complete, verified native cache of this library
+        bundle = self.referee_cache_dir()
+        draft_path = bundle / "draft_declaration.json"
+        if draft_path.exists():
+            engine = read_json(draft_path).get("engine", {})
+            if engine.get("pair_cache_sha256") == cache.sha256 and engine.get("library_fingerprint") == lib["fingerprint"]:
+                return {**self.referee_cache_state(), "bundle": str(bundle),
+                        "audit_command": REFEREE_CACHE_AUDIT_COMMAND.format(bundle=bundle), "prepared_now": False}
+            if (bundle / REFEREE_CACHE_DESCRIPTOR["audit_path"]).exists():
+                raise EngineError(f"{bundle} holds an audited bundle of another training library; it is never overwritten "
+                                  "(move it away to prepare a new one)")
+        if bundle.exists():
+            shutil.rmtree(bundle)
+        (bundle / "cache").mkdir(parents=True)
+        for key in REFEREE_CACHE_PATH_KEYS[:-1]:
+            shutil.copyfile(cache.dir / Path(REFEREE_CACHE_DESCRIPTOR[key]).name, bundle / REFEREE_CACHE_DESCRIPTOR[key])
+        train = []
+        for n in lib["ids"]:
+            relative = f"training/{n}.npz"
+            (bundle / "training").mkdir(exist_ok=True)
+            shutil.copyfile(self.out / "library" / f"{n}.npz", bundle / relative)
+            train.append({**self.known_row(n), "arbor_path": relative, "arbor_sha256": sha_file(bundle / relative)})
+        artifacts = {REFEREE_CACHE_DESCRIPTOR[k]: sha_file(bundle / REFEREE_CACHE_DESCRIPTOR[k]) for k in REFEREE_CACHE_PATH_KEYS[:-1]}
+        artifacts[REFEREE_CACHE_DESCRIPTOR["audit_path"]] = REFEREE_CACHE_RECEIPT_PLACEHOLDER
+        draft = {"schema": "axon_engine_referee_cache_draft_v1",
+                 "status": ("DRAFT: an unfrozen draft for the referee's full audit of the training distance cache; not an "
+                            "admissible frozen declaration. Only the audit receipt's hash is a placeholder"),
+                 "splits": {"train": train,
+                            "validation": [self.known_row(n) for n in self.cohort.part_neurons["validation"]],
+                            "test": [self.known_row(n) for n in self.cohort.part_neurons["test"]]},
+                 "training_distance_cache": dict(REFEREE_CACHE_DESCRIPTOR), "method_artifacts": artifacts,
+                 "engine": {"world": self.world.name, "library_fingerprint": lib["fingerprint"],
+                            "training_ids_sha256": lib["training_ids_sha256"], "pair_cache_sha256": cache.sha256,
+                            "pair_cache_directory": str(cache.dir), "code_sha256": engine_code_sha(), "prepared_utc": utc_now()},
+                 "audit_command": REFEREE_CACHE_AUDIT_COMMAND.format(bundle=bundle)}
+        write_json(draft_path, draft, exclusive=True, pretty=True)
+        return {**self.referee_cache_state(), "bundle": str(bundle), "audit_command": draft["audit_command"], "prepared_now": True,
+                "training_arbors": len(train), "pairs": cache.pairs}
 
     # -- isolation -------------------------------------------------------------------------
     def assert_isolated(self, row, state_id, scope):
@@ -2483,7 +3115,20 @@ class Engine:
         raw = {"E1_local_uniform": prior, "E2_local_kernel": prior * kernel, "E3_local_kernel_label": prior * kernel * label,
                "E4_local_kernel_regional": regional_weights * kernel,
                "E5_local_kernel_label_regional": regional_weights * kernel * label}
+        # E7: the query's regional profile as the general reconstruction layer infers it from permitted inputs (through
+        # the bridge), set against each neighbour's MEASURED profile. Without an inferred profile: E2's weights.
+        answer = self.layer_answer(row)
+        upstream = sorted(str(g) for g in answer.upstream_groups)
+        if row.animal in upstream or set(upstream) & self.cohort.heldout_animals:
+            raise LeakError(f"query {neuron}: the general-layer state that was consulted holds its animal or a held-out animal")
+        similarity = None
+        if answer.profile is not None:
+            with layer_errors(f"query {neuron}") as B:
+                similarity = B.profile_similarity(answer.profile, [d["profile"] for d in donors], REGIONS)
+            raw["E7_local_kernel_inferred_profile"] = prior * kernel * similarity["s"]
         weights = {name: w / w.sum() for name, w in raw.items()}
+        if similarity is None:
+            weights["E7_local_kernel_inferred_profile"] = weights["E2_local_kernel"]      # the same array: bit-identical to E2
         choice = {name: T.weighted_medoid(D, w)[0] for name, w in weights.items()}
         w2 = weights["E2_local_kernel"]
         choice["E6_local_consensus"] = choice["E2_local_kernel"]
@@ -2503,8 +3148,19 @@ class Engine:
                 arbor, extra = consensus_prune(arbor, [attach(j)[0] for j in others], w2[others])
             unsupported = "; ".join(f"{int(t['radius_um'])} um: {t['reason']}" for t in how["unsupported"])
             reasons = [r for r in (unsupported, extra.get("fallback_reason")) if r]
+            by_layer, more = name in USES_LAYER_STATE, {}
+            if by_layer:
+                if similarity is None:                # no inferred profile: E2's weights, said with the layer's reason code
+                    reasons.insert(0, f"no_inferred_profile:{answer.reason}")
+                    more = {"inferred_profile_used": False, "weights": [float(v) for v in weights[name]]}
+                else:
+                    more = {"inferred_profile_used": True, "inferred_profile_level": answer.provenance["level"],
+                            "profile_tau": similarity["tau"], "profile_distance_min": float(similarity["d"].min()),
+                            "profile_distance_max": float(similarity["d"].max()),
+                            "similarity": [float(v) for v in similarity["s"]], "weights": [float(v) for v in weights[name]]}
             put(name, arbor, family="engine", requested_policy=name + "+local_attachment_500",
-                executed_policy=name + "+" + how["executed"] + ("+unpruned" if extra.get("fallback_reason") else ""),
+                executed_policy=name + "+" + how["executed"] + ("+unpruned" if extra.get("fallback_reason") else "")
+                + ("+E2_weights" if by_layer and similarity is None else ""),
                 fallback=bool(reasons), fallback_reason="; ".join(reasons) or None,
                 selected_donor=ids[i], donor_ids=list(ids),           # every neighbour enters the choice (E6: also the pruning)
                 details={"k": k, "kernel_bandwidth_um": h, "neighbour_radius_um": float(distance.max()),
@@ -2512,14 +3168,21 @@ class Engine:
                          "label_factor_active": bool(same.any() and not same.all()),
                          "selected_weight": float(weights.get(name, w2)[i]), "soma_shift_um": how["soma_shift_um"],
                          "attachment_radius_um": how["radius_um"], "edge_ratio_min": how.get("edge_ratio_min"),
-                         "edge_ratio_max": how.get("edge_ratio_max"), **{key: v for key, v in extra.items() if key != "fallback_reason"}})
+                         "edge_ratio_max": how.get("edge_ratio_max"), **{key: v for key, v in extra.items() if key != "fallback_reason"},
+                         **more},
+                **({"general_layer": answer.provenance} if by_layer else {}))
         if set(out) != set(METHODS):
             raise EngineError("a forecast is missing for a declared method")
         log = {"query": neuron, "animal": row.animal, "state_id": state_id,
                "state_sha256": regional.proof["model_state_sha256"],
                "state_animals_sha256": ids_sha(sorted(regional.proof["train_animals"])),
                "donor_animals_sha256": scope["animals_sha256"], "donor_ids_sha256": scope["ids_sha256"],
-               "query_animal_in_state": False, "query_animal_in_donors": False}
+               "query_animal_in_state": False, "query_animal_in_donors": False,
+               # the general reconstruction layer's state that was consulted for E7 (none when no finished run exists)
+               "general_layer": {"fold": answer.provenance["fold"], "state_sha256": answer.provenance["state_sha256"],
+                                 "state_animals_sha256": ids_sha(upstream) if upstream else None,
+                                 "used": bool(answer.provenance["used"]), "reason_code": answer.provenance["reason_code"],
+                                 "query_animal_in_state": False}}
         return [out[m] for m in METHODS], log
 
     # -- prediction run --------------------------------------------------------------------
@@ -2543,6 +3206,7 @@ class Engine:
         self.open_cache(verify_files=verify_files)
         for state_id in self.needed_states():
             self.states.get(state_id)
+        self.layer_session()                         # the finished run of the general layer is verified here, or its absence noted
 
     def record_of(self, neuron, f, log):
         row = self.cohort.rows[neuron]
@@ -2550,8 +3214,11 @@ class Engine:
         relative = f"predictions/{f['model']}/{neuron}.npz"
         path = self.stage_dir / relative
         G.save_arbor(path, arbor)
-        uses_state = f["model"] in USES_FITTED_STATE
+        uses_state = f["model"] in USES_REGIONAL_STATE
+        by_layer = f["model"] in USES_LAYER_STATE
         return {
+            # E7 only: the bridge's provenance record (small fields; the lists and the per-file hashes are in the manifest)
+            **({"general_layer": jsonable(f["general_layer"])} if by_layer else {}),
             "query_id": neuron, "neuron": neuron, "animal": row.animal, "full_id": row.full_id, "part": row.part,
             "known_soma_um": list(row.soma), "source_label": row.source_label, "table_tag": row.tag,
             "soma_label": row.soma_label, "hemisphere": row.hemisphere, "reconstruction_type": row.recon_type,
@@ -2562,7 +3229,10 @@ class Engine:
             "donor_pool_sha256": log["donor_ids_sha256"],
             "regional_state_id": log["state_id"] if uses_state else None,
             "regional_state_sha256": log["state_sha256"] if uses_state else None,
-            "upstream_fit_animals_sha256": log["state_animals_sha256"] if uses_state else None,
+            # the training animals behind the fitted state this forecast depends on: the engine's regional state, or
+            # (E7) the general layer's state that was consulted; None when no fitted state touched the forecast
+            "upstream_fit_animals_sha256": (log["state_animals_sha256"] if uses_state else
+                                            log["general_layer"]["state_animals_sha256"] if by_layer else None),
             "details": jsonable(f["details"]),
             "path": relative, "sha256": sha_file(path), "arrays_sha256": arbor_sha(arbor), "nodes": int(len(arbor.xyz))}
 
@@ -2594,7 +3264,11 @@ class Engine:
                                     "included": len(lib["ids"]), "excluded": len(lib["all"]) - len(lib["ids"])},
                 "training_library_fingerprint": lib["fingerprint"], "training_ids_sha256": lib["training_ids_sha256"],
                 "pair_cache_sha256": self.cache.sha256,
-                "regional_states": {s: self.states.file_hashes(s) for s in self.needed_states()}}
+                # the referee's audited training distance cache (late item L6): its receipt, or its recorded absence
+                "referee_training_cache": self.referee_cache_state(),
+                "regional_states": {s: self.states.file_hashes(s) for s in self.needed_states()},
+                # the general layer's finished run and its T1 states (E7), or the recorded absence of a run
+                "general_layer": self.layer_pins(fresh=True)}
 
     def copy_groups(self, queries):
         """[(donor pool, its queries)]: one pool for a held-out stage, one per held-out animal in development."""
@@ -2620,6 +3294,13 @@ class Engine:
                     path = self.stage_dir / record["path"]
                     agrees = record["selected_donor"] == donor and same_tree(G.load_arbor(path), tree)
                     compared += 1
+                    if not agrees and self._referee_cache_used is not None:
+                        # through the audited cache the referee and this replica read the same bitwise matrix: any
+                        # difference means that something was tampered with; nothing is overwritten (round-2 finding)
+                        raise EngineError(
+                            f"the referee's copy {model} of {n} (donor {donor}) through the audited training distance cache "
+                            f"differs from the engine's own copy (donor {record['selected_donor']}), although both read the "
+                            "same distance matrix: the bundle or the receipt cannot be trusted. Nothing is committed")
                     if not agrees:
                         differing.append([n, model, record["selected_donor"], donor])
                         arbor = G.Arbor(np.array(tree[0]), np.array(tree[1]), np.array(tree[2])).validate()
@@ -2630,7 +3311,8 @@ class Engine:
                     record["replica_agreed"] = bool(agrees)
                 if bool(result["same_peptide_fallback"][n]) != bool(records[(n, "peptide_nearest")]["fallback"]):
                     fallback_differing += 1
-        return {"source": "referee copying_baselines", "referee_sha256": referee_hashes(), "pools": len(groups),
+        return {"source": "referee copying_baselines", "referee_sha256": referee_hashes(),
+                "referee_training_cache_receipt_sha256": getattr(self, "_referee_cache_used", None), "pools": len(groups),
                 "queries": sum(len(q) for _, q in groups), "pairs_recomputed_by_the_referee": pairs, "forecasts_compared": compared,
                 "replica_differences": len(differing), "replica_difference_examples": differing[:10],
                 "fallback_flag_differences": fallback_differing, "seconds": round(time.time() - started, 1)}
@@ -2650,6 +3332,9 @@ class Engine:
         if stage != "develop" and self.world.kind == "real" and self.protocol_state()["draft"]:
             raise EngineError("the biological protocol is still marked 'STATUS: DRAFT'; it is finalised (and its hash pinned) "
                               "before any held-out forecast is committed")
+        if stage != "develop":
+            self.require_referee_training_cache()
+            self.require_general_layer()
         self.ensure_library()
         queries = self.queries()
         missing = [s for s in self.needed_states() if s not in self.states.manifest()["states"]]
@@ -2721,14 +3406,23 @@ class Engine:
         if stage == "develop":
             chosen, used = [], 0
             for scope, neurons in groups:
-                if used + scope["pairs"] > spec["develop_api_pair_budget"] and chosen:
+                # the budget holds for the first group too (late item L3): a development pool larger than the budget is
+                # never recomputed by the referee here; the replica's forecasts are kept, which changes no forecast
+                if used + scope["pairs"] > spec["develop_api_pair_budget"]:
                     break
                 chosen.append((scope, neurons))
                 used += scope["pairs"]
-            official = self.apply_referee_copies(chosen, records)
+            if chosen:
+                official = self.apply_referee_copies(chosen, records)
+            else:
+                official = {"source": "engine replica (pinned cache, the contract's arithmetic)", "referee_sha256": referee_hashes(),
+                            "pools": 0, "queries": 0, "pairs_recomputed_by_the_referee": 0, "forecasts_compared": 0,
+                            "replica_differences": 0, "replica_difference_examples": [], "fallback_flag_differences": 0,
+                            "api_verification": "no development API verification (pair budget)",
+                            "smallest_pool_pairs": min(s["pairs"] for s, _ in groups) if groups else 0}
             official.update({"api_verified": len(chosen) == len(groups), "pools_in_stage": len(groups),
                              "animals_with_referee_copies": [s["exclude_animal"] for s, _ in chosen],
-                             "rule": spec["develop"]})
+                             "pair_budget": spec["develop_api_pair_budget"], "rule": spec["develop"]})
         elif groups[0][0]["pairs"] <= spec["heldout_inline_api_pair_limit"]:
             official = self.apply_referee_copies(groups, records)
             official["api_verified"] = True
@@ -2741,6 +3435,8 @@ class Engine:
         donor_lists = {scope["ids_sha256"]: scope["ids"] for scope, _ in groups}
         upstream = {ids_sha(sorted(self.states.get(s).proof["train_animals"])): sorted(self.states.get(s).proof["train_animals"])
                     for s in needed}
+        layer_lists = self.layer_upstream_lists(logs)       # the training brain samples behind every general-layer state consulted
+        upstream.update(layer_lists)
         manifest = {
             "schema": "axon_engine_prediction_manifest_v2", "label": self.label(), "world": self.world.name,
             "world_kind": self.world.kind, "stage": stage, "part": PART_OF_STAGE[stage],
@@ -2760,8 +3456,14 @@ class Engine:
                                  "animals_sha256": states[s]["animals_sha256"], "animals": states[s]["animals"],
                                  "training_ids_sha256": states[s]["training_ids_sha256"],
                                  "files_sha256": self.states.file_hashes(s)} for s in needed],
-            "upstream_fit_animals": sorted({a for s in needed for a in self.states.get(s).proof["train_animals"]}),
+            "upstream_fit_animals": sorted({a for s in needed for a in self.states.get(s).proof["train_animals"]}
+                                           | {a for animals in layer_lists.values() for a in animals}),
             "upstream_lists": upstream,
+            "general_layer": {"what": CONFIG["general_layer"]["inferred_input"], "pins": pins["general_layer"],
+                              "registration": self.states.layer_registration(),
+                              "adapter_status": "blocked: independent validation pending",
+                              "upstream_lists": sorted(layer_lists),
+                              "use_by_E7": layer_value_counts(predictions)},
             "methods": [{"name": m, "role": method_role(m), "what": METHOD_TEXT[m], "user_label": USER_LABEL.get(m),
                          "uses_fitted_state": m in USES_FITTED_STATE,
                          "matched_controls": list(MATCHED_CONTROLS.get(m, ()))} for m in METHODS],
@@ -2773,6 +3475,8 @@ class Engine:
         commit = {"schema": "axon_engine_prediction_commitment_v2", "stage": stage, "world": self.world.name,
                   "manifest_sha256": sha_file(path), "predictions": len(predictions), "queries": len(queries),
                   "methods": list(METHODS), "official_copies_api_verified": official["api_verified"],
+                  "referee_sha256": referee_hashes(),
+                  "referee_training_cache_receipt_sha256": pins["referee_training_cache"].get("receipt_sha256"),
                   "committed_utc": utc_now(),
                   "statement": ("development on training animals, leave one animal out: every forecast was written before it "
                                 "was scored and used neither donors nor regional rows of its own animal (checked for each "
@@ -2804,12 +3508,16 @@ class Engine:
                 raise LeakError(f"prediction log: query {log['query']} is not isolated from state {log['state_id']}")
             if ids_sha(sorted(animals)) != log["state_animals_sha256"]:
                 raise EngineError("prediction log: state animal hash differs")
+            consulted = log["general_layer"]["state_animals_sha256"]
+            if consulted is not None and (consulted not in manifest["upstream_lists"] or log["animal"] in manifest["upstream_lists"][consulted]):
+                raise LeakError(f"prediction log: query {log['query']} is not isolated from the general-layer state that was consulted")
         pools, pool_animals = {}, {}
         for key, ids in manifest["donor_lists"].items():
             if ids_sha(ids) != key or not set(ids) <= train_ids:
                 raise LeakError("a declared donor pool is not a list of training-library neurons")
             pools[key] = set(ids)
             pool_animals[key] = {self.cohort.rows[n].animal for n in ids}
+        rows = {(p["query_id"], p["model"]): p for p in manifest["predictions"]}
         for p in manifest["predictions"]:
             pool = pools[p["donor_pool_sha256"]]
             if p["selected_donor"] not in p["donor_ids"] or not set(p["donor_ids"]) <= pool:
@@ -2818,10 +3526,51 @@ class Engine:
                 raise LeakError(f"{p['query_id']}/{p['model']}: the query's animal supplied a donor")
             if p["model"] in COPY_BASELINES and len(p["donor_ids"]) != 1:
                 raise EngineError(f"{p['query_id']}/{p['model']}: a copy has exactly one donor")
-            uses = p["model"] in USES_FITTED_STATE
+            uses = p["model"] in USES_REGIONAL_STATE
             if uses != (p["regional_state_id"] is not None) or (uses and p["upstream_fit_animals_sha256"] not in manifest["upstream_lists"]):
                 raise EngineError(f"{p['query_id']}/{p['model']}: its fitted-state provenance is not recorded")
+            if p["model"] in USES_LAYER_STATE:
+                self.audit_layer_row(p, manifest, rows)
+            elif (not uses and p["upstream_fit_animals_sha256"] is not None) or "general_layer" in p:
+                raise EngineError(f"{p['query_id']}/{p['model']}: a method without a fitted state names one")
         return True
+
+    def audit_layer_row(self, p, manifest, rows):
+        """One E7 row: its general-layer provenance is complete and consistent; the state that was consulted is a
+        state of the pinned finished run and never saw the query's animal; without an inferred profile the row
+        says fallback with the reason, and its arrays are E2's."""
+        where = f"{p['query_id']}/{p['model']}"
+        layer, pins = p.get("general_layer"), manifest["pins"]["general_layer"]
+        if not isinstance(layer, dict) or not {"used", "reason_code", "fold", "level", "state_sha256", "run_complete_sha256",
+                                               "adapter_status", "code_sha256"} <= set(layer):
+            raise EngineError(f"{where}: its fitted-state provenance is not recorded (general layer)")
+        if layer["adapter_status"] != "blocked: independent validation pending":
+            raise EngineError(f"{where}: the axon adapter was not in its blocked state")
+        sha = p["upstream_fit_animals_sha256"]
+        consulted = layer["state_sha256"] is not None
+        if consulted != (sha is not None) or (consulted and sha not in manifest["upstream_lists"]):
+            raise EngineError(f"{where}: its fitted-state provenance is not recorded (general layer)")
+        if consulted:
+            run = pins["run"]
+            if run is None or layer["run_complete_sha256"] != run["run_complete_sha256"] \
+                    or run["states"].get(layer["fold"], {}).get("state_hash") != layer["state_sha256"]:
+                raise EngineError(f"{where}: its inferred profile does not come from a state of the pinned finished run")
+            if p["animal"] in manifest["upstream_lists"][sha] or set(manifest["upstream_lists"][sha]) & self.cohort.heldout_animals:
+                raise LeakError(f"{where}: the general-layer state that was consulted holds the query's animal or a held-out animal")
+            if (layer["fold"] == "serving") != (self.cohort.rows[p["query_id"]].part != "train"):
+                raise LeakError(f"{where}: a training query is answered by its fold's states and a held-out query by the "
+                                "all-training states, never otherwise")
+        elif layer["used"] or layer["reason_code"] != LAYER_RUN_MISSING or pins["run"] is not None:
+            raise EngineError(f"{where}: no general-layer state was consulted although a finished run is pinned")
+        if layer["used"]:
+            if layer["level"] not in ("engine", "baseline") or layer["reason_code"] is not None \
+                    or (layer["level"] == "engine") != (layer["value_state_hash"] == layer["state_sha256"]):
+                raise EngineError(f"{where}: the kind of inferred value it used is not recorded")
+        else:
+            twin = rows[(p["query_id"], "E2_local_kernel")]
+            if not p["fallback"] or f"no_inferred_profile:{layer['reason_code']}" not in (p["fallback_reason"] or "") \
+                    or p["arrays_sha256"] != twin["arrays_sha256"] or p["selected_donor"] != twin["selected_donor"]:
+                raise EngineError(f"{where}: without an inferred profile the forecast must be E2's, and must say why")
 
     # -- the committed bundle, bound to the current method ---------------------------------------
     def verify_commitment(self):
@@ -2879,6 +3628,7 @@ class Engine:
                 if record["selected_donor"] != result["donor_proof"][model][n] or not same_tree(G.load_arbor(self.stage_dir / record["path"]), tree):
                     differing.append([n, model, record["selected_donor"], result["donor_proof"][model][n]])
         record = {"stage": self.stage, "manifest_sha256": commit["manifest_sha256"], "referee_sha256": referee_hashes(),
+                  "referee_training_cache_receipt_sha256": self._referee_cache_used,
                   "queries": len(manifest["queries"]), "forecasts_compared": 4 * len(manifest["queries"]),
                   "pairs_recomputed_by_the_referee": scope["pairs"], "differences": len(differing),
                   "difference_examples": differing[:20], "all_equal": not differing,
@@ -3081,6 +3831,7 @@ class Engine:
                                       else admission["unavailable_at_source"]),
             "unit": CONFIG["unit_of_independence"], "summary": result["summary"], "per_animal": result["per_animal"],
             "fallbacks": fallback_counts(manifest["predictions"], set(scored_ids)),
+            "general_layer_use_by_E7": layer_value_counts(manifest["predictions"], set(scored_ids)),
             "queries": rows}
         if stage == "develop":
             output["development_only"] = True
@@ -3156,8 +3907,9 @@ class Engine:
     def git_state(self):
         """Engine, protocol and tests must be committed and unmodified for a real freeze and test. The pinned
         dependencies the commit does not hold (frozen prototype, referee, ignored records) are listed with hashes."""
-        pinned = list(ENGINE_FILES) + ["reports/axon_engine_protocol.md", "tests/test_axon_engine.py"]
-        dependencies = sorted(FROZEN_PINS["source_sha256"]) + [FREEZE_RECORD] + sorted(REFEREE_FILES.values()) + [REFEREE_CONTRACT]
+        pinned = list(ENGINE_FILES) + ["reports/axon_engine_protocol.md", "tests/test_axon_engine.py", BRIDGE_TEST_FILE]
+        dependencies = (sorted(FROZEN_PINS["source_sha256"]) + [FREEZE_RECORD] + sorted(REFEREE_FILES.values()) + [REFEREE_CONTRACT]
+                        + list(LAYER_CODE_FILES))
         try:
             run = lambda *args: subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True, timeout=30).stdout
             head = run("rev-parse", "HEAD").strip()
@@ -3217,6 +3969,13 @@ class Engine:
         stored = self.states.file_hashes("all_training")["model_state_sha256"]
         if refit != stored:
             raise EngineError("the stored all-training regional state is not what a fresh fit on the training animals gives")
+        # the general layer's finished run (E7) is verified again, in full, through a fresh bridge session: the
+        # declaration against code and inputs, every bound file, and the all-training T1 state by its fingerprint
+        self._layer = self._layer_pins = None
+        layer_pins = self.layer_pins(fresh=True)
+        if layer_pins["run"] is not None:
+            with layer_errors("the freeze"):
+                self.layer_session().layer(None)
         selected = gate["selected"]
         reference = gate["descriptive_reference"]
         roles = self.referee_roles({"selected": selected, "descriptive_reference": reference})
@@ -3227,6 +3986,12 @@ class Engine:
                   "family": manifest["family"], "selected": selected, "descriptive_reference": reference,
                   "validation_method_equals_frozen_method": True,
                   "all_training_state_refit_sha256": refit,
+                  "referee_training_cache_receipt_sha256": self.referee_cache_state().get("receipt_sha256"),
+                  "general_layer": {"finished_run_verified_at_freeze": layer_pins["run"] is not None,
+                                    "reason": layer_pins["reason"], "registration": self.states.layer_registration(),
+                                    "note": ("the general layer's all-training state is NOT fitted again here: the layer's "
+                                             "benchmark runs once and belongs to its owner; its files are pinned by hash and "
+                                             "verified against the run's completion record")},
                   "validation": {"manifest_sha256": commit["manifest_sha256"], "metrics_sha256": metrics_sha,
                                  "admission_sha256": sha_file(validate / "ADMISSION_COMPLETE.json"),
                                  "admitted": metrics["scored_queries"], "admitted_animals": metrics["scored_animals"],
@@ -3293,6 +4058,26 @@ class Engine:
     def bundle_models(roles):
         return [roles["candidate"], *roles["copy_baselines"], *roles["matched_controls"]]
 
+    def bundle_upstream(self, manifest, queries, models):
+        """{(query, model): the training animals behind the fitted state of that committed forecast} for a bundle: the
+        engine's all-training regional state (F1, F2, E4, E5), the general layer's state that was consulted (E7; on
+        fallback rows too, because the state's support decides the fallback), an empty list for every other method."""
+        records = {(p["query_id"], p["model"]): p for p in manifest["predictions"]}
+        regional = sorted(self.states.get("all_training").proof["train_animals"])
+        out = {}
+        for q in queries:
+            for model in models:
+                sha = records[(q, model)]["upstream_fit_animals_sha256"]
+                if model in USES_REGIONAL_STATE:
+                    if manifest["upstream_lists"].get(sha) != regional:
+                        raise EngineError(f"{q}/{model}: the committed forecast does not name the all-training regional state")
+                    out[(q, model)] = regional
+                elif model in USES_LAYER_STATE:
+                    out[(q, model)] = [] if sha is None else list(manifest["upstream_lists"][sha])
+                else:
+                    out[(q, model)] = []
+        return out
+
     def require_referee_can_seal(self, roles):
         """Before any test truth is opened: the referee on disk must be able to seal this bundle honestly."""
         preflight = referee_preflight()
@@ -3332,8 +4117,17 @@ class Engine:
             shutil.copyfile(source, target)
             artifacts[relative] = Ref.sha(target)
 
-        for relative in list(ENGINE_FILES) + ["tests/test_axon_engine.py"] + sorted(FROZEN_PINS["source_sha256"]):
+        for relative in (list(ENGINE_FILES) + ["tests/test_axon_engine.py"] + sorted(FROZEN_PINS["source_sha256"])
+                         + list(LAYER_CODE_FILES) + ([BRIDGE_TEST_FILE] if (ROOT / BRIDGE_TEST_FILE).exists() else [])):
             bind(ROOT / relative, f"method/source/{relative}")
+        with layer_errors("the method artifacts") as B:        # the finished run E7 read: completion record, bound files, T1 state
+            for name, source in B.run_artifacts(self.world, folds=(None,)):
+                bind(source, f"method/general_layer/{name}")
+        if (self.states.dir / "general_layer.json").exists():
+            bind(self.states.dir / "general_layer.json", "method/general_layer/engine_registration.json")
+        anchor_path = self.layer_anchor_path()
+        if anchor_path is not None and anchor_path.exists():
+            bind(anchor_path, "method/general_layer/world_anchor.json")
         if self.world.protocol and os.path.exists(self.world.protocol):
             bind(self.world.protocol, "method/protocol/axon_engine_protocol.md")
         bind(self.out / "freeze" / "frozen.json", "method/freeze/frozen.json")
@@ -3344,10 +4138,13 @@ class Engine:
         bind(self.out / "state_manifest.json", "method/regional_state/state_manifest.json")
         bind(self.cache.dir / "COMPLETE.json", "method/pair_cache/COMPLETE.json")
         bind(self.cache.dir / "index.json", "method/pair_cache/index.json")
+        cache_state = self.referee_cache_state()
+        if cache_state["status"] == "complete":      # the audited training distance cache: its six files, bound (L6)
+            for key in REFEREE_CACHE_PATH_KEYS:
+                bind(self.referee_cache_dir() / REFEREE_CACHE_DESCRIPTOR[key], REFEREE_CACHE_DESCRIPTOR[key])
         for name in ("PREDICTION_COMMITMENT.json", "prediction_manifest.json", "ADMISSION_COMPLETE.json", "truth_ingestion_log.json"):
             bind(self.stage_dir / name, f"method/test/{name}")
-        fitted = sorted(m for m in self.bundle_models(roles) if m in USES_FITTED_STATE)
-        state_animals = sorted(self.states.get("all_training").proof["train_animals"])
+        upstream = self.bundle_upstream(manifest, admission["admitted_ids"], self.bundle_models(roles))
         return {
             "geometry_contract": {
                 "units": "um", "axes": ["AP", "DV", "ML"],
@@ -3365,10 +4162,11 @@ class Engine:
             "splits": {"train": train, "validation": validation, "test": test},
             "excluded_ids": [n for n in cohort.order if n not in included],
             "test_excluded_ids": [], "test_excluded_animals": list(cohort.never_heldout),
-            "upstream_fit_animals": state_animals if fitted else [],
+            "upstream_fit_animals": sorted({a for animals in upstream.values() for a in animals}),
             "models": {"candidate": roles["candidate"], "copy_baselines": list(roles["copy_baselines"]),
                        "matched_controls": list(roles["matched_controls"])},
-            "config": dict(Ref.CONFIG)}
+            "config": dict(Ref.CONFIG),
+            **({"training_distance_cache": dict(REFEREE_CACHE_DESCRIPTOR)} if cache_state["status"] == "complete" else {})}
 
     def seal(self):
         """Build the referee's bundle for the test and obtain its seal: freeze_declaration, copying_baselines,
@@ -3415,13 +4213,15 @@ class Engine:
         frozen = Ref.freeze_declaration(base, declaration)
         queries, models = admission["admitted_ids"], self.bundle_models(roles)
         records = {(p["query_id"], p["model"]): p for p in manifest["predictions"]}
-        fitted_animals = sorted(self.states.get("all_training").proof["train_animals"])
+        upstream = self.bundle_upstream(manifest, queries, models)
         # the four official copies once more through the referee's own function (small pools), on the admitted queries
         scope = self.scope(None)
         api_in_seal = scope["pairs"] <= CONFIG["official_copies"]["heldout_inline_api_pair_limit"]
         if api_in_seal:
             donors = [{**row, "arbor": Ref.G.load_tree(base / row["arbor_path"])} for row in declaration["splits"]["train"]]
-            copies = Ref.copying_baselines(donors, declaration["splits"]["test"])
+            cached = ({"cache_base": base, "training_distance_cache": declaration["training_distance_cache"]}
+                      if "training_distance_cache" in declaration else {})
+            copies = Ref.copying_baselines(donors, declaration["splits"]["test"], **cached)
         rows = []
         for q in queries:
             for model in models:
@@ -3439,13 +4239,18 @@ class Engine:
                         raise EngineError(f"{q}/{model}: the committed copy is not the referee's own copy; nothing is sealed")
                 rows.append({"query_id": q, "model": model, "path": relative, "sha256": record["sha256"],
                              "donor_ids": list(record["donor_ids"]),
-                             "upstream_fit_animals": fitted_animals if model in USES_FITTED_STATE else []})
+                             "upstream_fit_animals": list(upstream[(q, model)]),
+                             # permitted metadata of the query (the true hemisphere of the index); the viewer export reads it
+                             "hemisphere": record["hemisphere"],
+                             **({"general_layer": record["general_layer"]} if model in USES_LAYER_STATE else {})})
         bundle_manifest = {"declaration_sha256": Ref.sha(base / "declaration.json"), "predictions": rows,
                            "upstream_fit_animals": list(declaration["upstream_fit_animals"])}
         info = {"engine_commitment_manifest_sha256": commit["manifest_sha256"], "admission_sha256": admission["_sha256"],
                 "freeze_sha256": freeze["_sha256"], "roles": roles, "models": models, "queries": len(queries),
                 "forecasts": len(rows), "declaration_sha256": frozen["declaration_sha256"],
-                "excluded_ids": len(declaration["excluded_ids"]), "copying_baselines_called_for_the_bundle": bool(api_in_seal)}
+                "excluded_ids": len(declaration["excluded_ids"]), "copying_baselines_called_for_the_bundle": bool(api_in_seal),
+                "referee_training_cache_receipt_sha256": (declaration["method_artifacts"][REFEREE_CACHE_DESCRIPTOR["audit_path"]]
+                                                          if "training_distance_cache" in declaration else None)}
         return base, declaration, bundle_manifest, info
 
     def score_test(self):
@@ -3528,6 +4333,7 @@ class Engine:
             "unit": CONFIG["unit_of_independence"], "methods_scored_by_the_referee": models,
             "summary": mine["summary"], "per_animal": mine["per_animal"],
             "fallbacks": fallback_counts([p for p in manifest["predictions"] if p["model"] in models], set(admission["admitted_ids"])),
+            "general_layer_use_by_E7": layer_value_counts(manifest["predictions"], set(admission["admitted_ids"])),
             "verdict": verdict,
             "subgroups": subgroup_report(rows, models, selected, controls=[m for m in models if m in CONTROLS]),
             "referee_subgroups": {"by_peptide": {k: {x: v[x] for x in ("neurons", "independent_animals", "interpretation")}
@@ -3564,7 +4370,61 @@ class Engine:
         if not problem:
             out["pair_cache"] = self.pair_cache().progress()
         out["referee"] = {"sha256": referee_hashes(), "preflight": referee_preflight()}
+        with layer_errors("status") as B:
+            out["general_layer"] = B.run_status(self.world)
+        out["general_layer"]["registration"] = self.states.layer_registration()
         return out
+
+    def prepare_general_layer(self):
+        """SYNTHETIC worlds only: make this world's layer world from its training rows and run the general layer's
+        own benchmark on it once (declaration, run, evidence, serving states). On the real cohort this is refused:
+        the layer's benchmark is its owner's single run, and the engine only reads it when it is finished."""
+        if self.world.kind != "synthetic":
+            raise EngineError("the engine never freezes, runs, scores or serves the general reconstruction layer's benchmark on "
+                              "the real cohort; it reads a finished run when one exists (general_layer_run_missing otherwise)")
+        started = time.time()
+        with layer_errors("the synthetic run") as B:
+            before = B.run_pins(self.world, folds="all")["run"]
+            status = B.ensure_synthetic_run(self.world)
+            run = B.run_pins(self.world, folds="all")["run"]
+        if run is not None:
+            if before is None:
+                self.write_layer_anchor(run)           # the step that built the run anchors it, once
+            self.check_layer_anchor(run)               # a run found already finished must be the anchored one
+            self.states.register_layer(run)            # the step that built the run registers it
+        self._layer = self._layer_pins = None
+        pins = self.layer_pins(fresh=True)
+        self.states.manifest()
+        return {**{k: status.get(k) for k in ("layer_world", "finished_run", "verified", "status", "best_comparator",
+                                               "best_comparator_params", "run_complete_sha256")},
+                "states": {key: entry["state_hash"] for key, entry in pins["run"]["states"].items()},
+                "what": ("the general layer's benchmark on this synthetic world's TRAINING rows with the layer's own small "
+                         "grid; a mechanism check, not biological evidence"),
+                "seconds": round(time.time() - started, 1)}
+
+
+def layer_value_counts(predictions, queries=None):
+    """What E7 did with the general reconstruction layer, forecast by forecast: an engine-level value, a flagged
+    baseline-level value (by comparator), or no inferred profile and E2's weights (by reason code)."""
+    out = {"forecasts": 0, "engine_level_value": 0, "baseline_level_value": 0, "baseline_by_comparator": Counter(),
+           "fallback_to_E2_weights": 0, "fallback_by_reason": Counter(), "codes": Counter(), "folds": Counter()}
+    for p in predictions:
+        layer = p.get("general_layer")
+        if layer is None or (queries is not None and p["query_id"] not in queries):
+            continue
+        out["forecasts"] += 1
+        if not layer["used"]:
+            out["fallback_to_E2_weights"] += 1
+            out["fallback_by_reason"][str(layer["reason_code"])] += 1
+        elif layer["level"] == "engine":
+            out["engine_level_value"] += 1
+        else:
+            out["baseline_level_value"] += 1
+            out["baseline_by_comparator"][str(layer["comparator"])] += 1
+        out["folds"][str(layer["fold"])] += 1
+        for code in layer["codes"]:
+            out["codes"][code] += 1
+    return {k: (dict(sorted(v.items())) if isinstance(v, Counter) else v) for k, v in out.items()}
 
 
 def fallback_counts(predictions, queries):
@@ -3961,8 +4821,18 @@ SYNTHETIC_KINDS = {
     "none": "neither label nor soma position carries route information (route drawn uniformly at random per neuron)",
     "dense": "the soma neighbourhood carries route information, the source label does not: dominant route f(soma zone) with probability 0.75; labels assigned at random",
     "informative_deterministic": "route = f(label, soma zone) with probability 1: the regime in which copying the nearest same-label neuron is already nearly optimal",
+    "fine_zones": ("the dominant route of a neuron (probability 0.75) is set by which of 27 soma cells of 200 um its soma lies in, and "
+                   "cells that share a face have different routes; the source label carries no route information. There are more "
+                   "zones than the frozen regional model has components, so the zone shows only in the regional profiles of nearby "
+                   "training neurons"),
 }
-SYNTHETIC_SEEDS = {"informative": 2026111001, "none": 2026111002, "dense": 2026111003, "informative_deterministic": 2026111004}
+# 'fine_zones' exists to exercise the referee path with E7 in the candidate slot. Its seed was CHOSEN for that: of the
+# eight generator seeds 2026111005 to 2026111012 the validation gate selected E7 in three (...006, ...007, ...012), and
+# ...007 has the clearest validation margin. In none of the three did E7 beat its matched control E2 on the test
+# animals. The record of all eight is data/interim/synarch_axon_bridge/seed_scan_fine_zones.json. A mechanism check;
+# it says nothing in favour of E7.
+SYNTHETIC_SEEDS = {"informative": 2026111001, "none": 2026111002, "dense": 2026111003, "informative_deterministic": 2026111004,
+                   "fine_zones": 2026111007}
 SYNTHETIC_DOMINANCE = 0.75
 SYNTHETIC_LABELS = ("SynA", "SynB", "SynC", "SynD")
 SYNTHETIC_SIZES = {
@@ -3999,7 +4869,11 @@ def _synthetic_route(kind, label_index, soma, rng):
     if kind == "none":
         family = int(rng.integers(8))
     else:
-        dominant = 2 * label_index + zone_ml if kind.startswith("informative") else 2 * (2 * zone_ap + zone_ml)
+        if kind == "fine_zones":                 # 3 x 3 x 3 cells of 200 um over the soma cube; face neighbours differ
+            i, j, k = (min(int((soma[axis] - low) // 200.0), 2) for axis, low in ((0, 6200.0), (1, 5700.0), (2, 4700.0)))
+            dominant = (i + 2 * j + 4 * k) % 8
+        else:
+            dominant = 2 * label_index + zone_ml if kind.startswith("informative") else 2 * (2 * zone_ap + zone_ml)
         if kind == "informative_deterministic" or rng.random() < SYNTHETIC_DOMINANCE:
             family = dominant
         else:
@@ -4038,7 +4912,7 @@ def _synthetic_neuron(kind, label_index, soma, rng, *, axon_code, dendrites=True
         if rng.random() < 0.5:                                 # an idiosyncratic collateral
             start = main[int(len(main) * rng.uniform(0.3, 0.8))]
             path(_polyline(xyz[start], xyz[start] + rng.uniform(1000.0, 2000.0) * _unit(rng.normal(size=3)), rng), start, axon_code)
-        if rng.random() < 0.3:                                 # a marker inside the path (connector)
+        if rng.random() < 0.3:                                 # a marker inside the path (axon by inheritance)
             types[main[len(main) // 2]] = 10
         if rng.random() < 0.3:                                 # a marker at a tip (terminal twig)
             xyz.append(xyz[second[-1]] + np.array([3.0, 2.0, 1.0]))
@@ -4209,6 +5083,8 @@ def hidden_outcome_canary(directory, stage, *, workers=1, log=None):
     engine.build_library()
     engine.build_cache(siblings=[original / "paircache"])
     engine.states.build_many(engine.needed_states())
+    if manifest["pins"]["general_layer"]["run"] is not None:      # the general layer's run is rebuilt from scratch as well
+        engine.prepare_general_layer()
     engine.prepare_prediction()
     committed = {(p["query_id"], p["model"]): p for p in manifest["predictions"]}
     differing, skipped = [], 0
@@ -4223,12 +5099,14 @@ def hidden_outcome_canary(directory, stage, *, workers=1, log=None):
     shutil.rmtree(copy)
     return {"stage": stage, "held_out_neurons_scrambled": len(changed), "forecasts_compared": len(committed) - skipped,
             "official_copies_skipped_because_the_replica_differed": skipped,
+            "general_layer_run_rebuilt": manifest["pins"]["general_layer"]["run"] is not None,
             "forecasts_differing": len(differing), "bit_identical": not differing, "examples": differing[:5]}
 
 
-def run_synthetic(kind, directory, *, size="standard", workers=1, log=print, develop=True, canary=True, family="all"):
-    """The whole pipeline on one synthetic world: library, all-pairs cache, states, development pass,
-    validation (forecasts, admission, scoring, both gates), freeze, test forecasts, canaries, admission, the
+def run_synthetic(kind, directory, *, size="standard", workers=1, log=print, develop=True, canary=True, family="all", layer=True):
+    """The whole pipeline on one synthetic world: library, all-pairs cache, states, the general layer's own
+    benchmark on the world's training rows (for E7; `layer=False` leaves it out and E7 falls back), development
+    pass, validation (forecasts, admission, scoring, both gates), freeze, test forecasts, canaries, admission, the
     referee's seal and single scoring, and the refusal to repeat any once-only step."""
     directory = Path(directory)
     started = time.time()
@@ -4245,9 +5123,12 @@ def run_synthetic(kind, directory, *, size="standard", workers=1, log=print, dev
     states = dev.states.build_many(list(dev.states.plan) if develop else ["all_training"], workers=workers)
     out["states"] = {s: {"animals": e["animals"], "selected_k": e["fit"]["selected_k"],
                          "held_out_animals_in_state": e["validation_or_test_animals_in_state"]} for s, e in states.items()}
+    out["general_layer"] = dev.prepare_general_layer() if layer else {"finished_run": False, "reason": LAYER_RUN_MISSING}
+    out["general_layer_use_by_E7"] = {}
     if develop:
         commit = dev.predict()
         d = dev.score()
+        out["general_layer_use_by_E7"]["develop"] = d["general_layer_use_by_E7"]
         out["develop"] = {"queries": d["scored_queries"], "animals": d["scored_animals"], "summary": brief(d["summary"]),
                           "official_copies": {k: d["official_copies"][k] for k in ("api_verified", "pools", "pools_in_stage",
                                                                                    "forecasts_compared", "replica_differences")}}
@@ -4256,6 +5137,7 @@ def run_synthetic(kind, directory, *, size="standard", workers=1, log=print, dev
     out["validation_canary"] = hidden_outcome_canary(directory, "validate", log=None) if canary else None
     admitted = val.admit()
     v = val.score()
+    out["general_layer_use_by_E7"]["validate"] = v["general_layer_use_by_E7"]
     out["validate"] = {"declared": v["declared_queries"], "scored": v["scored_queries"], "animals": v["scored_animals"],
                        "excluded_by_rule": v["excluded_by_rule"], "summary": brief(v["summary"]),
                        "official_copies": {k: v["official_copies"].get(k) for k in ("source", "api_verified", "forecasts_compared", "replica_differences")},
@@ -4277,6 +5159,7 @@ def run_synthetic(kind, directory, *, size="standard", workers=1, log=print, dev
         admission = test.admit()
         sealed = test.seal()
         t = test.score()
+        out["general_layer_use_by_E7"]["test"] = t["general_layer_use_by_E7"]
         out["test"] = {"declared": t["declared_queries"], "admitted": admission["admitted"], "scored": t["scored_queries"],
                        "animals": t["scored_animals"], "admission_read_forecasts": admission["forecasts_read"],
                        "excluded_by_rule": t["excluded_by_rule"], "scored_by": t["scored_by"],

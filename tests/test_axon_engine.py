@@ -9,12 +9,20 @@ engine and really called; it is never edited or patched here (one test wraps its
     python3 -I -m pytest tests/test_axon_engine.py -q
 """
 import json
+import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
-import numpy as np
-import pytest
+# Every process that calls the referee runs with exactly these four thread variables (late item L6): the referee's
+# audited distance cache records them, and the engine refuses the referee without them. They are set BEFORE numpy is
+# imported, because numpy's thread pools are fixed when it loads (round-2 finding: the engine checks the pools).
+THREADS = {v: "1" for v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS")}
+os.environ.update(THREADS)
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "analysis"))
@@ -179,7 +187,7 @@ def test_engine_uses_the_frozen_modules_five_policies_and_the_contracts_four_cop
     assert Path(T.__file__).name == "brm_template.py" and Path(G.__file__).name == "d110_geometry.py"
     assert tuple(T.POLICIES) == ("baseline", "uniform_anchor_500", "conditional_anchor_500", "uniform_anchor_1000", "conditional_anchor_1000")
     assert set(E.FROZEN_POLICY_OF.values()) == set(T.POLICIES)
-    assert len(E.ENGINE_CANDIDATES) <= 6 and len(E.METHODS) == len(set(E.METHODS)) == 15
+    assert len(E.ENGINE_CANDIDATES) <= 7 and len(E.METHODS) == len(set(E.METHODS)) == 16      # E1 to E7; 7 controls + 9 candidates
     assert E.OFFICIAL_COPIES == ("nearest", "medoid", "peptide_nearest", "peptide_medoid") == tuple(E.referee().COPIES)
     assert set(E.CONTROLS) == set(E.OFFICIAL_COPIES) | {"C1_medoid_copy", "C4_uniform_attach_500", "C5_uniform_attach_1000"}
     assert "sampled panels" in E.CONFIG["donor_pools"] and E.CONFIG["donor_pools"]["sampled panels"] == "none"
@@ -204,7 +212,7 @@ def test_axon_rule_gives_the_same_arbor_for_type2_and_type0_coding_and_matches_t
     # the frozen extractor (type 2 only) and this engine in frozen mode: bit-identical
     frozen = G.resample(G.extract_explicit_axon(two, False), 50.0)
     assert E.same_arbor(frozen, E.frozen_replay_arbor(two, False))
-    # plan rule: the marker inside the path is a connector, the terminal marker is axon cable (3 um more)
+    # plan rule: the marker inside the path is axon by inheritance (no connector node), the terminal marker is axon cable (3 um more)
     assert log2["terminal_marker_twig_nodes"] == 1 and log2["terminal_marker_twig_um"] == pytest.approx(3.0)
     assert a2.cable() == pytest.approx(frozen.cable() + 3.0)
     # nothing of the dendrite or of its marker is in the axon
@@ -623,8 +631,10 @@ def test_the_frozen_baseline_and_uniform_policies_do_not_depend_on_the_numbers_o
             else:
                 assert E.same_arbor(one, two), policy
     assert changed                                                           # the conditional weights did see the other state
-    assert set(E.USES_FITTED_STATE) == {"F1_conditional_attach_500", "F2_conditional_attach_1000",
-                                        "E4_local_kernel_regional", "E5_local_kernel_label_regional"}
+    assert set(E.USES_REGIONAL_STATE) == {"F1_conditional_attach_500", "F2_conditional_attach_1000",
+                                          "E4_local_kernel_regional", "E5_local_kernel_label_regional"}
+    # E7's fitted state is the general reconstruction layer's, not this regional state (tests/test_synarch_axon_bridge.py)
+    assert set(E.USES_FITTED_STATE) == set(E.USES_REGIONAL_STATE) | {"E7_local_kernel_inferred_profile"}
 
 
 # ------------------------------------------------------------------------------------------
@@ -1126,7 +1136,7 @@ def test_prediction_manifest_is_complete_and_arbors_are_standard(pipeline):
         pool = manifest["donor_lists"][p["donor_pool_sha256"]]
         assert E.ids_sha(pool) == p["donor_pool_sha256"] and p["selected_donor"] in p["donor_ids"] and set(p["donor_ids"]) <= set(pool)
         assert all(engine.cohort.rows[d].part == "train" for d in pool)
-        uses = p["model"] in E.USES_FITTED_STATE
+        uses = p["model"] in E.USES_REGIONAL_STATE                        # the engine's own regional state (E7 names another one)
         assert (p["regional_state_id"] is not None) == uses
         if uses:
             assert states[p["regional_state_id"]] == p["regional_state_sha256"]
@@ -1380,7 +1390,8 @@ def test_the_test_was_declared_sealed_and_scored_by_the_referee(pipeline):
     by_key = {(p["query_id"], p["model"]): p for p in committed["predictions"]}
     assert {(r["query_id"], r["model"]) for r in bundle["predictions"]} == {(q, m) for q in admission["admitted_ids"] for m in models}
     for r in bundle["predictions"]:
-        assert set(r) == {"query_id", "model", "path", "sha256", "donor_ids", "upstream_fit_animals"}
+        assert set(r) == {"query_id", "model", "path", "sha256", "donor_ids", "upstream_fit_animals", "hemisphere"}
+        assert r["hemisphere"] == cohort.rows[r["query_id"]].hemisphere in ("Left", "Right")      # permitted metadata, kept for the viewer
         assert r["sha256"] == by_key[(r["query_id"], r["model"])]["sha256"] == Ref.sha(base / r["path"])
         assert r["path"] == f"predictions/{r['model']}/{r['query_id']}.npz" and r["upstream_fit_animals"] == []
         assert len(r["donor_ids"]) == 1 or r["model"] not in roles["copy_baselines"]
@@ -2059,3 +2070,368 @@ def test_commands_run_on_a_synthetic_world(built, tmp_path, capsys):
     assert "independent referee" in text and "REFUSED (OnceOnly)" in text
     assert load(directory / "engine/freeze/frozen.json")["family"] == "no_fitted_state"
     assert (directory / "engine/test/referee/SCORE_COMPLETE.json").exists()
+
+
+# ------------------------------------------------------------------------------------------
+# fix round of 2026-11-11 (late items L2, L3, L6; review finding 1). Each test below was written before its fix and
+# failed then; the failing output is kept in data/interim/synarch_axon_bridge/regression_before_fix.txt
+# ------------------------------------------------------------------------------------------
+
+
+def test_L2_the_engine_hashes_the_same_three_referee_sources_as_the_referee_and_pins_them(built, tmp_path):
+    assert set(E.REFEREE_FILES) == {"evaluator", "geometry_math", "training_distance_cache"}
+    assert E.REFEREE_FILES["training_distance_cache"] == "analysis/prediction_distance_cache.py"
+    assert E.referee().source_hashes() == E.referee_hashes()          # like with like: the guard compares three entries
+    directory = clone(built, tmp_path / "w")
+    engine_of(directory, "validate").predict()
+    manifest = load(directory / "engine/validate/prediction_manifest.json")
+    assert manifest["referee_sha256"] == E.referee_hashes() and len(manifest["referee_sha256"]) == 3
+    commit = load(directory / "engine/validate/PREDICTION_COMMITMENT.json")
+    assert commit["referee_sha256"] == E.referee_hashes()
+
+
+def test_L3_development_honours_the_pair_budget_even_for_its_first_copy_group(built, tmp_path, monkeypatch):
+    """L3: with a budget smaller than the first animal's pool, no copy group is sent to the referee in development, and
+    the manifest says so. Only a redundant development check changes: every forecast array is the same."""
+    reference = clone(built, tmp_path / "ref")
+    engine_of(reference, "develop", develop_per_animal=1).predict()
+    directory = clone(built, tmp_path / "w")
+    monkeypatch.setitem(E.CONFIG["official_copies"], "develop_api_pair_budget", 1)
+    monkeypatch.setattr(E, "CONFIG_SHA", E.digest(E.CONFIG))
+    Ref = E.referee()
+    calls = []
+    real = Ref.copying_baselines
+    monkeypatch.setattr(Ref, "copying_baselines", lambda *a, **k: calls.append(1) or real(*a, **k))
+    engine_of(directory, "develop", develop_per_animal=1).predict()
+    official = load(directory / "engine/develop/prediction_manifest.json")["official_copies"]
+    assert calls == [], f"{len(calls)} copy groups were sent to the referee although every group is over the budget"
+    assert official["api_verified"] is False and official["animals_with_referee_copies"] == []
+    assert official["api_verification"] == "no development API verification (pair budget)"
+    assert arrays(load(directory / "engine/develop/prediction_manifest.json")) == arrays(load(reference / "engine/develop/prediction_manifest.json"))
+
+
+def test_L6_the_engine_refuses_the_referee_unless_the_four_thread_variables_are_one(monkeypatch):
+    E.referee()
+    for name in THREADS:
+        monkeypatch.setenv(name, "4")
+        with pytest.raises(E.EngineError, match=name):
+            E.referee()
+        monkeypatch.delenv(name)
+        with pytest.raises(E.EngineError, match=name):
+            E.referee()
+        monkeypatch.setenv(name, "1")
+    E.referee()
+
+
+def test_L6_the_command_line_sets_the_four_thread_variables_before_numpy_is_imported(built, tmp_path):
+    directory = clone(built, tmp_path / "w")
+    env = {k: v for k, v in os.environ.items() if k not in THREADS}
+    probe = ("import sys, runpy; sys.argv = ['axon_engine_cli.py', '--help']; import os\n"
+             "try:\n    runpy.run_path('analysis/axon_engine_cli.py', run_name='__main__')\nexcept SystemExit:\n    pass\n"
+             "print('THREADS', [os.environ.get(v) for v in %r]); print('NUMPY_FIRST', 'numpy' in sys.modules)" % (list(THREADS),))
+    out = subprocess.run([sys.executable, "-I", "-c", probe], cwd=ROOT, env=env, capture_output=True, text=True, timeout=300)
+    assert "THREADS ['1', '1', '1', '1']" in out.stdout, out.stdout + out.stderr
+    text = (ROOT / "analysis/axon_engine_cli.py").read_text()
+    assert text.index("VECLIB_MAXIMUM_THREADS") < text.index("import axon_engine as E")
+    done = subprocess.run([sys.executable, "-I", "analysis/axon_engine_cli.py", "--world", str(directory), "--workers", "1", "status"],
+                          cwd=ROOT, env=env, capture_output=True, text=True, timeout=600)
+    assert done.returncode == 0, done.stdout[-2000:] + done.stderr[-2000:]
+
+
+def audit_bundle(bundle, minutes=None):
+    """The lead's audit command, exactly as the referee's contract states it (one worker here)."""
+    command = [sys.executable, "-I", "analysis/prediction_distance_cache.py", "--base", str(bundle), "--declaration",
+               "draft_declaration.json", "--workers", "1"] + ([] if minutes is None else ["--minutes", str(minutes)])
+    out = subprocess.run(command, cwd=ROOT, env={**os.environ, **THREADS}, capture_output=True, text=True, timeout=1200)
+    assert out.returncode == 0, out.stdout[-2000:] + out.stderr[-3000:]
+    return json.loads(out.stdout.strip().splitlines()[-1])
+
+
+def test_L6_prepare_audit_and_reuse_the_referees_training_distance_cache_end_to_end(built, tmp_path, monkeypatch):
+    """L6 on a synthetic world: the engine prepares a training-only bundle and a draft declaration from its completed
+    native cache; the referee's helper audits every pair; the engine's referee calls on the EXACT declared training pool
+    then use the audited cache, with bit-identical copies, and every other pool never does. A corrupted matrix or another
+    donor pool is refused; the receipt is bound in the commitment, the freeze and the referee's declaration."""
+    directory = clone(built, tmp_path / "w")
+    dev = engine_of(directory, "develop")
+    assert dev.referee_cache_state()["status"] == "absent"
+    prepared = dev.prepare_referee_cache()
+    bundle = Path(prepared["bundle"])
+    draft = load(bundle / "draft_declaration.json")
+    descriptor = draft["training_distance_cache"]
+    assert descriptor == E.REFEREE_CACHE_DESCRIPTOR and descriptor["schema"] == "referee_training_distance_cache_v1"
+    paths = [descriptor[k] for k in ("index_path", "complete_path", "distance_path", "f1_path", "mask_path", "audit_path")]
+    assert set(paths) <= set(draft["method_artifacts"])
+    assert draft["method_artifacts"][descriptor["audit_path"]] == E.REFEREE_CACHE_RECEIPT_PLACEHOLDER
+    assert all(E.sha_file(bundle / p) == draft["method_artifacts"][p] for p in paths[:-1])
+    train_ids = [r["id"] for r in draft["splits"]["train"]]
+    assert train_ids == dev.library["ids"] and set(draft["splits"]) == {"train", "validation", "test"}
+    held = set(dev.cohort.part_neurons["validation"]) | set(dev.cohort.part_neurons["test"])
+    assert not held & set(train_ids) and not any((bundle / "training" / f"{n}.npz").exists() for n in held)
+    assert all(set(r) <= {"id", "animal", "soma_um", "peptide", "nucleus"} for p in ("validation", "test") for r in draft["splits"][p])
+    assert dev.referee_cache_state()["status"] == "prepared_audit_pending"
+    assert dev.prepare_referee_cache()["status"] == "prepared_audit_pending"          # idempotent; nothing rebuilt
+    # the audit, by the referee's own helper and command line; then the receipt unlocks the loader
+    result = audit_bundle(bundle)
+    assert result["status"] == "complete" and result["pairs_verified"] == dev.cache.pairs
+    val = engine_of(directory, "validate")
+    state = val.referee_cache_state()
+    assert state["status"] == "complete" and state["receipt_sha256"] == E.sha_file(bundle / descriptor["audit_path"])
+    # bit-identical copies with and without the cache, on the exact declared training pool
+    Ref = E.referee()
+    scope = val.scope(None)
+    queries = val.cohort.part_neurons["validation"]
+    donors, cached = val.referee_training_donors(scope)
+    assert cached is not None and cached["cache_base"] == bundle
+    plain = Ref.copying_baselines(donors, [val.known_row(n) for n in queries])
+    reused = Ref.copying_baselines(donors, [val.known_row(n) for n in queries], **cached)
+    assert plain["donor_proof"] == reused["donor_proof"]
+    assert all(np.array_equal(a, b) for m in plain["predictions"] for q in plain["predictions"][m]
+               for a, b in zip(plain["predictions"][m][q], reused["predictions"][m][q]))
+    # a smaller or another donor pool is refused by the referee's loader; a development subpool never gets the cache
+    with pytest.raises(ValueError, match="EXACT sorted frozen TRAIN pool"):
+        Ref.copying_baselines(donors[1:], [val.known_row(n) for n in queries], **cached)
+    animal = val.cohort.rows[dev.library["ids"][0]].animal
+    assert engine_of(directory, "develop").referee_training_donors(engine_of(directory, "develop").scope(animal))[1] is None
+    assert engine_of(directory, "develop").referee_training_donors(engine_of(directory, "develop").scope(None))[1] is None
+    # a corrupted matrix is refused (by the engine before the referee, and by the referee's loader itself)
+    matrix = bundle / descriptor["distance_path"]
+    original = matrix.read_bytes()
+    D = np.load(matrix)
+    D[0, 1] = D[1, 0] = D[0, 1] + 1e-9
+    np.save(matrix, D)
+    with pytest.raises(E.EngineError, match="audited training distance cache"):
+        engine_of(directory, "validate").referee_cache_state()
+    with pytest.raises(ValueError, match="changed after completion"):
+        Ref.copying_baselines(donors, [val.known_row(n) for n in queries], **cached)
+    matrix.write_bytes(original)
+    # through the engine's own steps: a pool above the inline limit is checked by copies-check WITH the audited cache
+    monkeypatch.setitem(E.CONFIG["official_copies"], "heldout_inline_api_pair_limit", 10)
+    monkeypatch.setattr(E, "CONFIG_SHA", E.digest(E.CONFIG))
+    calls = []
+    real = Ref.copying_baselines
+    monkeypatch.setattr(Ref, "copying_baselines", lambda *a, **k: calls.append(k.get("training_distance_cache")) or real(*a, **k))
+    commit = engine_of(directory, "validate").predict()
+    assert commit["official_copies_api_verified"] is False
+    assert commit["referee_training_cache_receipt_sha256"] == state["receipt_sha256"]
+    pins = load(directory / "engine/validate/prediction_manifest.json")["pins"]["referee_training_cache"]
+    assert pins["status"] == "complete" and pins["receipt_sha256"] == state["receipt_sha256"]
+    record = engine_of(directory, "validate").copies_check()
+    assert record["all_equal"] and record["referee_training_cache_receipt_sha256"] == state["receipt_sha256"]
+    assert calls[-1] == descriptor
+    # the receipt is bound: changed after the commitment, admit refuses before any truth
+    receipt = bundle / descriptor["audit_path"]
+    kept = receipt.read_bytes()
+    receipt.write_bytes(kept + b" ")
+    with pytest.raises(E.EngineError, match="referee_training_cache|audited training distance cache"):
+        engine_of(directory, "validate").admit()
+    assert not (directory / "engine/validate/TRUTH_OPENED.json").exists()
+    receipt.write_bytes(kept)
+    engine_of(directory, "validate").admit()
+    engine_of(directory, "validate").score()
+    frozen = engine_of(directory, "validate").freeze()
+    assert frozen["pins"]["referee_training_cache"]["receipt_sha256"] == state["receipt_sha256"]
+    assert frozen["referee_training_cache_receipt_sha256"] == state["receipt_sha256"]
+    engine_of(directory, "test").predict()
+    engine_of(directory, "test").copies_check()
+    engine_of(directory, "test").admit()
+    calls.clear()
+    seal = engine_of(directory, "test").seal()
+    assert seal["referee_training_cache_receipt_sha256"] == state["receipt_sha256"]
+    assert calls and all(c == descriptor for c in calls)               # inside seal_predictions: the declared cache
+    declaration = load(directory / "engine/test/referee/declaration.json")
+    assert declaration["training_distance_cache"] == descriptor
+    assert all(p in declaration["method_artifacts"] for p in paths)
+    assert declaration["method_artifacts"][descriptor["audit_path"]] == state["receipt_sha256"]
+    assert engine_of(directory, "test").score()["scored_by"].startswith("independent referee")
+
+
+def test_L6_on_the_real_cohort_a_validation_commitment_is_refused_while_the_audit_receipt_is_missing(built, tmp_path):
+    import dataclasses
+    directory = clone(built, tmp_path / "w")
+    protocol = tmp_path / "protocol.md"
+    protocol.write_text("# a final protocol (no draft line)\n")
+    as_real = dataclasses.replace(E.synthetic_world(directory), kind="real", protocol=str(protocol))
+    for stage in ("validate", "test"):
+        engine = E.Engine(as_real, stage, workers=1, log=None, family="no_fitted_state")
+        with pytest.raises(E.EngineError, match="audit receipt"):
+            engine.require_referee_training_cache()
+    with pytest.raises(E.EngineError, match="audit receipt"):
+        E.Engine(as_real, "validate", workers=1, log=None, family="no_fitted_state").predict()
+    assert not (directory / "engine/validate/PREDICTION_COMMITMENT.json").exists()
+    E.Engine(E.synthetic_world(directory), "validate", workers=1, log=None).require_referee_training_cache()   # synthetic: optional
+
+
+def test_finding1_the_library_is_keyed_to_its_ingestion_code_not_to_the_whole_engine_file(built, tmp_path):
+    """Review finding 1: a library made by an engine file whose INGESTION code is the same is accepted; a library whose
+    ingestion code differs is refused."""
+    directory = clone(built, tmp_path / "w")
+    log_path = directory / "engine/ingestion_log.json"
+    record = load(log_path)
+    record["engine_sha256"] = "0" * 64                     # another version of the engine file, same ingestion code
+    log_path.write_text(json.dumps(record))
+    assert engine_of(directory, "validate").library_problem() is None
+    record["ingestion_code_sha256"] = "1" * 64              # other ingestion code: refused
+    log_path.write_text(json.dumps(record))
+    assert "ingestion code" in engine_of(directory, "validate").library_problem()
+    del record["ingestion_code_sha256"]                     # an old record without the key, from an unknown engine file
+    log_path.write_text(json.dumps(record))
+    assert "ingestion code" in engine_of(directory, "validate").library_problem()
+
+
+def test_finding1_the_committed_engine_has_the_same_ingestion_code_and_its_real_library_is_accepted():
+    """The engine that built the full-cohort training library (git f46a87e, file SHA-256 e575ddc3...) has exactly the
+    current ingestion code, function by function; its ingestion log is therefore accepted without a re-ingest. The real
+    ingestion log is only READ here (its record); no trace and no library arbor is opened."""
+    text = subprocess.run(["git", "show", "f46a87e:analysis/axon_engine.py"], cwd=ROOT, capture_output=True, check=True).stdout
+    assert E.sha_bytes(text) == "e575ddc32d5d5e71b30a88744a012e509ee68ce6953f6d5f37596cd676df7d23"
+    current = E.ingestion_code_sha((ROOT / "analysis/axon_engine.py").read_text())
+    assert E.ingestion_code_sha(text.decode()) == current == E.INGESTION_CODE_SHA
+    assert E.LEGACY_INGESTION_ENGINES == {E.sha_bytes(text): current}
+    real_log = ROOT / "data/interim/axon_engine/real/ingestion_log.json"
+    if real_log.exists():
+        record = load(real_log)
+        assert record["engine_sha256"] in E.LEGACY_INGESTION_ENGINES and record["rules"] == E.jsonable(E.RULE_TEXT)
+        assert E.ingestion_record_problem(record) is None
+
+
+def test_finding1_the_fingerprinted_ingestion_code_is_closed_under_what_it_calls():
+    import ast
+    import builtins
+    text = (ROOT / "analysis/axon_engine.py").read_text()
+    tree = ast.parse(text)
+    top = {n.name: n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef))}
+    covered = set(E.INGESTION_FUNCTIONS) | set(E.INGESTION_CONSTANTS)
+    imported = {a.asname or a.name.split(".")[0] for n in tree.body if isinstance(n, (ast.Import, ast.ImportFrom)) for a in n.names}
+    allowed = covered | imported | set(dir(builtins)) | {"G", "T", "CONFIG", "EngineError"}
+    for name in E.INGESTION_FUNCTIONS:
+        used = {n.id for n in ast.walk(top[name]) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+        local = {a.arg for n in ast.walk(top[name]) if isinstance(n, ast.arguments) for a in n.args + n.kwonlyargs}
+        local |= {n.id for n in ast.walk(top[name]) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)}
+        local |= {n.name for n in ast.walk(top[name]) if isinstance(n, ast.FunctionDef)}
+        local |= {n.name for n in ast.walk(top[name]) if isinstance(n, ast.ExceptHandler) and n.name}
+        assert used - local <= allowed, (name, sorted(used - local - allowed))
+    uses_config = [n for n in E.INGESTION_FUNCTIONS if "CONFIG[" in ast.get_source_segment(text, top[n])]
+    for name in uses_config:
+        keys = {s for s in ast.get_source_segment(text, top[name]).split('CONFIG["inclusion"]["')[1:]}
+        assert {k.split('"')[0] for k in keys} <= set(E.INGESTION_CONFIG_KEYS), name
+
+
+# ------------------------------------------------------------------------------------------
+# second attack round (round 2): the referee cache receipt, the thread guard
+# ------------------------------------------------------------------------------------------
+
+
+def distance_cache_helper():
+    """The referee's own cache helper, imported read-only (as an attacker would use it to write a receipt)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("round2_pdc", ROOT / "analysis/prediction_distance_cache.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def forge_receipt(directory, bundle):
+    """The attackers' route: change D.npy (one donor made close to everybody), make COMPLETE.json agree with it, and write a
+    'complete' audit receipt with the helper's own binding and digest, WITHOUT running the audit."""
+    C, desc = distance_cache_helper(), E.REFEREE_CACHE_DESCRIPTOR
+    path = bundle / desc["distance_path"]
+    D = np.load(path)
+    k = D.shape[0] // 2
+    D[k, :] *= 0.01
+    D[:, k] *= 0.01
+    D[k, k] = 0.0
+    np.save(path, np.ascontiguousarray(D))
+    complete = load(bundle / desc["complete_path"])
+    complete["D_sha256"] = C.G.sha(path)
+    complete["cache_sha256"] = C.digest({key: complete[key] for key in ("schema", "library_fingerprint", "ids_sha256", "n", "pairs",
+                                                                        "metric", "index_sha256", "D_sha256", "F_sha256")})
+    (bundle / desc["complete_path"]).write_text(C.canonical(complete))
+    val = engine_of(directory, "validate")
+    donors = [{**val.known_row(n), "arbor": E.as_tree(val.donor(n)["arbor"]), "arbor_path": f"training/{n}.npz",
+               "arbor_sha256": E.sha_file(bundle / f"training/{n}.npz")} for n in val.scope(None)["ids"]]
+    _, binding, _ = C._binding(bundle, desc, donors)
+    n, total = binding["n"], binding["pairs"]
+    body = {"schema": C.AUDIT_SCHEMA, "status": "complete", "scope": "ALL_upper_triangle_D_bitwise;F_hash_and_structure_only",
+            "binding": binding, "pairs_verified": total, "pairs_expected": total,
+            "row_pairs_verified": [n - i - 1 for i in range(n)], "bitwise_mismatches": 0}
+    (bundle / desc["audit_path"]).write_text(C.canonical({**body, "receipt_sha256": C.digest(body)}))
+    return C.G.sha(path)
+
+
+def test_round2_a_forged_audit_receipt_for_a_changed_matrix_is_refused_and_nothing_is_committed(built, tmp_path):
+    """Round-2 finding (major): the receipt is a self-digest; anyone who can write the bundle can make a 'complete' one
+    without running the audit. The engine now also requires the five cache files to be byte for byte its own completed
+    all-pairs cache and the hashes its draft pinned at preparation. The forged bundle is refused before any referee call,
+    and no forecast is committed. Editing the draft's pins to the forged matrix as well does not help."""
+    directory = clone(built, tmp_path / "w")
+    bundle = Path(engine_of(directory, "develop").prepare_referee_cache()["bundle"])
+    pinned = load(bundle / "draft_declaration.json")["method_artifacts"][E.REFEREE_CACHE_DESCRIPTOR["distance_path"]]
+    forged = forge_receipt(directory, bundle)
+    assert forged != pinned
+    with pytest.raises(E.EngineError, match="not byte for byte the engine's own completed all-pairs cache"):
+        engine_of(directory, "validate").referee_cache_state()
+    with pytest.raises(E.EngineError, match="not byte for byte the engine's own completed all-pairs cache"):
+        engine_of(directory, "validate").predict()
+    assert not (directory / "engine/validate/PREDICTION_COMMITMENT.json").exists()
+    draft = load(bundle / "draft_declaration.json")
+    draft["method_artifacts"][E.REFEREE_CACHE_DESCRIPTOR["distance_path"]] = forged
+    E.write_json(bundle / "draft_declaration.json", draft, pretty=True)
+    with pytest.raises(E.EngineError, match=r"\['distance_path'\] are not\s+byte for byte|not byte for byte"):
+        engine_of(directory, "validate").predict()
+    assert not (directory / "engine/validate/PREDICTION_COMMITMENT.json").exists()
+
+
+def test_round2_a_referee_copy_through_the_audited_cache_that_differs_from_the_replica_is_refused(built, tmp_path, monkeypatch):
+    """Round-2 finding (major), second half: through the audited cache the referee and the engine's replica read the same
+    bitwise matrix, so a difference means tampering. It used to be overwritten with the referee's copy and only counted;
+    now it is an error and nothing is committed. Without the tampering the same steps commit with 0 differences."""
+    directory = clone(built, tmp_path / "w")
+    bundle = Path(engine_of(directory, "develop").prepare_referee_cache()["bundle"])
+    assert audit_bundle(bundle)["status"] == "complete"
+    honest = clone(directory, tmp_path / "honest")
+    commit = engine_of(honest, "validate").predict()
+    official = load(honest / "engine/validate/prediction_manifest.json")["official_copies"]
+    assert commit["referee_training_cache_receipt_sha256"] and official["api_verified"] and official["replica_differences"] == 0
+    Ref = E.referee()
+    real = Ref.copying_baselines
+    probe = engine_of(directory, "validate")
+
+    def tampered(donors, queries, **kw):
+        result = real(donors, queries, **kw)
+        if kw.get("training_distance_cache"):                  # the referee's answer through the cache, changed for one query
+            q = queries[0]["id"]
+            other = next(d["id"] for d in donors if d["id"] != result["donor_proof"]["medoid"][q])
+            result["donor_proof"]["medoid"][q] = other
+            result["predictions"]["medoid"][q] = E.as_tree(probe.donor(other)["arbor"])
+        return result
+
+    monkeypatch.setattr(Ref, "copying_baselines", tampered)
+    with pytest.raises(E.EngineError, match="differs from the engine's own copy"):
+        engine_of(directory, "validate").predict()
+    assert not (directory / "engine/validate/PREDICTION_COMMITMENT.json").exists()
+
+
+def run_probe(code, env):
+    out = subprocess.run([sys.executable, "-I", "-c", code], cwd=ROOT, env=env, capture_output=True, text=True, timeout=600)
+    return out.stdout + out.stderr
+
+
+def test_round2_the_thread_guard_checks_the_values_at_import_and_the_real_thread_pools(tmp_path):
+    """Round-2 finding: importing the engine loads analysis/brm_real.py, which writes '1' into the four variables after
+    numpy is loaded, so os.environ alone proved nothing and a process with 8 BLAS threads passed. The guard now checks
+    the values when the engine started and the thread pools themselves."""
+    bare = {k: v for k, v in os.environ.items() if k not in THREADS}
+    head = f"import sys, os; sys.path.insert(0, {str(ROOT / 'analysis')!r})\n"
+    tail = ("print('ENV', [os.environ.get(v) for v in E.THREAD_VARIABLES])\n"
+            "try:\n    E.referee(); print('ACCEPTED')\nexcept E.EngineError as e:\n    print('REFUSED', e)\n")
+    numpy_first = run_probe(head + "import numpy\nimport axon_engine as E\n" + tail, bare)
+    assert "ENV ['1', '1', '1', '1']" in numpy_first, numpy_first       # the variables look right afterwards ...
+    assert "REFUSED" in numpy_first and "ACCEPTED" not in numpy_first, numpy_first      # ... and the referee is still refused
+    engine_first = run_probe(head + "import axon_engine as E\n" + tail, bare)
+    assert "REFUSED" in engine_first and "ACCEPTED" not in engine_first, engine_first
+    late = run_probe(head + "import numpy\nos.environ.update(" + repr(THREADS) + ")\nimport axon_engine as E\n" + tail, bare)
+    assert "REFUSED" in late and "thread pools" in late, late           # set after numpy: the pools still run many threads
+    proper = run_probe(head + "os.environ.update(" + repr(THREADS) + ")\nimport numpy\nimport axon_engine as E\n" + tail, bare)
+    assert "ACCEPTED" in proper, proper
+    assert all(n == 1 for _, n in (E.thread_pools() or [])), E.thread_pools()          # this test process itself

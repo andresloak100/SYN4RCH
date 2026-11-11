@@ -4,6 +4,8 @@
 review and the independent referee's contract. Code: `analysis/axon_engine.py`, `analysis/axon_engine_cli.py`.
 Tests: `tests/test_axon_engine.py`. Rules: `reports/axon_engine_protocol.md` (STATUS: DRAFT). Outputs:
 `data/interim/axon_engine/` (not version controlled). I committed nothing and downloaded nothing.
+**Later the same morning the engine was connected to the general reconstruction layer (new candidate E7): see
+section 13.** Sections 1 to 12 describe the revision before that.
 
 ## In eight lines
 
@@ -387,3 +389,246 @@ Records: `data/interim/axon_engine/real_local37/` (`ingestion_log.json`, `state_
 `checks/coverage_with_test_inputs_2026-11-10.json`); `data/interim/axon_engine/synthetic/<world>/summary.json`
 and `data/interim/axon_engine/synthetic_no_fitted_state/<world>/summary.json`, each with its `engine/` directory
 (the referee's bundle is `engine/test/referee/`).
+
+## 13. Addendum, 2026-11-11 morning: the bridge to the general reconstruction layer and candidate E7
+
+Still DRAFT and unfrozen. No held-out trace was opened, nothing was frozen or tested on the real cohort, nothing
+was committed. Synthetic results are mechanism checks, not biological evidence. The 37 local traces are
+development, not a test.
+
+**What was connected.** A new file, `analysis/synarch_axon_bridge.py`, lets the axon engine ask the general
+reconstruction layer (`analysis/synarch_recon*.py`, another owner's) for one thing: the query neuron's 49-region
+axon-length profile, inferred from its table soma position and source label. The bridge builds the query's
+measured records of the permitted inputs only, asks the layer under its default policy on a reconstructor made
+by the layer's own `build_reconstructor` over a finished, verified run (all-training states for a held-out
+query; the outer-fold state that never saw the brain sample for a training query), and passes the answer
+through the layer's axon adapter. The adapter stays "blocked: independent validation pending". A new candidate,
+**E7_local_kernel_inferred_profile**, is E2 times a similarity factor between that inferred profile and each
+neighbour's measured profile (protocol section 6a). Without an inferred profile E7 is E2, byte for byte, and the
+row says why. Also in this edit: the referee bundle rows now keep the query's hemisphere (for the viewer export),
+and the configuration text about markers inside a path was corrected (axon by inheritance).
+
+**What was checked** (`python3 -I -m pytest tests/test_synarch_axon_bridge.py`: 28 tests; at 08:13 all 28
+passed; in the final run 27 passed and 1 was skipped, the check of the real cohort WITHOUT a finished layer run,
+because that run existed by then; `tests/test_axon_engine.py` 101 passed; full log in
+`data/interim/synarch_axon_bridge/final_test_run.txt`):
+the query's measured profile is refused as evidence; a training query is answered by the fold state that
+excludes its brain sample; values descending from a measured profile, hand-made "inferred" records and values
+issued for another neuron are refused; scale, tag and frame are converted exactly once and regions are matched by
+name; any change to a state file, an evidence or selection file, or the completion record is refused; scrambling
+or deleting held-out outcomes changes no forecast of any method; planted leaks are refused; the fallback is
+bit-identical to E2; 1 versus 3 workers and two processes give identical bytes; after `predict`, a changed
+bridge file, layer code file, finished run or state file makes `admit` refuse before any truth is opened; on a
+synthetic world where E7 is selected, the referee's four functions froze, sealed and scored the bundle with
+matched controls E1 and E2 and honest upstream lists; the viewer export gate accepted a passing bundle and read
+a real hemisphere.
+
+**No existing forecast moved.** Before the edit the forecast arrays of all 15 earlier methods were hashed in
+the real development run and the six synthetic runs (code at git HEAD). After the edit the same commands were
+run again: 44,745 arrays compared, 0 differ
+(`data/interim/synarch_axon_bridge/before_after/after/COMPARISON.json`).
+
+**Synthetic runs with E7** (`python3 -I analysis/axon_engine_cli.py synthetic --kind <world>`, with and without
+`--family no_fitted_state`; `summary.json` in each world folder):
+
+| world | family | validation gate | test, scored once by the referee |
+|---|---|---|---|
+| label and soma zone set the route (p 0.75) | all | E5 selected | E5 587.6 um / 0.527: beats copying. E7 for the record 1030.0 / 0.276 |
+| route at random | all | nothing eligible | reference F1: no method beyond copying. E7 1266.3 / 0.207 |
+| soma zone sets the route, label is noise | all | E1, E2, E4, E5, E6, E7 eligible; E4 selected | E4 732.9 / 0.491: rule not met (matched control). E7 717.4 / 0.490 |
+| label and soma zone set the route with certainty | all | nothing eligible | reference E5: no method beyond copying. E7 710.8 / 0.478 |
+| 27 small soma zones set the route (new; seed chosen so that E7 is selected) | all | E1, E2, E3, E6, E7 eligible; **E7 selected** | E7 694.5 / 0.476: **rule not met**: beats every copying control, but not its matched control E2 (685.0 / 0.469) |
+| label and soma zone set the route (p 0.75) | no_fitted_state | nothing eligible | reference E3: no method beyond copying |
+| soma zone sets the route, label is noise | no_fitted_state | E2 selected | E2 742.6 / 0.476: beats copying |
+
+Hidden-outcome canaries of these seven runs: 25,184 forecasts compared, 0 differing. The seed of the new world
+was picked from eight tried seeds because E7 was selected in it; E7 passed the test in none of the eight
+(`data/interim/synarch_axon_bridge/seed_scan_fine_zones.json`). That world exists to exercise the referee path
+with E7 in the candidate slot. It is no evidence for E7.
+
+**What E7 actually did.** In every synthetic world the layer's own benchmark judged its profile forecast "no
+better than baseline", so under the default policy the layer issued a flagged baseline-level value (its best
+comparator: RIDGE in the world where label and soma zone set the route with p 0.75 and in the random world, KNN
+in the other three), and E7 used it: all 3,434 E7 forecasts of the seven runs (development, validation and test
+stages; counted from `general_layer.use_by_E7` in each prediction manifest) used a baseline-level value; 0 an
+engine-level value; 0 fell back. An
+engine-level value was seen only in the test fixture built on the layer's own planted world. The fallback path
+was exercised only in tests.
+
+**Development on the 37 snapshot traces (DEVELOPMENT, not a test).** Two passes, same command
+(`python3 -I analysis/axon_engine_cli.py --world local37 --workers 1 develop`, log
+`data/interim/synarch_axon_bridge/logs/local37_develop.log`).
+* 04:48, before the general layer had a real run: E7 fell back in all 37 forecasts with the reason
+  `general_layer_run_missing` and was exactly E2 (800.8 um / 0.1805). That folder is kept in
+  `data/interim/synarch_axon_bridge/local37_develop_0448_before_the_layer_run_existed/`.
+* 08:50, after the layer's owner completed its single real run (08:29, `run_complete.json` SHA-256
+  `eaa635c2b723...`, verified by the bridge): every training query was answered by the layer's outer-fold state
+  that excludes its brain sample (folds 0 to 4: 8, 7, 9, 5, 8 queries). The layer judged its own profile forecast
+  "no better than baseline", so all 37 E7 forecasts used a flagged baseline-level value (KNN, k 40); 3 of them
+  also carried the notice `out_of_support`; none fell back. E7's template differs from E2's in 3 of 37 queries.
+  Animal means over 32 animals: **E7 789.2 um / 0.1820**, E2 800.8 / 0.1805, E1 818.3 / 0.1856; strongest
+  controls `medoid` 824.6 um and `nearest` F1 0.1866. E7 does not beat `nearest` on F1 and does not beat its
+  matched control E1 on F1. Paired distance difference against `medoid`: -35.3 um (interval -94.5 to +20.8).
+  Nothing is selected in development, and 37 neurons decide nothing.
+* All 15 earlier methods gave the same arrays as before the edit in this pass too (555 compared, 0 differ,
+  `data/interim/synarch_axon_bridge/before_after/after_local37_with_layer_run/COMPARISON.json`).
+
+`layer --build` on the real cohort is refused. A held-out `predict` with the family `all` is refused until the
+protocol names the layer's run; it does not name it yet (protocol section 6a).
+
+**Limits.** (1) E7 has not been tested on any held-out real animal; on the real cohort it has only the
+37-trace development pass above. (2) The layer's benchmark is exploratory; on every synthetic world its profile
+forecast was no better than its baselines, so what E7 used was a comparator's value. (3) In development the
+layer's verdict (engine or which comparator) comes from its benchmark over all training samples, the query's
+own included; held-out queries are not affected. (4) A success of E7 would not validate the layer or unblock its
+adapter. (5) The general layer's files were being hardened by their owner during this work; the hashes these
+results were made with are in `data/interim/synarch_axon_bridge/final_test_run.txt` and in every manifest.
+(6) The referee's owner changed the referee at about 08:25 (a new file, `analysis/prediction_distance_cache.py`,
+now part of the referee's own source list). The engine refused that referee until its list of referee files was
+extended by that one file (`REFEREE_FILES` in `analysis/axon_engine.py`); nothing else changed. The seven
+synthetic runs above were made before that, with engine `259bc679...` and the earlier referee `534d7e88...`. The
+08:50 development pass on the 37 traces was made after it, with engine `c13084a5...` and the final referee
+(`593aaa11...`, `88461504...`). (Corrected in the fix round below; this sentence first said that the development
+pass, too, used the earlier engine and referee.) All of these were made again with the final code in section 14.
+
+## 14. Fix round, 2026-11-11: review and attack findings, late items L2, L3, L6
+
+Still DRAFT and unfrozen. Nothing was committed, nothing downloaded, no held-out trace or held-out regional row was
+opened, nothing under `data/raw/jiao2025/traces` was touched, and nothing real was predicted, admitted, sealed,
+scored or frozen. The general layer's finished real run was only read. Synthetic results are mechanism checks;
+the 37 local traces are development.
+
+**What changed** (each with a test that failed before the change and passes after; the failing output is in
+`data/interim/synarch_axon_bridge/regression_before_fix.txt`):
+* **Development pair budget (L3).** The development check of the four copies against the referee now honours its
+  80,000-pair budget for the first animal too. When even that pool is over the budget nothing is sent and the
+  manifest says "no development API verification (pair budget)". No forecast changes (tested: same arrays).
+* **The referee's audited training distance cache (L6).** New command `referee-cache --prepare` writes a
+  training-only bundle and a draft declaration from the engine's completed all-pairs cache. The lead then runs the
+  referee's own audit (the command is in protocol section 6). With its COMPLETE receipt, the referee's
+  `copying_baselines` reuses the cache, but only on the exact declared training pool: the inline call, `copies-check`
+  and the seal. Never for a development pool. The receipt's SHA-256 is in the method pins, the commitment, the freeze
+  and the seal record, and the referee's declaration binds all six files. On the real cohort no validation or test
+  forecast is committed without the receipt. Tested end to end on a synthetic world: prepare; audit with the
+  helper's own command line; copies bit-identical with and without the cache; a corrupted matrix and a smaller pool
+  refused; a changed receipt makes `admit` refuse; then freeze, seal and score through the cache.
+* **Thread variables (L6).** The command line sets the four thread variables to 1 before numpy is imported. The
+  engine refuses to load the referee when any of them is not 1.
+* **Referee sources (L2).** This was already done by the builder: the engine hashes `analysis/prediction_distance_cache.py`
+  too. It is now also written into every commitment record.
+* **Library key (review finding 1).** The training library is keyed to the exact source of its ingestion code,
+  not to the whole engine file. A test reads the committed engine from git (f46a87e, file `e575ddc3...`) and shows
+  that its ingestion code is identical to the current one, so the full-cohort library
+  (`data/interim/axon_engine/real/ingestion_log.json`) is accepted without re-reading any trace. A library made by
+  different ingestion code is still refused. This is a choice the lead may undo; the other option is one full
+  re-ingest once the download and the engine are final.
+* **Run registration (provenance attack).** A validation or test stage never registers the general layer's run.
+  It refuses when the registration is missing or differs. Only development, `layer` and the synthetic build
+  register. The attack (a consistent forgery after deleting the registration) is refused before any forecast.
+* **Protocol anchor (review finding 10, attackers' suspicion).** The engine reads only the protocol's single line
+  "general layer run_complete.json SHA-256: ...". A mention of the value elsewhere does not count, and two such
+  lines are refused.
+* **Text.** The `layer` help and the protocol now say that `layer` registers the run on first sight (finding 9).
+  Protocol 6a now says what is pinned where (referee attacker). Protocol 7 says that `copying_baselines` is called
+  in the seal only for pools of at most 250,000 pairs (referee attacker). Limit (6) of section 13 is corrected
+  (finding 6).
+* **Tests.** The empty E2 assertion in K2a now compares against an independently recomputed E2 weight vector
+  (finding 7). The skipped real-cohort test is replaced by a check of the real cohort as it is now: run present,
+  not named on the anchor line, so held-out forecasts are refused for both families (finding 8).
+
+**No existing forecast moved.** All seven synthetic runs and the local development pass were made again with the
+final engine (`0910f0e5...`) and the final referee (`593aaa11...`, `88461504...`). The new synthetic runs are in
+`data/interim/axon_engine/synthetic_fixround/` and `.../synthetic_no_fitted_state_fixround/`; the builder's runs
+were left as they were. Compared with the hashes taken before the bridge edit (git HEAD engine): 44,745 arrays of the
+15 earlier methods, 0 differ (`data/interim/synarch_axon_bridge/before_after/after_fixround/COMPARISON.json`).
+
+**Synthetic results with the final code** (mechanism checks; test scored once by the referee). They equal the
+builder's numbers:
+
+| world | family | validation | test |
+|---|---|---|---|
+| informative | all | E5 selected | E5 587.6 um / 0.527, beats copying; E7 1030.0 / 0.276 |
+| none | all | nothing eligible | no method beyond copying; E7 1266.3 / 0.207 |
+| dense | all | E4 selected (E7 eligible) | E4 732.9 / 0.491, rule not met; E7 717.4 / 0.490 |
+| informative_deterministic | all | nothing eligible | no method beyond copying; E7 710.8 / 0.478 |
+| fine_zones (seed chosen) | all | **E7 selected** | E7 694.5 / 0.476, rule not met: beats copying, not E2 (685.0 / 0.469) |
+| informative | no_fitted_state | nothing eligible | no method beyond copying |
+| dense | no_fitted_state | E2 selected | E2 742.6 / 0.476, beats copying |
+
+Hidden-outcome canaries: every validation and test canary of the seven runs reported 0 forecasts differing.
+E7 used a flagged baseline-level value in all 3,434 synthetic forecasts (RIDGE in informative and none, KNN
+elsewhere); 0 engine-level values; 0 fallbacks.
+
+**Development on the 37 local traces (DEVELOPMENT, not a test).** The same as the 08:50 pass: E7 789.2 um / 0.1820,
+E2 800.8 / 0.1805, E1 818.3 / 0.1856, `medoid` 824.6 / 0.1773, `nearest` 945.0 / 0.1866; 37 of 37 E7 forecasts used
+a KNN baseline-level value (fold states 8/7/9/5/8 queries; 3 with the notice `out_of_support`); 0 fallbacks; E7's
+template differs from E2's in 3 queries. E7 would not be eligible: it does not beat `nearest` or E1 on F1. The
+referee checked every development pool (32 pools, 19,985 pairs, all within budget). Log:
+`data/interim/synarch_axon_bridge/logs/fixround_local37.log`.
+
+**Limits and open points.**
+* The full audit of the real training distance cache has not been run. It is the lead's step, after the all-pairs
+  cache of the 4,368-donor library is complete. Until then the real cohort refuses held-out forecasts.
+* The real cohort's regional states are still keyed to the engine file. They are cheap to refit with `states`.
+* The run registration is trust on first use in development. Someone who forges a run and then runs `layer` or the
+  develop stage again re-registers it. On the real cohort the protocol anchor line still protects held-out forecasts,
+  and forecasts committed earlier are protected by their pins.
+* The protocol does not name the layer's run on its anchor line. Doing so is part of accepting the protocol.
+* E7 has not been tested on any held-out real animal. The fine_zones world is no evidence for E7.
+
+## 15. Second fix round, 2026-11-11 midday: four attack findings
+
+Still DRAFT and unfrozen. Nothing was committed, downloaded, predicted, admitted, sealed, scored or frozen on the
+real cohort; no held-out trace or held-out regional row was opened; nothing under `data/raw/jiao2025/traces` was
+touched. Synthetic results are mechanism checks; the 37 local traces are development.
+
+Each finding got a regression test first. All five new tests failed against the unfixed engine for the stated
+reason (`data/interim/synarch_axon_bridge/regression_before_fix_round2.txt`) and pass now.
+
+**What changed.**
+* **Forged audit receipt (major).** The referee cache's receipt only checks itself, so anyone who can write the
+  bundle could make a "complete" one without running the audit, change the distance matrix, and weaken the
+  copying controls (the attackers changed 21 of 68). Now the five cache files must be byte for byte the engine's own
+  completed all-pairs cache and the hashes its draft pinned; otherwise the bundle is never used. And through the
+  audited cache, any difference between the referee's copies and the engine's replica is an error: nothing is
+  overwritten, nothing is committed. Tests: a forged receipt (also with the draft's pin edited) is refused before
+  any commitment; a referee answer changed through the cache is refused, while the honest run commits with 0
+  differences.
+* **Forged layer run through the registration (minor).** Editing `states/general_layer.json`, or deleting it and
+  running development, let a forged run's engine-level values into committed validation forecasts. Now the step
+  that BUILDS the run writes an anchor next to the world's description (`<world>/data/general_layer_anchor.json`),
+  and every stage, development included, refuses a run that the anchor does not name. A run found on disk instead
+  of built is never anchored. The anchor is in the method pins and the referee's artifacts. On the real cohort the
+  protocol's anchor line plays this role. This closes the "trust on first use" limit of section 14.
+* **Thread check (minor).** Importing the engine loads a module that sets the four thread variables to 1 after
+  numpy is loaded, so the old check always passed. Now the engine records the values before numpy is imported and
+  checks the real thread pools (threadpoolctl). A process with 8 BLAS threads is refused. The two test files now
+  set the variables before importing numpy.
+* **Protocol anchor line (minor).** The phrase was accepted anywhere: in a hidden HTML comment, a code block, or a
+  sentence that rejects the run. Now only one whole line, exactly `**general layer run_complete.json SHA-256: <64 hex>**`
+  (or the placeholder), counts, and the phrase anywhere else makes the engine refuse the protocol. The protocol's
+  anchor line was moved onto its own line. It still holds the placeholder.
+* Three older bridge tests were adapted to the new rules (exact anchor spelling; development no longer re-registers
+  a forged run; either refusal message when the anchor refuses first). Protocol and command-line help were updated.
+
+**Tests** (`data/interim/synarch_axon_bridge/final_test_run_round2.txt`, thread variables 1, file hashes equal
+before and after the runs): bridge 32 passed; engine 113 passed; general layer 79 passed; referee 72 passed; viewer
+export 21 passed.
+
+**No forecast moved.** All seven synthetic runs were made again with the final code
+(`data/interim/axon_engine/synthetic_round2/`, `.../synthetic_no_fitted_state_round2/`), and the local development
+pass was re-run. Against the hashes taken before the bridge edit: 44,745 arrays of the 15 earlier methods, 0 differ.
+Against the first fix round: 55,536 arrays of all 16 methods, E7 included, 0 differ
+(`data/interim/synarch_axon_bridge/before_after/after_round2/`). So every result of section 14 stands unchanged:
+the same selections and verdicts on all seven worlds, 0 differing forecasts in all 14 hidden-outcome canaries,
+every synthetic E7 forecast a flagged baseline-level value (3,385 counted in the summaries; 0 engine-level, 0
+fallbacks), and on local37 E7 789.2 um / 0.1820, E2 800.8 / 0.1805, E1 818.3 / 0.1856, 37 KNN baseline-level values
+(log `data/interim/synarch_axon_bridge/logs/round2_local37.log`).
+
+**Limits.**
+* The anchors move trust; they do not sign anything. Someone who can write the world's folder (synthetic) or the
+  accepted protocol (real cohort) can still name another run.
+* The receipt is still only as good as the lead's audit run. The engine's checks catch a changed matrix, not an audit
+  that was never run on an unchanged bundle (which would be harmless).
+* Unchanged from section 14: the real cache audit is not run, the protocol names no run, and E7 has not been tested
+  on any held-out real animal.
