@@ -24,3 +24,13 @@ Referee audit receipt `2eb4d2e4...` (record: `reports/axon_engine_referee_audit_
    * beef20acbd06182b487d22758bb6509527556cde96207622fbc38ec2c807c790  engine_gate.json
    * 6935aabeb8ae6ccd262c1d84fe0cf8747723b69af4afb20a43c8ad6cf9afeba2  frozen_gate.json
    * 6e8279cd8ee1910a92ab7fd8800ae8d86758f6b6fe9986ed977dcd21c57d4956  tables.md
+
+## Freeze
+
+Frozen 2026-11-11 16:38 EST, with 0 test traces on disk and no test stage directory. Selected: E4_local_kernel_regional
+(the frozen prototype's own gate chose conditional_anchor_1000 among its five policies; recorded, not the selected method).
+* `data/interim/axon_engine/real/freeze/frozen.json` SHA-256 `a05ac68b58dd9bde92f535c4e097e573b5c35a20696d9cdccc3710c1e50b0202`
+
+## Test
+
+Forecasting for all 1,547 declared test queries x 16 methods started 16:38 EST, before any test trace is fetched.
