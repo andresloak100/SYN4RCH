@@ -8501,3 +8501,29 @@ After D-107 the direction was: do not fix the conversions by hand; let an algori
 ### Next
 
 Measured axon geometry (Jiao et al. 2025): a region-level benchmark (D-109; audit in `reports/d109_jiao_audit.md`) and a measured 3D prototype of individual neurons (`reports/swc_prototype.md`, 6f9d70f). A held-out trajectory model must beat copying the nearest measured neuron from another animal.
+
+## D-109 - Parked before freeze: a region-level axon-length benchmark on Jiao et al. 2025, designed and reviewed, never run
+
+**Parked on the user's instruction (2026-11-10). Not frozen, not run: no D-109 score exists.** Saved: protocol `reports/d109_protocol.md`, implementation `analysis/d109_jiao.py` (its `run` refuses: no approving review, nothing pinned), conventions and sources `reports/d109_jiao_conventions.md`, input audit `reports/d109_jiao_audit.md`, and the three independent reviews with the writer's response `reports/d109_parked.md` (commits 1933fd4, 1602a6c).
+
+### What it was
+
+Can the axon length in 49 brain regions of a hypothalamic neuron from an animal the model has never seen be predicted from its soma position, and does the animal's genetic tag add to that? Jiao et al. 2025 tables: 7,180 neurons, 166 animals. Whole-animal splits (tag benefit within represented lines; unseen nucleus; unseen tag), a tag-shuffle control between animals, development on synthetic and row-permuted outcomes only.
+
+### Why parked
+
+1. Another author's BRM test scored the same table on D-109's primary split before D-109 was frozen. D-109 would have been a pre-specified but non-blind check.
+2. The reviews found no leakage, but the planned primary comparison (extra-trees with a tag one-hot against extra-trees without) recovers almost none of a planted moderate tag effect that ridge recovers (+0.08% against +3.83%), the tag-shuffle control is conservative rather than calibrated, and the animal-level bootstrap under-covers when animal effects are coherent across regions.
+3. The priority is measured 3D geometry; the next step is a dataset audit for a larger real 3D benchmark.
+
+### Established along the way, from sources and inputs only
+
+* Every animal carries exactly one genetic tag, so tag and animal are confounded; tags are also clustered in animal-ID order (57 runs, against about 152 under random assignment), a sign of batches.
+* Coordinates are AP / DV / ML = CCF x / y / z in micrometres on the 10 um CCFv3 grid. The published tables and the Zenodo traces are mirrored to ML < 5,700; the portal keeps the true hemisphere (Left 3,071, Right 4,109).
+* Three nucleus vocabularies exist (59, 50 and 16 labels); the fine one is authoritative and a crosswalk is documented.
+* Li et al. 2024 shares two animals with Jiao (195037 and 195038; 106 Jiao neurons); neuron-level identity is unproven.
+* Unresolved: the length unit of the 49-region table (micrometres indicated), whether both hemispheres are summed, whether the medulla column double-counts four of its sub-regions, and why 13 profiles are zero everywhere.
+
+### If resumed
+
+A decision on the primary comparison, a confirming review of the revised code, the freeze, one run; reported as non-blind.
