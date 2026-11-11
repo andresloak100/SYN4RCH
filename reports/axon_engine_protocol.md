@@ -208,7 +208,7 @@ development: minus the query's own animal).
 |---|---|
 | `nearest`, `peptide_nearest` | the whole library (the second: its neurons with the query's source label) |
 | `medoid`, `peptide_medoid` | the whole library, all pairs (the second: its neurons with the query's source label) |
-| C1, C4, C5, F1, F2 (frozen prototype) | the whole library, handed to the unmodified `predict_policy` |
+| C1, C4, C5, F1, F2 (frozen prototype) | the whole library, through the frozen `predict_policy`'s numerical path in the engine's compact adapter (below) |
 | E1 to E7 | the 16 nearest neurons of the whole library by table-soma distance |
 
 **All-pairs cache.** The soma-centred `distance_um` and `1 - f1_200` between every two library arbors, by the
@@ -227,9 +227,9 @@ its own two functions; on small pools trees and records are bit-identical with a
 | `medoid` (C1 by the referee's arithmetic) | the training neuron minimising the animal-balanced mean soma-centred geometric distance, translated | referee contract |
 | `peptide_nearest` (C3) | `nearest` among training neurons with the query's source label; falls back to `nearest` when the label is missing or has no donor (recorded) | referee contract |
 | `peptide_medoid` | `medoid` among training neurons with the query's source label; falls back to `medoid` | referee contract |
-| `C1_medoid_copy` (C1) | the frozen prototype's `baseline`: its own medoid function on the whole library, translated | unmodified `predict_policy` |
-| `C4_uniform_attach_500` (C4) | frozen `uniform_anchor_500` | unmodified `predict_policy` |
-| `C5_uniform_attach_1000` (C5) | frozen `uniform_anchor_1000` | unmodified `predict_policy` |
+| `C1_medoid_copy` (C1) | the frozen prototype's `baseline`: its own medoid function on the whole library, translated | frozen `predict_policy` path (compact adapter) |
+| `C4_uniform_attach_500` (C4) | frozen `uniform_anchor_500` | frozen `predict_policy` path (compact adapter) |
+| `C5_uniform_attach_1000` (C5) | frozen `uniform_anchor_1000` | frozen `predict_policy` path (compact adapter) |
 
 * **The four official copies are the referee's.** For a held-out stage the engine calls the referee's own
   `copying_baselines(training trees, known query metadata)` and writes ITS arrays as the four controls. The engine
@@ -285,8 +285,31 @@ its own two functions; on small pools trees and records are bit-identical with a
 
 ### Candidates
 
-**Frozen candidates.** F1 = `conditional_anchor_500`, F2 = `conditional_anchor_1000`, through the unmodified
-`brm_template.predict_policy` with the whole library and the query's regional state.
+**Frozen candidates.** F1 = `conditional_anchor_500`, F2 = `conditional_anchor_1000`, through the frozen
+`brm_template.predict_policy`'s numerical path (the compact adapter below) with the whole library and the query's
+regional state.
+
+**Compact adapter of the frozen prototype (2026-11-11, before any held-out forecast).** The engine does not call
+`brm_template.predict_policy` itself for C1, C4, C5, F1 and F2. It calls `compact_predict_policy` in
+`analysis/axon_engine.py`, which repeats the frozen function statement for statement and calls the frozen module's own
+helpers (`_training_boundary`, `training_medoid`, `state_posterior`, `conditional_weights`, `pair_costs`,
+`weighted_medoid`, `compact_attachment`, the exact-baseline fallback), in the same order and through the same pinned
+cache. It omits only the frozen function's two full-matrix diagnostics `pair_distance = D.tolist()` and
+`pair_f1_loss = F.tolist()`, which the engine discarded; on the whole library they are about 2 x 4368^2 float
+conversions per call, in four of the five policy calls per query (`baseline` returns before the matrices are
+made; the engine docstring's "five calls per query" counts the calls, not the matrices). `brm_template.py` and the other frozen and referee files are unchanged and
+keep their pinned hashes; the original function stays available. Parity is shown, not assumed: on synthetic donors
+(all five policies, valid and unsupported attachment, a tie, the leak and bad-input refusals) and on real training
+queries (`analysis/axon_engine_compact_parity.py`, result `data/interim/axon_engine/real/checks/compact_parity_train.json`:
+three development queries of three training animals, pools of 4,322 to 4,366 donors), arbors are byte-identical and every
+record field is equal after removing only those two keys, and the engine's sixteen forecast records and its
+prediction log are identical whether the frozen path goes through the adapter or through the unmodified function.
+On those three real queries every attaching policy fell back to the exact baseline (soma shift above radius/3) after
+the matrices, weights and risks were computed and compared, so the successful-attachment branch is shown equal on
+synthetic donors only. No method, option, K or threshold changed. The six regional states were refitted under the new
+engine code (their model bytes are unchanged; only the engine-keyed wrapper records changed) and the general-layer
+registration was re-checked. The development pass is restarted once, from scratch, under the new engine code after the
+referee's audit receipt and its owner's post-audit pin.
 
 **Engine candidates.** Neighbourhood N(q): the K = 16 training donors with the nearest table somas (other
 animals; ties by neuron ID). d_j: soma distance. a_j = 1 / (donors of j's animal in N); A = animals in N.
@@ -415,15 +438,16 @@ included, therefore also requires the run to be the ANCHORED one, and refuses an
 * A finished run: before a held-out forecast that uses it is committed (with either family), the SHA-256 of its
   `run_complete.json` must be written on this file's single anchor line, the next line below:
 
-**general layer run_complete.json SHA-256: (not written yet)**
+**general layer run_complete.json SHA-256: eaa635c2b723ac268b80c6a256f4852fc6fa3f6d83eb8c152ecb242a149937c4**
 
   The engine reads only that line. It must be one whole line, in exactly that spelling, with the 64 lower-case hex
   digits of the run on disk in place of the placeholder and nothing else on the line. The engine refuses this file
   if the anchor phrase stands anywhere else: inside a sentence (also one that rejects the run), in an HTML comment,
   in a code block, or in another letter case. A mention of the SHA-256 value anywhere else does not count, and a
   second anchor line is refused. State on 2026-11-11: the layer's owner completed its single run on the real
-  cohort at 08:29 (its `run_complete.json` begins `eaa635c2b723`; the full value is deliberately not written here).
-  Writing it on the anchor line is part of accepting this protocol, which is not done.
+  cohort at 08:29. Its full `run_complete.json` SHA-256 was written on the anchor line above on 2026-11-11, after
+  checking it against the file on disk (`data/interim/synarch_recon/run_complete.json`), as part of accepting this
+  protocol; the engine registered that run (`layer`, verified) before the development pass.
 
 **Limits of E7, stated now.**
 * The layer's benchmark is exploratory and its adapter is blocked. E7 is a candidate like the others: it claims
@@ -452,6 +476,10 @@ re-converted general-layer run. On the real cohort these are closed by procedure
 32 by the development pass on the complete training library (`develop`, leave one animal out), choosing the K with
 the lowest animal-mean distance of E2 among those whose F1 is not below that of K = 16. The choice is written here
 before this file loses its DRAFT line. Nothing else is tuned, and nothing at all after any held-out forecast is committed.
+
+**Outcome (2026-11-11): K stays 16; the optional reset was not used.** No K = 8 or K = 32 development run was made,
+so no K was compared or chosen on any data. The development pass runs at K = 16 only, as a report on training
+animals.
 
 ## 7. Validation, freeze, test
 

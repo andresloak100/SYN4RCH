@@ -2291,7 +2291,12 @@ def test_finding1_the_committed_engine_has_the_same_ingestion_code_and_its_real_
     real_log = ROOT / "data/interim/axon_engine/real/ingestion_log.json"
     if real_log.exists():
         record = load(real_log)
-        assert record["engine_sha256"] in E.LEGACY_INGESTION_ENGINES and record["rules"] == E.jsonable(E.RULE_TEXT)
+        # the log may have been rewritten by a later engine (re-ingested at 12:37 on 2026-11-11 by d790bef, e4201e5c...):
+        # what binds it is the ingestion code, which must be exactly the current one
+        assert record["ingestion_code_sha256"] == current and record["rules"] == E.jsonable(E.RULE_TEXT)
+        if record["engine_sha256"] not in E.LEGACY_INGESTION_ENGINES:
+            later = subprocess.run(["git", "show", "d790bef:analysis/axon_engine.py"], cwd=ROOT, capture_output=True, check=True).stdout
+            assert record["engine_sha256"] == E.sha_bytes(later) and E.ingestion_code_sha(later.decode()) == current
         assert E.ingestion_record_problem(record) is None
 
 
@@ -2435,3 +2440,113 @@ def test_round2_the_thread_guard_checks_the_values_at_import_and_the_real_thread
     proper = run_probe(head + "os.environ.update(" + repr(THREADS) + ")\nimport numpy\nimport axon_engine as E\n" + tail, bare)
     assert "ACCEPTED" in proper, proper
     assert all(n == 1 for _, n in (E.thread_pools() or [])), E.thread_pools()          # this test process itself
+
+
+# ------------------------------------------------------------------------------------------
+# the engine's compact adapter of the frozen predict_policy (omits only its two discarded diagnostics)
+# ------------------------------------------------------------------------------------------
+
+
+def _route(sign, soma=(0., 0., 0.), bend=100.):
+    points = np.array([[0., 0., 0.], [500. * sign, 0., 0.], [1200. * sign, bend, 0.], [500. * sign, 350., 0.]]) + np.asarray(soma)
+    return G.resample(G.Arbor(points, np.array([-1, 0, 1, 1]), np.array([1, 2, 2, 2])), 50.)
+
+
+def _policy_fixture(arbors):
+    """The frozen module's own synthetic fixture shape (tests/test_brm_template.py), built on the engine's copy of it."""
+    tags = ["p", "q", "p", "q", "p", "q"]
+    donors = []
+    for i, arbor in enumerate(arbors):
+        neuron, animal, tag = f"T{i}_001", f"T{i}", tags[i % len(tags)]
+        donors.append({"neuron": neuron, "animal": animal, "full_id": f"{neuron}_{tag}_HY", "tag": tag,
+                       "table_soma": np.zeros(3), "swc_soma": np.zeros(3), "profile": np.full(49, 4. * (tag == "q")), "arbor": arbor})
+    queries = [T.Query("E0_001", "E0", "E0_001_p_HY", np.zeros(3), np.zeros(3), "p"),
+               T.Query("E1_001", "E1", "E1_001_q_HY", np.zeros(3), np.zeros(3), "q")]
+    continuous = [*Geo.R.POSITION, *Geo.R.target_fields()]
+    train_ids = [d["full_id"] for d in donors]
+    import hashlib
+    model = {"core_sha256": Geo.JOINT_SHA, "target_fields": list(Geo.R.target_fields()),
+             "field_types": {**{f: "continuous" for f in continuous}, Geo.R.TAG: "categorical"},
+             "training_ids_sha256": hashlib.sha256("\n".join(train_ids).encode()).hexdigest(),
+             "field_metadata": {f: {"training_mean": 0., "training_scale": 1.} for f in continuous},
+             "blocks": [{"name": "block_0", "fields": [*continuous, Geo.R.TAG], "weights": [.5, .5],
+                         "means": {f: [0., 0.] if f in Geo.R.POSITION else [0., 4.] for f in continuous},
+                         "variances": {f: [1., 1.] if f in Geo.R.POSITION else [.01, .01] for f in continuous},
+                         "tables": {Geo.R.TAG: [[.999, .001], [.001, .999]]}}]}
+    model["field_metadata"][Geo.R.TAG] = {"categories": ["p", "q"]}
+    proof = {"name": "synthetic_train_only", "train_ids": train_ids, "train_animals": [d["animal"] for d in donors],
+             "test_ids": [q.full_id for q in queries], "test_animals": [q.animal for q in queries],
+             "model_state_sha256": T._digest(model)}
+    return donors, Geo.RegionalState(model, proof), queries
+
+
+def _all_parity(query, donors, regional):
+    out = [E.compact_parity(query, donors, regional, policy) for policy in T.POLICIES]
+    for r in out:
+        assert r["arbor_bitwise_equal"] and r["omitted_keys_exactly_the_two"] and r["records_equal_without_the_two"], r
+    return out
+
+
+def test_compact_adapter_equals_the_frozen_policy_for_all_five_policies_with_valid_attachment():
+    donors, regional, queries = _policy_fixture([_route(1), _route(-1), _route(1, bend=180.), _route(-1, bend=40.)])
+    for query in queries:
+        out = _all_parity(query, donors, regional)
+        assert {r["executed_policy"] for r in out} == set(T.POLICIES)              # every attachment was supported
+    # reversed input order: the adapter sorts exactly as the frozen function does
+    out = _all_parity(queries[1], list(reversed(donors)), regional)
+    assert len(out) == 5
+    _, info = E.compact_predict_policy(queries[1], donors, regional, "conditional_anchor_500")
+    _, frozen = T.predict_policy(queries[1], donors, regional, "conditional_anchor_500")
+    assert set(frozen) - set(info) == set(E.COMPACT_OMITTED_INFO_KEYS) and not set(info) - set(frozen)
+    assert info["f1_risk"] == frozen["f1_risk"] and info["distance_risk"] == frozen["distance_risk"]
+
+
+def test_compact_adapter_falls_back_to_the_exact_baseline_like_the_frozen_policy():
+    donors, regional, queries = _policy_fixture([_route(1), _route(-1), _route(1, bend=180.)])
+    far = T.Query("E1_001", "E1", "E1_001_q_HY", np.array([1000., 0., 0.]), np.array([1000., 0., 0.]), "q")
+    out = _all_parity(far, donors, regional)
+    assert {r["fallback_reason"] for r in out[1:]} == {"soma_shift_exceeds_radius_over_three"}
+    assert {r["executed_policy"] for r in out} == {T.BASELINE}
+
+
+def test_compact_adapter_keeps_the_frozen_tie_rule():
+    same = _route(1)
+    donors, regional, queries = _policy_fixture([same, G.Arbor(same.xyz.copy(), same.parent.copy(), same.types.copy()),
+                                                 _route(-1), G.Arbor(_route(-1).xyz.copy(), _route(-1).parent.copy(), _route(-1).types.copy())])
+    for query in queries:
+        for r in _all_parity(query, donors, regional):
+            assert r["executed_policy"] in T.POLICIES
+    for policy in T.POLICIES:
+        _, a = E.compact_predict_policy(queries[0], donors, regional, policy)
+        _, b = T.predict_policy(queries[0], donors, regional, policy)
+        assert a["selected_donor"] == b["selected_donor"] and a.get("attempted_donor") == b.get("attempted_donor")
+
+
+def test_compact_adapter_refuses_every_leak_and_bad_input_exactly_like_the_frozen_policy():
+    donors, regional, queries = _policy_fixture([_route(1), _route(-1), _route(1, bend=180.)])
+    own = dict(donors[0], neuron="E0_002", animal="E0", full_id="E0_002_p_HY")
+    cases = [(queries[0], donors + [own], "conditional_anchor_500"),               # the query's animal among the donors
+             (queries[0], donors + [dict(donors[0])], "uniform_anchor_500"),       # a duplicated donor
+             (queries[0], [], T.BASELINE),                                          # no donors
+             (queries[0], donors, "oracle_best_geometry")]                          # outside the fixed family
+    for query, pool, policy in cases:
+        with pytest.raises(Exception) as frozen:
+            T.predict_policy(query, pool, regional, policy)
+        with pytest.raises(Exception) as compact:
+            E.compact_predict_policy(query, pool, regional, policy)
+        assert type(frozen.value) is type(compact.value) and str(frozen.value) == str(compact.value)
+    with pytest.raises(TypeError):
+        E.compact_predict_policy(queries[0], donors, regional, "baseline", query_profile=np.zeros(49))
+
+
+def test_compact_adapter_inside_the_frozen_memo_gives_the_same_sixteen_records_and_log(built):
+    """On the synthetic world's training queries: the five policies through the pinned cache, and the engine's whole
+    forecast (sixteen records and the prediction log) through the adapter and through the unmodified function."""
+    engine = engine_of(built, "develop")
+    neurons = list(engine.library["ids"])[::max(1, len(engine.library["ids"]) // 4)][:4]
+    proof = E.prove_compact_parity(engine, neurons)
+    assert proof["queries"] == len(neurons) and proof["all_identical"], proof
+    assert all(r["methods"] == len(E.METHODS) for r in proof["rows"])
+    assert E.compact_predict_policy is not T.predict_policy                          # the proof's routing is undone
+    with pytest.raises(E.EngineError):
+        E.prove_compact_parity(engine_of(built, "validate"), neurons)

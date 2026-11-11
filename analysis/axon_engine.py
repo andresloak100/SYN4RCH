@@ -348,7 +348,7 @@ CONFIG = {
         "library": "every training neuron whose trace passes the inclusion rules; for a training query (development) minus its own animal",
         "nearest, peptide_nearest": "the whole library (peptide_nearest: its neurons with the query's source label)",
         "medoid, peptide_medoid": "the whole library, all pairs (peptide_medoid: its neurons with the query's source label)",
-        "C1, C4, C5, F1, F2": "the whole library, handed to the unmodified frozen predict_policy; pair costs read from the pinned all-pairs cache",
+        "C1, C4, C5, F1, F2": ("the whole library, through the engine's compact adapter of the frozen predict_policy (the same statements and frozen helpers, omitting only its two discarded full-matrix diagnostics pair_distance and pair_f1_loss); pair costs read from the pinned all-pairs cache"),
         "E1 to E7": "the K nearest neurons of the whole library by table-soma distance",
         "sampled panels": "none",
     },
@@ -1661,6 +1661,90 @@ class PairCache:
             out.update({"referee_metric_bit_identical": bool(referee_ok),
                         "ms_per_pair_referee": 1000.0 * seconds["referee"] / max(1, len(pairs))})
         return out
+
+
+def compact_predict_policy(query, donors, regional, policy):
+    """The frozen brm_template.predict_policy's numerical path, statement for statement, WITHOUT its two
+    discarded full-matrix diagnostics.
+
+    The frozen function writes info['pair_distance'] = D.tolist() and info['pair_f1_loss'] = F.tolist(): on the
+    whole training library about 2 x 4368^2 float conversions per call, five calls per query, and the engine
+    discards `info` apart from a few scalar fields. This adapter omits ONLY those two entries. Every other
+    statement is the frozen function's, in its order, calling the frozen module's own helpers through the module
+    (so `FrozenMemo.frozen_memo()` replaces pair_costs and training_medoid exactly as it does for the original):
+    sorting by neuron ID, _training_boundary, training_medoid, state_posterior, conditional_weights, pair_costs,
+    weighted_medoid, the uniform-policy medoid rule, F @ weights, compact_attachment, the exact-baseline fallback
+    and every other metadata field. The original T.predict_policy is not modified and stays available;
+    `prove_compact_parity` and the tests show bitwise-equal arbors and equal records (minus those two keys)."""
+    if policy not in T.POLICIES:
+        raise ValueError("Unknown policy; the fixed family has five members.")
+    donors = sorted(donors, key=lambda d: d["neuron"])
+    T._training_boundary(query, donors, regional)
+    baseline_index = T.G.training_medoid(donors)
+    baseline = donors[baseline_index]["arbor"].shifted(query.swc_soma)
+    info = {"requested_policy": policy, "executed_policy": T.BASELINE, "fallback": policy != T.BASELINE,
+            "fallback_reason": None, "baseline_donor": donors[baseline_index]["neuron"],
+            "selected_donor": donors[baseline_index]["neuron"],
+            "donor_ids": [d["neuron"] for d in donors], "donor_animals": [d["animal"] for d in donors],
+            "upstream_state_sha256": regional.proof["model_state_sha256"],
+            "source_provenance": T.source_provenance(), "config": T.deepcopy(T.CONFIG)}
+    if policy == T.BASELINE:
+        return baseline, info
+    conditional = policy.startswith("conditional_")
+    radius = float(policy.rsplit("_", 1)[1])
+    animals = [d["animal"] for d in donors]
+    posterior = T.Geo.state_posterior(regional.model, np.asarray(query.table_soma)[None], [query.tag])[0]
+    responsibilities = T.Geo.state_posterior(regional.model, np.asarray([d["table_soma"] for d in donors]),
+                                             [d["tag"] for d in donors], measured_profiles=np.asarray([d["profile"] for d in donors]))
+    fit = T.conditional_weights(animals, responsibilities, posterior)
+    weights = fit["weights"] if conditional else fit["animal_prior"]
+    D, F = T.pair_costs(donors)
+    selected, distance_risk = T.weighted_medoid(D, weights)
+    if not conditional:
+        selected = baseline_index  # exact existing tie/selection rule
+    info.update({"attempted_donor": donors[selected]["neuron"], "radius_um": radius,
+                 "guidance": "conditional" if conditional else "uniform",
+                 "query_posterior": posterior.tolist(), "donor_responsibilities": responsibilities.tolist(),
+                 "weights": weights.tolist(), "animal_prior": fit["animal_prior"].tolist(),
+                 "animal_weights": fit["animal_weights"].tolist(), "component_mass": fit["component_mass"].tolist(),
+                 "component_donor_weights": fit["component_donor_weights"].tolist(),
+                 # omitted here, and only here: "pair_distance": D.tolist(), "pair_f1_loss": F.tolist(),
+                 "distance_risk": distance_risk.tolist(), "f1_risk": (F @ weights).tolist()})
+    try:
+        output, attachment = T.compact_attachment(donors[selected]["arbor"], query.swc_soma, radius)
+    except T.UnsupportedAttachment as unsupported:
+        info.update({"fallback_reason": unsupported.reason, "attachment": unsupported.details})
+        return baseline, info  # EXACT baseline coordinates/topology, no dropped query
+    info.update({"executed_policy": policy, "selected_donor": donors[selected]["neuron"], "fallback": False,
+                 "attachment": attachment})
+    return output, info
+
+
+COMPACT_OMITTED_INFO_KEYS = ("pair_distance", "pair_f1_loss")
+
+
+def compact_parity(query, donors, regional, policy, memo=None):
+    """One parity check of the compact adapter against the unmodified frozen predict_policy on the same inputs
+    (inside the same FrozenMemo when one is given): arbors bitwise equal, and records equal after removing ONLY
+    the two omitted diagnostics."""
+    def both():
+        a0, i0 = T.predict_policy(query, donors, regional, policy)
+        a1, i1 = compact_predict_policy(query, donors, regional, policy)
+        return a0, i0, a1, i1
+    if memo is None:
+        a0, i0, a1, i1 = both()
+    else:
+        with memo.frozen_memo():
+            a0, i0, a1, i1 = both()
+    expected_omitted = set(COMPACT_OMITTED_INFO_KEYS) if policy != T.BASELINE else set()
+    omitted = set(i0) - set(i1)
+    stripped = {k: v for k, v in i0.items() if k not in COMPACT_OMITTED_INFO_KEYS}
+    arrays_equal = all(getattr(a0, f).dtype == getattr(a1, f).dtype and getattr(a0, f).shape == getattr(a1, f).shape
+                       and getattr(a0, f).tobytes() == getattr(a1, f).tobytes() for f in ("xyz", "parent", "types"))
+    return {"policy": policy, "arbor_bitwise_equal": bool(arrays_equal and same_arbor(a0, a1)),
+            "omitted_keys_exactly_the_two": omitted == expected_omitted and not (set(i1) - set(i0)),
+            "records_equal_without_the_two": Geo.canonical(jsonable(stripped)) == Geo.canonical(jsonable(i1)),
+            "executed_policy": i1["executed_policy"], "fallback_reason": i1["fallback_reason"]}
 
 
 class FrozenMemo:
@@ -3074,10 +3158,11 @@ class Engine:
                 details={"soma_distance_um": float(np.sqrt(d2[i])), "same_label_donors": replica["same_label_donors"],
                          "pool_donors": len(scope["ids"])})
 
-        # frozen prototype, unmodified predict_policy on the whole pool (C1, C4, C5 controls; F1, F2 candidates)
+        # frozen prototype on the whole pool (C1, C4, C5 controls; F1, F2 candidates): the frozen predict_policy's numerical
+        # path through the engine's compact adapter, which omits only its two discarded full-matrix diagnostics
         with self.memo.frozen_memo():
             for policy in T.POLICIES:
-                arbor, info = T.predict_policy(query, pool, regional, policy)
+                arbor, info = compact_predict_policy(query, pool, regional, policy)
                 attachment = info.get("attachment") or {}
                 put(METHOD_OF_FROZEN_POLICY[policy], arbor, family="frozen", requested_policy=policy,
                     executed_policy=info["executed_policy"], fallback=bool(info["fallback"]) and policy != T.BASELINE,
@@ -4688,6 +4773,61 @@ def prove_memo(engine, queries=3):
     ok = all(r["pair_distance_bit_identical"] and r["pair_f1_loss_bit_identical"] and r["medoid_identical"]
              and all(r["policies"].values()) for r in rows)
     return {"queries": len(rows), "all_bit_identical": bool(rows) and ok, "rows": rows}
+
+
+def _arbor_bytes_equal(a, b):
+    return all(getattr(a, f).dtype == getattr(b, f).dtype and getattr(a, f).shape == getattr(b, f).shape
+               and getattr(a, f).tobytes() == getattr(b, f).tobytes() for f in ("xyz", "parent", "types"))
+
+
+@contextmanager
+def _original_frozen_path_for_proof():
+    """PROOF ONLY (prove_compact_parity): routes the engine's frozen-prototype call back to the unmodified
+    T.predict_policy so that the same query can be forecast both ways. Never used by a stage."""
+    global compact_predict_policy
+    adapter = compact_predict_policy
+    compact_predict_policy = T.predict_policy
+    try:
+        yield
+    finally:
+        compact_predict_policy = adapter
+
+
+def prove_compact_parity(engine, neurons):
+    """For TRAINING queries only (development scope, own animal left out): (a) each of the five policies, the
+    unmodified predict_policy against the compact adapter inside the same FrozenMemo; (b) the engine's whole
+    forecast (all sixteen method records and the prediction log) made through the adapter and through the
+    unmodified function. Arbors are compared byte for byte; records as canonical JSON."""
+    if engine.stage != "develop":
+        raise EngineError("the compact-adapter parity proof runs on training queries only")
+    rows = []
+    for neuron in neurons:
+        row = engine.cohort.rows[neuron]
+        if row.part != "train":
+            raise LeakError(f"{neuron} is not a training neuron")
+        scope = engine.scope(row.animal)
+        pool = engine.pool_donors(scope)
+        regional = engine.states.get(engine.states.state_id_for(neuron))
+        soma = np.array(row.soma, dtype=float)
+        query = T.Query(row.neuron, row.animal, row.full_id, soma.copy(), soma.copy(), row.tag)
+        policies = [compact_parity(query, pool, regional, policy, memo=engine.memo) for policy in T.POLICIES]
+        records1, log1 = engine.forecast(neuron)
+        with _original_frozen_path_for_proof():
+            records0, log0 = engine.forecast(neuron)
+        methods = {}
+        for r0, r1 in zip(records0, records1):
+            strip = lambda r: Geo.canonical(jsonable({k: v for k, v in r.items() if k != "arbor"}))
+            methods[r1["model"]] = bool(r0["model"] == r1["model"] and _arbor_bytes_equal(r0["arbor"], r1["arbor"])
+                                        and strip(r0) == strip(r1))
+        rows.append({"query": neuron, "pool_donors": len(pool), "policies": policies,
+                     "sixteen_records_identical": methods, "methods": len(methods),
+                     "prediction_log_identical": Geo.canonical(jsonable(log0)) == Geo.canonical(jsonable(log1))})
+    ok = bool(rows) and all(all(p["arbor_bitwise_equal"] and p["omitted_keys_exactly_the_two"] and p["records_equal_without_the_two"]
+                                for p in r["policies"]) and r["methods"] == len(METHODS)
+                            and all(r["sixteen_records_identical"].values()) and r["prediction_log_identical"] for r in rows)
+    return {"queries": len(rows), "all_identical": ok, "omitted_info_keys": list(COMPACT_OMITTED_INFO_KEYS),
+            "executed_policies": sorted({p["executed_policy"] for r in rows for p in r["policies"]}),
+            "fallback_reasons": sorted({str(p["fallback_reason"]) for r in rows for p in r["policies"]}), "rows": rows}
 
 
 def check_official_copies(engine, max_pairs=None):

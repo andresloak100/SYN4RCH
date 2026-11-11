@@ -304,11 +304,11 @@ def test_on_the_real_cohort_the_bridge_never_starts_the_layers_benchmark(tmp_pat
 
 
 @real_only
-def test_real_cohort_as_it_is_now_the_finished_run_is_not_named_in_the_protocol_so_held_out_forecasts_are_refused(tmp_path):
+def test_real_cohort_as_it_is_now_the_finished_run_is_anchored_and_held_out_forecasts_still_need_their_traces(tmp_path):
     """Review finding 8: the state of the real cohort on disk now. The general layer's owner has finished its single run
-    (data/interim/synarch_recon/run_complete.json), and the protocol does not name it on its anchor line: a held-out
-    forecast is refused for both candidate families, and the engine cannot start, replace or serve the layer's
-    benchmark. Only the 37 local training traces are listed (legacy_only); every engine output goes to tmp_path; no
+    (data/interim/synarch_recon/run_complete.json), and since 2026-11-11 the protocol names it on its anchor line. A
+    held-out forecast is still refused here for both candidate families (the held-out traces of this legacy world are
+    not on disk), and the engine cannot start, replace or serve the layer's benchmark. Only the 37 local training traces are listed (legacy_only); every engine output goes to tmp_path; no
     trace, no regional row and nothing under data/raw/jiao2025/traces is opened."""
     real = E.real_world(out=tmp_path, legacy_only=True)
     run = ROOT / "data/interim/synarch_recon/run_complete.json"
@@ -319,13 +319,12 @@ def test_real_cohort_as_it_is_now_the_finished_run_is_not_named_in_the_protocol_
         engine = E.Engine(real, "validate", workers=1, log=None, family=family)
         with pytest.raises(E.EngineError, match="never freezes, runs, scores or serves"):
             engine.prepare_general_layer()
-        with pytest.raises(E.EngineError, match=f"{sha}.*is not named on the protocol's anchor line"):
-            engine.require_general_layer()
         with pytest.raises(E.StageBlocked, match="have not been fetched"):
             engine.predict()
     status = B.run_status(real)
     assert status["finished_run"] is True and status["run_complete_sha256"] == sha
-    assert E.Engine(real, "validate", workers=1, log=None).protocol_anchor() is None      # '(not written yet)'
+    # 2026-11-11, acceptance step: the protocol's anchor line now names exactly this run (it was '(not written yet)')
+    assert E.Engine(real, "validate", workers=1, log=None).protocol_anchor() == sha
     assert not (tmp_path / "validate").exists() and not (tmp_path / "states").exists()  # nothing written, nothing registered
 
 
@@ -1596,8 +1595,10 @@ def test_round2_only_a_whole_visible_anchor_line_in_the_protocol_counts(layered,
     assert anchor_of("# p\n\n**general layer run_complete.json SHA-256: (not written yet)**\n") is None
     assert anchor_of(f"# p\n\nThe run {sha} is mentioned, not anchored.\n") is None
     assert anchor_of(f"# p\n\n<!-- a comment -->\n\n  **general layer run_complete.json SHA-256: {sha}**  \n") == sha
-    # the accepted protocol as it is now: the placeholder, read without error
-    assert E.Engine(E.real_world(legacy_only=True), "develop", workers=1, log=None).protocol_anchor() is None
+    # the real protocol as it is now: its one anchor line names the finished run on disk (written 2026-11-11)
+    run = ROOT / "data/interim/synarch_recon/run_complete.json"
+    if run.exists():
+        assert E.Engine(E.real_world(legacy_only=True), "develop", workers=1, log=None).protocol_anchor() == E.sha_file(run)
 
 
 def test_round2_an_edited_or_remade_registration_cannot_bring_a_forged_run_in(layered, tmp_path):
