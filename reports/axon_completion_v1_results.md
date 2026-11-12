@@ -81,9 +81,12 @@ Selector minus control. Brackets are paired sample-bootstrap 95% intervals (10,0
 
 **Plain reading:**
 * The prefix-aware COPYING controls are much worse than the local soma medoids (about 760–1,100 um vs 620 um).
-  Matching the first 300 um does not, on its own, pick a donor whose distal route is right.
+  Choosing a donor by these tested prefix-matching rules does not pick a donor whose distal route is right. This
+  is not proof that the partial observation holds no usable information; other representations were not tested
+  here.
 * The learned selector adds about +0.01 hidden F1 and no distance gain over E1/E2.
-* Its prefix input adds little beyond the metadata-only learner: +0.009 F1, distance +3.3 um (a tie).
+* With these features, its prefix input adds little beyond the metadata-only learner: +0.009 F1, distance +3.3 um
+  (a tie).
 
 ## Details
 
@@ -136,3 +139,19 @@ Selector minus control. Brackets are paired sample-bootstrap 95% intervals (10,0
 
 The same folder also holds `index.jsonl`, `labels_fit.jsonl` (185,293 pairs), `labels_score.jsonl` (37,423 pairs),
 `decoded.jsonl` and `run.log`. The experiment is complete and is not repeated.
+
+## ROOT verification (reporting-only update)
+
+ROOT independently checked the saved outputs with `analysis/axon_completion_result_check.py` (SHA-256 `73ab1ccb…`).
+* It checked:
+  * all 4,368 observations and the folds;
+  * the 37,423 score pairs and the 69,888 method-score hashes;
+  * the exact fallbacks and the source pins;
+  * the bootstrap intervals and the cable guards.
+* Everything agrees, with a maximum mean error of 2.3e-13. No refit and no rescore.
+* The old test is unchanged.
+
+Receipt: `data/interim/axon_completion_v1_root/saved_result_check.json`, SHA-256
+`6f531a1fb1210b73d8d0f53bf9b3844ff4ac9dfe9c30c53c54c4258d188d8213`.
+
+**FAIL confirmed.** The v1 code, protocol and run outputs are unchanged.
