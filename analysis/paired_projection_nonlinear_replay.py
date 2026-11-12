@@ -66,9 +66,31 @@ def verify_completion(run_dir):
         started = load(run_dir/'STARTED.json')
         require(sha(run_dir/'protocol_snapshot.json') == started['protocol_snapshot_sha256'],
                 'protocol snapshot differs from STARTED')
-        require(started['protocol_sha256'] == started['protocol_snapshot_sha256'],
-                'executing protocol and saved protocol differ')
+        if 'protocol_sha256' in started:
+            require(started['protocol_sha256'] == started['protocol_snapshot_sha256'],
+                    'executing protocol and saved protocol differ')
     return done
+
+
+def verify_source_bindings(run_dir, selection=None):
+    started = load(run_dir/'STARTED.json')
+    paths = {'nonlinear': 'analysis/paired_projection_nonlinear.py',
+             'development': 'analysis/paired_projection_logloss_development.py',
+             'frozen_runner': 'analysis/paired_projection_real_benchmark.py',
+             'reference': 'analysis/paired_projection_reference.py',
+             'simulation': 'analysis/paired_projection_simulation.py',
+             'simulation_protocol': 'docs/paired_projection_simulation_protocol.json'}
+    require(set(paths) == set(started['source_sha256']), 'executing source pin set differs')
+    for name, path in paths.items():
+        require(sha(ROOT/path) == started['source_sha256'][name], 'executing/import source hash differs: '+name)
+    require(sha(ROOT/'docs/paired_projection_nonlinear_protocol.json') == started['protocol_snapshot_sha256'],
+            'current immutable protocol differs from saved snapshot')
+    if selection is not None:
+        require(selection['source_sha256'] == started['source_sha256'], 'selection source binding differs')
+        require(selection['protocol_snapshot_sha256'] == started['protocol_snapshot_sha256'],
+                'selection protocol binding differs')
+    return {'source_sha256': started['source_sha256'],
+            'protocol_snapshot_sha256': started['protocol_snapshot_sha256']}
 
 
 def adapter_from_train(x):
@@ -182,6 +204,11 @@ def verify_sim_training(run_dir, data, audit, case):
 def verify_artifacts(run_dir, selection, protocol):
     """Load only our known completed, hash-pinned joblib files; never score training predictions."""
     import joblib
+    # The caller verifies these exact local source bytes before this import.
+    # Only its feature-only public inference API is used; no scores/selectors/fits.
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from analysis import paired_projection_nonlinear as inference
     manifest, ids, genes, pos, groups, labels = a1_inputs(protocol)
     out = {}
     for family in FAMILIES:
@@ -204,6 +231,9 @@ def verify_artifacts(run_dir, selection, protocol):
         require(set(meta['targets']) == {t for _, t in labels}, 'artifact target list differs')
         models = joblib.load(model_path)
         require(set(models) == set(meta['targets']), 'artifact fitted model target list differs')
+        api = inference.artifact_predict(meta, models, gnames, manifest['position_columns'],
+            genes if family == FAMILIES[0] else None, pos)
+        worst = 0.
         for target, target_meta in meta['targets'].items():
             y = np.array([labels[(cell, target)] for cell in ids]); fit = y >= 0
             require(target_meta['train_cell_ids'] == sorted(np.asarray(ids)[fit]) and
@@ -214,13 +244,17 @@ def verify_artifacts(run_dir, selection, protocol):
             require(models[target].n_features_in_ == x.shape[1], 'artifact model feature width differs')
             close_tree(meta['hgbt'], models[target].get_params())
             adapter = target_meta['adapter']
-            probe = x[:8].copy()
+            probe = x.copy()
             z = (probe-np.asarray(adapter['scaler_mean']))/np.asarray(adapter['scaler_scale'])
             p = (1-meta['alpha'])*models[target].predict_proba(z)[:, 1]+meta['alpha']*q
             require(np.isfinite(p).all() and ((p >= 0) & (p <= 1)).all(), 'artifact inference invalid')
+            error = float(np.max(np.abs(p-api[target])))
+            require(error <= TOL, 'feature-only artifact API differs from independent inference')
+            worst = max(worst, error)
         out[family] = {'metadata_sha256': sha(meta_path), 'model_sha256': sha(model_path),
                        'targets': len(models), 'feature_only_inference_finite': True,
-                       'fit_identity_adapter_and_prior_verified': True, 'scored_as_oof': False}
+                       'fit_identity_adapter_and_prior_verified': True, 'scored_as_oof': False,
+                       'feature_api_max_abs_error': worst, 'cells_predicted_without_labels': len(ids)}
     return out
 
 
@@ -475,6 +509,7 @@ def replay_a1(run_dir, protocol):
     prior = verify_old_oof(data, old, protocol['comparators']['a1_keys'])
     close_tree(prior, result['baseline_replay'])
     sel = load(run_dir/'selection.json')
+    sources = verify_source_bindings(run_dir, sel)
     close_tree({'alphas': {f: selections[f]['alpha'] for f in FAMILIES},
                 'selected_keys': {f: selections[f]['selected'] for f in FAMILIES}, 'gate_met': checks['met']}, sel)
     shrink = check_shrinkage(data, audit)
@@ -488,11 +523,13 @@ def replay_a1(run_dir, protocol):
             'baseline_oof_replay': prior, 'raw_shrinkage_max_abs_error': shrink,
             'selected': selections, 'gate': checks, 'scores': scores,
             'training_audit_replay': training, 'deployment_artifact_checks': artifacts,
+            'source_and_protocol_binding': sources,
             'completion_sha256': sha(run_dir/'RUN_COMPLETE.json'), 'refits_performed': 0}
 
 
 def replay_sim(run_dir, protocol):
     done = verify_completion(run_dir)
+    sources = verify_source_bindings(run_dir)
     cases, n = parse_rows(run_dir/'predictions.csv', simulation=True)
     expected_cases = {f'{s}|{seed}' for s, seeds in NEW_SEEDS.items() for seed in seeds}
     require(set(cases) == expected_cases, 'synthetic cases missing or unexpected')
@@ -543,6 +580,7 @@ def replay_sim(run_dir, protocol):
             'raw_shrinkage_max_abs_error': worst,
             'per_case_gate': all_gates, 'hidden_state_expected_risk': nulls,
             'training_data_audit': training, 'frozen_selection_record_sha256': sha(record_path),
+            'source_and_protocol_binding': sources,
             'meaning': 'Three seeds per scenario are bounded sensitivity, not biological validation.',
             'completion_sha256': sha(run_dir/'RUN_COMPLETE.json'), 'refits_performed': 0}
 

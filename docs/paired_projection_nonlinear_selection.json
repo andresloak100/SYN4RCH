@@ -1,0 +1,56 @@
+{
+  "a1_gate_met": false,
+  "a1_predictions_sha256": "86b173d18e24f78f95cc72ed64f50a5163dc61ffb080d40fa893e1606d4ef816",
+  "a1_protocol_snapshot_sha256": "f7943016ada22a3958e7800db2ca3ecefd8fae8979a3fdd3a713afc0218a28a6",
+  "a1_result_sha256": "e7cf0f19c021c6556544199d478349b6bd655938fab3e74fa5295f388ee0daa7",
+  "a1_run_complete_sha256": "ad05b855891f5516385da25bae8fc36c813dc749ceeb9920711f45676784a86c",
+  "a1_selection_sha256": "d7a8ea2e1409fc1ca09afb688421bfcbaadfeb89004ea2701be175c04f55daa2",
+  "a1_source_sha256": {
+    "development": "d0b6a28cb2fed7a29582843c6129bf0393cafbf885e95c0ec9e07ad394867f2e",
+    "frozen_runner": "7b23157a704cd6e34eb887a7b9ec59f3e2050e86435f9cd174efb0ec1250baac",
+    "nonlinear": "20988e42b544c68df833c7e2967b21e90832287a2982a607db4e90be30db8adc",
+    "reference": "9ae3dd30a7fad55c6b7d232e8faad4ec678bf406c105faa61cade544039723a3",
+    "simulation": "a789a103ec1940143afc0d95fc596d40358a2cd0093d659e34a33ed111082f67",
+    "simulation_protocol": "2e3aede234f9c09a595bff88acbd801a95853982d9b08131f61b8240b6dd0ac5"
+  },
+  "alphas": {
+    "hgbt_gene_position": 0.1,
+    "hgbt_position": 0.25
+  },
+  "decision": "Frozen logistic remains operational. Nonlinear development candidate is tested unchanged, not promoted.",
+  "fixed_hgbt": {
+    "categorical_features": null,
+    "class_weight": null,
+    "early_stopping": false,
+    "l2_regularization": 1.0,
+    "learning_rate": 0.05,
+    "loss": "log_loss",
+    "max_depth": 2,
+    "max_iter": 100,
+    "max_leaf_nodes": 4,
+    "min_samples_leaf": 20,
+    "random_state": 20261112
+  },
+  "frozen_utc": "2026-11-12T18:07:06.237972+00:00",
+  "independent_replay": {
+    "path": "data/interim/paired_projection_nonlinear/nonlinear_a1_dev_v1/ROOT_REPLAY.json",
+    "sha256": "98f1a1840d1f115328085b1f4204831ddad13dc3921d8611871e419a5df54b76",
+    "verifier_source_sha256": "3482d271d2c6059b7e9a57524637b908f8111cd851b7029f17847961c3ff886b"
+  },
+  "limits": "A1 both animals exposed development; next 12 cases generic synthetic evidence, not new hypothalamus neurons or 3D circuit validation.",
+  "no_simulation_results_seen_at_freeze": true,
+  "operational_model": "models/paired_projection/a1_logloss_v1.json",
+  "operational_recipe": "models/paired_projection/logloss_recipe_v1.json",
+  "schema": "synarch_nonlinear_selection_record_v1",
+  "selected_keys": {
+    "hgbt_gene_position": "hgbt_gene_position|alpha=0.1",
+    "hgbt_position": "hgbt_position|alpha=0.25"
+  },
+  "source_commit": "a76448adb27eb884066b5769c1e9ffada49949ba",
+  "status": "FROZEN_FOR_PRESPECIFIED_FRESH_SYNTHETIC_SENSITIVITY",
+  "user_constraints": [
+    "No lab collaboration",
+    "No new author contact or downloads",
+    "All work in andresloak100/SYN4RCH"
+  ]
+}
