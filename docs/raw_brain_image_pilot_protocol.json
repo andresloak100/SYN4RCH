@@ -1,0 +1,184 @@
+{
+  "schema": "synarch_raw_brain_image_pilot_protocol_v1",
+  "status": "DRAFT_FOR_ROOT_REVIEW",
+  "date": "2026-11-12",
+  "files": {
+    "code": "analysis/raw_brain_image_features.py",
+    "tests": "tests/test_raw_brain_image_features.py",
+    "raw_inputs": "data/raw/raw_brain_image_pilot/mouselight_2018-03-26/ (git-ignored)",
+    "outputs": "data/interim/raw_brain_image_pilot/"
+  },
+  "part_A_raw_image_pilot": {
+    "purpose": "Show that a small public raw 3D microscopy volume from independent animals can be acquired, pinned and turned into target-free, unit-preserving local measurements. Descriptive only; no fitted biological accuracy.",
+    "route": {
+      "bucket": "s3://janelia-mouselight-imagery (AWS Open Data registry; licence Creative Commons Attribution 4.0)",
+      "access": "anonymous HTTPS GET and list-type=2 listings; no account, no credentials, no contact",
+      "publication": "Winnubst et al., Cell 179:268-281 (2019), doi:10.1016/j.cell.2019.07.042"
+    },
+    "specimen_choice": {
+      "image_date": "2018-03-26",
+      "rule": "an imaged brain with NO prefix under neurons/Finished_Neurons/ or tracings/tracing_complete/ in the public listing, so it holds no released reconstruction and cannot belong to the 22-sample hypothalamic test cohort",
+      "never_downloaded": [
+        "neurons/",
+        "tracings/",
+        "reconstructions/",
+        "carveouts/",
+        "segmentation/"
+      ]
+    },
+    "acquired": {
+      "images/2018-03-26/default.0.tif": {
+        "bytes": 106849192,
+        "sha256": "857b8b4be6c1f0641cb083b077e1b5bb84b1acc29ae8da031d6213bf0bb0f984",
+        "etag": "fcedf4516a89853d9152905c4494abe0-13"
+      },
+      "images/2018-03-26/transform.txt": {
+        "bytes": 112,
+        "sha256": "bd1b56314f0df56d4b89ff2ecd8ff2dcb27cac6b611176b6b0452003c7d787f5",
+        "etag": "daa6149bf31e60e18c3f2f5f1ba9aeab"
+      },
+      "registration/2018-03-26/HortaObj/HY_1097.obj": {
+        "bytes": 2003618,
+        "sha256": "27f092ec1de239c6be543fab7560821e2d953d520a804f5bc39d9503e5117b0a",
+        "etag": "16709d77ac0f6b3e29bc20733be25110"
+      },
+      "total_bytes": 108852922,
+      "budget_bytes": 250000000,
+      "listings": "data/interim/raw_brain_image_pilot/acquisition/*.xml (bucket listings only)"
+    },
+    "image": {
+      "volume": "208 x 472 x 544 (z, y, x) uint16, one channel (default.0.tif), octree root level of 7",
+      "voxel_size_um_xyz": [
+        19.145,
+        19.229,
+        62.054
+      ],
+      "finest_level_voxel_um_xyz": [
+        0.299,
+        0.3,
+        0.97
+      ],
+      "frame": "MouseLight sample (imaging) space; transform.txt origin and voxel size in nanometres; Horta corner convention",
+      "crop": "1200 um cube centred on the centroid of the hypothalamus mesh that MouseLight back-registered into this sample's space; the mesh places the crop and is not a feature"
+    },
+    "features": {
+      "intensity_qc": "statistics in the source dtype and units actually present (recorded per run); no unit conversion",
+      "bright_signal_fraction": "fraction above Otsu x {0.8, 1.0, 1.25}; the spread is reported as segmentation uncertainty",
+      "orientation": "3D structure tensor in physical micrometres, eigenvalues l1 <= l2 <= l3. The tube-like direction is the l1 eigenvector, weighted per voxel by the gap (l2 - l1); if sum(l2 - l1) / sum(l3) < 0.1 (planar or isotropic texture, where the smallest eigenvector is arbitrary) the status is NO_TUBE_DIRECTION and the direction is undefined. A flat crop gives NO_SIGNAL and a fully excluded crop NO_VALID_VOXELS. The 0.1 threshold was fixed on synthetic sheets and tubes only.",
+      "compact_object_scale": "scale-normalised PHYSICAL Laplacian of Gaussian (each axis's second derivative divided by its spacing squared); radius r probed at sigma = r*sqrt(2)/3 (the maximiser for a Gaussian blob of radius r = sd*sqrt(3)); only when soma-scale sampling is adequate; never a soma identification",
+      "support_flags": "soma-scale sampling is adequate when the largest voxel edge is <= 3 um; single-neurite resolution is NEVER certified from voxel size alone (optical resolution / PSF unknown)",
+      "exclusion": "any outcome or projection-region voxels can be excluded; they are removed from every statistic and replaced by the valid median before smoothing so they cannot leak",
+      "never": [
+        "calling fluorescent signal axons, neurons or projections",
+        "gene profiles",
+        "any target-derived value"
+      ]
+    },
+    "exact_gaps": [
+      "CCF coordinates of crop voxels need registration/2018-03-26/Transform.2018-03-26.h5 (10,254,288,480 bytes), above budget; the 2018-03-26.nrrd is 6.8 GB and Transformed_2018-03-26.nrrd 266 MB",
+      "the fluorophore of channel 0 is not stated in the bucket",
+      "root-level voxels (19 x 19 x 62 um) cannot resolve somata or single neurites; higher octree tiles would be needed",
+      "Horta voxel corner versus centre convention is not stated (half-voxel uncertainty)"
+    ],
+    "synthetic_tests": "planted tubes (direction recovered within cos > 0.95 under anisotropic spacing), planted Gaussian blobs (radius recovered on a fixed grid), exact intensity statistics, threshold monotonicity, half-up crop sizing, coordinate round trip, exclusion invariance and forbidden-name refusal; these establish numerical behaviour only",
+    "run_v1_note": "run raw_image_pilot_mouselight_2018-03-26_v1 used the earlier code (arbitrary direction on near-flat data, voxel-grid LoG, sampling-based neurite flag); its receipts are kept unchanged and superseded by this revision. Its root-level orientation (along the 62 um axis) is treated as a sampling artefact."
+  },
+  "part_B_model_compatibility_audit": {
+    "question": "Which frozen SYN4RCH model can be scored on MouseLight independent animals using only permitted inputs?",
+    "mouselight_permitted_inputs": "soma position (CCFv3 from public metadata, converted to the mirrored-left AP/DV/ML micrometre frame) and the raw image; no genes, no Cre/peptide source label for most neurons, no partial axon unless a protocol explicitly reveals one",
+    "audit": [
+      {
+        "model": "paired-projection gene models (frozen logistic recipe, nonlinear HGBT, PVH pilot)",
+        "inputs": "measured endogenous genes (+ position)",
+        "compatible": false,
+        "reason": "MouseLight has no gene measurements; scoring them would require inventing gene profiles"
+      },
+      {
+        "model": "SYNARCH reconstruction engine T1 (regional profile)",
+        "inputs": "soma position + Jiao source label",
+        "compatible": false,
+        "reason": "MouseLight neurons lack Jiao source labels; the frozen API refuses unseen labels; status was no_better_than_baseline (KNN 1.259 vs engine 1.371 log MSE)"
+      },
+      {
+        "model": "axon completion v1/v2",
+        "inputs": "soma + first 300 um of the observed axon",
+        "compatible": false,
+        "reason": "needs revealed axon geometry, which stays unopened; both runs failed their gates"
+      },
+      {
+        "model": "routing v3",
+        "inputs": "donor trees + route graph on Jiao TRAIN",
+        "compatible": false,
+        "reason": "development-only and lost to complete donor copying"
+      },
+      {
+        "model": "D-110 learned growth",
+        "inputs": "query soma only",
+        "compatible": true,
+        "reason": "soma-only, so technically compatible; superseded and not one of the external-test candidates"
+      },
+      {
+        "model": "D-111 complete sections (analysis/d111_geometry.py fce55fb9..., d110_geometry.py 3b011643...)",
+        "inputs": "query soma and seed only",
+        "compatible": true,
+        "reason": "soma-only, so technically compatible; it lost to representative-neuron copy on both measures in development (1.112 mm / F1 0.101 vs 0.922 mm / 0.198) and is not one of the external-test candidates"
+      },
+      {
+        "model": "E4 local kernel regional (frozen brm_template / axon_engine recipe)",
+        "inputs": "query soma; missing source tag marginalised with the frozen brm_geometry.state_posterior(None)",
+        "compatible": true,
+        "reason": "external-test candidate in the ROOT-owned docs/mouselight_external_protocol.json; its previous full test gate failed, so it is not a validated winner"
+      },
+      {
+        "model": "E6 local consensus (frozen)",
+        "inputs": "query soma only",
+        "compatible": true,
+        "reason": "second predeclared external-test candidate (soma-kernel medoid template with consensus pruning at 200 um and 25% weighted neighbour support), not selected from MouseLight"
+      },
+      {
+        "model": "E7 regional bridge (frozen T1 bridge)",
+        "inputs": "soma + measured source label",
+        "compatible": false,
+        "reason": "requires a measured source label; its no-value fallback equals E2, so it is omitted rather than given a fabricated input"
+      },
+      {
+        "model": "image features from part A",
+        "inputs": "raw image",
+        "compatible": false,
+        "reason": "no frozen model uses image features; part A is a data/feature pilot only"
+      }
+    ],
+    "conclusion": "MouseLight can supply only soma position (plus raw images, which no frozen model uses). The external test (ROOT-owned analysis/mouselight_external_test.py and docs/mouselight_external_protocol.json) uses two fixed soma-only geometry candidates, E4 (missing tag marginalised) and E6, against nearest copy, global medoid copy, E1 local uniform and E2 local kernel, with E1/E2/E6 as the aggregation controls. Each candidate must have strictly lower distance and strictly higher F1 than every control; E4 already failed its earlier full test gate. No gene model (frozen logistic recipe, nonlinear HGBT, PVH pilot) may be scored on MouseLight, which has no measured genes; the reconstruction engine T1 and E7 need a measured source label and are not used."
+  },
+  "part_C_external_mouselight_test_DRAFT": {
+    "status": "WITHDRAWN in favour of ROOT-owned docs/mouselight_external_protocol.json",
+    "corrections": [
+      "the 18 MouseLight comparator filenames in Jiao Supplementary Fig 4 are NOT automatically excluded: reports/swc_prototype.md and analysis/swc_fetch.py show those AA files were not fetched or used and current TRAIN donors are all Jiao IDs (zero AA); filename presence does not establish exposure or shared animals",
+      "main manifest is the 97 HY-subtree neurons from 22 brains; the 77 classic-HY neurons are a subset",
+      "soma metadata is already acquired (mouselight_hy_source_manifest.json)"
+    ],
+    "rule": "no MouseLight query truth is downloaded until ROOT-owned predictions are sealed and committed"
+  },
+  "part_A2_high_resolution_ktx_pilot": {
+    "run_id": "raw_image_ktx_pvh_20170419_273377_v3",
+    "source": "ROOT-acquired MouseLight texture images/2017-04-19/ktx/2/7/3/3/7/7/block_8_xy_273377.ktx (SHA-256 08eee2363d455e832da48275dfcd11ddb5128fd1deb4a0e422aef94271930627, 11,058,544 bytes) with source_pilot_receipt.json and source_pilot_quality.json; no new download",
+    "decoder": "strict KTX1 reader: identifier, little-endian marker, uncompressed GL_UNSIGNED_BYTE RG8 (format/internal/base), no array elements, faces 0 or 1, key-value block parsed to its exact length, first mip imageSize = W x H x D x 2 with 4-byte row alignment, no truncation; geometry from xyz_from_texcoord_xform cross-checked against corner_xyzs, distance_units must be micrometers",
+    "image": "first mip 150 x 144 x 224 voxels (z, y, x), two channels, uint8; spacing x 0.663, y 0.653, z 0.999 um; native sample frame, not CCF",
+    "units": "8-bit intensity-rescaled fluorescence (per-channel gamma 2.0, scale and offset in the metadata); not linear camera counts; channel identities unknown",
+    "selection": "PVH atlas-mesh bounding-box centre chosen by ROOT without any neuron target; the patch is NOT verified to be soma-centred",
+    "cohort_note": "brain 2017-04-19 belongs to the MouseLight hypothalamic cohort; only raw imagery is processed, no trace geometry is opened; this patch is recorded as viewed imagery",
+    "outputs": "features.json (both channels), projections.png (max projections with a 20 um scale bar and key features), STARTED and RUN_COMPLETE",
+    "not_claimed": [
+      "neuron, soma, axon or gene identification",
+      "biological accuracy",
+      "CCF location"
+    ],
+    "run_v1_note": "run raw_image_ktx_pvh_20170419_273377_v1 is kept unchanged; it has identical features but its figure used whole-volume percentiles that clipped the max projections; v2 changes only the display contrast and label placement",
+    "interpretation_limits": [
+      "dominant orientation lies along z (the coarsest, axial direction) in both channels: consistent with axial point-spread elongation or sampling anisotropy, not interpretable as biological fibre direction",
+      "brightest compact object scored at the smallest probed radius (2 um) near the volume edge: not evidence of a soma",
+      "bright curvilinear signal is visible but is not identified as an axon, dendrite or vessel"
+    ],
+    "run_v2_note": "run raw_image_ktx_pvh_20170419_273377_v2 is kept unchanged; it weighted directions by (l3 - l1), which can report an arbitrary direction for planar texture; v3 uses the (l2 - l1) rule"
+  }
+}
