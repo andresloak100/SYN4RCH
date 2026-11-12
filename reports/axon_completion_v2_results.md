@@ -14,7 +14,7 @@ confirmed it.
 * Protocol: `reports/axon_completion_v2_protocol.md` (FINAL/APPROVED, SHA-256 `48d3a777…`).
 * Code: `analysis/axon_completion_v2.py` (`f75712f5…`). Tests: `tests/test_axon_completion_v2.py` (`496af39f…`).
 * All were committed at 4a1a7ce before `RUN_STARTED`.
-* The run: 2026-11-12 05:28–05:36 UTC, one continuous run, 4 workers, all four thread variables set to 1.
+* The run: 2026-11-12 05:26–05:36 UTC, one continuous run, 4 workers, all four thread variables set to 1.
 
 ## What changed from v1
 
