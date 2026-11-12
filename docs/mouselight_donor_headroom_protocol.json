@@ -1,0 +1,53 @@
+{
+  "code": "analysis/mouselight_donor_headroom.py",
+  "diagnostic_id": "mouselight_16_donor_headroom_v1",
+  "fixed_recipes": {
+    "aggregation": "Per neuron, mean within source sample, equal mean across22 samples",
+    "attachment": "For every candidate donor, unchanged mouselight_external_test.attach: compact_attachment500um, then1000um, otherwise translation of that same complete TRAIN arbor",
+    "baseline": "Reproduce sealed E1 donor attachment and compare BOTH scores to the saved per-query primary metrics within absolute tolerance1e-9",
+    "distance_oracle": "Choose donor with minimum distance_um; tie exactly by ascending donor ID. Report BOTH its distance and F1.",
+    "f1_oracle": "Choose donor with maximum f1_200; tie exactly by ascending donor ID. Report BOTH its distance and F1.",
+    "joint_improvement": "Count queries for which at least one single donor has distance strictly lower AND F1 strictly higher than E1. Report raw count/fraction, per-animal counts/fractions and equal-animal mean fraction.",
+    "metrics": [
+      "frozen symmetric arc-weighted nearest-sample distance_um",
+      "frozen cable F1 within200um"
+    ],
+    "pareto": "Report standard weak dominance (distance<=E1 and F1>=E1, with at least one strict), plus the complement of strict BOTH-improvement separately; do not conflate them.",
+    "truth": "Previously fixed source conversion/admission and canonical50um arbors; retain every measured cable/connector; no clipping"
+  },
+  "interpretation_limits": [
+    "Truth-assisted choices are not predictors, validation or confirmatory results.",
+    "An oracle requires revealed query geometry and cannot choose a hidden donor in any future prediction.",
+    "Headroom establishes candidate geometry availability only; it does not establish learnability from soma, labels, images or genes.",
+    "Only the already fixed sixteen-neighbour pool is examined. Absence of headroom here is not a whole-TRAIN-library or biology ceiling.",
+    "Report the two individually attainable oracle metric pairs; never combine their separately optimized metrics into a fictitious joint prediction.",
+    "No new fit, download, frozen-experiment rerun/change, source profile inference, website change or invented geometry."
+  ],
+  "output": "reports/mouselight_donor_headroom.json",
+  "question": "Within the SAME sixteen sealed TRAIN donors for each revealed external query, how much attainable donor-selection headroom exists over E1?",
+  "recorded_utc": "2026-11-12T20:10:57.006734+00:00",
+  "schema": "mouselight_donor_headroom_protocol_v1",
+  "scope": {
+    "admission": "Reuse the fixed primary ADMISSION exactly; no new exclusions",
+    "animals": 22,
+    "donor_pool": "The sixteen donor_ids in the sealed E1_local_uniform prediction row for each query; no global library expansion or ceiling claim",
+    "external_experiment": "mouselight_external_geometry_v1",
+    "neurons": 97,
+    "truth_status": "All external outcomes are already REVEALED. This diagnostic explicitly uses their answers and is development only."
+  },
+  "source_pins": {
+    "analysis/axon_engine.py": "d9eac6f220691b33adc729ecc24a39d3290418039b7717bb052900741da971a8",
+    "analysis/brm_template.py": "0a3da130c0e0049e8c9cc5df94523442f542f44a6815e82d3ad947a960a8d49a",
+    "analysis/d110_geometry.py": "3b011643b1b224256fdce1ad8a31014e01e644c6a794bd1d49af5e6543090a5e",
+    "analysis/mouselight_external_test.py": "5b7990b9253bd78ac1781e0b7c1bd57d7ba53cd94fe1261796c539b0ffb8b942",
+    "data/interim/mouselight_external_test/mouselight_external_geometry_v1/ACQUISITION.json": "010612bb46b24d50cbb70a24b38f00bb4be8aed99fc5ea9ea5599654b138c728",
+    "data/interim/mouselight_external_test/mouselight_external_geometry_v1/ADMISSION.json": "0109e7d27bc248879f1a4d94c437b7d83a51efc209448e141c4d43ab039478d8",
+    "data/interim/mouselight_external_test/mouselight_external_geometry_v1/FROZEN.json": "b3d40c26978376a8b059520dd537647579427cdfa33235ca91db07521ad89262",
+    "data/interim/mouselight_external_test/mouselight_external_geometry_v1/PREDICTIONS_COMMITTED.json": "66bdc9009794759db5449e1a56662e4fb0ac8898eea8e04552d1459ae4b9c62c",
+    "data/interim/mouselight_external_test/mouselight_external_geometry_v1/SCORE_COMPLETE.json": "6d4297bbf79655dec2503485c46bf9e5195bf35c85b61fca94bbf044d1a76788",
+    "data/interim/mouselight_external_test/mouselight_external_geometry_v1/metrics.json": "6b760fe7de833adb14005ae056250ab60e41104972336e280a5e56622c7e5482",
+    "data/interim/mouselight_external_test/mouselight_external_geometry_v1/prediction_manifest.json": "ecad76d9ec88007628feadd84bde3a190214446bbdfdf74d3107852e058c9c0f",
+    "docs/mouselight_external_protocol.json": "fa19dca6354dd4ba3472e8501a19990ac2dc5841abd0d9a7ee2bcf17cafd5ad3"
+  },
+  "status": "POST_TEST_DEVELOPMENT_PROTOCOL_RECORDED_BEFORE_DIAGNOSTIC_COMPUTATION"
+}

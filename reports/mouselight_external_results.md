@@ -3,13 +3,14 @@
 ## Summary
 
 * **What was tested:** frozen 3D axon-geometry methods, predicting complete axons from the soma position only,
-  on 97 hypothalamic neurons from 22 MouseLight animals that had never been used.
+  on 97 hypothalamic neurons from 22 MouseLight animals excluded from this pipeline's recorded training and
+  development inputs.
 * **Result:** neither fixed learned candidate (E4 or E6) beat every fixed control on both mean distance and mean
   F1. **There is no learned win, and nothing is promoted.**
 * **Best method:** the simple local control E1 (the animal-balanced medoid of the 16 nearest training somas) had
   both the lowest distance and the highest F1.
-* **Verification:** an independent replay passed all 2,155,003 checks, with no errors and no prohibited
-  operation.
+* **Verification:** an independent replay verified the source and forecast pins, all 97 lossless trace
+  conversions, admission and equal-animal score aggregation. Differences in recomputed means were roundoff only.
 
 ## Results
 
@@ -26,6 +27,7 @@ the 22 animals are weighted equally. Lower distance and higher F1 are better.
 | E6 local consensus | learned candidate | 0.871021 | 0.205837 |
 
 **How each candidate did:**
+
 * **E4:** better than both plain copies on distance and F1, but worse than E1 and E2 on both. Gate: not met.
 * **E6:** better than nearest copy on both, worse than E1 on both. Against E2 it is a trade-off: higher F1 but
   worse distance. Gate: not met.
@@ -43,7 +45,8 @@ comparison is descriptive, with no significance test.
 | 4. Trace download started (official route; 178,607,296 bytes of raw responses) | 20:02:18.79 |
 | 5. Single scoring run | 20:03:52.63 to 20:04:02.15 |
 
-* No traced axon existed locally before the lock.
+* No MouseLight evaluation-query axon existed locally before the lock. Training axons and the separate
+  non-test calibration neuron were already available.
 * Every trace request was bound to the publicly locked forecasts.
 * The score ran once.
 
@@ -55,8 +58,9 @@ comparison is descriptive, with no significance test.
   * No query axon, target profile or image feature chose a donor.
 * **Not a gene-model test:** MouseLight has no measured gene profiles. This tests a 3D geometry module only and
   does not validate any gene-based model or gene-to-circuit inference.
-* **No circuit claim:** F1 is the share of cable within 200 um, not a share of circuits reconstructed. Nothing
-  here shows complete or accurate circuit reconstruction, new connections or synapses.
+* **No circuit claim:** F1 is the harmonic mean of predicted-cable precision and measured-cable recall within
+  200 um. It is not the share of circuits reconstructed. Nothing here shows complete or accurate circuit
+  reconstruction, new connections or synapses.
 * **Shared atlas:** MouseLight and the training data share the same atlas frame. One separate cortical neuron
   from a non-test animal checked the format conversion and the physical basis. That check did not establish
   how accurate each laboratory's registration is.
@@ -69,10 +73,12 @@ A separate pilot (`docs/raw_brain_image_pilot_protocol.json`, `analysis/raw_brai
 `5937437c1e0a904dded7c0de2d268ae189c0e36c`) read real MouseLight fluorescence imagery.
 
 **What it did:**
+
 * read a whole-brain root-level TIFF and a high-resolution PVH-region texture with a strict decoder;
 * measured intensity, segmentation uncertainty, scale and orientation in physical units.
 
 **Limits:**
+
 * At high resolution the dominant direction followed the axial (z) axis, which is consistent with optical blur
   rather than fibre direction.
 * The pilot supplies measurements only, not traced cells, genes or validated connections.
