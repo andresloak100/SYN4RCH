@@ -1,0 +1,32 @@
+{
+  "C": 0.1,
+  "alpha": 0.1,
+  "controls_frozen_with_it": {
+    "candidate_logistic": "candidate_logistic|C=0.1|alpha=0.1",
+    "constant_0.5": "constant_0.5",
+    "copy_1nn_location": "copy_1nn_location|alpha=0.5",
+    "copy_1nn_matched": "copy_1nn_matched|alpha=0.5",
+    "location_knn": "location_knn|k=31|alpha=0.5",
+    "location_logistic": "location_logistic|C=0.1|alpha=0.0",
+    "matched_knn": "matched_knn|k=31|alpha=0.1",
+    "molecular_knn": "molecular_knn|k=31|alpha=0.1",
+    "technical": "technical|C=1.0|alpha=0.0",
+    "train_frequency": "train_frequency"
+  },
+  "deployment": "refit on all admitted training animals; predictions take features only, never labels",
+  "family": "candidate_logistic",
+  "fit_weights": "group-balanced 1/n_group, mean-normalised; no class_weight",
+  "frozen_utc": "2026-11-12T17:28:12.737056+00:00",
+  "future_rule": "no new-animal parameter selection; any calibration from fit-side data only",
+  "independent_replay_sha256": "5cfa13b9cfe66d00175924b438ce8e1686c887f8d15e9070830b6fec8c78aa25",
+  "inputs": "log1p measured endogenous genes + measured position (declared axes); StandardScaler fitted on the training animals only",
+  "model": "sklearn LogisticRegression L2 (default), lbfgs, max_iter 2000, tol 1e-6, random_state 20261112",
+  "not_transferable": "A1 23-gene coefficients are not carried over; a new (e.g. hypothalamic) panel refits this recipe only on its own admitted training animals before any held-out test",
+  "reuse_scope": "Probability recipe only. A1-specific weights require the exact 23-gene/depth assay and captured-target definitions. A new measured gene panel must be refit using only admitted training animals. Simulations remain synthetic evidence.",
+  "schema": "synarch_paired_projection_frozen_recipe_v1",
+  "selection_basis": "leave-one-animal-out OOF on the 2 exposed A1 animals; development-optimistic",
+  "shrinkage": "p' = (1 - alpha) p + alpha q_fit, q_fit = group-balanced captured rate in the training animals only",
+  "source_development_result_sha256": "2df329387bec6ea6a1a1aa4c0184bfed236d8c139e657c310151defae4822647",
+  "source_development_run": "logloss_dev_barseq2_a1_v1",
+  "status": "FROZEN_FOR_FUTURE_EXTERNAL_VALIDATION"
+}

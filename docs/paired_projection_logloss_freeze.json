@@ -1,0 +1,42 @@
+{
+  "code_sha256": "d0b6a28cb2fed7a29582843c6129bf0393cafbf885e95c0ec9e07ad394867f2e",
+  "development_exposure": "Selected on the same cross-animal development predictions reported; estimates optimistic, not an independent improvement claim.",
+  "development_freeze_commit": "74bd3111ca7613bfa32a4d90c5e8acf9389caf67",
+  "development_run": "logloss_dev_barseq2_a1_v1",
+  "frozen_utc": "2026-11-12T17:28:12.737909+00:00",
+  "independent_replay": {
+    "path": "data/interim/paired_projection_logloss_development/logloss_dev_barseq2_a1_v1/ROOT_REPLAY.json",
+    "sha256": "5cfa13b9cfe66d00175924b438ce8e1686c887f8d15e9070830b6fec8c78aa25"
+  },
+  "measured_input": "23 endogenous genes and one image-measured normalized cortical-depth axis",
+  "model_artifact": {
+    "path": "models/paired_projection/a1_logloss_v1.json",
+    "sha256": "7cdb560801787680d6458c5a798386b3dfbeb32f9162e7f6ad2dc2caeb39c2f1"
+  },
+  "new_hypothalamus_evaluation": "NOT_RUN_NO_ADMITTED_COHORT",
+  "no_test_label_use": "Future target labels cannot enter fitting, scaling, prior, setting selection or prediction; pure prediction API accepts features only.",
+  "outputs": "11 captured-target probabilities; not synapses or complete axon paths",
+  "protocol_sha256": "a48b59e7a864c0435fd37bc52309374fd8a4d708fb9f569d3e93ff0c185b5e5b",
+  "recipe": {
+    "path": "models/paired_projection/logloss_recipe_v1.json",
+    "sha256": "26274a23d551a5d9913d038cb4df36c57b7e26a68b7396228d7da1846c2f64e2"
+  },
+  "schema": "synarch_paired_projection_model_freeze_v1",
+  "selected_setting": "candidate_logistic|C=0.1|alpha=0.1",
+  "sources": {
+    "data": "https://data.mendeley.com/datasets/jnx89bmv4s/2",
+    "data_license": "CC BY 4.0",
+    "paper": "https://doi.org/10.1038/s41593-021-00842-4"
+  },
+  "status": "FROZEN_NEW_REAL_ANIMAL_VALIDATION_PENDING",
+  "training_animals": [
+    "XC95",
+    "XC97"
+  ],
+  "training_cells": 598,
+  "user_constraints": [
+    "All project code/models/results in andresloak100/SYN4RCH",
+    "No lab collaboration; pursue existing public data and clearly labeled simulations",
+    "No further author contacts beyond already posted exact Rossi and Coester requests"
+  ]
+}
