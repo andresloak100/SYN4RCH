@@ -12,7 +12,7 @@ two parts.
 
 **Main result:** no method beats every control on both log loss and Brier. Nothing is promoted.
 
-* **Best-calibrated methods:** two nearest-neighbour averaging models, with log loss 0.675721 and 0.675835,
+* **Lowest-log-loss methods:** two nearest-neighbour averaging models, with log loss 0.675721 and 0.675835,
   only slightly better than the training prior at 0.693147.
 * **Technical control:** library size and detected-gene count alone reach 0.683889.
 * **Gene logistic model:** it ranks nuclei better than chance, but its probabilities are lopsided across pools.
@@ -74,6 +74,7 @@ of PVH projections.
 ## Part 2: exploratory collection-label prediction (run pvh_population_pilot_v1)
 
 **Cohort:** 265 nuclei from one sequencing run (GEO GSM9117450) with exact barcode joins, in four pools:
+
 | pool | collection group | sex | nuclei |
 |---|---|---|---:|
 | 11F | PB | female | 144 |
