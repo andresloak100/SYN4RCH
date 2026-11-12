@@ -1,0 +1,118 @@
+{
+  "schema": "synarch_paired_projection_reference_protocol_v1",
+  "status": "DRAFT_FOR_ROOT_REVIEW_SOFTWARE_ONLY",
+  "date": "2026-11-12",
+  "code": "analysis/paired_projection_reference.py",
+  "tests": "tests/test_paired_projection_reference.py",
+  "outputs": "data/interim/paired_projection_reference/",
+  "purpose": "One bounded published-reference benchmark: probability of an observed captured projection label from measured endogenous genes and measured source position, against fixed controls, evaluated on held-out biological groups.",
+  "not_authorized": [
+    "No real-data fit until ROOT reviews this code and a biological protocol with margins and power is committed",
+    "No automatic PASS: the biological gate is NOT_EVALUATED in every run",
+    "No new packages, remote author code execution, old test reopening or viewer work"
+  ],
+  "endpoint": {
+    "mode_required": "manifest endpoint_mode must be 'capture_per_target' or 'exclusive_two_target'; no default",
+    "capture_per_target": "e.g. PFC cells with a captured LHA label: y=1 captured; y=0 only for a QC-passed nondetection in an assayed group; failed-QC and unassayed rows are unknown and excluded",
+    "exclusive_two_target": "e.g. Rossi LHb-only vs VTA-only: among cells assayed and QC-passed for both targets, y=1 first-target-only, y=0 second-target-only; double-labelled and neither are kept as separate counted statuses and excluded",
+    "semantics": "Observed capture only, never a verified absence of projection; unknown masks stay unknown",
+    "probability_reported": "P(captured label | measured genes, measured position, assay), not a biological projection probability",
+    "separation": "PFC->LHA capture (SPIDER-type) and Rossi LHb-only/VTA-only are different endpoint modes and are never pooled"
+  },
+  "manifest_requirements_checked_before_any_matrix_is_read": [
+    "software-only release: any manifest with synthetic != true is refused first, before any file is hashed or parsed",
+    "explicit endpoint_mode",
+    "technical_columns non-empty",
+    "synthetic flag (true only for the software test)",
+    "group_unit is 'animal' or 'pool'; slice, section and hemisphere are refused as group units",
+    "every group lists true animal identities with no repeats; pools list member animals, no animal may appear in two groups (overlapping pool members refused), and every group has independence evidence",
+    "global independence evidence string",
+    "explicit target-by-group assay mask file",
+    "exact paired-measurement evidence with per_cell_join == 'exact_cell_id'",
+    "position_measured == true",
+    "independent power approval (approved_by, reference, min_groups) with at least min_groups groups present",
+    "declared endogenous gene list, position columns, technical columns and targets",
+    "file SHA-256 for cells, genes, labels and mask must match",
+    "predictor roles (genes, position, technical) and targets: non-empty, unique, unpadded names; predictor roles disjoint; every predictor name passes the name rules",
+    "animal IDs inside groups must be non-blank and unpadded (so 'A00 ' cannot pass as disjoint from 'A00')"
+  ],
+  "data_checks": [
+    "cell_id unique in cells and genes tables; identical cell sets (exact join)",
+    "(cell_id, target) unique in labels with columns cell_id,target,captured,qc_pass; captured and qc_pass only 0/1",
+    "mask covers every group x target exactly once with assayed in 0/1",
+    "every assayed group x target cell has exactly one label; any label in an unassayed group x target is refused",
+    "gene columns equal the declared endogenous list exactly; reporter/vector/barcode/target/class/cluster names refused in genes and technical columns",
+    "no missing or non-finite values; gene counts non-negative",
+    "per-endpoint eligible biological groups (groups with >= 1 eligible cell) must reach power_approval.min_groups; a global group count does not qualify a target assayed in fewer groups",
+    "every method output must be a numeric vector of shape (n_eval,), finite and within [0, 1] before assignment; scalars, wrong shapes, non-finite or out-of-range values are a FAIL"
+  ],
+  "candidate": {
+    "model": "sklearn 1.8 LogisticRegression (L2 via the default; penalty not passed because it is deprecated in 1.8)",
+    "C": 1.0,
+    "solver": "lbfgs",
+    "max_iter": 2000,
+    "tol": 1e-06,
+    "random_state": 20261112,
+    "features": "log1p(endogenous gene counts) + measured XYZ",
+    "scaling": "StandardScaler fitted on training cells of the fold only",
+    "fit_weights": "group-balanced: 1/n_group per training cell, normalised to mean 1; no class_weight"
+  },
+  "controls": {
+    "constant_0.5": "p = 0.5",
+    "fit_frequency": "group-balanced weighted training captured rate",
+    "technical": "same logistic settings and group-balanced weights on declared technical columns only",
+    "location_knn": "KNeighborsClassifier k=15 on fit-scaled XYZ",
+    "molecular_knn": "KNeighborsClassifier k=15 on fit-scaled log1p genes",
+    "naive_bayes": "GaussianNB with group-balanced weights on fit-scaled log1p genes",
+    "knn_note": "KNN controls are unweighted (KNeighborsClassifier has no sample weights)"
+  },
+  "folds": {
+    "unit": "declared biological group (animal or verified-disjoint pool)",
+    "scheme": "groups shuffled with seed 20261112 and dealt into min(5, n_groups) outer folds; every cell of a group stays in one fold",
+    "per_target": "train = assayed cells of training groups; evaluate = assayed cells of held-out groups",
+    "unevaluable": "a fold/endpoint with one training class or fewer than 15 training cells is a FAIL (Refusal); no fallback",
+    "identical_queries": "every method is scored on the identical eligible cell IDs and folds; any missing or non-finite probability is a FAIL, never a dropped row; the eligible-ID SHA-256 is recorded"
+  },
+  "metrics": {
+    "probability_clip": [
+      1e-06,
+      0.999999
+    ],
+    "brier": "per group mean (p - y)^2, then mean over groups (animal-weighted), per target; macro mean over targets",
+    "log_loss": "per group mean -(y log p + (1-y) log(1-p)) with clipped p, then group-weighted as Brier",
+    "calibration_diagnostics": "10 equal-width bins of pooled held-out predictions (count, mean p, observed rate), cell-weighted ECE, per-group mean p vs observed rate",
+    "discrimination": "pooled held-out AUC (rank-based) when both classes are present"
+  },
+  "gate": {
+    "biological": "NOT_EVALUATED: no committed biological protocol, margins or power",
+    "synthetic_software_checks": [
+      "candidate group-weighted Brier and log loss below constant_0.5 and fit_frequency",
+      "candidate Brier below location_knn, molecular_knn and technical (recoverable gene + position signal)",
+      "unequal group sizes; hand-computed group-weighted Brier and log loss match the code to 1e-12",
+      "fitted scalers, coefficients, frequency and NB parameters identical after changing hidden evaluation-group features and labels",
+      "unassayed and failed-QC rows unknown; every planted refusal (21) raised"
+    ],
+    "synthetic_pass_meaning": "software works on planted data only; says nothing about biology"
+  },
+  "real_data": "Non-synthetic manifests are refused by run_manifest/validate_manifest in this software-only release; no real-data command exists. Real fitting needs ROOT review, a committed biological protocol with margins and power, and resolution of the SPIDER same-mouse blocker.",
+  "name_rules": {
+    "reporter_aliases_exact_token": "name tokens (split on non-alphanumerics) equal to a reporter/vector alias, e.g. GFP, EGFP, EYFP, tdTomato, mCherry, Cre, Flp, WPRE, AAV, are refused; endogenous symbols such as Gfpt1, Gfpt2, Creb1, Crem are admitted",
+    "reserved_metadata_substrings": [
+      "target",
+      "label",
+      "captur",
+      "class",
+      "cluster",
+      "projection",
+      "barcode",
+      "reporter",
+      "vector",
+      "qc_pass",
+      "assay"
+    ],
+    "also_refused": "reserved column names and any target name",
+    "applies_to": "endogenous_genes, position_columns and technical_columns"
+  },
+  "load_order": "cells, labels and mask are parsed and checked first (IDs non-blank, mask content 0/1 and complete, endpoint derivation, per-endpoint eligible biological group count >= power min_groups); the gene matrix is parsed last",
+  "canonical_order": "after cell IDs are validated, cells are stably sorted by cell_id before endpoint derivation, gene join, folds and fitting; results are invariant to CSV row order (exact cell-ID joins retained)"
+}

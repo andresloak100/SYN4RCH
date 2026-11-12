@@ -92,11 +92,17 @@
         "Slices and hemispheres do not establish independent animals",
         "PT figure exclusions do not establish an injection/assay mask",
         "Separate full-transcriptome spatial mappings are inferred; do not substitute them as measured",
-        "Only schema and basic completeness/nonnegativity/captured-LHA frequencies were profiled; no gene-target association, fitted prediction or biological test was performed"
+        "Only schema and basic completeness/nonnegativity/captured-LHA frequencies were profiled; no gene-target association, fitted prediction or biological test was performed",
+        "Primary paper describes the main 15-target spatial map in one mouse; 36 slices cannot establish an independent-animal test. Repeat spatial data and per-animal masks remain unresolved."
       ],
       "primary_paper": "https://academic.oup.com/nsr/article/13/5/nwag004/8427315",
+      "primary_source_independence_check": {
+        "finding": "Main spatial projectome described in one mouse. Other-mouse detection repeat is reported, but no public per-cell multi-animal crosswalk was established.",
+        "path": "data/interim/paired_projection_search_round3/spider_independence_check.json",
+        "sha256": "64be93efe89a0e0af8ef0259284f6c91260ba25b9a29803ba188950e43bda909"
+      },
       "public_processed_source": "https://huggingface.co/spaces/TigerZheng/SPIDER-web/tree/main/data",
-      "qualification": "PUBLIC_PAIRED_DEVELOPMENT_RESOURCE_SCHEMA_AND_BASIC_QC_VERIFIED; independent-animal evaluation still pending",
+      "qualification": "PUBLIC_PAIRED_DEVELOPMENT_RESOURCE; MAIN_SPATIAL_MAP_DESCRIBED_IN_ONE_MOUSE; NO_UNSEEN_ANIMAL_TEST_ADMITTED",
       "schema_verified": {
         "LHA_I_field_present": true,
         "animal_by_target_mask_established": false,
@@ -129,5 +135,5 @@
     }
   },
   "status": "SEARCH_AND_SCHEMA_QUALIFICATION_COMPLETE_NO_CONFIRMATORY_DATASET_ADMITTED",
-  "utc": "2026-11-12T14:22:26.074037+00:00"
+  "utc": "2026-11-12T15:48:01.052999+00:00"
 }
