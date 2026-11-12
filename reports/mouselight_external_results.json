@@ -1,0 +1,101 @@
+{
+  "conclusion": "Neither fixed learned candidate beat the strongest complete-template control on both distance and F1. All 97 new neurons/22 animals were mechanically admitted.",
+  "date": "2026-11-12",
+  "evaluation": {
+    "aggregation": "neuron means within animal; equal mean across22 animals",
+    "animals": 22,
+    "clipping": "none; full connected cable and out-of-atlas paths retained",
+    "distance": "frozen symmetric cable distance; same 50 \u00b5m representation for all",
+    "excluded_neurons": 0,
+    "f1": "cable F1 within 200 \u00b5m, not a fraction of circuits reconstructed",
+    "forecasts": 582,
+    "inference": "Descriptive external transfer; no statistical-significance or population-level confirmation claim.",
+    "lost_animals": 0,
+    "queries": 97
+  },
+  "full_predeclared_gate": {
+    "E4_local_kernel_regional": false,
+    "E6_local_consensus": false
+  },
+  "lower_distance_higher_f1_are_better": true,
+  "next_geometry_reference": "Use the strongest complete local-medoid control as the development bar; retain all failures and do not tune/retest this cohort as fresh.",
+  "observed_comparisons": [
+    "E1 local animal-balanced medoid is the lowest-distance and highest-F1 method in this fixed set. It selects one measured template from a local soma neighbourhood; it is not a coordinate-average axon.",
+    "E4 improves both means over nearest-copy and global-medoid-copy, but loses both means to E1 and E2. This partial improvement does not pass the stronger predeclared comparison.",
+    "E6 improves both means over nearest-copy, loses both to E1, and trades higher F1 for worse distance against E2."
+  ],
+  "pins": {
+    "ACQUISITION.json": "010612bb46b24d50cbb70a24b38f00bb4be8aed99fc5ea9ea5599654b138c728",
+    "ADMISSION.json": "0109e7d27bc248879f1a4d94c437b7d83a51efc209448e141c4d43ab039478d8",
+    "FROZEN.json": "b3d40c26978376a8b059520dd537647579427cdfa33235ca91db07521ad89262",
+    "PREDICTIONS_COMMITTED.json": "66bdc9009794759db5449e1a56662e4fb0ac8898eea8e04552d1459ae4b9c62c",
+    "SCORE_COMPLETE.json": "6d4297bbf79655dec2503485c46bf9e5195bf35c85b61fca94bbf044d1a76788",
+    "metrics.json": "6b760fe7de833adb14005ae056250ab60e41104972336e280a5e56622c7e5482",
+    "prediction_manifest.json": "ecad76d9ec88007628feadd84bde3a190214446bbdfdf74d3107852e058c9c0f"
+  },
+  "run_id": "mouselight_external_geometry_v1",
+  "schema": "mouselight_external_results_v1",
+  "scope": [
+    "Queries used only measured soma and its derived hemisphere; missing molecular labels remain None. No query axon, regional target profile or image features selected donors.",
+    "This tests a 3D geometry module. MouseLight lacks measured gene profiles, so it does not validate ModelD or gene-to-circuit inference.",
+    "The separately completed PVH image-feature pilot uses real processed fluorescence and has axial sampling/point-spread limitations. It supplies measurements, not traced cells, genes or validated connections.",
+    "No complete accurate circuit reconstruction, de-novo connection discovery or prediction viewer promotion was demonstrated.",
+    "The 97 neurons / 22 samples are now outcome-exposed. Future method development can use them but cannot describe them as untouched validation."
+  ],
+  "source": {
+    "downloaded_query_files": 97,
+    "license": "Per-neuron figshare terms recorded; no blanket imagery-license substitution",
+    "name": "Janelia MouseLight official separate-axon NeuronBrowser route",
+    "original_responses_and_derived_swcs": "kept local with individual provenance/license/hash receipts",
+    "raw_json_bytes": 178607296,
+    "source_calibration": "One separate cortical neuron from a non-test animal; lossless conversion and shared atlas physical basis verified, not independent nonlinear-registration accuracy."
+  },
+  "status": "COMPLETE_NO_LEARNED_CANDIDATE_PROMOTION",
+  "summary": [
+    {
+      "animals": 22,
+      "distance_mm": 1.0510230675145578,
+      "f1_at_200um": 0.15736741689129283,
+      "method": "nearest_copy"
+    },
+    {
+      "animals": 22,
+      "distance_mm": 0.83298884015511,
+      "f1_at_200um": 0.1687425285554377,
+      "method": "global_medoid_copy"
+    },
+    {
+      "animals": 22,
+      "distance_mm": 0.7841199016940044,
+      "f1_at_200um": 0.20898856630805504,
+      "method": "E1_local_uniform"
+    },
+    {
+      "animals": 22,
+      "distance_mm": 0.7981119477213007,
+      "f1_at_200um": 0.20201850294341703,
+      "method": "E2_local_kernel"
+    },
+    {
+      "animals": 22,
+      "distance_mm": 0.8159639408424352,
+      "f1_at_200um": 0.19977251308150887,
+      "method": "E4_local_kernel_regional"
+    },
+    {
+      "animals": 22,
+      "distance_mm": 0.87102082318568,
+      "f1_at_200um": 0.2058365852707447,
+      "method": "E6_local_consensus"
+    }
+  ],
+  "timeline": {
+    "acquisition_started_utc": "2026-11-12T20:02:18.786837+00:00",
+    "frozen_source_commit": "169b06b7c2902cc912f163f5b0f55111399f9943",
+    "prediction_utc": "2026-11-12T20:00:03.806891+00:00",
+    "public_lock_git_utc": "2026-11-12T20:01:31Z",
+    "public_prediction_lock_commit": "88493d55ef690d0c624fcf6c795a5326cc99705a",
+    "scoring_completed_utc": "2026-11-12T20:04:02.148869+00:00",
+    "scoring_started_utc": "2026-11-12T20:03:52.634822+00:00"
+  }
+}

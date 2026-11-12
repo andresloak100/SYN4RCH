@@ -1,0 +1,2371 @@
+{
+  "arithmetic_replay": {
+    "independent_all_control_both_means_verdict": {
+      "E4_local_kernel_regional": false,
+      "E6_local_consensus": false
+    },
+    "independent_candidate_control_comparisons": {
+      "E4_local_kernel_regional": {
+        "E1_local_uniform": {
+          "distance_improvement_um": -31.844039148430852,
+          "f1_improvement": -0.009216053226546173,
+          "higher_f1": false,
+          "lower_distance": false
+        },
+        "E2_local_kernel": {
+          "distance_improvement_um": -17.85199312113457,
+          "f1_improvement": -0.0022459898619081597,
+          "higher_f1": false,
+          "lower_distance": false
+        },
+        "global_medoid_copy": {
+          "distance_improvement_um": 17.02489931267462,
+          "f1_improvement": 0.031029984526071225,
+          "higher_f1": true,
+          "lower_distance": true
+        },
+        "nearest_copy": {
+          "distance_improvement_um": 235.0591266721225,
+          "f1_improvement": 0.04240509619021604,
+          "higher_f1": true,
+          "lower_distance": true
+        }
+      },
+      "E6_local_consensus": {
+        "E1_local_uniform": {
+          "distance_improvement_um": -86.90092149167538,
+          "f1_improvement": -0.003151981037310403,
+          "higher_f1": false,
+          "lower_distance": false
+        },
+        "E2_local_kernel": {
+          "distance_improvement_um": -72.9088754643791,
+          "f1_improvement": 0.00381808232732761,
+          "higher_f1": true,
+          "lower_distance": false
+        },
+        "global_medoid_copy": {
+          "distance_improvement_um": -38.031983030569904,
+          "f1_improvement": 0.037094056715306994,
+          "higher_f1": true,
+          "lower_distance": false
+        },
+        "nearest_copy": {
+          "distance_improvement_um": 180.00224432887796,
+          "f1_improvement": 0.04846916837945181,
+          "higher_f1": true,
+          "lower_distance": true
+        }
+      }
+    },
+    "independent_minus_saved_per_animal": [
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "distance_um": -5.684341886080802e-14,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "distance_um": -5.684341886080802e-14,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "distance_um": 0.0,
+        "f1_200": -2.7755575615628914e-17,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "distance_um": 0.0,
+        "f1_200": 2.7755575615628914e-17,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "distance_um": -1.1368683772161603e-13,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "distance_um": 0.0,
+        "f1_200": 6.938893903907228e-18,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:392c3da3-808f-473b-8784-cd4d64a2230b",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:392c3da3-808f-473b-8784-cd4d64a2230b",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:392c3da3-808f-473b-8784-cd4d64a2230b",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:392c3da3-808f-473b-8784-cd4d64a2230b",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:392c3da3-808f-473b-8784-cd4d64a2230b",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:392c3da3-808f-473b-8784-cd4d64a2230b",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:4aa02a4b-e7c0-4960-9497-214fa97491bc",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:4aa02a4b-e7c0-4960-9497-214fa97491bc",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:4aa02a4b-e7c0-4960-9497-214fa97491bc",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:4aa02a4b-e7c0-4960-9497-214fa97491bc",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:4aa02a4b-e7c0-4960-9497-214fa97491bc",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:4aa02a4b-e7c0-4960-9497-214fa97491bc",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "distance_um": 0.0,
+        "f1_200": 2.7755575615628914e-17,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "distance_um": -1.1368683772161603e-13,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "distance_um": -1.1368683772161603e-13,
+        "f1_200": 2.7755575615628914e-17,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "distance_um": 0.0,
+        "f1_200": -2.7755575615628914e-17,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "distance_um": 0.0,
+        "f1_200": 2.7755575615628914e-17,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "distance_um": -2.2737367544323206e-13,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "distance_um": -2.2737367544323206e-13,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "distance_um": -2.2737367544323206e-13,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "distance_um": -2.2737367544323206e-13,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "distance_um": 2.2737367544323206e-13,
+        "f1_200": 2.7755575615628914e-17,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "distance_um": 0.0,
+        "f1_200": -5.551115123125783e-17,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "distance_um": 0.0,
+        "f1_200": -5.551115123125783e-17,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "distance_um": 0.0,
+        "f1_200": -5.551115123125783e-17,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "distance_um": 1.1368683772161603e-13,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:ae46e4ac-74a1-433a-8de3-ca9625547939",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:ae46e4ac-74a1-433a-8de3-ca9625547939",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:ae46e4ac-74a1-433a-8de3-ca9625547939",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:ae46e4ac-74a1-433a-8de3-ca9625547939",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:ae46e4ac-74a1-433a-8de3-ca9625547939",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:ae46e4ac-74a1-433a-8de3-ca9625547939",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "distance_um": 0.0,
+        "f1_200": -5.551115123125783e-17,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "distance_um": 0.0,
+        "f1_200": -2.7755575615628914e-17,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "distance_um": 0.0,
+        "f1_200": -2.7755575615628914e-17,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "distance_um": 0.0,
+        "f1_200": -2.7755575615628914e-17,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:c852c78a-01f1-451b-8b1f-68718baab2bb",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:c852c78a-01f1-451b-8b1f-68718baab2bb",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:c852c78a-01f1-451b-8b1f-68718baab2bb",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:c852c78a-01f1-451b-8b1f-68718baab2bb",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:c852c78a-01f1-451b-8b1f-68718baab2bb",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:c852c78a-01f1-451b-8b1f-68718baab2bb",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "distance_um": 0.0,
+        "f1_200": 1.3877787807814457e-17,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "distance_um": 1.1368683772161603e-13,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "distance_um": 1.1368683772161603e-13,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:f004540f-c203-4d27-9c90-c527acebaa3c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:f004540f-c203-4d27-9c90-c527acebaa3c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:f004540f-c203-4d27-9c90-c527acebaa3c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:f004540f-c203-4d27-9c90-c527acebaa3c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:f004540f-c203-4d27-9c90-c527acebaa3c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:f004540f-c203-4d27-9c90-c527acebaa3c",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "distance_um": 5.684341886080802e-14,
+        "f1_200": 5.551115123125783e-17,
+        "method": "E1_local_uniform"
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "distance_um": 0.0,
+        "f1_200": -5.551115123125783e-17,
+        "method": "E2_local_kernel"
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "E4_local_kernel_regional"
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "distance_um": 0.0,
+        "f1_200": -5.551115123125783e-17,
+        "method": "E6_local_consensus"
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "distance_um": 1.1368683772161603e-13,
+        "f1_200": 2.7755575615628914e-17,
+        "method": "global_medoid_copy"
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "distance_um": 0.0,
+        "f1_200": 0.0,
+        "method": "nearest_copy"
+      }
+    ],
+    "independent_minus_saved_summary": {
+      "E1_local_uniform": {
+        "distance_um": 1.1368683772161603e-13,
+        "f1_200": 0.0
+      },
+      "E2_local_kernel": {
+        "distance_um": 1.1368683772161603e-13,
+        "f1_200": 0.0
+      },
+      "E4_local_kernel_regional": {
+        "distance_um": 2.2737367544323206e-13,
+        "f1_200": 0.0
+      },
+      "E6_local_consensus": {
+        "distance_um": -1.1368683772161603e-13,
+        "f1_200": -5.551115123125783e-17
+      },
+      "global_medoid_copy": {
+        "distance_um": 0.0,
+        "f1_200": -5.551115123125783e-17
+      },
+      "nearest_copy": {
+        "distance_um": 0.0,
+        "f1_200": 0.0
+      }
+    },
+    "independent_summary": {
+      "E1_local_uniform": {
+        "animals": 22,
+        "distance_um": 784.1199016940045,
+        "f1_200": 0.20898856630805504
+      },
+      "E2_local_kernel": {
+        "animals": 22,
+        "distance_um": 798.1119477213008,
+        "f1_200": 0.20201850294341703
+      },
+      "E4_local_kernel_regional": {
+        "animals": 22,
+        "distance_um": 815.9639408424354,
+        "f1_200": 0.19977251308150887
+      },
+      "E6_local_consensus": {
+        "animals": 22,
+        "distance_um": 871.0208231856799,
+        "f1_200": 0.20583658527074464
+      },
+      "global_medoid_copy": {
+        "animals": 22,
+        "distance_um": 832.98884015511,
+        "f1_200": 0.16874252855543764
+      },
+      "nearest_copy": {
+        "animals": 22,
+        "distance_um": 1051.0230675145579,
+        "f1_200": 0.15736741689129283
+      }
+    },
+    "maximum_absolute_per_animal_differences": {
+      "distance_um": 2.2737367544323206e-13,
+      "f1_200": 5.551115123125783e-17
+    },
+    "maximum_absolute_summary_differences": {
+      "distance_um": 2.2737367544323206e-13,
+      "f1_200": 5.551115123125783e-17
+    },
+    "method": "stdlib math.fsum; neuron mean within source sample UUID, followed by equal mean across all22 animals. Saved scorer used numpy.mean; floating summation differences reported exactly.",
+    "saved_all_control_both_means_verdict": {
+      "E4_local_kernel_regional": false,
+      "E6_local_consensus": false
+    }
+  },
+  "artifact_sha256": {
+    "ACQUISITION.json": "010612bb46b24d50cbb70a24b38f00bb4be8aed99fc5ea9ea5599654b138c728",
+    "ACQUISITION_STARTED.json": "d19ec598aa5000289795a71a85094c74df58ea6d29329b6a9c1b64d6447866a4",
+    "ADMISSION.json": "0109e7d27bc248879f1a4d94c437b7d83a51efc209448e141c4d43ab039478d8",
+    "FREEZE_STARTED.json": "4c69a089e5412ed2dbe029c0fc7a2beb969e71543bdda4f3a5f64440c54f8098",
+    "FROZEN.json": "b3d40c26978376a8b059520dd537647579427cdfa33235ca91db07521ad89262",
+    "PREDICTIONS_COMMITTED.json": "66bdc9009794759db5449e1a56662e4fb0ac8898eea8e04552d1459ae4b9c62c",
+    "PREDICT_STARTED.json": "46ec452590af2d518bcf840da06789f79cced7f4feb680966456dc9a24b9b176",
+    "SCORE_COMPLETE.json": "6d4297bbf79655dec2503485c46bf9e5195bf35c85b61fca94bbf044d1a76788",
+    "SCORE_STARTED.json": "7cb9a9cb8e72152af01c9a9112a4fd6d7c22e09f55583dcb9da75b72c6a5ee2a",
+    "metrics.json": "6b760fe7de833adb14005ae056250ab60e41104972336e280a5e56622c7e5482",
+    "prediction_manifest.json": "ecad76d9ec88007628feadd84bde3a190214446bbdfdf74d3107852e058c9c0f"
+  },
+  "checks_by_kind": {
+    "acquired_neuron_sample_trace_binding": 97,
+    "acquired_truth_byte_count": 194,
+    "acquired_truth_file_pin": 194,
+    "acquisition_prediction_binding": 1,
+    "acquisition_start_receipts_agree": 1,
+    "admission_evidence_pin": 21,
+    "admission_receipt_pin": 2,
+    "all_97_source_downloads_available": 97,
+    "all_requests_after_acquisition_start_and_public_lock": 1,
+    "attempt_receipt_binding": 97,
+    "calibrated_source_role": 536221,
+    "canonical_query_swc": 97,
+    "canonical_relative_path": 346,
+    "checkpoint_matches_final_receipt_and_seal": 97,
+    "complete_582_prediction_grid": 1,
+    "completed_metrics_binding": 1,
+    "contained_unsymlinked_path": 346,
+    "declared_truth_absent_at_seal": 1,
+    "each_request_bound_to_publicly_locked_forecasts": 97,
+    "exact_22_declared_animals": 1,
+    "exact_4368_training_arbors": 1,
+    "exact_97_distinct_queries": 1,
+    "exact_97_unique_completed_attempts": 1,
+    "exact_charged_download_bytes": 1,
+    "exact_mechanical_admission_accounting": 1,
+    "exact_official_trace_request": 97,
+    "finite_source_geometry": 536221,
+    "fixed_method_family": 1,
+    "freeze_binding": 1,
+    "frozen_source_input_pin": 30,
+    "frozen_train_arbor_pin": 4368,
+    "identical_582_scored_prediction_grid": 1,
+    "identical_declared_acquired_admitted_cohort": 1,
+    "independent_all_control_both_means_verdict": 1,
+    "independent_animal_mean_agrees_within_floating_roundoff": 264,
+    "independent_exact_raw_json_to_swc_conversion": 97,
+    "independent_mechanical_admission": 97,
+    "independent_summary_agrees_within_floating_roundoff": 12,
+    "manifest_binding": 1,
+    "mechanical_admission_declared_prediction_independent": 1,
+    "no_unreported_or_failed_transport_attempts": 1,
+    "per_animal_neuron_count": 132,
+    "per_neuron_reuse_provenance": 97,
+    "prediction_identity_and_path": 582,
+    "prediction_pair_unique_declared": 582,
+    "pretest_exposure_declaration": 1,
+    "public_commit_blob_matches_local_lock": 1,
+    "public_lock_binds_actual_seals": 1,
+    "public_lock_declared_counts": 1,
+    "public_lock_forecast_hash": 582,
+    "public_lock_query_inputs": 1,
+    "query_digest_binding": 1,
+    "reviewed_source_commit": 1,
+    "same_neuron_counts_per_animal_for_every_method": 1,
+    "score_acquisition_binding": 1,
+    "scored_row_identity_and_finiteness": 582,
+    "sealed_prediction_file_pin": 582,
+    "source_git_commit_matches_executed_files": 5,
+    "source_response_exact_axon_domain": 97,
+    "source_tree_connected": 97,
+    "source_tree_no_cycle": 536221,
+    "source_tree_parent_and_no_second_soma": 536124,
+    "source_tree_unique_ids_and_single_type1_root": 97,
+    "strict_recorded_chronology": 1,
+    "top_level_and_nested_swc_pin_agree": 97,
+    "training_paircache_file_pin": 3,
+    "training_paircache_identity": 1
+  },
+  "chronology": {
+    "acquisition_completed_utc": "2026-11-12T20:03:44.168180+00:00",
+    "acquisition_started_utc": "2026-11-12T20:02:18.786837+00:00",
+    "first_request_utc": "2026-11-12T20:02:18.789110+00:00",
+    "freeze_completed_utc": "2026-11-12T19:59:23.130555+00:00",
+    "freeze_started_utc": "2026-11-12T19:59:23.130141+00:00",
+    "last_request_utc": "2026-11-12T20:03:42.580932+00:00",
+    "prediction_started_utc": "2026-11-12T19:59:43.945767+00:00",
+    "predictions_committed_utc": "2026-11-12T20:00:03.806891+00:00",
+    "public_commit_created_at": "2026-11-12T20:01:31Z",
+    "score_completed_utc": "2026-11-12T20:04:02.148869+00:00",
+    "score_started_utc": "2026-11-12T20:03:52.634822+00:00"
+  },
+  "chronology_strictly_ordered": true,
+  "cohort": {
+    "actual_raw_transport_bytes": 178607296,
+    "admitted_animals": 22,
+    "admitted_neurons": 97,
+    "declared_animals": 22,
+    "declared_neurons": 97,
+    "excluded_neurons": 0,
+    "forecasts": 582,
+    "lost_animals": 0,
+    "methods": [
+      "nearest_copy",
+      "global_medoid_copy",
+      "E1_local_uniform",
+      "E2_local_kernel",
+      "E4_local_kernel_regional",
+      "E6_local_consensus"
+    ],
+    "per_animal_neuron_counts": {
+      "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f": 3,
+      "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6": 7,
+      "mouselight:392c3da3-808f-473b-8784-cd4d64a2230b": 1,
+      "mouselight:4aa02a4b-e7c0-4960-9497-214fa97491bc": 1,
+      "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded": 2,
+      "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe": 4,
+      "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac": 10,
+      "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c": 2,
+      "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa": 8,
+      "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0": 5,
+      "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a": 9,
+      "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de": 2,
+      "mouselight:ae46e4ac-74a1-433a-8de3-ca9625547939": 1,
+      "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5": 4,
+      "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c": 5,
+      "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c": 2,
+      "mouselight:c852c78a-01f1-451b-8b1f-68718baab2bb": 1,
+      "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99": 2,
+      "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712": 2,
+      "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c": 8,
+      "mouselight:f004540f-c203-4d27-9c90-c527acebaa3c": 1,
+      "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719": 17
+    },
+    "same_query_animals_and_neurons_for_all_methods": true,
+    "scored_rows": 582,
+    "source_download_statuses": {
+      "downloaded": 97
+    }
+  },
+  "created_utc": "2026-11-12T20:09:26.573139+00:00",
+  "errors": [],
+  "exposure_declaration": {
+    "after_this_run": {
+      "all_22_source_animals_now_exposed": true,
+      "all_97_axon_truths_now_exposed": true,
+      "future_tuning_reuse": "Any future use for model selection is development; this cohort must not be described as a fresh independent test again."
+    },
+    "before_this_run": {
+      "evidence": [
+        {
+          "path": "data/interim/paired_projection_search_round6/image_routes/external_admission/exposure_inventory.json",
+          "sha256": "36779e5592cf5538639e2baa1d316f9da384293327b1ffa1d7576e34a42fc39e"
+        },
+        {
+          "path": "analysis/swc_fetch.py",
+          "sha256": "e3d75d9c322470df5eca131a0bcd7f8f172dedcf3dbc564481f004d307da2d4b"
+        },
+        {
+          "path": "reports/swc_prototype.md",
+          "sha256": "59f58e18e0be6564c3ec355803183d7a3deb5f02ab943aca212562e83dd02f73"
+        },
+        {
+          "path": "reports/axon_dataset_other_sources.md",
+          "sha256": "8608506f1854ce579e13939a55f341ba093a68ed194bbf7bd9c4ebcfa21e4347"
+        },
+        {
+          "path": "analysis/axon_engine.py",
+          "sha256": "d9eac6f220691b33adc729ecc24a39d3290418039b7717bb052900741da971a8"
+        },
+        {
+          "path": "data/interim/axon_engine/real/ingestion_log.json",
+          "sha256": "2826ba68b02b946957826b7229712272cd9b97406e6d60a5642e8699e5245c0f"
+        },
+        {
+          "path": "data/interim/axon_engine/real/states/all_training.proof.json",
+          "sha256": "40ef843b647317224e31348e17314c808d85bf0c9280e535789c6e81b0367e13"
+        },
+        {
+          "path": "data/interim/paired_projection_search_round6/image_routes/jiao_zip_metadata_overlap.json",
+          "sha256": "330caf3ffa1feb2f6115cf576313f995895c51bedcb5c0867a1a5d9fdf9b773b"
+        }
+      ],
+      "image_exposure_disclosure": "PVH source-only raw image patch from2017-04-19 was inspected/acquired after the E4/E6 recipes were frozen. Those recipes ignore image pixels and have not been refitted. This brain is development data for any future image-conditioned model.",
+      "interpretation": "The 18 names in the Jiao supplement ZIP listing are not evidence of model exposure or shared experimental mice. The files were explicitly excluded by the acquisition code; no automatic exclusions follow from names alone.",
+      "limits": "Independent source-study animals and actual consumed IDs/provenance support this external transfer admission. This audit does not establish that public traces were never visible to any researcher or that every historical file was never renamed; it checks recorded pipeline inputs and current geometry filenames. No fresh gene-model validation is claimed.",
+      "observed": {
+        "AA_comparator_geometry_fetched": false,
+        "actual_AA_named_geometry_files": 0,
+        "published_comparator_names": 18,
+        "query_neurons": 97,
+        "query_samples": 22,
+        "training_canonical_arbors": 4368,
+        "training_regional_rows": 4448,
+        "training_samples": 101
+      },
+      "overlapping_query_ids": [],
+      "overlapping_sample_ids": [],
+      "passed": true,
+      "query_ids_sha256": "c765002336fba572c7d000486c7302493125d268f60441526617ee1350160f46",
+      "schema": "mouselight_exposure_audit_v1",
+      "test_geometry_unopened": true
+    }
+  },
+  "frozen_source_input_files_checked": 30,
+  "frozen_source_input_pins": [
+    {
+      "path": "analysis/axon_engine.py",
+      "sha256": "d9eac6f220691b33adc729ecc24a39d3290418039b7717bb052900741da971a8"
+    },
+    {
+      "path": "analysis/brm_geometry.py",
+      "sha256": "8de317bc4f261e8061b0bccad1dbba537b2a8daf6f6834d94d303645d6611187"
+    },
+    {
+      "path": "analysis/brm_joint.py",
+      "sha256": "ae7f5ec432bcbd2b0eebb65595549bc12158b1b7c047f5ace167c7840c0c937e"
+    },
+    {
+      "path": "analysis/brm_real.py",
+      "sha256": "5225ea5833b32fee57e735600eda87a9784cb2b1798cd326ee4203e1b6997648"
+    },
+    {
+      "path": "analysis/brm_template.py",
+      "sha256": "0a3da130c0e0049e8c9cc5df94523442f542f44a6815e82d3ad947a960a8d49a"
+    },
+    {
+      "path": "analysis/brm_template_benchmark.py",
+      "sha256": "80b66392469538f2934463f7e4f903cd6c589aab7f0ce842da56b2c2532fb118"
+    },
+    {
+      "path": "analysis/d110_geometry.py",
+      "sha256": "3b011643b1b224256fdce1ad8a31014e01e644c6a794bd1d49af5e6543090a5e"
+    },
+    {
+      "path": "analysis/mouselight_external_acquire.py",
+      "sha256": "007c6172bebc566ed14541dc908c4afbc260ebc9aae03e85024cc61c16ef6bdd"
+    },
+    {
+      "path": "analysis/mouselight_external_test.py",
+      "sha256": "5b7990b9253bd78ac1781e0b7c1bd57d7ba53cd94fe1261796c539b0ffb8b942"
+    },
+    {
+      "path": "data/interim/axon_dataset/local_manifest.tsv",
+      "sha256": "5399fe316a37fc229d8f22e2911789400be6df842f3f9f5fc3827f34a89546c0"
+    },
+    {
+      "path": "data/interim/axon_engine/real/freeze/frozen.json",
+      "sha256": "a05ac68b58dd9bde92f535c4e097e573b5c35a20696d9cdccc3710c1e50b0202"
+    },
+    {
+      "path": "data/interim/axon_engine/real/ingestion_log.json",
+      "sha256": "2826ba68b02b946957826b7229712272cd9b97406e6d60a5642e8699e5245c0f"
+    },
+    {
+      "path": "data/interim/axon_engine/real/states/all_training.json",
+      "sha256": "b690e97ea65a48c9737229dbffe0501f97e85c9bdc387a0f692cec09dda98962"
+    },
+    {
+      "path": "data/interim/axon_engine/real/states/all_training.proof.json",
+      "sha256": "40ef843b647317224e31348e17314c808d85bf0c9280e535789c6e81b0367e13"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/calibration/acquisition_source_manifest.json",
+      "sha256": "e2c88fc3c30de4386a09229c59ca92f4a06517d6fdd3800fa65c12294bcb8ee5"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/calibration/official_constants_metadata.json",
+      "sha256": "b208e58b94a78dc5f80f2b87a8ddb4c1b916758c75f297b289e13188a0514757"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/calibration/source_calibration_receipt.json",
+      "sha256": "f38132065afb10cf9b59b1583c6e245535b4da0384fa2287cb88713ad3060c43"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/external_admission/exposure_audit.json",
+      "sha256": "2edde73414de3085a4086fdc65cc1c85ca6876aff9d580926cdda85e42eff019"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/mouselight_hy_source_manifest.json",
+      "sha256": "35fdef31ece4dd064446df6f209f490ca335e1d41238bfd04f86f86548e8590c"
+    },
+    {
+      "path": "data/raw/jiao2025/All_soma_infor_HY_neurons.csv",
+      "sha256": "cc01d048bf5a7c9c9f46869fb750f2d67a98ca934903d2e2e71c1a67b1d97cb9"
+    },
+    {
+      "path": "data/raw/jiao2025/all_neurons_projection_length_fig1.csv",
+      "sha256": "2072bc20550607c195be0a42cee9fcbe0e0ab5aaebfaee0a1016b2a43d35e63c"
+    },
+    {
+      "path": "data/raw/jiao2025/swc/MANIFEST.tsv",
+      "sha256": "6d94796e6a35f16baec4c99343c61e8a8c0fbd2d446179702a7d7249b55ae9fe"
+    },
+    {
+      "path": "data/raw/jiao2025/traces/MANIFEST.tsv",
+      "sha256": "e3d05c1c4a49b2ca468b1017dabff7239af6b50ee89ec9f14bbf15903d7e480b"
+    },
+    {
+      "path": "docs/mouselight_external_protocol.json",
+      "sha256": "fa19dca6354dd4ba3472e8501a19990ac2dc5841abd0d9a7ee2bcf17cafd5ad3"
+    },
+    {
+      "path": "reports/axon_dataset_manifest.tsv",
+      "sha256": "649f829a592cd3d13bcda5cffdbd049e759568d38bacb144f6a61220610a1ca4"
+    },
+    {
+      "path": "reports/brm_template_protocol.md",
+      "sha256": "e0d794b626682feda4d72b266b7adce2c67216e57d40ed2cb33db8366bd9db15"
+    },
+    {
+      "path": "tests/test_brm_template.py",
+      "sha256": "d8fdbda56a6b10b02c012a5ee69fe453010f9146dac6d7da6d454b53fa4ae809"
+    },
+    {
+      "path": "tests/test_brm_template_benchmark.py",
+      "sha256": "dfc18cfafd4878ed25a44c2e2fcb7546902b6a0f76d53e9e52c56cdf57f21bfe"
+    },
+    {
+      "path": "tests/test_mouselight_external_acquire.py",
+      "sha256": "67a0b30e7fc2e536fdf59260e3c66efcdf4156a855c548c90d0b03a291b4a1b9"
+    },
+    {
+      "path": "tests/test_mouselight_external_test.py",
+      "sha256": "7a3daee58ec8c25548bf2d8e29f41924ea0f3b3d1c733e04696e073579d5386f"
+    }
+  ],
+  "limitations_and_interpretation": [
+    "Descriptive prospective external transfer on97 neurons from22 MouseLight brains; no population-significance or validated-winner claim.",
+    "E4 and E6 were fixed candidates after failed prior gates; molecular labels were absent and marginalized. This was soma-only pathway prediction, not a gene-conditioned or image-conditioned test.",
+    "E4 beats nearest and global-medoid plain copying on both means, but loses to E1 and E2 local aggregation. E6 does not beat every fixed control on both means. No model promotion follows.",
+    "Source calibration establishes separately identified axon-domain conversion, shared physical atlas coordinate basis and units. It does not independently validate nonlinear biological registration accuracy or establish that the CCFV30 request parameter selects a coordinate warp.",
+    "Hash replay establishes integrity relative to sealed records; it does not prove all historical aliases, renames or undocumented exposure absent. The prospectively pinned exposure audit states its recorded-input and filename scope."
+  ],
+  "mechanical_source_replay": {
+    "all_97_conversion_hashes_match": true,
+    "maximum_raw_cable_abs_diff_um": 5.820766091346741e-11,
+    "maximum_soma_error_abs_diff_um": 0.0,
+    "method": "Independent stdlib raw JSON domain/root/parent/finite/role/connectivity checks; deterministic role-preserving SWC byte reconstruction; raw cable and transformed soma recomputation. No model/geometry metric code imported.",
+    "per_neuron": [
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 75570.62101227549,
+        "query": "AA0080",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 75570.62101227549,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2789
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 61137.94703134108,
+        "query": "AA0081",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 61137.94703134108,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1928
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 62799.57996692764,
+        "query": "AA0082",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 62799.57996692764,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2469
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 41984.74139076172,
+        "query": "AA0084",
+        "raw_cable_diff_um": 7.275957614183426e-12,
+        "saved_raw_cable_um": 41984.741390761716,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1479
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 19084.23712143982,
+        "query": "AA0086",
+        "raw_cable_diff_um": 3.637978807091713e-12,
+        "saved_raw_cable_um": 19084.237121439815,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 736
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 96415.79159022558,
+        "query": "AA0087",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 96415.79159022558,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 6049
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 76227.43854896976,
+        "query": "AA0090",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 76227.43854896976,
+        "saved_soma_error_um": 2.000888343900442e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.000888343900442e-11,
+        "source_nodes": 4445
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 10543.130177475257,
+        "query": "AA0092",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 10543.130177475257,
+        "saved_soma_error_um": 2.000888343900442e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.000888343900442e-11,
+        "source_nodes": 465
+      },
+      {
+        "animal": "mouselight:a4c4ea63-8d75-4bcd-b79e-97b6c86d730a",
+        "independent_raw_cable_um": 29595.604301205425,
+        "query": "AA0093",
+        "raw_cable_diff_um": 3.637978807091713e-12,
+        "saved_raw_cable_um": 29595.60430120542,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1846
+      },
+      {
+        "animal": "mouselight:4aa02a4b-e7c0-4960-9497-214fa97491bc",
+        "independent_raw_cable_um": 114348.90691442716,
+        "query": "AA0128",
+        "raw_cable_diff_um": 1.4551915228366852e-11,
+        "saved_raw_cable_um": 114348.90691442715,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 5835
+      },
+      {
+        "animal": "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c",
+        "independent_raw_cable_um": 43118.726061943,
+        "query": "AA0141",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 43118.726061943,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1171
+      },
+      {
+        "animal": "mouselight:5ec58ca0-c39c-4caa-b48a-25a71e2ea79c",
+        "independent_raw_cable_um": 19214.15724208994,
+        "query": "AA0142",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 19214.15724208994,
+        "saved_soma_error_um": 2.000888343900442e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.000888343900442e-11,
+        "source_nodes": 328
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "independent_raw_cable_um": 20164.393767488942,
+        "query": "AA0152",
+        "raw_cable_diff_um": -3.637978807091713e-12,
+        "saved_raw_cable_um": 20164.393767488946,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 596
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "independent_raw_cable_um": 15333.679440911133,
+        "query": "AA0153",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 15333.679440911133,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 684
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "independent_raw_cable_um": 23028.618010845476,
+        "query": "AA0163",
+        "raw_cable_diff_um": -3.637978807091713e-12,
+        "saved_raw_cable_um": 23028.61801084548,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2107
+      },
+      {
+        "animal": "mouselight:51c092c9-794f-44fc-b9f0-a8942df373fe",
+        "independent_raw_cable_um": 60191.138977530805,
+        "query": "AA0167",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 60191.138977530805,
+        "saved_soma_error_um": 1.000444171950221e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 1.000444171950221e-11,
+        "source_nodes": 2763
+      },
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "independent_raw_cable_um": 74682.24832337475,
+        "query": "AA0174",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 74682.24832337475,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2347
+      },
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "independent_raw_cable_um": 123580.45590162431,
+        "query": "AA0175",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 123580.45590162431,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2459
+      },
+      {
+        "animal": "mouselight:15cc7868-b3a6-46ed-8c75-83849716002f",
+        "independent_raw_cable_um": 57279.077866913125,
+        "query": "AA0177",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 57279.077866913125,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1334
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 55752.135446737506,
+        "query": "AA0207",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 55752.135446737506,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2005
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 64244.287272499874,
+        "query": "AA0212",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 64244.287272499874,
+        "saved_soma_error_um": 9.094947017729282e-12,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 9.094947017729282e-12,
+        "source_nodes": 8688
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 34262.22321123172,
+        "query": "AA0213",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 34262.22321123172,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2006
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 44266.186177300944,
+        "query": "AA0214",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 44266.186177300944,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1672
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 95073.69468283314,
+        "query": "AA0216",
+        "raw_cable_diff_um": 1.4551915228366852e-11,
+        "saved_raw_cable_um": 95073.69468283313,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 7087
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 42639.167030254,
+        "query": "AA0217",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 42639.167030254,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2292
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 40198.602128611856,
+        "query": "AA0218",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 40198.602128611856,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1252
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 134113.3387252102,
+        "query": "AA0219",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 134113.3387252102,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 7741
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 121606.02123031767,
+        "query": "AA0220",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 121606.02123031767,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 4649
+      },
+      {
+        "animal": "mouselight:55e0ef1f-23a4-4737-8cf1-613a6dacf6ac",
+        "independent_raw_cable_um": 60829.816902906095,
+        "query": "AA0222",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 60829.816902906095,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 6045
+      },
+      {
+        "animal": "mouselight:ae46e4ac-74a1-433a-8de3-ca9625547939",
+        "independent_raw_cable_um": 94732.11696246118,
+        "query": "AA0330",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 94732.11696246118,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1792
+      },
+      {
+        "animal": "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712",
+        "independent_raw_cable_um": 167594.9075027259,
+        "query": "AA0389",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 167594.9075027259,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 18955
+      },
+      {
+        "animal": "mouselight:e2b30c42-58c1-4fe3-9727-6651e5671712",
+        "independent_raw_cable_um": 55227.84559200689,
+        "query": "AA0428",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 55227.84559200689,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 3098
+      },
+      {
+        "animal": "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded",
+        "independent_raw_cable_um": 21096.59990632003,
+        "query": "AA0436",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 21096.59990632003,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 747
+      },
+      {
+        "animal": "mouselight:4ddc94ad-8ca3-4368-b48b-2694258fbded",
+        "independent_raw_cable_um": 14463.540546468686,
+        "query": "AA0437",
+        "raw_cable_diff_um": -1.8189894035458565e-12,
+        "saved_raw_cable_um": 14463.540546468688,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 506
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "independent_raw_cable_um": 101860.10817241909,
+        "query": "AA0443",
+        "raw_cable_diff_um": -1.4551915228366852e-11,
+        "saved_raw_cable_um": 101860.1081724191,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 4464
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "independent_raw_cable_um": 111243.34097520627,
+        "query": "AA0449",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 111243.34097520627,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 4125
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "independent_raw_cable_um": 24867.31441172391,
+        "query": "AA0486",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 24867.31441172391,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 610
+      },
+      {
+        "animal": "mouselight:af2a1916-af75-41c5-9425-9fa30be4ccc5",
+        "independent_raw_cable_um": 56633.537557699,
+        "query": "AA0488",
+        "raw_cable_diff_um": 7.275957614183426e-12,
+        "saved_raw_cable_um": 56633.53755769899,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1269
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "independent_raw_cable_um": 62947.43387999657,
+        "query": "AA0537",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 62947.43387999657,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2559
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "independent_raw_cable_um": 60116.58012035411,
+        "query": "AA0542",
+        "raw_cable_diff_um": 7.275957614183426e-12,
+        "saved_raw_cable_um": 60116.580120354105,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 858
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "independent_raw_cable_um": 26785.052956427655,
+        "query": "AA0555",
+        "raw_cable_diff_um": -3.637978807091713e-12,
+        "saved_raw_cable_um": 26785.05295642766,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 536
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "independent_raw_cable_um": 43838.33283765386,
+        "query": "AA0557",
+        "raw_cable_diff_um": 7.275957614183426e-12,
+        "saved_raw_cable_um": 43838.332837653856,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1577
+      },
+      {
+        "animal": "mouselight:b26406e6-ad1a-4050-9954-2cee3ae4a23c",
+        "independent_raw_cable_um": 48406.72716032048,
+        "query": "AA0558",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 48406.72716032048,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2002
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "independent_raw_cable_um": 165711.716999442,
+        "query": "AA0606",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 165711.716999442,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 7870
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "independent_raw_cable_um": 71563.24548630696,
+        "query": "AA0607",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 71563.24548630696,
+        "saved_soma_error_um": 2.000888343900442e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.000888343900442e-11,
+        "source_nodes": 12596
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "independent_raw_cable_um": 144545.27493470462,
+        "query": "AA0608",
+        "raw_cable_diff_um": -2.9103830456733704e-11,
+        "saved_raw_cable_um": 144545.27493470465,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 6301
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "independent_raw_cable_um": 71459.53087401633,
+        "query": "AA0609",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 71459.53087401633,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 1711
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "independent_raw_cable_um": 38464.27452024579,
+        "query": "AA0614",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 38464.27452024579,
+        "saved_soma_error_um": 2.000888343900442e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.000888343900442e-11,
+        "source_nodes": 7087
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "independent_raw_cable_um": 70109.81381592106,
+        "query": "AA0615",
+        "raw_cable_diff_um": -1.4551915228366852e-11,
+        "saved_raw_cable_um": 70109.81381592108,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 11867
+      },
+      {
+        "animal": "mouselight:24366630-6295-4728-a073-4e92b9a3e1a6",
+        "independent_raw_cable_um": 58787.19836908518,
+        "query": "AA0616",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 58787.19836908518,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 11523
+      },
+      {
+        "animal": "mouselight:392c3da3-808f-473b-8784-cd4d64a2230b",
+        "independent_raw_cable_um": 52244.66739254446,
+        "query": "AA0730",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 52244.66739254446,
+        "saved_soma_error_um": 1.000444171950221e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 1.000444171950221e-11,
+        "source_nodes": 1261
+      },
+      {
+        "animal": "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c",
+        "independent_raw_cable_um": 73903.20803618955,
+        "query": "AA0760",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 73903.20803618955,
+        "saved_soma_error_um": 2.000888343900442e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.000888343900442e-11,
+        "source_nodes": 2721
+      },
+      {
+        "animal": "mouselight:b52f5456-0a89-4b2c-87f0-f138c710052c",
+        "independent_raw_cable_um": 115900.19676754372,
+        "query": "AA0761",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 115900.19676754372,
+        "saved_soma_error_um": 2.000888343900442e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.000888343900442e-11,
+        "source_nodes": 3896
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "independent_raw_cable_um": 158266.2642323088,
+        "query": "AA0768",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 158266.2642323088,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 24656
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "independent_raw_cable_um": 84537.18142111432,
+        "query": "AA0779",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 84537.18142111432,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 4082
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "independent_raw_cable_um": 73739.51493040052,
+        "query": "AA0808",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 73739.51493040052,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 3441
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "independent_raw_cable_um": 74341.93823640741,
+        "query": "AA0904",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 74341.93823640741,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2495
+      },
+      {
+        "animal": "mouselight:8863c227-5a76-4c09-9558-3d74be0f4ec0",
+        "independent_raw_cable_um": 38152.807782819866,
+        "query": "AA0917",
+        "raw_cable_diff_um": 7.275957614183426e-12,
+        "saved_raw_cable_um": 38152.80778281986,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 661
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 12516.531622309578,
+        "query": "AA0930",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 12516.531622309578,
+        "saved_soma_error_um": 2.000888343900442e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.000888343900442e-11,
+        "source_nodes": 520
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 11937.842789687436,
+        "query": "AA0933",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 11937.842789687436,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 546
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 17617.347337737792,
+        "query": "AA0934",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 17617.347337737792,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 592
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 15355.964116571973,
+        "query": "AA0935",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 15355.964116571973,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 446
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 16394.699241334707,
+        "query": "AA0936",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 16394.699241334707,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 587
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 7725.146634177784,
+        "query": "AA0937",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 7725.146634177784,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 319
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 67703.65076571834,
+        "query": "AA0938",
+        "raw_cable_diff_um": 1.4551915228366852e-11,
+        "saved_raw_cable_um": 67703.65076571832,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 3057
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 19508.480586614267,
+        "query": "AA0939",
+        "raw_cable_diff_um": 3.637978807091713e-12,
+        "saved_raw_cable_um": 19508.480586614263,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 538
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 19221.547419052487,
+        "query": "AA0940",
+        "raw_cable_diff_um": -3.637978807091713e-12,
+        "saved_raw_cable_um": 19221.54741905249,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 828
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 8161.782758081543,
+        "query": "AA1034",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 8161.782758081543,
+        "saved_soma_error_um": 1.000444171950221e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 1.000444171950221e-11,
+        "source_nodes": 273
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 23299.747657727552,
+        "query": "AA1036",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 23299.747657727552,
+        "saved_soma_error_um": 1.000444171950221e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 1.000444171950221e-11,
+        "source_nodes": 800
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 8163.780932122376,
+        "query": "AA1039",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 8163.780932122376,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 285
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 20737.965303062032,
+        "query": "AA1040",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 20737.965303062032,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 680
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 10659.167367235881,
+        "query": "AA1041",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 10659.167367235881,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 292
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 11863.202667069527,
+        "query": "AA1048",
+        "raw_cable_diff_um": -1.8189894035458565e-12,
+        "saved_raw_cable_um": 11863.202667069529,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 648
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 18585.202772072334,
+        "query": "AA1067",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 18585.202772072334,
+        "saved_soma_error_um": 1.000444171950221e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 1.000444171950221e-11,
+        "source_nodes": 972
+      },
+      {
+        "animal": "mouselight:ffd28be1-3815-4d15-957d-8a9a6de95719",
+        "independent_raw_cable_um": 14478.175490144751,
+        "query": "AA1081",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 14478.175490144751,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 498
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "independent_raw_cable_um": 72585.47192375724,
+        "query": "AA1100",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 72585.47192375724,
+        "saved_soma_error_um": 1.000444171950221e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 1.000444171950221e-11,
+        "source_nodes": 13191
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "independent_raw_cable_um": 57134.51437464158,
+        "query": "AA1101",
+        "raw_cable_diff_um": -7.275957614183426e-12,
+        "saved_raw_cable_um": 57134.514374641585,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 10090
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "independent_raw_cable_um": 115725.52173448457,
+        "query": "AA1107",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 115725.52173448457,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 9343
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "independent_raw_cable_um": 154637.14869831034,
+        "query": "AA1120",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 154637.14869831034,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 26704
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "independent_raw_cable_um": 83583.78486807119,
+        "query": "AA1150",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 83583.78486807119,
+        "saved_soma_error_um": 1.000444171950221e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 1.000444171950221e-11,
+        "source_nodes": 12521
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "independent_raw_cable_um": 59427.173556816546,
+        "query": "AA1153",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 59427.173556816546,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 5902
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "independent_raw_cable_um": 28931.22846403674,
+        "query": "AA1154",
+        "raw_cable_diff_um": 3.637978807091713e-12,
+        "saved_raw_cable_um": 28931.228464036736,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 4470
+      },
+      {
+        "animal": "mouselight:ed0d5f76-7e53-4051-81fc-16f4ea7b523c",
+        "independent_raw_cable_um": 45792.87894234349,
+        "query": "AA1175",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 45792.87894234349,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 4825
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "independent_raw_cable_um": 466332.33354296035,
+        "query": "AA1188",
+        "raw_cable_diff_um": 5.820766091346741e-11,
+        "saved_raw_cable_um": 466332.3335429603,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 26117
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "independent_raw_cable_um": 14886.11153218573,
+        "query": "AA1198",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 14886.11153218573,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 488
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "independent_raw_cable_um": 309031.49652902375,
+        "query": "AA1200",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 309031.49652902375,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 13236
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "independent_raw_cable_um": 100846.81867520645,
+        "query": "AA1207",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 100846.81867520645,
+        "saved_soma_error_um": 1.000444171950221e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 1.000444171950221e-11,
+        "source_nodes": 5333
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "independent_raw_cable_um": 62674.09522396996,
+        "query": "AA1209",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 62674.09522396996,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2791
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "independent_raw_cable_um": 439413.88991240656,
+        "query": "AA1218",
+        "raw_cable_diff_um": 5.820766091346741e-11,
+        "saved_raw_cable_um": 439413.8899124065,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 39510
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "independent_raw_cable_um": 444308.7394885401,
+        "query": "AA1220",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 444308.7394885401,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 35547
+      },
+      {
+        "animal": "mouselight:79e043dd-b49c-4b9d-8878-4ca0e5fbcbaa",
+        "independent_raw_cable_um": 520088.14642515837,
+        "query": "AA1226",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 520088.14642515837,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 23826
+      },
+      {
+        "animal": "mouselight:f004540f-c203-4d27-9c90-c527acebaa3c",
+        "independent_raw_cable_um": 67704.24745324513,
+        "query": "AA1316",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 67704.24745324513,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2501
+      },
+      {
+        "animal": "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99",
+        "independent_raw_cable_um": 430277.12766131415,
+        "query": "AA1412",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 430277.12766131415,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 37783
+      },
+      {
+        "animal": "mouselight:cfc6f8b4-e5b6-4332-819c-5f07c265af99",
+        "independent_raw_cable_um": 16705.788976266555,
+        "query": "AA1419",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 16705.788976266555,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 2320
+      },
+      {
+        "animal": "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de",
+        "independent_raw_cable_um": 26268.237084149197,
+        "query": "AA1462",
+        "raw_cable_diff_um": -3.637978807091713e-12,
+        "saved_raw_cable_um": 26268.2370841492,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 3398
+      },
+      {
+        "animal": "mouselight:a5731db2-8d89-4f13-b134-0daef1cbd2de",
+        "independent_raw_cable_um": 72418.2755375365,
+        "query": "AA1464",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 72418.2755375365,
+        "saved_soma_error_um": 0.0,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 0.0,
+        "source_nodes": 7777
+      },
+      {
+        "animal": "mouselight:c852c78a-01f1-451b-8b1f-68718baab2bb",
+        "independent_raw_cable_um": 84222.32101671009,
+        "query": "AA1526",
+        "raw_cable_diff_um": 0.0,
+        "saved_raw_cable_um": 84222.32101671009,
+        "saved_soma_error_um": 2.2370611761741828e-11,
+        "soma_error_diff_um": 0.0,
+        "soma_error_um": 2.2370611761741828e-11,
+        "source_nodes": 6134
+      }
+    ]
+  },
+  "prohibited_operations_performed": {
+    "fit": false,
+    "new_inferential_threshold": false,
+    "new_model": false,
+    "predict": false,
+    "score_command_or_rerun": false
+  },
+  "public_prediction_lock": {
+    "commit": "88493d55ef690d0c624fcf6c795a5326cc99705a",
+    "github_commit_created_at": "2026-11-12T20:01:31Z",
+    "limitation": "Post-run remote reachability and GitHub commit metadata do not independently attest first-push wall time. ROOT recorded public verification before acquisition; local sealed acquisition records follow the displayed commit time.",
+    "public_record_sha256": "72956c2f84eb999dca58e6fb354337d3f6fb8db7fa910baafb6bb1d10a62144d",
+    "remote_object_verified_with": "GitHub connector fetch_commit",
+    "url": "https://github.com/andresloak100/SYN4RCH/commit/88493d55ef690d0c624fcf6c795a5326cc99705a"
+  },
+  "run_id": "mouselight_external_geometry_v1",
+  "schema": "mouselight_external_independent_replay_v1",
+  "scope": "Independent verification of saved seals, hashes, source conversion/QC and arithmetic reaggregation. No fit, predict or score command called; no geometry accuracy recomputation or new inferential threshold.",
+  "source_commit": "169b06b7c2902cc912f163f5b0f55111399f9943",
+  "status": "PASS",
+  "total_checks": 2155003,
+  "training_assets": {
+    "canonical_arbors_checked": 4368,
+    "library_fingerprint": "85f0f247bacfd142acc7fe7b9e73ad4b958c4c8d065f951c9eb8f8abd6030bc4",
+    "no_pair_distances_recomputed": true,
+    "pair_cache_files_checked": [
+      "index.json",
+      "D.npy",
+      "F.npy"
+    ],
+    "pair_cache_sha256": "b8c089ee46f1915cc71696e33e89d0d11242f72f4e3946c5c72f169a5b930bd0"
+  }
+}
