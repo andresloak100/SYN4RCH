@@ -1,0 +1,150 @@
+{
+  "schema": "synarch_mouselight_external_protocol_v1",
+  "run_id": "mouselight_external_geometry_v1",
+  "status": "READY_FOR_ROOT_FREEZE",
+  "date": "2026-11-12",
+  "objective": "Prospective external transfer of frozen soma-only geometry recipes to independent MouseLight animals; compare E4 and E6 with complete copying and local aggregation controls.",
+  "output_dir": "data/interim/mouselight_external_test/mouselight_external_geometry_v1",
+  "raw_dir": "data/raw/mouselight_external_test/mouselight_external_geometry_v1",
+  "code": "analysis/mouselight_external_test.py",
+  "tests": "tests/test_mouselight_external_test.py",
+  "acquisition": {
+    "root_reviewed": true,
+    "root_admission": "READY",
+    "code": "analysis/mouselight_external_acquire.py",
+    "tests": "tests/test_mouselight_external_acquire.py",
+    "source_manifest": {
+      "path": "data/interim/paired_projection_search_round6/image_routes/calibration/acquisition_source_manifest.json",
+      "sha256": "e2c88fc3c30de4386a09229c59ca92f4a06517d6fdd3800fa65c12294bcb8ee5"
+    },
+    "constants": {
+      "path": "data/interim/paired_projection_search_round6/image_routes/calibration/official_constants_metadata.json",
+      "sha256": "b208e58b94a78dc5f80f2b87a8ddb4c1b916758c75f297b289e13188a0514757"
+    },
+    "rule": "Exact 97-query source tracing UUIDs, official node-role constants, deterministic JSON-to-separate-axon-SWC converter and bounded acquisition recipe must be reviewed and pinned before the first test trace request. Code/tests must be committed before freeze. No network is performed while this protocol remains DRAFT.",
+    "transport_budget": "Acquisition code fixes a 2 GiB cumulative response budget and a 64 MiB per-response cap. Reserve the complete response allowance durably before each request so interrupted requests cannot make resumed accounting optimistic; completed attempts record actual bytes. A network timeout does not establish source unavailability."
+  },
+  "metadata": {
+    "path": "data/interim/paired_projection_search_round6/image_routes/mouselight_hy_source_manifest.json",
+    "sha256": "35fdef31ece4dd064446df6f209f490ca335e1d41238bfd04f86f86548e8590c",
+    "source": "Public NeuronBrowser soma metadata, CCFv3 HY-subtree source cohort already selected before external geometry",
+    "source_neurons": 97,
+    "source_samples": 22,
+    "unit": "source sample UUID, namespaced mouselight:; one brain per sample",
+    "date_join": "Not needed for soma-only predictions. AWS date joins remain a separate imagery-admission question."
+  },
+  "admission": {
+    "root_reviewed": true,
+    "excluded_animals": [],
+    "excluded_neurons": [],
+    "blockers": [],
+    "exposure_audit": {
+      "path": "data/interim/paired_projection_search_round6/image_routes/external_admission/exposure_audit.json",
+      "sha256": "2edde73414de3085a4086fdc65cc1c85ca6876aff9d580926cdda85e42eff019",
+      "required": "Explicit donor/development identities and records of geometry actually consumed, including aliases; no new MouseLight test geometry opened to perform this audit."
+    },
+    "calibration": {
+      "receipt_path": "data/interim/paired_projection_search_round6/image_routes/calibration/source_calibration_receipt.json",
+      "receipt_sha256": "f38132065afb10cf9b59b1583c6e245535b4da0384fa2287cb88713ad3060c43",
+      "selection_rule": "Lexicographically first metadata-listed MouseLight neuron with soma, from a sample UUID outside all22 HY samples. Selection made before downloading calibration morphology.",
+      "receipt_schema": "mouselight_source_calibration_v1",
+      "required_receipt": {
+        "validated": true,
+        "non_hy": true,
+        "animal": "explicit source sample UUID outside the 22 test samples",
+        "neuron": "explicit non-test MouseLight ID",
+        "selection_rule": "the exact prospectively declared metadata-only selection rule",
+        "frame": "CCFv3",
+        "axes": [
+          "ML",
+          "DV",
+          "AP"
+        ],
+        "units": "um",
+        "trace_domain": "separate_axon_tracing",
+        "root": "one_type1_root",
+        "nonroot_semantics": "all_nodes_in_separate_axon_tracing_are_axon",
+        "allowed_node_types": "observed/verified subset of 0,1,2,5,6; no inferred dendrite interpretation",
+        "evidence": "list of repository-relative source/calibration file paths and SHA-256 hashes"
+      },
+      "whole_animal_rule": "The calibration animal must not occur among evaluation queries. If selection uses a member of the current source cohort, exclude its entire sample prospectively, never just the neuron."
+    }
+  },
+  "permitted_inputs": {
+    "query": [
+      "source neuron ID for bookkeeping",
+      "source sample UUID for independent aggregation",
+      "measured CCFv3 soma x/y/z micrometres",
+      "hemisphere derived mechanically from soma x"
+    ],
+    "transform": "(x,y,z)=(ML,DV,AP) to (AP,DV,ML)=(z,y,x); mirror the entire right-hemisphere arbor with ML'=11400-ML, where x>5700",
+    "source_label": null,
+    "missing_label_rule": "E4 marginalizes the missing tag using frozen brm_geometry.state_posterior with None. No WT, Cre, peptide, nucleus, atlas-transferred gene profile or invented label is supplied.",
+    "forbidden": [
+      "query axon/dendrite geometry or partial axon",
+      "query regional profile",
+      "query geometry-derived descriptors",
+      "hidden geometry to choose donors",
+      "raw image pixels/features",
+      "genes absent from MouseLight",
+      "target-derived identities"
+    ],
+    "E7": "Omitted: frozen T1 bridge requires measured source label. Its documented no-value fallback would equal E2; do not fabricate its input.",
+    "molecular_models": "A1 and other gene models are incompatible without actual measured endogenous genes."
+  },
+  "training": {
+    "partition": "Existing Jiao TRAIN only: 101 animals, 4448 regional rows, 4368 mechanically admitted canonical arbors",
+    "library": "data/interim/axon_engine/real/library",
+    "library_fingerprint": "85f0f247bacfd142acc7fe7b9e73ad4b958c4c8d065f951c9eb8f8abd6030bc4",
+    "pair_cache_sha256": "b8c089ee46f1915cc71696e33e89d0d11242f72f4e3946c5c72f169a5b930bd0",
+    "regional_state": "data/interim/axon_engine/real/states/all_training.json",
+    "regional_state_sha256": "b690e97ea65a48c9737229dbffe0501f97e85c9bdc387a0f692cec09dda98962",
+    "fit": "No new fit. Reuse frozen K=8 mixture, existing TRAIN profiles, canonical donors and audited distance cache.",
+    "closed": "Jiao validation/test and previous routing/completion experiments remain closed; no old query proof, cohort, forecast or score is edited or rerun."
+  },
+  "methods": [
+    "nearest_copy",
+    "global_medoid_copy",
+    "E1_local_uniform",
+    "E2_local_kernel",
+    "E4_local_kernel_regional",
+    "E6_local_consensus"
+  ],
+  "candidates": {
+    "E4_local_kernel_regional": "The previously frozen selected recipe, now tested prospectively with missing tag marginalized. Its previous full test gate failed; it is not a validated winner.",
+    "E6_local_consensus": "Fixed existing soma-kernel medoid template, consensus pruning at 200um and 25% weighted neighbour support with ancestor paths preserved; return whole template if retained cable is below 1000um. A second predeclared candidate, not selected from MouseLight."
+  },
+  "controls": {
+    "nearest_copy": "Complete TRAIN arbor with nearest measured soma, translated to query soma; ties by sorted donor ID",
+    "global_medoid_copy": "Complete animal-balanced TRAIN geometric medoid using exact frozen cache arithmetic, translated to query soma",
+    "E1_local_uniform": "Animal-balanced geometric medoid among 16 nearest TRAIN somas",
+    "E2_local_kernel": "Same neighbourhood with Gaussian soma-distance weights; h=max(100um,eighth-nearest distance)",
+    "local_attachment": "Frozen compact_attachment at first supported radius 500um/1000um; otherwise translate the same selected arbor",
+    "averaging": "No valid coordinate-averaged branched-tree baseline exists in the frozen representation. E1/E2 aggregate donor risks and E6 aggregates neighbour support; none is described as a mean axon.",
+    "regional_average": "Not evaluated: Jiao table units/hemisphere/ontology semantics must be independently reconciled before a regional-mean diagnostic is meaningful. No profile is manufactured from hidden query truth for donor selection."
+  },
+  "representation": {
+    "canonical": "Complete rooted axon tree, branch-to-branch resampling every 50um, retain fork/tip coordinates and every connector; no clipping of any cable outside atlas bounds",
+    "truth_adapter": "Only separately exported axon geometry after source-format calibration; preserve its entire connected tree. Source-domain node coding mapped to axon only after semantic validation; never apply this adapter to combined axon/dendrite or image-space SWCs.",
+    "QC": "Frozen root/parent/connectivity/tree checks; calibrated node types; soma within 5um of metadata after conversion; >=1000um complete axon cable; mechanical exclusions independent of predictions. Source-unavailable neurons require explicit receipts."
+  },
+  "scores": {
+    "primary": [
+      "frozen symmetric arc-weighted nearest-sample distance_um",
+      "frozen cable F1 within 200um"
+    ],
+    "aggregation": "neuron mean within source sample UUID, then equal mean across samples; same admitted neurons for all methods",
+    "descriptive_rule": "For each of the two fixed candidates, distance must be strictly lower and F1 strictly higher than EVERY fixed control. Report both candidates and all failures. No selection from these outcomes.",
+    "inference": "Descriptive external transfer only; no population-level significance or confirmatory best-model claim. Report admitted/declaration counts and any complete lost sample. No viewer promotion.",
+    "sensitivity": "No optional outcome-selected subset will be computed in this run. Primary cohort is the exact97 metadata-declared neurons/22animals; all mechanical exclusions and lost animals will be reported."
+  },
+  "lifecycle": {
+    "commands": "python3 -I analysis/mouselight_external_test.py audit|freeze|predict|score",
+    "audit": "Read-only metadata/source readiness; does not construct library, forecast or open external geometry",
+    "freeze": "Requires resolved admission, pinned calibration and ROOT review; refuses any file in canonical external raw directory; binds source/protocol/metadata/TRAIN library and full query list; exclusive FREEZE_STARTED/FROZEN",
+    "predict": "Verifies freeze and absent external truth, writes every method for every declared query, hashes every forecast, then exclusive PREDICTIONS_COMMITTED before any test trace request",
+    "acquisition": "Separate authorized official-source JSON acquisition and calibrated deterministic separate-axon SWC conversion after committed predictions. Preserve original response bytes and per-query source/license/hash receipts, source-unavailable disclosures and transport failures. No outcome tuning, inferred genes, source-space substitution or tree clipping.",
+    "score": "Verifies all sealed inputs and acquisition receipts, exclusive SCORE_STARTED before first truth parse, fixes mechanical admission without forecast metrics, scores exactly once, writes metrics and exclusive SCORE_COMPLETE. An interrupted attempt cannot silently resume or change inputs.",
+    "paths": "Fixed run ID and contained canonical paths; symlink/path aliases refused; no overwrite or run-ID override; closed Jiao artifacts read-only"
+  }
+}

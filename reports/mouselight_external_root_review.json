@@ -1,0 +1,63 @@
+{
+  "checks": {
+    "acquisition": "Exact97tracingUUID/22sample metadata verified; sequential official-source requests only after sealed predictions; calibrated lossless separate-axon converter; transport failures do not silently remove neurons; fixed wrong soma key, clean parent path and checkpoint status integrity; bounded hash-only resume.",
+    "acquisition_test_count": 34,
+    "adapter_and_acquisition_tests": 62,
+    "exposure": "Root receipt independently reviewed; all8 evidence hashes and exact97query binding match;4448trainingrows/4368arbors/101animals, allrecordedJiaoIDs; published18AA comparator files were explicitly notfetched",
+    "inputs": "Query has soma position, derived hemisphere, bookkeeping neuron and animal only; missing measured tag remains None. No target geometry, profile, genes or raw image used",
+    "lifecycle": "Fixed paths and source/library pins, committed source required for freeze, exclusive freeze/predict/score markers, hashes for every prediction; truth absent before forecasting and rechecked immediately before commitment",
+    "numerical_parity": "Exact artificial-tree donor/array parity against unchanged frozen Engine.forecast for all six methods",
+    "raw_image_tests_separate": 51,
+    "scoring": "Existing frozen symmetric cable distance and F1@200um, complete connected axon cable with no clipping, neuron mean within animal then equal-animal mean",
+    "source_calibration": "One non-HY non-test cortical animal,13evidence hashes verified,11145nodes preserved exactly; adapter soma mismatch0um and full98000um+axon admitted; shared physical atlas basis supported by official renderer. No independent nonlinear-registration accuracy claim.",
+    "test_count": 28
+  },
+  "finding_fixed": {
+    "fix": "Recheck canonical RAW emptiness after forecasts/source verification immediately before commitment",
+    "issue": "A truth file arriving during prediction could still produce a truth_absent=True commitment",
+    "regression": "Synthetic canary arriving during predict_one leaves STARTED/manifest but no PREDICTIONS_COMMITTED; independently reproduced fixed behavior"
+  },
+  "interpretation": "External descriptive test of frozen previously unsuccessful soma-only geometry recipes. No gene model validation, no accurate complete circuit claim, no automatic promotion.",
+  "remaining_gate": "Commit/push finalized code/protocol before freeze; freeze and generate every forecast from allowed soma metadata/TRAIN only; publish prediction commitment hash before acquiring any HY query axon; score once.",
+  "reviewed_files": [
+    {
+      "path": "analysis/mouselight_external_test.py",
+      "sha256": "5b7990b9253bd78ac1781e0b7c1bd57d7ba53cd94fe1261796c539b0ffb8b942"
+    },
+    {
+      "path": "tests/test_mouselight_external_test.py",
+      "sha256": "7a3daee58ec8c25548bf2d8e29f41924ea0f3b3d1c733e04696e073579d5386f"
+    },
+    {
+      "path": "analysis/mouselight_external_acquire.py",
+      "sha256": "007c6172bebc566ed14541dc908c4afbc260ebc9aae03e85024cc61c16ef6bdd"
+    },
+    {
+      "path": "tests/test_mouselight_external_acquire.py",
+      "sha256": "67a0b30e7fc2e536fdf59260e3c66efcdf4156a855c548c90d0b03a291b4a1b9"
+    },
+    {
+      "path": "docs/mouselight_external_protocol.json",
+      "sha256": "fa19dca6354dd4ba3472e8501a19990ac2dc5841abd0d9a7ee2bcf17cafd5ad3"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/external_admission/exposure_audit.json",
+      "sha256": "2edde73414de3085a4086fdc65cc1c85ca6876aff9d580926cdda85e42eff019"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/calibration/source_calibration_receipt.json",
+      "sha256": "f38132065afb10cf9b59b1583c6e245535b4da0384fa2287cb88713ad3060c43"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/calibration/root_verification.json",
+      "sha256": "c0f829163642acc95bd516f5411e9f80124aedb98ff978557b8626cefb18665a"
+    },
+    {
+      "path": "data/interim/paired_projection_search_round6/image_routes/calibration/acquisition_source_manifest.json",
+      "sha256": "e2c88fc3c30de4386a09229c59ca92f4a06517d6fdd3800fa65c12294bcb8ee5"
+    }
+  ],
+  "schema": "mouselight_external_root_review_v1",
+  "status": "PASS_READY_FOR_SOURCE_COMMIT_AND_FREEZE",
+  "utc": "2026-11-12T19:56:36.221522+00:00"
+}
