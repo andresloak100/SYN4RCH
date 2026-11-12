@@ -1,0 +1,158 @@
+{
+  "schema": "synarch_paired_projection_nonlinear_protocol_v1",
+  "status": "FROZEN_NONLINEAR_STAGED_AUTHORIZED",
+  "status_values": {
+    "DRAFT_FOR_ROOT_REVIEW_NO_RUNS": "no A1 fit and no new synthetic generation",
+    "FROZEN_NONLINEAR_STAGED_AUTHORIZED": "stage 1: exactly one A1 development run (nonlinear_a1_dev_v1); stage 2: exactly one fresh simulation run (nonlinear_sim_v1), only after the committed selection record exists. The protocol is not edited between stages."
+  },
+  "date": "2026-11-12",
+  "code": "analysis/paired_projection_nonlinear.py",
+  "tests": "tests/test_paired_projection_nonlinear.py",
+  "outputs": "data/interim/paired_projection_nonlinear/<run_id>/",
+  "question": "Does a fixed shallow nonlinear gene-and-position model give lower log loss with non-increased Brier than the frozen logistic model, a nonlinear depth-only model and strong copying/averaging controls?",
+  "not_claimed": [
+    "biological or hypothalamic accuracy",
+    "cell-level significance",
+    "full anatomy, axon geometry or synapses"
+  ],
+  "candidate": {
+    "families": {
+      "hgbt_gene_position": "log1p measured genes + measured position",
+      "hgbt_position": "measured position only (isolates genes beyond nonlinear location)"
+    },
+    "model": "sklearn 1.8 HistGradientBoostingClassifier, one per target, fixed structure",
+    "fixed_parameters": {
+      "loss": "log_loss",
+      "learning_rate": 0.05,
+      "max_iter": 100,
+      "max_leaf_nodes": 4,
+      "max_depth": 2,
+      "min_samples_leaf": 20,
+      "l2_regularization": 1.0,
+      "early_stopping": false,
+      "categorical_features": null,
+      "class_weight": null,
+      "random_state": 20261112
+    },
+    "adapter": "the frozen simulation adapter (analysis/paired_projection_simulation.py fit_view): training-only median fill then training-only StandardScaler; identical for both families",
+    "fit_weights": "group-balanced 1/n_group over training cells, mean-normalised; no class_weight",
+    "shrinkage": "p' = (1 - alpha) p + alpha q_fit, q_fit = group-balanced captured rate in the training animals only",
+    "alpha_grid": [
+      0.0,
+      0.1,
+      0.25
+    ],
+    "no_structure_search": true
+  },
+  "comparators": {
+    "frozen_operational_model": "candidate_logistic|C=0.1|alpha=0.1",
+    "a1_keys": [
+      "candidate_logistic|C=0.1|alpha=0.1",
+      "constant_0.5",
+      "copy_1nn_location|alpha=0.5",
+      "copy_1nn_matched|alpha=0.5",
+      "location_knn|k=31|alpha=0.5",
+      "location_logistic|C=0.1|alpha=0.0",
+      "matched_knn|k=31|alpha=0.1",
+      "molecular_knn|k=31|alpha=0.1",
+      "technical|C=1.0|alpha=0.0",
+      "train_frequency",
+      "candidate_logistic|C=1.0|alpha=0.0",
+      "copy_1nn_location|alpha=0.0",
+      "copy_1nn_matched|alpha=0.0"
+    ],
+    "simulation_names": "the 13 methods of the frozen simulation protocol (same settings; old candidate and raw copy anchors renamed there)",
+    "strong_copy_averaging": [
+      "location_knn|k=31|alpha=0.5",
+      "molecular_knn|k=31|alpha=0.1",
+      "matched_knn|k=31|alpha=0.1",
+      "copy_1nn_location|alpha=0.5",
+      "copy_1nn_matched|alpha=0.5",
+      "copy_1nn_location|alpha=0.0",
+      "copy_1nn_matched|alpha=0.0"
+    ]
+  },
+  "a1_phase": {
+    "run_id": "nonlinear_a1_dev_v1",
+    "data": "BARseq2 A1 598 cells, XC95 and XC97, 11 targets: BOTH mice EXPOSED DEVELOPMENT",
+    "loading": "frozen runner validate/assemble (exact IDs, masks, targets, canonical order); leave-one-animal-out folds from the frozen runner",
+    "baselines": "the 13 comparators are reproduced fold-by-fold with the frozen development code; the saved development predictions.csv must contain exactly one row per expected (cell_id, group_id, fold, endpoint, config) key (no duplicates, none missing, no extras), finite probabilities in [0, 1], equal labels, and agree within 1e-12. The all-training deployment artifact is never scored as out-of-fold.",
+    "selection": "one global alpha per HGBT family, by target-equal (animal-equal within target) log loss, subject to Brier <= that family's own alpha=0 Brier; ties: lower Brier, then larger alpha. All configurations and the unconstrained best are reported.",
+    "gate": "DEVELOPMENT descriptive: selected hgbt_gene_position must have lower target-equal log loss AND non-increased target-equal Brier than the frozen operational model, the selected hgbt_position, and every strong copy/averaging control. Failures are listed separately. If the gate is not met, the frozen operational model is retained; the nonlinear candidate is still reported and still tested in the simulation phase.",
+    "frozen_selection_output": "selection.json, written last, binds alphas, selected keys, gate, executing source path and hashes of the executing and imported sources, the run's protocol snapshot, result.json, predictions.csv, RUN_COMPLETE.json and both artifacts",
+    "deployment_artifact": {
+      "what": "for each selected HGBT family: per target, the fixed HGBT refit on ALL A1 development rows (both mice) - DEPLOYMENT_REFIT_NOT_OOF",
+      "saved": "artifact_<family>.joblib (our own file) + artifact_<family>.json: training-only median/scaler, q_fit, feature order, fixed parameters, selected alpha, training cell IDs and groups, model file SHA-256",
+      "loading": "metadata and model hashes verified before joblib.load; third-party pickles are never loaded",
+      "prediction": "features only (no labels); numeric 2-D inputs with exact widths and matching rows; finite values; gene counts >= 0 before log1p; outputs pass the reviewed probability check. A1 inputs are complete; the shared median adapter only matters for missing simulation inputs."
+    }
+  },
+  "simulation_phase": {
+    "run_id": "nonlinear_sim_v1",
+    "generator": "unchanged analysis/paired_projection_simulation.py generate(), 4 scenarios, 6 TRAIN + 4 TEST animals, 100 cells/animal, 16 genes, 4 targets",
+    "new_seeds": {
+      "location_only": [
+        876211,
+        876212,
+        876213
+      ],
+      "complementarity": [
+        876221,
+        876222,
+        876223
+      ],
+      "latent_unobserved": [
+        876231,
+        876232,
+        876233
+      ],
+      "batch_shift_missing": [
+        876241,
+        876242,
+        876243
+      ]
+    },
+    "old_seeds": "764101-764104 are exposed regression/development only",
+    "case_id": "(scenario, seed); required because generator animal/cell IDs repeat across seeds",
+    "fitting": "each frozen recipe and each HGBT family (frozen alpha) refit on that case's TRAIN animals only; TEST labels, assay masks, generating probabilities and latent/true states are never passed to preprocessing, eligibility, q_fit, fallback or prediction",
+    "reporting": "each case, paired control-minus-candidate differences, means and ranges per scenario and overall; gate result per case; no settings chosen from these outcomes",
+    "saved_cases": "each case saved as SYNTHETIC_<scenario>_<seed>.npz (allow_pickle=False compatible; verified by reload): all generator arrays including labels, masks, coordinates, features, generating probabilities and latent states, plus case_id and seed; anchor_receipt.json; every input/output hash in RUN_COMPLETE.json"
+  },
+  "pins": {
+    "a1_input_manifest": "data/interim/paired_projection_real_benchmark/barseq2_a1_inputs/manifest.json",
+    "a1_input_manifest_sha256": "7337f39b4eaddb98687df445462e4942eea643bd7917830fae5f0d206c54183f",
+    "a1_admission_sha256": "d3e8fcd0a8f621dcd060bdf4ae307714eb996f491d6274d867abe54c3908f28f",
+    "frozen_runner_sha256": "7b23157a704cd6e34eb887a7b9ec59f3e2050e86435f9cd174efb0ec1250baac",
+    "reference_sha256": "9ae3dd30a7fad55c6b7d232e8faad4ec678bf406c105faa61cade544039723a3",
+    "development_code_sha256": "d0b6a28cb2fed7a29582843c6129bf0393cafbf885e95c0ec9e07ad394867f2e",
+    "development_predictions": "data/interim/paired_projection_logloss_development/logloss_dev_barseq2_a1_v1/predictions.csv",
+    "development_predictions_sha256": "a23329d59aaefcd0c8fcf03c5a2f2bbaa136a42ad4db5f64285173a83f8e00f0",
+    "development_result_sha256": "2df329387bec6ea6a1a1aa4c0184bfed236d8c139e657c310151defae4822647",
+    "published_recipe": "models/paired_projection/logloss_recipe_v1.json",
+    "published_recipe_sha256": "26274a23d551a5d9913d038cb4df36c57b7e26a68b7396228d7da1846c2f64e2",
+    "archived_candidate_recipe_sha256": "06e510963264fd3d915410805ffbef07a81e19637ec2b6d9adc460882c8ba02e",
+    "simulation_code_sha256": "a789a103ec1940143afc0d95fc596d40358a2cd0093d659e34a33ed111082f67",
+    "simulation_protocol_sha256": "2e3aede234f9c09a595bff88acbd801a95853982d9b08131f61b8240b6dd0ac5"
+  },
+  "durability": "fixed run IDs and canonical folders; protocol_snapshot.json copied into each run and hashed in STARTED; exclusive STARTED before any data are parsed or generated; keyed raw and shrunk predictions; fit audit; RUN_COMPLETE with executing source and imported module hashes and all output hashes; duplicate run IDs refused; no silent rerun",
+  "selection_record": {
+    "path": "docs/paired_projection_nonlinear_selection.json",
+    "written": "only after ROOT replays stage 1; committed before stage 2",
+    "content": {
+      "schema": "synarch_nonlinear_selection_record_v1",
+      "a1_selection_sha256": "sha256 of data/interim/paired_projection_nonlinear/nonlinear_a1_dev_v1/selection.json",
+      "a1_run_complete_sha256": "sha256 of that run's RUN_COMPLETE.json",
+      "alphas": "{hgbt_gene_position: a, hgbt_position: a} exactly as in selection.json"
+    },
+    "stage2_checks": "record committed and unmodified; A1 selection.json and RUN_COMPLETE hashes match; every completed A1 file still matches RUN_COMPLETE; alphas equal and in the grid; executing and imported source hashes equal those recorded in selection.json; fixed HGBT structure equal"
+  },
+  "checks_before_any_data_is_read_or_generated": [
+    "protocol status FROZEN_NONLINEAR_STAGED_AUTHORIZED, committed and unmodified; the run uses the canonical protocol path",
+    "executing source is the canonical analysis/paired_projection_nonlinear.py (no substitute path), committed and unmodified",
+    "imported sources pinned: development code, frozen runner, reference module, simulation code and simulation protocol",
+    "published recipe hash and archived candidate recipe hash pinned separately, with identical frozen settings",
+    "protocol fixed HGBT parameters, alphas, comparators, run identities and seeds equal the code constants",
+    "stage 1 also: A1 input manifest, admission record and saved development predictions hashes",
+    "stage 2 also: the committed selection record (see selection_record)"
+  ]
+}
