@@ -184,21 +184,26 @@ def extraction_counts(folder, cohort):
 
 
 def scores(forecasts, cohort, folds):
+    from scipy.stats import rankdata
     out = {}
     for method in ALPHAS:
         by_fold = {}
         for fold, spec in folds.items():
-            pool_scores = {}
+            pool_scores = {}; fold_y, fold_p = [], []
             for pool in spec['test']:
                 yy, pp = [], []
                 for r in cohort:
                     if r['pool'] == pool:
                         yy.append(r['target'] == 'PB'); pp.append(forecasts[fold, r['object'], r['cell_id'], method]['p'])
                 y, p = np.asarray(yy, float), np.asarray(pp); q = np.clip(p, 1e-6, 1-1e-6)
+                fold_y.extend(y); fold_p.extend(p)
                 pool_scores[pool] = {'n': len(y), 'brier': float(np.mean((y-p)**2)),
                                      'log_loss': float(np.mean(-y*np.log(q)-(1-y)*np.log1p(-q)))}
             by_fold[fold] = {'per_pool': pool_scores, **{
                 m: float(np.mean([v[m] for v in pool_scores.values()])) for m in ('brier', 'log_loss')}}
+            yf = np.asarray(fold_y, bool); npos, nneg = int(yf.sum()), int((~yf).sum())
+            by_fold[fold]['auroc_descriptive'] = (float((rankdata(fold_p)[yf].sum()-npos*(npos+1)/2)/(npos*nneg))
+                                                  if npos and nneg else None)
         out[method] = {'per_fold': by_fold, **{m+'_macro': float(np.mean([v[m] for v in by_fold.values()]))
                                             for m in ('brier', 'log_loss')}}
     return out
@@ -228,6 +233,8 @@ def verify_fit(folder, cohort, counts, panel, protocol, done):
         for metric in ('brier', 'log_loss'):
             near(sc[metric+'_macro'], reported['per_method'][method][metric+'_macro'], 'macro '+metric)
         for fold, fs in sc['per_fold'].items():
+            near(fs['auroc_descriptive'], reported['per_method'][method]['per_fold'][fold]['auroc_descriptive'],
+                 'descriptive fold AUROC')
             for metric in ('brier', 'log_loss'):
                 near(fs[metric], reported['per_method'][method]['per_fold'][fold][metric], 'fold '+metric)
                 for pool, ps in fs['per_pool'].items():

@@ -1,0 +1,61 @@
+{
+  "exposed": "All 265 first-MUX original-study nuclei (pools 11F PB 144, 12M PB 53, 13F SC 39, 14M SC 29), their collection labels and every method outcome are now exposed. The 1225 original-study nuclei of the atlas are also exposed as metadata.",
+  "not_claimed": [
+    "individual-animal generalisation",
+    "projection probability or absence",
+    "dual projection",
+    "circuits, positions, axon paths or synapses",
+    "novelty"
+  ],
+  "published_copies": {
+    "reports/pvh_population_pilot_metrics.json": "d2d8dc8fc6aae98619084e496c7566cc0518820057ff26da7f7663068fccde12",
+    "reports/pvh_population_pilot_replay.json": "a6f534e34c458d399f6be2a2dea5ac06d50a29c8558819591a8c0035649626a2"
+  },
+  "receipts": {
+    "extraction_diagnostic_v1.json": "e63a76a752f99988a6908f5f6c791cfd7557d2fc85c37b1c0922707a14ece441",
+    "root_preflight_review.json": "1cc24d4294f9c368ba4ab428f7477e6d8f524b505657e2ca93ab6e3d9156ea7b",
+    "root_recovery_review.json": "d0594d8c190a603f3234d6f4e565d66eaa9606d24eff44a5de0a89ebe6b30c32",
+    "sampling_figure_receipt.json": "da5adfc745674600839ef346f75d2f07dcac2df4b93976c153d8dc22729e6c52"
+  },
+  "reviewed_source_sha256": {
+    "analysis/pvh_population_extract.R": "481c50fec61c44ea2052023f1fce69fb58eb6a0988854ce93291be9db5cea4a9",
+    "analysis/pvh_population_pilot.py": "6285d093d401a7ab6a168d358a874969f88ecd380b698f728159cbd0fe357b24",
+    "docs/pvh_population_pilot_protocol.json": "ac8abae66e5cbe905de24b2cbb68c470b746f221a39d12b53bf7b23583cf2e92"
+  },
+  "rule": "These nuclei, pools and outcomes may be reused only for development. They may not serve as a fresh or independent test for any future method, setting or claim.",
+  "runs": {
+    "pvh_population_atlas_v1": {
+      "RUN_COMPLETE.json": "9fa60e74b41b8f99a2dabb9129830c574d49277191bc786c481977539635feac",
+      "STARTED.json": "950ccb289504d642ab3371d32f5825ecb916fe61735e974e3aa049bb862396a5",
+      "protocol_snapshot.json": "2e94794bf98715257f14f57319a6d110ec893f5b78e6a4b802448ca734241bb4",
+      "status": "COMPLETE"
+    },
+    "pvh_population_pilot_v1": {
+      "ROOT_REPLAY.json": "a6f534e34c458d399f6be2a2dea5ac06d50a29c8558819591a8c0035649626a2",
+      "RUN_COMPLETE.json": "1b1aaf54f99cbc19be941ca4eeac81dea47cf908c3763c955d5020e57d5e61a1",
+      "STARTED.json": "77dd3211f7e7305d269c73547d482921b9e9f68f4e4be30a4c33fdc740668c09",
+      "metrics.json": "d2d8dc8fc6aae98619084e496c7566cc0518820057ff26da7f7663068fccde12",
+      "predictions.csv": "2388893588b77e18b1917f055bba0819944a504d7f9a232442ab34803472a1d1",
+      "protocol_snapshot.json": "ac8abae66e5cbe905de24b2cbb68c470b746f221a39d12b53bf7b23583cf2e92",
+      "status": "COMPLETE; first and only fit"
+    },
+    "pvh_rna_extract_v1": {
+      "STARTED.json": "6e0fb2f4fe661f68faf17f1697e10bc1d46ccf3e230981b9e253fe2ba1d4ec41",
+      "extract_PB.log": "ec0de6ef6935fd17753ff1f75612270292e96ab706fedadbcc22cc8a28e16e18",
+      "protocol_snapshot.json": "2e94794bf98715257f14f57319a6d110ec893f5b78e6a4b802448ca734241bb4",
+      "status": "FAILED_PRESERVED: PB counts layer contains fractional entries outside the cohort; refused before any RNA export; no RUN_COMPLETE"
+    },
+    "pvh_rna_extract_v2": {
+      "RUN_COMPLETE.json": "cd3585c9cd4ff65f36caf442df3da61ab243432278aa63de1975f3397243924d",
+      "STARTED.json": "2418b668e4e3ec36f0fd72b0f3075ad2e8aa5684221ac468e634dc29f5825389",
+      "protocol_snapshot.json": "ac8abae66e5cbe905de24b2cbb68c470b746f221a39d12b53bf7b23583cf2e92",
+      "status": "COMPLETE (reviewed recovery; integer check on selected cohort columns only)"
+    }
+  },
+  "schema": "synarch_pvh_population_pilot_exposure_v1",
+  "source_commits": {
+    "extraction_recovery_and_replay": "74e3623196ba66980bd45730ad53b89bf68d2e39",
+    "freeze": "c85cc7324ed93b5e412c2fc2c2c6ec97f41eeab7"
+  },
+  "status": "EXPOSED_AFTER_FIRST_FIT"
+}

@@ -1,0 +1,372 @@
+{
+  "edges": [
+    {
+      "fraction_of_target_collection": 0.001594896331738437,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 1,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S1.Crh-Scgn",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.03177257525083612,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 19,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S10.Npsr1-Npnt",
+      "target": "target:PB"
+    },
+    {
+      "fraction_of_target_collection": 0.21371610845295055,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 134,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S10.Npsr1-Npnt",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.32441471571906355,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 194,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S11.Esr2-Abcc9",
+      "target": "target:PB"
+    },
+    {
+      "fraction_of_target_collection": 0.37799043062200954,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 237,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S11.Esr2-Abcc9",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.21237458193979933,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 127,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S12.Npr3",
+      "target": "target:PB"
+    },
+    {
+      "fraction_of_target_collection": 0.3668261562998405,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 230,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S12.Npr3",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.008361204013377926,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 5,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S13.Npy2r-Tll2",
+      "target": "target:PB"
+    },
+    {
+      "fraction_of_target_collection": 0.001594896331738437,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 1,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S13.Npy2r-Tll2",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.14715719063545152,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 88,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S15.Brs3",
+      "target": "target:PB"
+    },
+    {
+      "fraction_of_target_collection": 0.001594896331738437,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 1,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S15.Brs3",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.07859531772575251,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 47,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S16.Pde3a-Tmem215",
+      "target": "target:PB"
+    },
+    {
+      "fraction_of_target_collection": 0.1688963210702341,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 101,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S17.Sfta3-ps",
+      "target": "target:PB"
+    },
+    {
+      "fraction_of_target_collection": 0.019138755980861243,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 12,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S17.Sfta3-ps",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.001594896331738437,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 1,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S18.Ebf2",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.01594896331738437,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 10,
+      "n_target_collected": 627,
+      "other_target_status": null,
+      "source": "type:Seq_S19.Onecut3",
+      "target": "target:SC"
+    },
+    {
+      "fraction_of_target_collection": 0.026755852842809364,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 16,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S2.Trh-Satb2",
+      "target": "target:PB"
+    },
+    {
+      "fraction_of_target_collection": 0.0016722408026755853,
+      "kind": "collected_in",
+      "meaning": "sampling count among collected nuclei; not prevalence or projection probability",
+      "n_nuclei": 1,
+      "n_target_collected": 598,
+      "other_target_status": null,
+      "source": "type:Seq_S5.Oxt-Rxfp3",
+      "target": "target:PB"
+    },
+    {
+      "kind": "pool_collected_for",
+      "n_nuclei": 144,
+      "source": "pool:Mm_PVH_11F_PBprojecting",
+      "target": "target:PB"
+    },
+    {
+      "kind": "pool_collected_for",
+      "n_nuclei": 53,
+      "source": "pool:Mm_PVH_12M_PBprojecting",
+      "target": "target:PB"
+    },
+    {
+      "kind": "pool_collected_for",
+      "n_nuclei": 39,
+      "source": "pool:Mm_PVH_13F_SCprojecting",
+      "target": "target:SC"
+    },
+    {
+      "kind": "pool_collected_for",
+      "n_nuclei": 29,
+      "source": "pool:Mm_PVH_14M_SCprojecting",
+      "target": "target:SC"
+    },
+    {
+      "kind": "retrograde_collection_from",
+      "n_nuclei": 598,
+      "source": "region:PVH",
+      "target": "target:PB"
+    },
+    {
+      "kind": "retrograde_collection_from",
+      "n_nuclei": 627,
+      "source": "region:PVH",
+      "target": "target:SC"
+    }
+  ],
+  "nodes": [
+    {
+      "coordinates": null,
+      "id": "region:PVH",
+      "kind": "source_region",
+      "label": "paraventricular hypothalamus (PVH)"
+    },
+    {
+      "id": "target:PB",
+      "kind": "collection_target",
+      "label": "parabrachial retrograde collection group",
+      "n_nuclei_collected": 598
+    },
+    {
+      "id": "target:SC",
+      "kind": "collection_target",
+      "label": "spinal cord retrograde collection group",
+      "n_nuclei_collected": 627
+    },
+    {
+      "id": "type:Seq_S1.Crh-Scgn",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S1.Crh-Scgn",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S10.Npsr1-Npnt",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S10.Npsr1-Npnt",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S11.Esr2-Abcc9",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S11.Esr2-Abcc9",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S12.Npr3",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S12.Npr3",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S13.Npy2r-Tll2",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S13.Npy2r-Tll2",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S15.Brs3",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S15.Brs3",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S16.Pde3a-Tmem215",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S16.Pde3a-Tmem215",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S17.Sfta3-ps",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S17.Sfta3-ps",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S18.Ebf2",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S18.Ebf2",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S19.Onecut3",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S19.Onecut3",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S2.Trh-Satb2",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S2.Trh-Satb2",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "type:Seq_S5.Oxt-Rxfp3",
+      "inferred": true,
+      "kind": "author_inferred_type",
+      "label": "Seq_S5.Oxt-Rxfp3",
+      "note": "author predicted.celltype; inferred identity, not a measurement"
+    },
+    {
+      "id": "pool:Mm_PVH_11F_PBprojecting",
+      "is_individual_animal": false,
+      "kind": "encoded_pool",
+      "label": "Mm_PVH_11F_PBprojecting",
+      "note": "pool of 4-10 mice; not an animal",
+      "sex": "female"
+    },
+    {
+      "id": "pool:Mm_PVH_12M_PBprojecting",
+      "is_individual_animal": false,
+      "kind": "encoded_pool",
+      "label": "Mm_PVH_12M_PBprojecting",
+      "note": "pool of 4-10 mice; not an animal",
+      "sex": "male"
+    },
+    {
+      "id": "pool:Mm_PVH_13F_SCprojecting",
+      "is_individual_animal": false,
+      "kind": "encoded_pool",
+      "label": "Mm_PVH_13F_SCprojecting",
+      "note": "pool of 4-10 mice; not an animal",
+      "sex": "female"
+    },
+    {
+      "id": "pool:Mm_PVH_14M_SCprojecting",
+      "is_individual_animal": false,
+      "kind": "encoded_pool",
+      "label": "Mm_PVH_14M_SCprojecting",
+      "note": "pool of 4-10 mice; not an animal",
+      "sex": "male"
+    }
+  ],
+  "not_present": [
+    "coordinates or positions",
+    "individual animals",
+    "other-target negatives",
+    "dual projection",
+    "axon paths or synapses"
+  ],
+  "provenance": {
+    "PB_metadata_sha256": "b4b3498c40384a7041a1bdde6d67c156d456e6d3246bc109e9179c44f0845d33",
+    "SC_metadata_sha256": "5843c00af964078c8dd238cb3e89baa1aa42cd47d1dbde55010aa858ffdc70de",
+    "manifest_sha256": "35e49bea63120564128e3e217a136b55ec6b600a7aab7ec9b7a29187c6a6ddfd",
+    "run_id": "pvh_population_atlas_v1"
+  },
+  "schema": "synarch_pvh_evidence_graph_v1",
+  "scope": "original-study nuclei only (reused SC nuclei excluded); counts are sampling counts",
+  "unknown_pool_nuclei": 960
+}

@@ -1,0 +1,293 @@
+{
+  "excluded_gene_ids": [
+    "Cav2",
+    "Cfp"
+  ],
+  "labels_pb": 197,
+  "location_comparator": "NONE AVAILABLE: no measured positions in these RNA data",
+  "n_cells": 265,
+  "n_panel_genes": 30477,
+  "note": "exploratory; no cell-level p-values; no promotion regardless of score",
+  "per_method": {
+    "gene_copy_1nn": {
+      "brier_macro": 0.2553502650434579,
+      "log_loss_macro": 0.7114174145510705,
+      "per_fold": {
+        "fold_F_to_M": {
+          "auroc_descriptive": 0.6027976577748861,
+          "brier": 0.26110117111255693,
+          "log_loss": 0.7240534467080468,
+          "per_pool": {
+            "Mm_PVH_12M_PBprojecting": {
+              "brier": 0.27004716981132076,
+              "log_loss": 0.7437098149177883,
+              "n": 53
+            },
+            "Mm_PVH_14M_SCprojecting": {
+              "brier": 0.2521551724137931,
+              "log_loss": 0.7043970784983052,
+              "n": 29
+            }
+          }
+        },
+        "fold_M_to_F": {
+          "auroc_descriptive": 0.625801282051282,
+          "brier": 0.24959935897435898,
+          "log_loss": 0.6987813823940944,
+          "per_pool": {
+            "Mm_PVH_11F_PBprojecting": {
+              "brier": 0.21875,
+              "log_loss": 0.6309984126605652,
+              "n": 144
+            },
+            "Mm_PVH_13F_SCprojecting": {
+              "brier": 0.28044871794871795,
+              "log_loss": 0.7665643521276235,
+              "n": 39
+            }
+          }
+        }
+      }
+    },
+    "hgbt_fixed": {
+      "brier_macro": 0.2517058265054264,
+      "log_loss_macro": 0.7075675539772812,
+      "per_fold": {
+        "fold_F_to_M": {
+          "auroc_descriptive": 0.6629798308392972,
+          "brier": 0.2724527525912088,
+          "log_loss": 0.7608531891786873,
+          "per_pool": {
+            "Mm_PVH_12M_PBprojecting": {
+              "brier": 0.1351412374306731,
+              "log_loss": 0.4164777633854702,
+              "n": 53
+            },
+            "Mm_PVH_14M_SCprojecting": {
+              "brier": 0.4097642677517445,
+              "log_loss": 1.1052286149719044,
+              "n": 29
+            }
+          }
+        },
+        "fold_M_to_F": {
+          "auroc_descriptive": 0.7199074074074074,
+          "brier": 0.23095890041964395,
+          "log_loss": 0.654281918775875,
+          "per_pool": {
+            "Mm_PVH_11F_PBprojecting": {
+              "brier": 0.12676172049320597,
+              "log_loss": 0.4161045930400443,
+              "n": 144
+            },
+            "Mm_PVH_13F_SCprojecting": {
+              "brier": 0.33515608034608196,
+              "log_loss": 0.8924592445117057,
+              "n": 39
+            }
+          }
+        }
+      }
+    },
+    "logistic_frozen_recipe": {
+      "brier_macro": 0.24065718263257355,
+      "log_loss_macro": 0.6935711002596818,
+      "per_fold": {
+        "fold_F_to_M": {
+          "auroc_descriptive": 0.7072218607677294,
+          "brier": 0.2766369984358366,
+          "log_loss": 0.7897911182796064,
+          "per_pool": {
+            "Mm_PVH_12M_PBprojecting": {
+              "brier": 0.12385360330578406,
+              "log_loss": 0.3844795202760945,
+              "n": 53
+            },
+            "Mm_PVH_14M_SCprojecting": {
+              "brier": 0.4294203935658892,
+              "log_loss": 1.1951027162831183,
+              "n": 29
+            }
+          }
+        },
+        "fold_M_to_F": {
+          "auroc_descriptive": 0.7676282051282052,
+          "brier": 0.20467736682931048,
+          "log_loss": 0.5973510822397574,
+          "per_pool": {
+            "Mm_PVH_11F_PBprojecting": {
+              "brier": 0.13895122316960082,
+              "log_loss": 0.4364587709100511,
+              "n": 144
+            },
+            "Mm_PVH_13F_SCprojecting": {
+              "brier": 0.27040351048902017,
+              "log_loss": 0.7582433935694637,
+              "n": 39
+            }
+          }
+        }
+      }
+    },
+    "molecular_knn31": {
+      "brier_macro": 0.24208417792363207,
+      "log_loss_macro": 0.6757213865667075,
+      "per_fold": {
+        "fold_F_to_M": {
+          "auroc_descriptive": 0.6818477553675992,
+          "brier": 0.24343459494115666,
+          "log_loss": 0.6779953449310248,
+          "per_pool": {
+            "Mm_PVH_12M_PBprojecting": {
+              "brier": 0.1278246421769776,
+              "log_loss": 0.4346598895690109,
+              "n": 53
+            },
+            "Mm_PVH_14M_SCprojecting": {
+              "brier": 0.3590445477053357,
+              "log_loss": 0.9213308002930386,
+              "n": 29
+            }
+          }
+        },
+        "fold_M_to_F": {
+          "auroc_descriptive": 0.7240918803418803,
+          "brier": 0.24073376090610749,
+          "log_loss": 0.6734474282023905,
+          "per_pool": {
+            "Mm_PVH_11F_PBprojecting": {
+              "brier": 0.15363813735691986,
+              "log_loss": 0.4956775945439613,
+              "n": 144
+            },
+            "Mm_PVH_13F_SCprojecting": {
+              "brier": 0.3278293844552951,
+              "log_loss": 0.8512172618608196,
+              "n": 39
+            }
+          }
+        }
+      }
+    },
+    "pool_weighted_knn31": {
+      "brier_macro": 0.24131792100325922,
+      "log_loss_macro": 0.6758352142737438,
+      "per_fold": {
+        "fold_F_to_M": {
+          "auroc_descriptive": 0.6779440468445024,
+          "brier": 0.24921039667411257,
+          "log_loss": 0.6921037532028098,
+          "per_pool": {
+            "Mm_PVH_12M_PBprojecting": {
+              "brier": 0.38967978031044803,
+              "log_loss": 0.9901372885338112,
+              "n": 53
+            },
+            "Mm_PVH_14M_SCprojecting": {
+              "brier": 0.1087410130377771,
+              "log_loss": 0.39407021787180835,
+              "n": 29
+            }
+          }
+        },
+        "fold_M_to_F": {
+          "auroc_descriptive": 0.7337962962962963,
+          "brier": 0.2334254453324059,
+          "log_loss": 0.6595666753446779,
+          "per_pool": {
+            "Mm_PVH_11F_PBprojecting": {
+              "brier": 0.27361433946898756,
+              "log_loss": 0.7407615537153033,
+              "n": 144
+            },
+            "Mm_PVH_13F_SCprojecting": {
+              "brier": 0.19323655119582422,
+              "log_loss": 0.5783717969740526,
+              "n": 39
+            }
+          }
+        }
+      }
+    },
+    "technical_logistic": {
+      "brier_macro": 0.24538158543008187,
+      "log_loss_macro": 0.6838891638112174,
+      "per_fold": {
+        "fold_F_to_M": {
+          "auroc_descriptive": 0.5699414443721535,
+          "brier": 0.25005542538312797,
+          "log_loss": 0.6932893010554922,
+          "per_pool": {
+            "Mm_PVH_12M_PBprojecting": {
+              "brier": 0.2241843036355803,
+              "log_loss": 0.6379546066365426,
+              "n": 53
+            },
+            "Mm_PVH_14M_SCprojecting": {
+              "brier": 0.2759265471306756,
+              "log_loss": 0.7486239954744419,
+              "n": 29
+            }
+          }
+        },
+        "fold_M_to_F": {
+          "auroc_descriptive": 0.6741452991452992,
+          "brier": 0.2407077454770358,
+          "log_loss": 0.6744890265669428,
+          "per_pool": {
+            "Mm_PVH_11F_PBprojecting": {
+              "brier": 0.2509947993097221,
+              "log_loss": 0.6951432150956571,
+              "n": 144
+            },
+            "Mm_PVH_13F_SCprojecting": {
+              "brier": 0.23042069164434947,
+              "log_loss": 0.6538348380382285,
+              "n": 39
+            }
+          }
+        }
+      }
+    },
+    "train_prior": {
+      "brier_macro": 0.25,
+      "log_loss_macro": 0.6931471805599454,
+      "per_fold": {
+        "fold_F_to_M": {
+          "auroc_descriptive": 0.5,
+          "brier": 0.25,
+          "log_loss": 0.6931471805599456,
+          "per_pool": {
+            "Mm_PVH_12M_PBprojecting": {
+              "brier": 0.24999999999999994,
+              "log_loss": 0.6931471805599453,
+              "n": 53
+            },
+            "Mm_PVH_14M_SCprojecting": {
+              "brier": 0.2500000000000001,
+              "log_loss": 0.6931471805599458,
+              "n": 29
+            }
+          }
+        },
+        "fold_M_to_F": {
+          "auroc_descriptive": 0.5,
+          "brier": 0.25,
+          "log_loss": 0.6931471805599452,
+          "per_pool": {
+            "Mm_PVH_11F_PBprojecting": {
+              "brier": 0.25,
+              "log_loss": 0.6931471805599453,
+              "n": 144
+            },
+            "Mm_PVH_13F_SCprojecting": {
+              "brier": 0.25,
+              "log_loss": 0.693147180559945,
+              "n": 39
+            }
+          }
+        }
+      }
+    }
+  }
+}
