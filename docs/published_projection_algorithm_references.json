@@ -1,0 +1,107 @@
+{
+  "schema": "synarch_published_projection_algorithm_references_v1",
+  "checked_date": "2026-11-12",
+  "status": "REFERENCE_ONLY_NO_MODEL_RUN_OR_FROZEN_EXPERIMENT",
+  "human_readable": "reports/published_projection_algorithms.md",
+  "references": [
+    {
+      "id": "wang2023_cea_logistic",
+      "citation": "Wang et al., Multimodal mapping of cell types and projections in the central nucleus of the amygdala, eLife 12:e84262 (2023)",
+      "doi": "10.7554/eLife.84262",
+      "paper": "https://doi.org/10.7554/eLife.84262",
+      "algorithm": "L2 logistic regression and recursive feature elimination",
+      "inputs": "29 measured marker genes",
+      "scope": "Central amygdala captured projection classes, not hypothalamic outputs",
+      "validation": "Main stratified cell CV; selected markers additionally checked in a third animal",
+      "role": "Small-panel interpretable reference",
+      "data": "https://doi.org/10.25378/janelia.21171373"
+    },
+    {
+      "id": "xu2024_merge_nb",
+      "citation": "Xu et al., High-throughput mapping of single-neuron projection and molecular features by retrograde barcoded labeling, eLife (2024)",
+      "doi": "10.7554/eLife.85419",
+      "paper": "https://doi.org/10.7554/eLife.85419",
+      "algorithm": "Target-specific Naive Bayes",
+      "inputs": "Endogenous RNA features",
+      "scope": "Prefrontal source, including LH as a destination",
+      "validation": "Random cell split, not established animal-held-out evaluation",
+      "code": "https://github.com/MichaelPeibo/MERGE-seq-analysis/tree/revised",
+      "checked_source_revision": "4f5553161cb3a740b291c59dad4b83790cfc6663",
+      "code_licence": "Not established in checked repository"
+    },
+    {
+      "id": "zheng2026_spider_xgboost",
+      "citation": "Zheng et al., SPIDER-Seq, National Science Review (2026)",
+      "doi": "10.1093/nsr/nwag004",
+      "paper": "https://doi.org/10.1093/nsr/nwag004",
+      "algorithm": "XGBoost binary logistic prediction",
+      "inputs": "Transcriptomic PCs and XYZ",
+      "scope": "Prefrontal inputs to LHA; not hypothalamic-source geometry",
+      "validation": "Cell splitting; separate MERFISH spatial comparisons are not same-cell projection truth",
+      "code": "https://github.com/ZhengTiger/SPIDER-Seq/blob/047eb5aaa15087c241570745bd6df07882b0dd78/Main%20Figures/Figure7.R",
+      "code_commit": "047eb5aaa15087c241570745bd6df07882b0dd78",
+      "code_file_blob": "91745981ec94ecc7b11d17356683fac9f5102705",
+      "code_licence": "MIT; processed-data terms separately checked"
+    },
+    {
+      "id": "sun2021_barseq2_spatial_modules",
+      "citation": "Sun et al., Integrating barcoded neuroanatomy with spatial transcriptional profiling enables identification of gene correlates of projections, Nature Neuroscience (2021)",
+      "doi": "10.1038/s41593-021-00842-4",
+      "paper": "https://doi.org/10.1038/s41593-021-00842-4",
+      "algorithm": "NMF projection modules, Gaussian-process spatial regression and gene regression",
+      "scope": "Auditory/motor cortical gene-projection relationships",
+      "validation": "Neuron-level cross-validation; animal-fold grouping not established",
+      "role": "Strong nonlinear anatomy controls and fitting-only output representations",
+      "data_and_code": "https://data.mendeley.com/datasets/jnx89bmv4s/2",
+      "deposit_licence": "CC BY 4.0"
+    },
+    {
+      "id": "sorensen2026_sparse_rrr",
+      "citation": "Sorensen et al., Connecting single-cell transcriptomes to projectomes in the mouse visual cortex, Nature (2026)",
+      "doi": "10.1038/s41586-026-10424-8",
+      "paper": "https://doi.org/10.1038/s41586-026-10424-8",
+      "algorithm": "Sparse reduced-rank representation and ridge logistic projection models",
+      "scope": "Separate Patch-seq/local-phenotype and whole-morphology cohorts",
+      "validation": "Checked projection code withholds cells, not animals",
+      "code": "https://github.com/AllenInstitute/exc_vis_manuscript/blob/7f187ac1efdc0d81b18b5d539fa602b3bae1a550/scripts/glm_lf_subclass_loo.R",
+      "code_commit": "7f187ac1efdc0d81b18b5d539fa602b3bae1a550",
+      "code_file_blob": "f76d092cd7266fac6d1e827a9019b994ead0c6c4",
+      "code_licence": "BSD-like with noncommercial restriction",
+      "restriction": "Do not turn population alignment into assumed individual RNA/full-axon pairs"
+    },
+    {
+      "id": "elkan_noto2008_pu",
+      "citation": "Elkan and Noto, Learning classifiers from only positive and unlabeled data, KDD (2008)",
+      "doi": "10.1145/1401890.1401920",
+      "paper": "https://cseweb.ucsd.edu/~elkan/posonly.pdf",
+      "algorithm": "Positive-unlabelled probability correction",
+      "scope": "General learning framework, not neuronal validation",
+      "required_assumption": "Labelled positives selected completely at random among positives",
+      "role": "Conditional reference for detection and missingness; not a default tracing correction"
+    }
+  ],
+  "implementation_and_evaluation": {
+    "penalized_regression": "https://www.jstatsoft.org/article/view/v033i01",
+    "glmnet": "https://cran.r-project.org/web/packages/glmnet/index.html",
+    "glmnet_fold_assignment": "https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf",
+    "regularized_logistic": "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html",
+    "nonoverlapping_group_folds": "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GroupKFold.html",
+    "calibration_and_proper_scores": "https://scikit-learn.org/stable/modules/calibration.html"
+  },
+  "adoption_order": [
+    "Resolve exact animal groups and target-assay masks",
+    "Freeze one regularized logistic candidate and strong controls",
+    "Require nonlinear anatomy, frequency, technical and nearest-neighbour comparisons",
+    "Keep feature selection and calibration within fitting groups",
+    "Assess proper probability scores and calibration on independent groups",
+    "Consider representation or geometry extensions only after a reliable destination gain"
+  ],
+  "guardrails": [
+    "Captured label probability is not automatically anatomical projection probability",
+    "Nondetection and unassayed targets are not verified negatives",
+    "Gene and geometry pairing must be genuinely measured or validated",
+    "No literature score is a Synarch result",
+    "No author source code, weights or datasets are republished by this catalogue",
+    "No new fitting, old test reopening, viewer promotion or author contact"
+  ]
+}
