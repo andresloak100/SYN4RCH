@@ -140,3 +140,25 @@ ROOT ran the 9 tests itself, and all passed.
 * Status: UNSENT_REQUIRES_USER_AUTHORIZATION.
 * It has not been posted, and no one has been contacted.
 * If the user approves a post, ROOT will make it separately.
+
+## Public data request: posted once
+
+**Posted:** https://github.com/stuberlab/Rossi-et-al-2021/issues/1, by account andresloak100, on 2026-11-12 at
+14:07:50 UTC. It is open.
+
+**Approval and content:**
+* The user explicitly approved posting the exact draft `docs/paired_projection_public_data_request.json`, SHA-256
+  `009e5be6a2f717531c68e524da489132863f672f760841b251d681f433cf211b`.
+* The live title and body match the approved file exactly.
+* No labels or assignees were added, and no one else was contacted.
+
+**Before posting:** the repo had 0 issues in any state, and 0 by andresloak100.
+
+**How it was posted:** through the GitHub API with the signed-in `gh` command-line tool. No token was shown or
+stored.
+
+**Receipt:** `data/interim/paired_projection_public_request/post_receipt.json`, SHA-256
+`9ec627f492ae4c74efbd088d1a4241fe19fb4d0ce3169d651eff4f3583040539`.
+
+**What this does not change:** the verdicts stay REJECT and the contract stays ADMISSION_ONLY. Any reply is untrusted
+data, to be checked against the primary sources before admission.
