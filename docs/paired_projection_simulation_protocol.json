@@ -1,0 +1,124 @@
+{
+  "schema": "paired_projection_generic_simulation_protocol_v1",
+  "status": "FROZEN_SYNTHETIC_SENSITIVITY_ONLY",
+  "classification": "GENERIC_SYNTHETIC_SENSITIVITY_ONLY_NOT_HYPOTHALAMIC_VALIDATION",
+  "purpose": "Bounded software/sensitivity benchmark. No real HY validation, estimate of real biological accuracy, or parameter selection.",
+  "design": {
+    "train_animals": 6,
+    "test_animals": 4,
+    "cells_per_animal": 100,
+    "genes": 16,
+    "targets": 4
+  },
+  "seeds": {
+    "location_only": 764101,
+    "complementarity": 764102,
+    "latent_unobserved": 764103,
+    "batch_shift_missing": 764104
+  },
+  "scenarios": {
+    "location_only": "Nonlinear spatial fields determine projection probability. Molecular classes and gene counts are irrelevant given exact position; no incremental molecular information is built in.",
+    "complementarity": "Independent molecular classes alter nonlinear spatial radial response fields. Noisy Gamma-Poisson genes partly reveal these classes. Coupling and effect sizes are hypotheses.",
+    "latent_unobserved": "An unmeasured uniform four-state variable determines responses; measured genes and position cannot identify the state. Each target has exact observable P(Y=1|measured features)=0.5.",
+    "batch_shift_missing": "Complementarity plus animal-specific and held-out batch gene shifts, overdispersed counts/dropout, missing genes/coordinates, coordinate measurement shifts and noisy/incompletely assayed target labels. All magnitudes invented."
+  },
+  "pins": {
+    "data/interim/training_donor_selector_development/input/metadata.json": "e2397a54fc0655ae4b33708bc65835ea5921c3d45131b6ee6c52a4b08ceae6f8",
+    "data/interim/training_donor_selector_development/input/whitelist.json": "f8b5aa6f4ea0e2ed36797676fff84b2a73db985f95bdfb8239c63d7084fa77db",
+    "data/interim/training_donor_selector_development/regional_profiles/profile_input.json": "86d867e6502472b4422e47e507dd35d4ba1ea8042a7ecdc4d7931ce7095a489c",
+    "data/interim/paired_projection_logloss_development/logloss_dev_barseq2_a1_v1/frozen_recipe_candidate.json": "06e510963264fd3d915410805ffbef07a81e19637ec2b6d9adc460882c8ba02e"
+  },
+  "anchors": {
+    "classification": "TRAIN HY coordinate units/scale only; remaining simulation is generic",
+    "source_rows": 37,
+    "source_animal_proxies": 32,
+    "uses": [
+      "coordinate centre and standard deviation in micrometres",
+      "documented AP/DV/ML axis names",
+      "counts of peptide-tag categories and 49-region vocabulary for disclosure only"
+    ],
+    "does_not_use": [
+      "regional projection values or geometry",
+      "gene-to-projection associations",
+      "closed validation/test rows",
+      "A1 expression, coordinates, coefficients, scores or predictions"
+    ],
+    "insufficiency": "No empirical multigene assay or noise distribution. Generic simulation with a narrow TRAIN HY coordinate-scale anchor; no claim of a hypothalamic simulator."
+  },
+  "generator": {
+    "architecture": "Spatial Gaussian mixtures + nonlinear radial/sinusoidal response fields + discrete molecular/hidden states; Gamma-Poisson counts, detection dropout and Bernoulli labels. Not a logistic regression generator.",
+    "count_dispersion_shape": 2.0,
+    "baseline_detection_dropout": 0.06,
+    "generic_gene_base_mean_range": [
+      1.2,
+      4.0
+    ],
+    "marker_log_fold_hypothesis": 2.3,
+    "gene_missing_train_test": [
+      0.04,
+      0.15
+    ],
+    "whole_missing_genes_per_animal_in_shift_scenario": 2,
+    "coordinate_missing_train_test": [
+      0.04,
+      0.18
+    ],
+    "coordinate_measurement_noise_sd_in_source_scaled_units_train_test": [
+      0.12,
+      0.4
+    ],
+    "assay_sensitivity_train_test": [
+      0.92,
+      0.72
+    ],
+    "assay_false_positive_train_test": [
+      0.02,
+      0.08
+    ],
+    "target_label_missing_train_test": [
+      0.04,
+      0.1
+    ],
+    "all_numbers_are": "Synthetic sensitivity hypotheses, not estimates from HY assays."
+  },
+  "methods": [
+    "candidate_logistic|C=0.1|alpha=0.1",
+    "constant_0.5",
+    "copy_1nn_location|alpha=0.5",
+    "copy_1nn_matched|alpha=0.5",
+    "location_knn|k=31|alpha=0.5",
+    "location_logistic|C=0.1|alpha=0.0",
+    "matched_knn|k=31|alpha=0.1",
+    "molecular_knn|k=31|alpha=0.1",
+    "technical|C=1.0|alpha=0.0",
+    "train_frequency",
+    "candidate_original|C=1.0|alpha=0.0",
+    "copy_1nn_location_raw|alpha=0.0",
+    "copy_1nn_matched_raw|alpha=0.0"
+  ],
+  "recipe_policy": "All ten families/settings fixed in the authorized development recipe are retained. Old candidate C=1 alpha=0 and two raw 1NN copies are descriptive comparison anchors. No hyperparameter grid or selection.",
+  "technical_features": [
+    "synthetic log library factor",
+    "observed gene missing fraction",
+    "observed coordinate missing fraction"
+  ],
+  "missingness_adapter": "Fixed per-feature TRAIN median imputation (0 fallback for all-missing TRAIN feature) applied after gene log1p, then TRAIN StandardScaler; same adapter for all feature methods, no new gene/position missing indicators. Explicit extension to the complete-input frozen recipe.",
+  "training": "For each target use assayed TRAIN labels only. Group-balanced 1/n_animal fit weights normalized to mean1, no class weights. q_fit uses TRAIN labels/weights only. Copy/average donors are TRAIN animals only.",
+  "evaluation": "Disjoint simulated animals. Binary observed assay labels with unknown=-1 excluded; no coding unassayed targets negative. Brier on raw probabilities; log loss clipped at [1e-6,1-1e-6]. Animal-equal mean within each target, then target-equal mean.",
+  "freeze_order": "Write this protocol before generating synthetic benchmark outcomes. Hash protocol/code/recipe/anchor files in STARTED. Refuse overwrite; record final file hashes. No synthetic-test-based model selection, tuning, recalibration or scenario/seed deletion.",
+  "success_criteria": "Working reproducible implementation and meaningful leakage/missingness/metric tests. No required performance win or biologically interpreted pass/fail gate.",
+  "outputs": [
+    "SYNTHETIC scenario datasets",
+    "keyed synthetic test predictions",
+    "all frozen-method per-animal/per-target metrics",
+    "fit audit and train-only imputation/scaler values",
+    "source anchor receipt",
+    "STARTED and RUN_COMPLETE hash receipts"
+  ],
+  "scope_limits": [
+    "One fixed seed per hypothesis gives sensitivity examples, not precise Monte Carlo performance estimates.",
+    "Scenario sample sizes, labels and couplings do not establish real-data sample size requirements or accuracy.",
+    "No complete axon geometries, synapses, causal circuits or real projection probabilities are simulated or validated.",
+    "A1 23-gene coefficients do not transfer; each synthetic panel is fit from its own synthetic TRAIN animals only."
+  ]
+}
