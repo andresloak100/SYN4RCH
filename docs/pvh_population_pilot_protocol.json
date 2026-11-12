@@ -70,18 +70,25 @@
     "pools_are_not_animals": "each encoded pool combines 4-10 mice; only one pool per sex x target"
   },
   "extraction": {
-    "run_id": "pvh_rna_extract_v1",
+    "run_id": "pvh_rna_extract_v2",
     "method": "own base-R reader (Rscript --vanilla analysis/pvh_population_extract.R); no author code, no Seurat or other package installed or loaded",
     "layer": "assay RNA, layer counts only",
     "checks": [
       "object SHA-256 equals the pin before reading",
       "assay is RNA (not prediction.score.celltype); layer is counts (not data or scale.data)",
-      "counts are finite, >= 0 and whole numbers; the data layer, if present, is not identical",
+      "Full counts layer finite and non-negative; selected cohort values also whole numbers. Fractional values in excluded nuclei do not invalidate selected integer counts; no values are rounded.",
       "layer cell order taken from the object's cell map or layer dimnames and must equal meta.data row names exactly",
       "layer gene IDs taken from the object's feature map for the counts layer or layer dimnames; counts must match",
       "every cohort cell found exactly once; no other cells exported"
     ],
-    "outputs": "per object: genes.txt, cells.tsv, triplets.tsv (gene index, cell index, count) for the cohort cells only; receipt.tsv"
+    "outputs": "per object: genes.txt, cells.tsv, triplets.tsv (gene index, cell index, count) for the cohort cells only; receipt.tsv",
+    "recovery": {
+      "superseded_attempt": "pvh_rna_extract_v1",
+      "failed_attempt_preserved": true,
+      "cause": "An overbroad whole-layer integer check rejected fractional counts in excluded PB nuclei. All 197 PB and 68 SC selected nuclei have integer counts. No predictive model was fitted before this fix.",
+      "change": "Validate integer counts on selected exported columns; preserve full-layer finite/nonnegative checks. New extraction run ID only. Atlas v1 stays valid under its original snapshot; fit v1 has not started.",
+      "method_or_cohort_changed": false
+    }
   },
   "features": {
     "allowed": "raw RNA counts only, on the exact common gene ID panel (intersection of PB and SC count-layer gene IDs)",

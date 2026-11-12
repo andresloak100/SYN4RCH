@@ -44,7 +44,7 @@ x <- attr(layer, "x", exact = TRUE); dims <- attr(layer, "Dim", exact = TRUE)
 if (is.null(i) || is.null(p) || is.null(x) || length(dims) != 2L) refuse("counts layer is not a column-compressed sparse matrix")
 n_genes <- dims[[1L]]; n_cells <- dims[[2L]]
 if (length(p) != n_cells + 1L || p[[length(p)]] != length(x) || length(i) != length(x)) refuse("inconsistent sparse structure")
-if (any(!is.finite(x)) || any(x < 0) || any(x != round(x))) refuse("counts layer is not non-negative whole numbers")
+if (any(!is.finite(x)) || any(x < 0)) refuse("counts layer is not finite non-negative values")
 if ("data" %in% names(layers)) {
   dx <- attr(layers[["data"]], "x", exact = TRUE)
   if (!is.null(dx) && identical(as.numeric(dx), as.numeric(x))) refuse("counts layer identical to data layer")
@@ -74,13 +74,14 @@ if (is.null(cells) || length(cells) != n_cells || !identical(as.character(cells)
 columns <- match(wanted, cells)
 if (any(is.na(columns))) refuse("cohort cell not found in the counts layer: ", wanted[is.na(columns)][[1L]])
 
+lens <- p[columns + 1L] - p[columns]
+idx <- unlist(lapply(columns, function(j) if (p[[j + 1L]] > p[[j]]) (p[[j]] + 1L):p[[j + 1L]] else integer(0)))
+gi <- i[idx] + 1L; ci <- rep.int(seq_along(columns), lens); cv <- x[idx]
+if (any(cv != round(cv))) refuse("selected cohort counts are not non-negative whole numbers")
 dir.create(out_dir, recursive = FALSE)
 writeLines(genes, file.path(out_dir, "genes.txt"))
 write.table(data.frame(cell_index = seq_along(wanted), cell_id = wanted, layer_column = columns),
             file.path(out_dir, "cells.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
-lens <- p[columns + 1L] - p[columns]
-idx <- unlist(lapply(columns, function(j) if (p[[j + 1L]] > p[[j]]) (p[[j]] + 1L):p[[j + 1L]] else integer(0)))
-gi <- i[idx] + 1L; ci <- rep.int(seq_along(columns), lens); cv <- x[idx]
 write.table(data.frame(gene_index = gi, cell_index = ci, count = format(cv, scientific = FALSE, trim = TRUE)),
             file.path(out_dir, "triplets.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 receipt <- c(

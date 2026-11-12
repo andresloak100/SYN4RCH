@@ -292,6 +292,18 @@ def test_extractor_exports_exact_cohort_counts(tmp_path, cohort_tsv):
     assert rec['layer'] == 'counts' and rec['packages_loaded_by_script'] == 'none' and rec['exported_cells'] == '2'
 
 
+def test_extractor_ignores_fractional_values_outside_selected_cohort(tmp_path, cohort_tsv):
+    # c2 is not requested: its fractional abundance must not invalidate c1/c3 count exports.
+    code = R_TOY.replace('x <- c(5, 1, 2, 7, 3)', 'x <- c(5, 1, 2.25, 7.5, 3)')
+    path = tmp_path / 'outside.rds'
+    code = code.replace('MULT', '1').replace('CELLORDER', 'cells').replace('OUTPATH', f'"{path}"')
+    subprocess.run([P.RSCRIPT, '--vanilla', '-e', code], check=True, capture_output=True)
+    result = run_extractor(path, hashlib.md5(path.read_bytes()).hexdigest(), cohort_tsv, tmp_path / 'out')
+    assert result.returncode == 0, result.stderr
+    rows = list(csv.DictReader((tmp_path / 'out/triplets.tsv').open(), delimiter='\t'))
+    assert all(float(row['count']).is_integer() for row in rows)
+
+
 @pytest.mark.parametrize('case,msg', [('noninteger', 'whole numbers'), ('cell_order', 'cell order'),
                                       ('md5', 'md5'), ('exists', 'already exists')])
 def test_extractor_refusals(tmp_path, cohort_tsv, case, msg):
