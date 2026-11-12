@@ -1,0 +1,111 @@
+{
+  "schema": "synarch_paired_projection_logloss_development_protocol_v1",
+  "status": "FROZEN_DEVELOPMENT_AUTHORIZED",
+  "date": "2026-11-12",
+  "code": "analysis/paired_projection_logloss_development.py",
+  "tests": "tests/test_paired_projection_logloss_development.py",
+  "outputs": "data/interim/paired_projection_logloss_development/",
+  "purpose": "One small bounded development round to improve probabilistic (log-loss) quality of the gene+position captured-label model by stronger L2 and train-only shrinkage toward the training capture frequency, then freeze one generic fit/predict recipe for a later test on NEW animals (hypothalamic data prioritised).",
+  "data_status": {
+    "dataset": "BARseq2 A1, 598 cells, mice XC95 and XC97, 11 targets (same frozen inputs as run barseq2_a1_598_logo_v1)",
+    "exposure": "EXPOSED DEVELOPMENT ONLY. Both animals' outcomes were seen in the closed one-shot run; every result here is supervised development with selection optimism. Nothing here is a test result.",
+    "closed_run": "barseq2_a1_598_logo_v1 and its files stay immutable and closed; its frozen runner, protocol, admission and results are not edited",
+    "pins": {
+      "input_manifest": "data/interim/paired_projection_real_benchmark/barseq2_a1_inputs/manifest.json",
+      "input_manifest_sha256": "7337f39b4eaddb98687df445462e4942eea643bd7917830fae5f0d206c54183f",
+      "admission_sha256": "d3e8fcd0a8f621dcd060bdf4ae307714eb996f491d6274d867abe54c3908f28f",
+      "frozen_runner_sha256": "7b23157a704cd6e34eb887a7b9ec59f3e2050e86435f9cd174efb0ec1250baac",
+      "reference_sha256": "9ae3dd30a7fad55c6b7d232e8faad4ec678bf406c105faa61cade544039723a3"
+    },
+    "loading": "inputs are validated and assembled by the frozen runner's own validate_manifest/assemble (exact IDs, masks, animal groups, forbidden names, canonical order, frozen cohort); no refit of the closed run"
+  },
+  "run_requirements_checked_before_any_data_file_is_parsed": [
+    "real runs use exactly run_id logloss_dev_barseq2_a1_v1 and the canonical output root data/interim/paired_projection_logloss_development/; other IDs or roots are refused",
+    "no code_path override for real runs: the actually executing file must be committed and unmodified",
+    "this protocol committed and unmodified in git, status FROZEN_DEVELOPMENT_AUTHORIZED (any other status refuses)",
+    "input manifest, admission record, frozen runner and reference module SHA-256 equal the pins",
+    "exclusive run directory and STARTED marker before any data are parsed; duplicate refused; no silent rerun"
+  ],
+  "grid": {
+    "C": [
+      0.01,
+      0.1,
+      1.0
+    ],
+    "k": [
+      5,
+      15,
+      31
+    ],
+    "alpha": [
+      0.0,
+      0.1,
+      0.25,
+      0.5
+    ],
+    "shrinkage": "p' = (1 - alpha) * p + alpha * q_fit, where q_fit is the group-balanced captured rate of the target in the fold's TRAINING animals only",
+    "fixed": "L2 (default), lbfgs, max_iter 2000, tol 1e-6, random_state 20261112; train-only StandardScaler; group-balanced fit weights for logistic families; KNN/copy unweighted; no class_weight",
+    "size": "one round: 82 configurations (logistic 3 x 12, averaging KNN 3 x 12, copy 2 x 4, references 2); no grid expansion or iteration"
+  },
+  "families": {
+    "candidate_logistic": "log1p genes + measured position; C x alpha (12); baseline C=1, alpha=0",
+    "location_logistic": "measured position only; C x alpha (12); baseline C=1, alpha=0",
+    "technical": "authentic technical proxies only; C x alpha (12); baseline C=1, alpha=0 (kept tuned)",
+    "location_knn": "k x alpha on fit-scaled position (12); baseline k=15, alpha=0",
+    "molecular_knn": "k x alpha on fit-scaled log1p genes (12); baseline k=15, alpha=0",
+    "matched_knn": "k x alpha on the candidate's exact fit-scaled inputs (12); baseline k=15, alpha=0",
+    "copy_1nn_location": "alpha (4); alpha=0 is the raw 1NN anchor",
+    "copy_1nn_matched": "alpha (4); alpha=0 is the raw 1NN anchor",
+    "train_frequency": "reference (equals q_fit)",
+    "constant_0.5": "reference"
+  },
+  "folds": "leave one animal out (2 folds). With 2 animals the outer training side has one animal, so there is NO nested animal-level calibration; no section/slice pseudo-groups are invented.",
+  "selection": {
+    "unit": "one global setting per family, shared by all 11 targets (no per-target choice)",
+    "basis": "leave-one-animal-out out-of-fold predictions on the 2 exposed A1 animals",
+    "primary": "lowest target-equal log loss (targets equal, animals equal within target)",
+    "guard": "target-equal Brier must not exceed the family's OWN baseline setting (tolerance 0.0, strict non-degradation)",
+    "tie_break": "lower target-equal Brier, then larger alpha, then smaller C, then smaller k (deterministic)",
+    "reporting": "every configuration of every family; plus each family's unrestricted log-loss best and whether the guard rejected it",
+    "honesty": "selection and scores use the same OOF predictions: DEVELOPMENT-OPTIMISTIC; no outer test or nested claim; controls receive the same 12-point (copy: 4-point) opportunity"
+  },
+  "reporting": [
+    "every configuration of every family: target-equal and per-animal log loss and Brier, per-target values",
+    "selected setting per family; selected candidate vs every selected (tuned) control and vs every untuned baseline: target-equal and per-animal paired differences",
+    "frozen recipe JSON for the selected candidate setting"
+  ],
+  "frozen_recipe": {
+    "content": "family, C, alpha, preprocessing (log1p genes, measured position, train-only scaling, group-balanced weights), q_fit rule (training animals only), selected control settings, metric definitions",
+    "not_transferable": "the 23-gene A1 weights are not carried over; a new (e.g. hypothalamic) panel refits the recipe on its own fit animals",
+    "future_validation": "settings are frozen before any unseen outcome is opened; any calibration there must use fit-side data only"
+  },
+  "not_allowed": [
+    "class-weight balancing",
+    "per-target selection",
+    "outcome-based feature selection",
+    "post-test recalibration",
+    "wider architecture search",
+    "new animal files",
+    "hypothalamic fits",
+    "author contact",
+    "new packages",
+    "viewer"
+  ],
+  "deployment": {
+    "pool": "XC95 and XC97 jointly form the admitted training/development pool",
+    "refit": "selected candidate setting refit on ALL training animals (both mice), per target: train-only scaler, group-balanced weights, q_fit from both animals",
+    "artifact": "deployment_artifact_a1.json: per target scaler mean/scale, coefficients, intercept, q_fit, n_fit; A1-specific",
+    "prediction": "deploy_predict takes features only (no labels); tests show predictions for a new animal do not change when that animal's labels change",
+    "panel_rule": "a different gene panel (e.g. hypothalamic) is refused by the A1 artifact; the frozen recipe (C, alpha, preprocessing) is refit only on that panel's admitted training animals before any held-out test; no A1 coefficient transfer claim",
+    "no_new_animal_selection": "no parameter selection on new animals; any calibration from fit-side data only",
+    "prediction_input_checks": "deploy_predict accepts only numeric 2-D arrays with matching rows and exact schema widths, finite values and gene counts >= 0 (checked before log1p); stable expit; every output passes the reviewed probability check (shape, finite, [0, 1])"
+  },
+  "outputs_per_run": [
+    "STARTED.json (exclusive, before data are parsed)",
+    "development_result.json (every configuration, selection, comparisons)",
+    "frozen_recipe_candidate.json",
+    "deployment_artifact_a1.json",
+    "predictions.csv (keyed OOF predictions, every configuration)",
+    "RUN_COMPLETE.json (hashes)"
+  ]
+}
