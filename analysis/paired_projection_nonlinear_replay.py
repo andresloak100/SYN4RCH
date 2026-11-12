@@ -170,7 +170,7 @@ def verify_sim_training(run_dir, data, audit, case):
     tr, ev = d['split'] == 'train', d['split'] == 'test'
     require(int(tr.sum()) == 600 and int(ev.sum()) == 400 and int((tr | ev).sum()) == 1000,
             'NPZ split row counts differ')
-    tg, eg = sorted(set(d['animal'][tr])), sorted(set(d['animal'][ev]))
+    tg, eg = sorted(set(map(str, d['animal'][tr]))), sorted(set(map(str, d['animal'][ev])))
     require(len(tg) == 6 and len(eg) == 4 and not set(tg) & set(eg), 'NPZ animal splits differ')
     require(all(np.sum(d['animal'] == a) == 100 for a in tg+eg), 'synthetic cells per animal differ')
     close_tree({'train_animals': tg, 'test_animals': eg, 'test_labels_read_by_fitter': False}, audit['comparators'])
