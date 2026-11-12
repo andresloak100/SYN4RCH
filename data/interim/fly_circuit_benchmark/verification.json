@@ -1,0 +1,104 @@
+{
+  "schema": "fly_circuit_postrun_verification_v1",
+  "utc": "2026-11-12T21:57:53.164004+00:00",
+  "source_code_protocol_pins": "PASS",
+  "prediction_hashes_and_dimensions": {
+    "global_frequency": {
+      "sha256": "3dd0a7abd366205facbff9ab4264960bdb10a874811c7417ac18158711a6b15b",
+      "shape": [
+        410,
+        1638
+      ],
+      "finite_probability_check": "PASS"
+    },
+    "incoming_degree_block": {
+      "sha256": "7007c137ae4f0a86f65d791e35ff171ea61b60e37a65fce35767802b1b52025f",
+      "shape": [
+        410,
+        1638
+      ],
+      "finite_probability_check": "PASS"
+    },
+    "nearest_incoming_copy": {
+      "sha256": "87153ee40da104202bf3dce324a342cafd1a9dc37fa17c16023a1e3c32e246ae",
+      "shape": [
+        410,
+        1638
+      ],
+      "finite_probability_check": "PASS"
+    },
+    "reciprocity_logistic": {
+      "sha256": "42f6818f00b1c5e03f5f3ed68eb2740ca82f702ee684eb082559862df1f674ff",
+      "shape": [
+        410,
+        1638
+      ],
+      "finite_probability_check": "PASS"
+    },
+    "shared_input_logistic": {
+      "sha256": "94efc8664c3cd063b7ef1cea788b7f5c602b412beef06cb96fdf400114d33fc0",
+      "shape": [
+        410,
+        1638
+      ],
+      "finite_probability_check": "PASS"
+    },
+    "target_frequency": {
+      "sha256": "3f81d4aaacdc440e28ca9a45543a82a5c01ffc82a5df8a9e2acadf6add155258",
+      "shape": [
+        410,
+        1638
+      ],
+      "finite_probability_check": "PASS"
+    }
+  },
+  "fits": {
+    "reciprocity_logistic": {
+      "coefficients": [
+        -0.710336574922996,
+        0.13251713280907707,
+        0.2504323742750787
+      ],
+      "converged": true,
+      "training_means": [
+        0.0010621589898573583,
+        0.6569131119780058
+      ],
+      "training_scales": [
+        0.04067081910836495,
+        0.6602605839728826
+      ]
+    },
+    "shared_input_logistic": {
+      "coefficients": [
+        -0.7880514191744608,
+        0.12192291886651938,
+        0.13966833506004103,
+        0.23329012769242746
+      ],
+      "converged": true,
+      "training_means": [
+        0.0010621589898573583,
+        0.0011360177128462588,
+        0.6569131119780058
+      ],
+      "training_scales": [
+        0.04067081910836495,
+        0.02407728589236343,
+        0.6602605839728826
+      ]
+    }
+  },
+  "independent_synthetic_review": {
+    "passed": 15,
+    "reviewer": "/root/public_independent_hy_search",
+    "remaining_findings": []
+  },
+  "report_sha256": "aeb65cc91c4b14d8e84407c5652443168a3c7ca38720907c6975a92ef624f123",
+  "freeze_sha256": "1c39335c996706c2bb5107f576e544b12548ae3a6fadcedca903b9ea34e6a54f",
+  "prediction_commitment_sha256": "d1e20b19f3d285237cbf2fab8bb39e8cb9d2429473ca75a4a75750b105d57af1",
+  "single_score_complete_sha256": "6f9eb339dba39d0e1ce4882984d89a99ccd60ddaa52a6c0a206e1c437e9e3543",
+  "score_rerun": false,
+  "model_refit": false,
+  "mouse_graph_edited": false
+}

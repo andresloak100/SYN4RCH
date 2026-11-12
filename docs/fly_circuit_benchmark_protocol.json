@@ -1,0 +1,84 @@
+{
+  "schema": "synarch_fly_circuit_development_protocol_v1",
+  "status": "FROZEN_DEVELOPMENT_AUTHORIZED",
+  "species": "drosophila_melanogaster",
+  "namespace": "flywire_fafb_v630",
+  "specimen": "Single adult female FAFB specimen; snapshot630 as redistributed by Shiu etal.",
+  "specimens": 1,
+  "metadata_path": "data/interim/fly_circuit_benchmark/source/2023_03_23_completeness_630_final.csv",
+  "edges_path": "data/interim/fly_circuit_benchmark/source/2023_03_23_connectivity_630_final.parquet",
+  "inputs": [
+    {
+      "path": "data/interim/fly_circuit_benchmark/source/2023_03_23_completeness_630_final.csv",
+      "sha256": "e6b71e17671a9bdb05f55e4bc6774640a1418cb7a05125e0fc994ad40f9bfdfb",
+      "bytes": 3057611
+    },
+    {
+      "path": "data/interim/fly_circuit_benchmark/source/2023_03_23_connectivity_630_final.parquet",
+      "sha256": "94db8c650533bc36ffa3223f2e62325d5648b8d6bd31c3a4e1c804628c7557b3",
+      "bytes": 86630944
+    }
+  ],
+  "node_count": 2048,
+  "query_fraction": 0.2,
+  "seed": "synarch-fly-dev-v1",
+  "l2": 0.001,
+  "candidate": "shared_input_logistic",
+  "controls": [
+    "global_frequency",
+    "target_frequency",
+    "incoming_degree_block",
+    "nearest_incoming_copy",
+    "reciprocity_logistic"
+  ],
+  "input_domain": "Only measured chemical-synapse count Connectivity, never signed model Excitatory x Connectivity. No genes, soma coordinates or independently established celltypes supplied by these twofiles.",
+  "selection": "Hash metadata rootIDs to choose2048nodes, sortnumeric, use a separate hash to select20%querysources. No selection using connection counts or degrees. Exact IDs frozen before graphfeatures or scoring.",
+  "holdout": "Delete ALL outgoing rows of querysources before any degree, shared-neighbor feature, embedding, fitting or copying-donor selection. Retain known incoming connections from nonquery sources only. Targets are the nonquery source set. Autapses excluded.",
+  "supervised_training_features": "For each training source, exclude its own outgoing row too. Reciprocal features unchanged except unusedselfpair; common-input target norm removes that source; target-frequency offset is leave-one-source-out. Synthetic tests compare to explicit row deletion.",
+  "methods": {
+    "global_frequency": "Beta(1,1) smoothed global TRAIN nonself link frequency",
+    "target_frequency": "Beta(1,1) smoothed per-target TRAIN nonself link frequency",
+    "incoming_degree_block": "Quartiles of knownincomingdegree fitted onTRAIN sources, per-target observedfrequency shrunk by10pseudoobservations toward globaltargetfrequency. Exclude the targetselfpair from each block denominator.",
+    "nearest_incoming_copy": "PickTRAIN donor by cosine similarity of incoming connections from nonquerysources; copy observed outgoingbinaryprofile over same targetset, blend50/50 with TRAIN targetfrequency for finite logloss. Donors excluded self-target slot uses TRAIN targetfrequency. Ties by numericneuronID.",
+    "reciprocity_logistic": "L2=.001logistic residual over leave-one-source-out targetlogit frequency, using observed log1p reverse count and known log1p incomingdegree; no classbalancing",
+    "shared_input_logistic": "Same, adding observed shared-presynaptic-input cosine. Source-row-deleted context for EVERY supervisedtraining source; TRAIN-only featurestandardization.150L-BFGSiterations, no heldout tuning."
+  },
+  "metrics": [
+    "micro average_precision with exact tie groups",
+    "mean log_loss",
+    "mean brier"
+  ],
+  "comparison": "Same410querysources and1638targets for everymethod. Report everycontrol. Candidatewins only if APstrictlyhigher, loglossandBrierstrictlylower thaneachcontrol. No statisticalsignificanceclaim from onebrain.",
+  "zero_semantics": "Among selected completedneurons, an absent pair in this published identifiedchemicalsynapse table is a recorded-snapshotzero. It is not provenbiologicalabsence, completehormonalsignaling coverage, or an unassayedneuronnegative. Sourceassumption is disclosed; synapsedetection/proofreadingerrors remain.",
+  "lifecycle": "freeze metadata/schema/input/code/testhashes; predict after allsourceholdouts and commit everyforecast; score heldoutoutcomes once. Rawsourcealready on disk; this is standard maskeddevelopment, not prospective absent-truth acquisition.",
+  "sources": [
+    {
+      "url": "https://github.com/philshiu/Drosophila_brain_model",
+      "commit": "91bdd1e7dcf193f3e7ca5a8933497fcef63b7960",
+      "paper": "https://doi.org/10.1038/s41586-024-07763-9"
+    },
+    {
+      "url": "https://www.nature.com/articles/s41586-024-07558-y",
+      "role": "UnderlyingFlyWire measured connectome"
+    },
+    {
+      "url": "https://home.flywire.ai/guidelines",
+      "data_license": "CC BY-NC4.0; underlying data terms distinct from MITmodelcode."
+    }
+  ],
+  "rejected_first_choice": {
+    "paper": "https://elifesciences.org/articles/65745",
+    "author_repository": "https://github.com/Pankratz-Lab/FFN_Hueckesfeld-et-al.-2020",
+    "finding": "Published notebook requests numericadjacency from explicitlyprivate CATMAID. Public saved outputs are rasterheatmaps, not reliable measured counttables. No private access or image digitization attempted."
+  },
+  "scope": "Genericwithin-fly connectivity completion with observedincomingcontext, not a neuroendocrine-specific subset. Onebrain, no independentanimals/sex/speciesvalidation, no axongeometryscore or causalinterventionprediction.",
+  "transfer_admission": {
+    "mouse_edges_added": 0,
+    "mouse_accuracy_gain_claimed": false,
+    "fly_transmitter_sign_transferred": false,
+    "permitted": "Reusable modelarchitecture, masking/evaluation and uncertainty algorithms only; structuralpretraining would need separatelytested mouseendpoints.",
+    "prohibited": "Appending fly connections to mousegraph, aligningneurons by genenamealone, importing flyweights/signs asmousegroundtruth, claimingage-reversal/actuatorvalidation."
+  },
+  "download_budget_initial_bytes": 100000000,
+  "downloaded_bytes": 90607355
+}

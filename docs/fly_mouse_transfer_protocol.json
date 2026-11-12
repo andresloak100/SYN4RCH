@@ -1,0 +1,74 @@
+{
+  "schema": "synarch_fly_mouse_transfer_protocol_v1",
+  "status": "FROZEN_DEVELOPMENT_AUTHORIZED",
+  "root_scientific_admission": true,
+  "species": "mus_musculus",
+  "namespace": "microns_pinky_L23_v185",
+  "specimen": "OneP36malevisualcortexL2/3mouse, archivedv185; nothypothalamus",
+  "assessed_count": 362,
+  "synapse_rows": 1961,
+  "metadata_path": "data/interim/fly_mouse_transfer/source/soma_valence_v185.csv",
+  "synapse_path": "data/interim/fly_mouse_transfer/source/soma_subgraph_synapses_spines_v185.csv",
+  "inputs": [
+    {
+      "path": "data/interim/fly_mouse_transfer/source/soma_valence_v185.csv",
+      "sha256": "e0845382e88a51d22b296f0d8cdcc7f74561868f98fb4fdf8056b0627ee8e95f"
+    },
+    {
+      "path": "data/interim/fly_mouse_transfer/source/soma_subgraph_synapses_spines_v185.csv",
+      "sha256": "ac22845bf2078fad27f895b0d4ab1f8b1bf980a2f00056be3f1eec6183770ae4"
+    },
+    {
+      "path": "data/interim/fly_mouse_transfer/admission.json",
+      "sha256": "78ea31903852fee45be4d80ca88afdf2d53e50283b8009f6cc0213812b7c8913"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "analysis/fly_circuit_benchmark.py",
+      "sha256": "819af2efe6371c9439eece6dc12f4db2a5f8be92480c90c868c6d8b143007d3b"
+    },
+    {
+      "path": "docs/fly_circuit_benchmark_protocol.json",
+      "sha256": "a33b91819366649195e58a84fc47e7e2388570774bb437dcc1102f1b0932bfdb"
+    },
+    {
+      "path": "data/interim/fly_circuit_benchmark/FROZEN.json",
+      "sha256": "1c39335c996706c2bb5107f576e544b12548ae3a6fadcedca903b9ea34e6a54f"
+    },
+    {
+      "path": "data/interim/fly_circuit_benchmark/PREDICTIONS_COMMITTED.json",
+      "sha256": "d1e20b19f3d285237cbf2fab8bb39e8cb9d2429473ca75a4a75750b105d57af1"
+    }
+  ],
+  "fly_prediction_commitment": "data/interim/fly_circuit_benchmark/PREDICTIONS_COMMITTED.json",
+  "fly_candidate": "shared_input_logistic",
+  "query_fraction": 0.2,
+  "seed": "synarch-fly-to-mouse-dev-v1",
+  "l2": 0.001,
+  "cohort": "All362metadata cell_typee rootIDs beforeanyconnectivityselection; preserve28isolates. Exactendpointmappingvalidated,1961unique synapserows. Do not use334positiveparticipants ascohort.",
+  "assay_evidence": [
+    "https://www.microns-explorer.org/v185-release-notes",
+    "https://cdn.elifesciences.org/articles/76120/elife-76120-v2.pdf Table1:362selectedforproofreading,334withpositiveconnections"
+  ],
+  "data_source": "https://zenodo.org/records/3710459",
+  "data_licence": "CC BY4.0",
+  "version_limits": "Fixedarchivalv185CSV1961rows vs2022paperTable11960rows/1735connections; no dataediting tomatchpaper. Twoselfsynapserows excluded prospectively. Zeros onlynoidentifiedsynapse withinboundedassessedvolume.",
+  "holdout": "Metadata-hash20%querysources, ALLtheir outgoingrows absentbeforeeverygraphfeature/degree/standardizer/fit/copychoice. Targetsareothermetadata-cohortneurons. Mask eachTRAINsources ownrow from its supervisedfeaturecontext, usingunchanged reviewedflytraining_context.",
+  "features": [
+    "known log1p reverseconnection count",
+    "sharedpresynaptic-input cosine",
+    "known log1p incomingdegree"
+  ],
+  "zero_shot_naming": "Frozen fly residual parametertransfer WITHmouseTRAINper-targetfrequencyoffset; not entirelymouse-data-free zero-shot. No mousecoefficients/scalers fitted for thisstrategy.",
+  "methods": {
+    "mouse_only_controls": "Reuseall6fixedflybenchmarkprocedures unchanged, fittedonlytomaskedmouseTRAIN whereapplicable: globalfrequency,targetfrequency,incomingdegreeblock,nearestincomingprofilecopy,reciprocitylogistic,sharedinputlogistic.",
+    "frozen_fly_residual": "Usefrozenflyshared_input_logisticintercept/coefficients/TRAINmeans/scales unchanged. AddmouseTRAINtargetfrequencylogitoffset. Nevertransferflycell/edgeidentities, signs, or targetpriors.",
+    "fly_informed_prior": "FitmouseTRAINconditionalmodel withsamefeatures, TRAINstandardization, meanloglossandlambda=.001 asmouse-only model. Sloperegularization centeredat convertedfly\u03b2; intercept unpenalized inBOTH models. Thischangesobjective, ratherthan merelyinitializingthesamemouseobjective."
+  },
+  "prior_conversion": "Rawfeaturesshared: \u03b2prior_m=\u03b2f*\u03c3m/\u03c3f; aprior_m=af+sum(\u03b2f*(\u03bcm\u2212\u03bcf)/\u03c3f). Thispreservesflyresidualfunction; onlyslopecomponents enterL2prior. MouseTRAINmeans/scalesarecomputedfromleave-own-source-row-outsupervisedcontexts.",
+  "fit_options": "SameL-BFGS-B maxiter150,ftol1e-11,gtol1e-7; noheldouttuning, nogenes,somapositionsortransmittersigns.",
+  "metrics": "Samequery/targetpairs forALL8methods; reportAPwithties,logloss,Brier andallconvergence. Eachtransfermethodwins onlyifAPstrictlyhigher andLL/Brierstrictlylower thanmouse-onlysharedmodel; compareeveryfixedcontroltoo. Descriptiveonly, nomultiplemodelselectionfromresults.",
+  "lifecycle": "Syntheticchecks+independentreview, hashfreezeinputs/code/protocol/dependencies/cohort, fit/predictall8andcommitforecasts, then scoreonefrozenmouseholdoutonce. Dataalreadyexposedduringadmission: nonblindDEVELOPMENT.",
+  "transfer_limits": "Noindependentanimals/HY/wholeaxonpathprediction, no causal/neurocontrol/agingvalidation, no mousegraphbiologicaledgescreated. Existingflymodelneverrefit ormodified."
+}

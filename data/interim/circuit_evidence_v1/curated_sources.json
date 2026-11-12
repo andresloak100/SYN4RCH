@@ -1,0 +1,1321 @@
+{
+  "created_utc": "2026-11-12T21:50:29.933790+00:00",
+  "edges": [
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "hou2026:target_lh",
+      "kind": "intervention_target",
+      "measurement_detail": "study_defined_population",
+      "measurement_level": "population",
+      "method": "other",
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": "other",
+      "perturbation_polarity": "unclear",
+      "review_status": "unreviewed",
+      "source": "hou2026:mechanogenetics",
+      "source_locator": "Results2.3 / Figure4A; XML#advs78177-sec-0050",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Intervention targeted the study-defined LH excitatory population.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "hou2026:lh_excitatory",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Existing method vocabulary lacks sonogenetics; methodother derives classother/polarityunclear. Source-reported activity increases are stored as measured outcomes, not reclassified."
+      ],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": 6,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Results2.2 / Figure3F-H; XML#advs78177-sec-0040",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [
+        "Ultrasound control without either component",
+        "Nanobubbles plus ultrasound without MscL",
+        "MscL sonogenetics without nanobubbles",
+        "Within-session stimulation-off comparison"
+      ],
+      "direction": "increase",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "hou2026:lh_activity",
+      "kind": "intervention_outcome",
+      "measurement_detail": "population_calcium_photometry",
+      "measurement_level": "population",
+      "method": "other",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "other",
+      "perturbation_polarity": "unclear",
+      "review_status": "unreviewed",
+      "source": "hou2026:mechanogenetics",
+      "source_locator": "Results2.2 / Figure3F-H; XML#advs78177-sec-0040",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "LH calcium signals rose reversibly during stimulation.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "hou2026:lh_calcium",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Calcium fluorescence is an activity proxy, not a spike-by-spike count."
+      ],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": 6,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Results2.4 / Figure5C; XML#advs78177-sec-0060",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [
+        "Ultrasound control without either component",
+        "Nanobubbles plus ultrasound without MscL",
+        "MscL sonogenetics without nanobubbles",
+        "Within-session stimulation-off comparison"
+      ],
+      "direction": "increase",
+      "effect": {
+        "contrast": "Targeted versus non-targeted cells within nanobubbles+MscL+ultrasound condition",
+        "difference": null,
+        "type": "reported_group_proportions",
+        "unit": "percent_cells_cFos_positive",
+        "values": {
+          "MscL_negative": 10.8,
+          "MscL_positive": 24.7
+        }
+      },
+      "effect_missing_reason": null,
+      "extraction_method": "llm",
+      "id": "hou2026:lh_cfos",
+      "kind": "intervention_outcome",
+      "measurement_detail": "cell_fraction_activity_marker",
+      "measurement_level": "population",
+      "method": "other",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "other",
+      "perturbation_polarity": "unclear",
+      "review_status": "unreviewed",
+      "source": "hou2026:mechanogenetics",
+      "source_locator": "Results2.4 / Figure5C; XML#advs78177-sec-0060",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "c-Fos labeling was enriched in targeted versus nearby untargeted cells.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "hou2026:lh_cfos",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "This is a within-condition cell-population contrast, not a lifespan effect."
+      ],
+      "valence": "activation"
+    },
+    {
+      "challenge": null,
+      "challenge_note": "Methods behavior test explicitly describes well-fed mice; no canonical acute-state code inferred from housing.",
+      "conditions": {
+        "n_animals": 6,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Results2.3 / Figure4E; XML#advs78177-sec-0050",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [
+        "Ultrasound control without either component",
+        "Nanobubbles plus ultrasound without MscL",
+        "MscL sonogenetics without nanobubbles",
+        "Within-session stimulation-off comparison"
+      ],
+      "direction": "decrease",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "hou2026:food_intake",
+      "kind": "intervention_outcome",
+      "measurement_detail": "animal_behavior",
+      "measurement_level": "animal",
+      "method": "other",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "other",
+      "perturbation_polarity": "unclear",
+      "review_status": "unreviewed",
+      "source": "hou2026:mechanogenetics",
+      "source_locator": "Results2.3 / Figure4E; XML#advs78177-sec-0050",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Food consumption decreased during stimulation.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": "NBs‐injected MscL+ mice consumed less food",
+      "target": "hou2026:food_intake",
+      "tier_a_admitted": false,
+      "uncertainty": [],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": 6,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Results2.3 / Figure4F; XML#advs78177-sec-0050",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [
+        "Ultrasound control without either component",
+        "Nanobubbles plus ultrasound without MscL",
+        "MscL sonogenetics without nanobubbles",
+        "Within-session stimulation-off comparison"
+      ],
+      "direction": "decrease",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "hou2026:food_zone_time",
+      "kind": "intervention_outcome",
+      "measurement_detail": "animal_behavior",
+      "measurement_level": "animal",
+      "method": "other",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "other",
+      "perturbation_polarity": "unclear",
+      "review_status": "unreviewed",
+      "source": "hou2026:mechanogenetics",
+      "source_locator": "Results2.3 / Figure4F; XML#advs78177-sec-0050",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Food-zone exploration time decreased during stimulation.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "hou2026:food_zone_time",
+      "tier_a_admitted": false,
+      "uncertainty": [],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": 6,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Results2.5 / Figure6C-E; XML#advs78177-sec-0070",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [
+        "Ultrasound control without either component",
+        "Nanobubbles plus ultrasound without MscL",
+        "MscL sonogenetics without nanobubbles",
+        "Within-session stimulation-off comparison"
+      ],
+      "direction": "increase",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "hou2026:vta_glutamate",
+      "kind": "intervention_outcome",
+      "measurement_detail": "regional_glutamate_sensor",
+      "measurement_level": "region",
+      "method": "other",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "other",
+      "perturbation_polarity": "unclear",
+      "review_status": "unreviewed",
+      "source": "hou2026:mechanogenetics",
+      "source_locator": "Results2.5 / Figure6C-E; XML#advs78177-sec-0070",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "VTA glutamate-sensor signals increased during LH stimulation.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": "rapid and synchronized increases in iGlu fluorescence",
+      "target": "hou2026:vta_glutamate",
+      "tier_a_admitted": false,
+      "uncertainty": [],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "hou2026:lh_vta_function",
+      "kind": "functional_association",
+      "measurement_detail": "population_to_region_functional_evidence",
+      "measurement_level": "population",
+      "method": null,
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": null,
+      "perturbation_polarity": null,
+      "review_status": "unreviewed",
+      "source": "hou2026:lh_excitatory",
+      "source_locator": "Results2.5 / Figure6B-J; XML#advs78177-sec-0070",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "LH stimulation engaged VTA glutamate signaling linked to feeding suppression.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "hou2026:vta",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Glutamate sensing and receptor-blockade dependence do not identify a monosynaptic pair or a complete axonal route.",
+        "Do not promote author-described pathway to measured_axon_projection without an anatomical assay."
+      ],
+      "valence": null
+    },
+    {
+      "conditions": {
+        "n_animals": 6,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Results2.5 / Figure6G-I; XML#advs78177-sec-0070",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [
+        "Matched local vehicle during the same LH stimulation strategy"
+      ],
+      "direction": "increase",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "hou2026:blockade_feeding_rescue",
+      "kind": "intervention_outcome",
+      "measurement_detail": "animal_behavior_conditional_on_lh_stimulation",
+      "measurement_level": "animal",
+      "method": "local_pharmacology",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "pharmacological",
+      "perturbation_polarity": "decrease",
+      "review_status": "unreviewed",
+      "source": "hou2026:vta_receptor_blockade",
+      "source_locator": "Results2.5 / Figure6G-I; XML#advs78177-sec-0070",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "VTA receptor blockade attenuated the feeding suppression.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "hou2026:food_intake",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Outcomeincrease refers to food intake; perturbationdecrease refers to receptor signaling. Blockade is not selective proof of one presynaptic axon."
+      ],
+      "valence": "inhibition"
+    },
+    {
+      "conditions": {
+        "n_animals": 6,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Results2.6 / Figure7A; XML#advs78177-sec-0080",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: Animal Care"
+      },
+      "controls": [
+        "Source-reported matched treatment controls"
+      ],
+      "direction": "no_change",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "hou2026:weight_nochange",
+      "kind": "intervention_outcome",
+      "measurement_detail": "short_term_animal_physiology",
+      "measurement_level": "animal",
+      "method": "other",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "other",
+      "perturbation_polarity": "unclear",
+      "review_status": "unreviewed",
+      "source": "hou2026:mechanogenetics",
+      "source_locator": "Results2.6 / Figure7A; XML#advs78177-sec-0080",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Body weight showed no detected change in short follow-up.",
+      "study_id": "hou2026_mechanogenetics",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "hou2026:body_weight_shortterm",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Null short-term weight findings do not demonstrate long-term safety or normal aging."
+      ],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:marker",
+      "kind": "marker_identity",
+      "measurement_detail": "population_immunohistochemistry",
+      "measurement_level": "population",
+      "method": null,
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": null,
+      "perturbation_polarity": null,
+      "review_status": "unreviewed",
+      "source": "tokizane2024:Ppp1r17",
+      "source_locator": "Results: Identification and characterization; Figure1B / FigureS1C",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Ppp1r17 marks the author-defined compact-DMH population.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:dmh_ppp1r17",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Markeridentity only; no per-cell transcriptome or unique cross-study cell match."
+      ],
+      "valence": null
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:projection_poa",
+      "kind": "measured_axon_projection",
+      "measurement_detail": "population_labeled_axonal_terminals",
+      "measurement_level": "population",
+      "method": null,
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": null,
+      "perturbation_polarity": null,
+      "review_status": "unreviewed",
+      "source": "tokizane2024:dmh_ppp1r17",
+      "source_locator": "Figure2A-C / nihms-1953113-f0002.jpg",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Population-labeled axonal terminals were observed in POA.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:poa",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Population-level terminal fluorescence; no identified postsynaptic cell, synaptic sign or complete individual3D morphology.",
+        "The terminal fields are not assumed to be the causal route for lifespan benefit."
+      ],
+      "valence": null
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:projection_pvn",
+      "kind": "measured_axon_projection",
+      "measurement_detail": "population_labeled_axonal_terminals",
+      "measurement_level": "population",
+      "method": null,
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": null,
+      "perturbation_polarity": null,
+      "review_status": "unreviewed",
+      "source": "tokizane2024:dmh_ppp1r17",
+      "source_locator": "Figure2A-C / nihms-1953113-f0002.jpg",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Population-labeled axonal terminals were observed in PVN.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:pvn",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Population-level terminal fluorescence; no identified postsynaptic cell, synaptic sign or complete individual3D morphology.",
+        "The terminal fields are not assumed to be the causal route for lifespan benefit."
+      ],
+      "valence": null
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:projection_lh",
+      "kind": "measured_axon_projection",
+      "measurement_detail": "population_labeled_axonal_terminals",
+      "measurement_level": "population",
+      "method": null,
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": null,
+      "perturbation_polarity": null,
+      "review_status": "unreviewed",
+      "source": "tokizane2024:dmh_ppp1r17",
+      "source_locator": "Figure2A-C / nihms-1953113-f0002.jpg",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Population-labeled axonal terminals were observed in LH.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:lh",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Population-level terminal fluorescence; no identified postsynaptic cell, synaptic sign or complete individual3D morphology.",
+        "The terminal fields are not assumed to be the causal route for lifespan benefit."
+      ],
+      "valence": null
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:projection_pag",
+      "kind": "measured_axon_projection",
+      "measurement_detail": "population_labeled_axonal_terminals",
+      "measurement_level": "population",
+      "method": null,
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": null,
+      "perturbation_polarity": null,
+      "review_status": "unreviewed",
+      "source": "tokizane2024:dmh_ppp1r17",
+      "source_locator": "Figure2A-C / nihms-1953113-f0002.jpg",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Population-labeled axonal terminals were observed in PAG.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:pag",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Population-level terminal fluorescence; no identified postsynaptic cell, synaptic sign or complete individual3D morphology.",
+        "The terminal fields are not assumed to be the causal route for lifespan benefit."
+      ],
+      "valence": null
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:target",
+      "kind": "intervention_target",
+      "measurement_detail": "genetically_targeted_population",
+      "measurement_level": "population",
+      "method": "chemogenetic",
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": "circuit_activity",
+      "perturbation_polarity": "increase",
+      "review_status": "unreviewed",
+      "source": "tokizane2024:chemogenetic_activation",
+      "source_locator": "Figure7A / Methods: Chemogenetic Experiment for lifespan study",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Chemogenetic activation targeted DMH Ppp1r17 neurons.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:dmh_ppp1r17",
+      "tier_a_admitted": false,
+      "uncertainty": [],
+      "valence": "activation"
+    },
+    {
+      "cohort_age": {
+        "meaning": "Methods age at lifespan-arm preparation; not transferred to physiological cohorts",
+        "unit": "months",
+        "value": 22
+      },
+      "conditions": {
+        "n_animals": 13,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Figure7H / Methods: Chemogenetic Experiment for lifespan study",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [
+        "Control reporter group given the same ligand"
+      ],
+      "direction": "increase",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:lifespan",
+      "kind": "intervention_outcome",
+      "measurement_detail": "animal_survival",
+      "measurement_level": "animal",
+      "method": "chemogenetic",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "circuit_activity",
+      "perturbation_polarity": "increase",
+      "review_status": "unreviewed",
+      "source": "tokizane2024:chemogenetic_activation",
+      "source_locator": "Figure7H / Methods: Chemogenetic Experiment for lifespan study",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Chemogenetic activation increased survival in aged male mice.",
+      "statistical_result": {
+        "chi_square": 4.191,
+        "df": 1,
+        "p_value": 0.0406,
+        "test": "log_rank"
+      },
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": "successfully extended lifespan",
+      "target": "tokizane2024:lifespan",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Effect magnitude and confidence interval not extracted; no percent lifespan gain is inferred.",
+        "Small male-only cohort, not a human rejuvenation result.",
+        "Longevity animals were separate from physiological/metabolic assay animals."
+      ],
+      "valence": "activation"
+    },
+    {
+      "cohort_age": {
+        "meaning": "Figure7B assay age",
+        "unit": "months",
+        "value": 20
+      },
+      "conditions": {
+        "n_animals": 5,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Figure7B:20-month-old DREADD male mice, before/after comparison",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [
+        "Paired pre-activation baseline; reporter control arm discussed separately"
+      ],
+      "direction": "increase",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:wheel_running",
+      "kind": "intervention_outcome",
+      "measurement_detail": "animal_behavior",
+      "measurement_level": "animal",
+      "method": "chemogenetic",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "circuit_activity",
+      "perturbation_polarity": "increase",
+      "review_status": "unreviewed",
+      "source": "tokizane2024:chemogenetic_activation",
+      "source_locator": "Figure7B:20-month-old DREADD male mice, before/after comparison",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Wheel-running activity increased after activation.",
+      "statistical_result": {
+        "reported_p_threshold": 0.05,
+        "test": "Wilcoxon_matched_pairs_signed_rank"
+      },
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:wheel_running",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "n5 denotes the paired DREADD assay cohort, not the lifespan n13/group cohort."
+      ],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [
+        "Reporter control group and pre-activation comparison"
+      ],
+      "direction": "increase",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:enampt",
+      "kind": "intervention_outcome",
+      "measurement_detail": "circulating_protein",
+      "measurement_level": "animal",
+      "method": "chemogenetic",
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": "circuit_activity",
+      "perturbation_polarity": "increase",
+      "review_status": "unreviewed",
+      "source": "tokizane2024:chemogenetic_activation",
+      "source_locator": "Figure7G / Results: Chemogenetic activation subsection",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Circulating eNAMPT increased after activation.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:plasma_enampt",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "No numerical concentration or panel-specific sample size transcribed.",
+        "eNAMPT-containing extracellular vesicles are not acoustic gas vesicles."
+      ],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [
+        "Reporter control group and pre-activation comparison"
+      ],
+      "direction": "no_change",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:food_nochange",
+      "kind": "intervention_outcome",
+      "measurement_detail": "animal_behavior",
+      "measurement_level": "animal",
+      "method": "chemogenetic",
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": "circuit_activity",
+      "perturbation_polarity": "increase",
+      "review_status": "unreviewed",
+      "source": "tokizane2024:chemogenetic_activation",
+      "source_locator": "FigureS7G / Results: Chemogenetic activation subsection",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Food intake did not change detectably after activation.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": "food intake was unchanged",
+      "target": "tokizane2024:food_intake",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "No panel-specific effect magnitude or sample size transcribed."
+      ],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": 13,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": "Figure7I / Results: Chemogenetic activation subsection",
+        "n_scope": "per_group unless paired within-animal comparison explicitly specified",
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [
+        "Reporter control group"
+      ],
+      "direction": "no_change",
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:mortality_slope",
+      "kind": "intervention_outcome",
+      "measurement_detail": "animal_survival_model_slope",
+      "measurement_level": "animal",
+      "method": "chemogenetic",
+      "n_animals_missing_reason": null,
+      "perturbation_class": "circuit_activity",
+      "perturbation_polarity": "increase",
+      "review_status": "unreviewed",
+      "source": "tokizane2024:chemogenetic_activation",
+      "source_locator": "Figure7I / Results: Chemogenetic activation subsection",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "Mortality-slope differences did not reach statistical significance.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:mortality_slope",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "A trend toward decrease was reported; no_change encodes a nonsignificant comparison, not proof of identical slopes."
+      ],
+      "valence": "activation"
+    },
+    {
+      "conditions": {
+        "n_animals": null,
+        "sex": "male"
+      },
+      "conditions_evidence": {
+        "n_locator": null,
+        "n_scope": null,
+        "sex_locator": "Methods: lifespan arm or male physiological cohort; see record-specific locator"
+      },
+      "controls": [],
+      "direction": null,
+      "effect": null,
+      "effect_missing_reason": "No exact effect magnitude extracted from an acquired numeric table; graph-bar values are not guessed.",
+      "extraction_method": "llm",
+      "id": "tokizane2024:dmh_wat_function",
+      "kind": "functional_association",
+      "measurement_detail": "inter_tissue_function",
+      "measurement_level": "study",
+      "method": null,
+      "n_animals_missing_reason": "No panel-specific animal count was verified in the acquired source passage; not inferred from another assay or figure.",
+      "perturbation_class": null,
+      "perturbation_polarity": null,
+      "review_status": "unreviewed",
+      "source": "tokizane2024:dmh_ppp1r17",
+      "source_locator": "Results: DMH-specific Ppp1r17 KD decreases lipolysis and sympathetic nerve innervation in WAT; Figure4",
+      "source_record_id": null,
+      "species": "mus_musculus",
+      "statement": "DMH manipulation altered sympathetic WAT function.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "support_quote": null,
+      "support_quote_missing_reason": "Paraphrased graph evidence with an exact paper/figure locator; not a Tier A record proposal.",
+      "target": "tokizane2024:wat",
+      "tier_a_admitted": false,
+      "uncertainty": [
+        "Functional systemic relation through sympathetic pathways, not a measured direct DMH axon terminating on an adipocyte.",
+        "No direct nerve edge or synaptic sign inferred."
+      ],
+      "valence": null
+    }
+  ],
+  "limitations": [
+    "All newly curated facts are llm/unreviewed and not admitted Tier A records.",
+    "No measured terminal field is expanded into an individual axon or synapse.",
+    "No region/marker overlap is used as same-cell or same-animal identity.",
+    "No doses, acoustic parameters, genetic sequences or procedural instructions are exported in graph facts.",
+    "A gene marker is an identity annotation, not an observed expression vector.",
+    "A no_change significance finding is not equivalence evidence.",
+    "Existing sonogenetic method-vocabulary gap remains explicit rather than silently rewriting derived perturbation classes."
+  ],
+  "measurement_unit": "One study-specific population/intervention/readout observation per edge; projections are population→region observations.",
+  "missing_data": [
+    {
+      "id": "gap:gv_lifespan",
+      "query": "Does GV-assisted hypothalamic control reverse aging or extend lifespan?",
+      "reason": "No joined GV-hypothalamic-control aging/lifespan experiment is reported in these two sources; absence of an experiment is not a measured failure.",
+      "study_ids": [
+        "hou2026_mechanogenetics",
+        "tokizane2024_dmh_ppp1r17"
+      ],
+      "value": null
+    },
+    {
+      "id": "gap:paired_cell_identity",
+      "query": "Are gas-vesicle-responsive LH cells the same cells as DMH Ppp1r17 longevity neurons?",
+      "reason": "Different regions, author-defined populations and studies; no individual-cell, marker or animal identity bridge.",
+      "value": null
+    },
+    {
+      "id": "gap:full_routes",
+      "query": "What are the complete3D paths and identified synapses?",
+      "reason": "The acquired assays provide population terminal fields and functional modulation, not full individual-neuron reconstructions or synapse identities.",
+      "value": null
+    },
+    {
+      "id": "gap:human_translation",
+      "query": "Does the intervention improve human lifespan?",
+      "reason": "These sources concern mice and provide no human lifespan outcome.",
+      "value": null
+    }
+  ],
+  "nodes": [
+    {
+      "id": "hou2026:lh_excitatory",
+      "identity_evidence": "CaMKIIα-directed targeting and anti-glutamate colocalization; not a transcriptomic subtype assignment.",
+      "identity_limitations": [
+        "No Slc17a6/Vglut2, Nts, Hcrt/Orexin, Pmch or Sst identity is inferred.",
+        "No exact match to existing displayed neurons or to Tokizane DMH Ppp1r17 cells."
+      ],
+      "identity_status": "author_defined",
+      "kind": "population",
+      "label": "LH excitatory / glutamatergic neurons (study-defined targeting)",
+      "marker_genes": [],
+      "region_id": "lha",
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:vta",
+      "identity_status": "author_defined",
+      "kind": "region",
+      "label": "Ventral tegmental area (VTA)",
+      "marker_genes": [],
+      "region_id": null,
+      "region_id_missing_reason": "Not an entry in the existing hypothalamic region vocabulary; preserve author label rather than invent an atlas identifier.",
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:mechanogenetics",
+      "identity_status": "author_defined",
+      "intervention_class": "sonogenetic_neuromodulation",
+      "kind": "intervention",
+      "label": "Gas-vesicle-assisted MscL sonogenetics",
+      "marker_genes": [],
+      "material_identity": "Purified gas-vesicle-derived nanobubbles; not extracellular vesicles and not demonstrated neuronal GV biosynthesis.",
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:vta_receptor_blockade",
+      "identity_status": "author_defined",
+      "kind": "intervention",
+      "label": "Local VTA glutamate-receptor blockade",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:lh_calcium",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "LH neuronal calcium response",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:lh_cfos",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "LH c-Fos-positive cell fraction",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:vta_glutamate",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "VTA extracellular glutamate-sensor response",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:food_intake",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "Food consumption",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:food_zone_time",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "Food-zone exploration time",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "hou2026:body_weight_shortterm",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "Short-term body weight",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "hou2026_mechanogenetics"
+      ]
+    },
+    {
+      "id": "tokizane2024:dmh_ppp1r17",
+      "identity_evidence": "Ppp1r17 protein localization in compact DMH; subset of author-described SIRT1/Nkx2-1 population.",
+      "identity_limitations": [
+        "Population is predominantly glutamatergic but includes GABAergic neurons, especially posteriorly; no uniform synaptic sign assigned.",
+        "Identity marker is not a measured per-neuron expression vector or a match to displayed DMH Orexin neurons."
+      ],
+      "identity_status": "author_defined",
+      "kind": "population",
+      "label": "DMH Ppp1r17 neurons",
+      "marker_genes": [
+        "Ppp1r17"
+      ],
+      "region_id": "dmh",
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:Ppp1r17",
+      "identity_status": "author_defined",
+      "kind": "gene",
+      "label": "Ppp1r17 identity marker",
+      "marker_genes": [
+        "Ppp1r17"
+      ],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:poa",
+      "identity_status": "author_defined",
+      "kind": "region",
+      "label": "Preoptic area (POA)",
+      "marker_genes": [],
+      "region_id": "poa",
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:pvn",
+      "identity_status": "author_defined",
+      "kind": "region",
+      "label": "Hypothalamic paraventricular nucleus (paper: PVN)",
+      "marker_genes": [],
+      "region_id": "pvh",
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:lh",
+      "identity_status": "author_defined",
+      "kind": "region",
+      "label": "Lateral hypothalamus (LH)",
+      "marker_genes": [],
+      "region_id": "lha",
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:pag",
+      "identity_status": "author_defined",
+      "kind": "region",
+      "label": "Periaqueductal grey (PAG)",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:chemogenetic_activation",
+      "identity_status": "author_defined",
+      "kind": "intervention",
+      "label": "Chemogenetic activation of DMH Ppp1r17 neurons",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:lifespan",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "Mouse survival / lifespan",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:wheel_running",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "Wheel-running activity",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:plasma_enampt",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "Circulating eNAMPT",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:food_intake",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "Food intake",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:mortality_slope",
+      "identity_status": "author_defined",
+      "kind": "outcome",
+      "label": "Age-associated mortality slope",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    },
+    {
+      "id": "tokizane2024:wat",
+      "identity_status": "author_defined",
+      "kind": "organ",
+      "label": "White adipose tissue (WAT)",
+      "marker_genes": [],
+      "region_id": null,
+      "species": "mus_musculus",
+      "study_ids": [
+        "tokizane2024_dmh_ppp1r17"
+      ]
+    }
+  ],
+  "schema": "synarch_circuit_sources_v1",
+  "scope": "Known-outcome computational evidence integration and development; no wet-lab design or held-out prediction result.",
+  "studies": [
+    {
+      "age_note": "Methods reports8-week-old mice at preparation; exact age at each endpoint is not inferred.",
+      "aging_endpoint_missing_reason": "Paper reports neural activity, feeding and short-term biosafety, not aging or lifespan efficacy.",
+      "aging_or_lifespan_endpoint": null,
+      "data_availability": "Article states study data are available on request; no author contact or request performed.",
+      "deduplication_scan": {
+        "action": "No existing matched observation reused; new graph facts only, not appended to canonical Tier A corpus.",
+        "casefold_terms": [
+          "10.1002/advs.78177",
+          "10.1016/j.cmet.2023.12.011",
+          "38194970",
+          "ppp1r17",
+          "tokizane"
+        ],
+        "corpus_path": "data/curated/records.jsonl",
+        "corpus_sha256": "1638e5ae81bda8cf53cffe4fa89eaddd7e2673e2613c02bde6a899792a93d85d",
+        "matching_existing_record_ids": [],
+        "rows_scanned": 722
+      },
+      "doi": "10.1002/advs.78177",
+      "exposure_status": "previously_read_known_outcomes_development_integration",
+      "extraction_method": "llm",
+      "full_3d_axon_paths": null,
+      "full_text_available": true,
+      "full_text_path": "data/interim/circuit_evidence_v1/hou2026_fulltext.xml",
+      "full_text_retrieval_scope": "Complete open-access article XML including Results and figure captions",
+      "full_text_sha256": "3f330bced832a7bc3b9352440fd9c600ff0fa0598520ae695edfd6bbbbebc10d",
+      "gene_measurements_per_neuron": null,
+      "individual_animal_ids": null,
+      "individual_animal_ids_missing_reason": "No per-animal identifier table was acquired for this extraction.",
+      "primary_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13643108/",
+      "publication_date": "2026-10-06",
+      "retrieval_receipt": "data/interim/circuit_evidence_v1/hou2026_fulltext.xml.receipt.json",
+      "reuse_licence": "CC BY4.0 stated in article front matter",
+      "review_status": "unreviewed",
+      "sex": "male",
+      "species": [
+        "mus_musculus"
+      ],
+      "strain": "C57BL/6",
+      "study_id": "hou2026_mechanogenetics",
+      "title": "Targeted Mechanogenetics to Modulate Specific Deep Neural Circuits",
+      "url": "https://doi.org/10.1002/advs.78177"
+    },
+    {
+      "additional_source_paths": [
+        "data/interim/circuit_evidence_v1/tokizane2024_lifespan_indexed_passages.txt",
+        "data/interim/circuit_evidence_v1/tokizane2024_projection_indexed_passages.txt"
+      ],
+      "cohort_separation": "Paper Methods explicitly states longevity animals were not used in other physiological/metabolic tests. Do not create same-animal joins across these endpoints.",
+      "data_availability": "Paper links Data S1 underlying figures and GEO expression datasets. Those matrices were not acquired or treated as paired individual-neuron circuit truth.",
+      "deduplication_scan": {
+        "action": "No existing matched observation reused; new graph facts only, not appended to canonical Tier A corpus.",
+        "casefold_terms": [
+          "10.1002/advs.78177",
+          "10.1016/j.cmet.2023.12.011",
+          "38194970",
+          "ppp1r17",
+          "tokizane"
+        ],
+        "corpus_path": "data/curated/records.jsonl",
+        "corpus_sha256": "1638e5ae81bda8cf53cffe4fa89eaddd7e2673e2613c02bde6a899792a93d85d",
+        "matching_existing_record_ids": [],
+        "rows_scanned": 722
+      },
+      "doi": "10.1016/j.cmet.2023.12.011",
+      "exposure_status": "previously_read_known_outcomes_development_integration",
+      "extraction_method": "llm",
+      "full_3d_axon_paths": null,
+      "full_text_available": true,
+      "full_text_path": "data/interim/circuit_evidence_v1/tokizane2024_primary_indexed_passages.txt",
+      "full_text_retrieval_scope": "Indexed original full-text Results, Methods and Figure1/2/6/7 captions read; direct XML failed and HTML/PDF routes returned challenges. Not a complete origin file.",
+      "full_text_sha256": "d4636e3e90b2d54686787cf29c07903312089a84bc419027a16ec6846394f02e",
+      "gene_measurements_per_neuron": null,
+      "individual_animal_ids": null,
+      "primary_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10922643/",
+      "publication_date": "2024-01-08",
+      "retrieval_receipt": "data/interim/circuit_evidence_v1/tokizane2024_primary_indexed_passages.txt.receipt.json",
+      "reuse_licence": null,
+      "reuse_licence_missing_reason": "Public author manuscript is accessible; no permissive reuse licence asserted from the acquired passages.",
+      "review_status": "unreviewed",
+      "sex": "male",
+      "species": [
+        "mus_musculus"
+      ],
+      "strain": null,
+      "strain_missing_reason": "Do not assign the wild-type strain of one arm to the Ppp1r17-Cre lifespan arm without cohort-specific evidence.",
+      "study_id": "tokizane2024_dmh_ppp1r17",
+      "title": "DMH Ppp1r17 neurons regulate aging and lifespan in mice through hypothalamic-adipose inter-tissue communication",
+      "url": "https://doi.org/10.1016/j.cmet.2023.12.011"
+    }
+  ]
+}

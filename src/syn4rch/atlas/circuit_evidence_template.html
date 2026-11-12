@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Circuit Evidence Map</title>
+<style>
+:root{--bg:#f6f6f4;--panel:#ffffff;--ink:#1d1d1b;--muted:#5d5d58;--line:#d9d9d4;--accent:#1f5fa8;--warn:#8a4b00;
+ --meas:#1e7a46;--meas-bg:#e3f3ea;--inf:#7a4fb0;--inf-bg:#efe8f8;--fly:#9a5b00;--fly-bg:#fbefdc;--chip:#eeeeea}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121314;--panel:#1c1d1f;--ink:#ececea;--muted:#a3a39e;--line:#34353a;
+ --accent:#7fb2ff;--warn:#f0b35a;--meas:#7fd6a2;--meas-bg:#18301f;--inf:#c7a6f2;--inf-bg:#2a2236;--fly:#f0b35a;--fly-bg:#33270f;--chip:#2a2b2e}}
+:root[data-theme="dark"]{--bg:#121314;--panel:#1c1d1f;--ink:#ececea;--muted:#a3a39e;--line:#34353a;--accent:#7fb2ff;--warn:#f0b35a;
+ --meas:#7fd6a2;--meas-bg:#18301f;--inf:#c7a6f2;--inf-bg:#2a2236;--fly:#f0b35a;--fly-bg:#33270f;--chip:#2a2b2e}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;display:grid;
+ grid-template-columns:300px minmax(0,1fr) 400px;grid-template-rows:auto minmax(0,1fr);height:100vh;overflow:hidden}
+header{grid-column:1/-1;display:flex;gap:14px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:15px;margin:0}header .small{flex:1}
+#fixture{display:none;background:var(--warn);color:var(--bg);font-weight:700;padding:4px 10px;border-radius:4px}
+aside,#detail{overflow:auto;background:var(--panel);padding:10px 14px}aside{border-right:1px solid var(--line)}#detail{border-left:1px solid var(--line)}
+main{position:relative;min-width:0;display:flex;flex-direction:column}
+#scene{flex:1;border:0;width:100%;background:var(--bg)}
+#status{padding:6px 12px;border-top:1px solid var(--line);background:var(--panel);font-size:12px;min-height:30px}
+h2{font-size:11.5px;margin:14px 0 5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+h3{font-size:14px;margin:4px 0}.small{font-size:11.5px;color:var(--muted)}
+label{display:block;cursor:pointer;margin:1px 0}select{font:inherit;width:100%;padding:3px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:3px}
+.note{border:1px solid var(--warn);color:var(--warn);padding:6px 8px;border-radius:4px;margin:6px 0;font-size:12px}
+.btn{font:inherit;font-size:11.5px;background:none;border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:2px 8px;cursor:pointer}
+.pop{padding:5px 7px;border-radius:4px;cursor:pointer;border:1px solid transparent;margin:2px 0}
+.pop:hover{border-color:var(--line)}.pop.sel{border-color:var(--accent);background:var(--chip)}
+.pop .r{font-size:11px;color:var(--muted)}
+.grp{font-weight:600;margin:10px 0 2px}.grp.fly{color:var(--fly)}
+.badge{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:9px;margin-right:4px;vertical-align:1px}
+.b-meas{color:var(--meas);background:var(--meas-bg)}.b-inf{color:var(--inf);background:var(--inf-bg)}.b-oth{color:var(--muted);background:var(--chip)}
+.b-fly{color:var(--fly);background:var(--fly-bg)}
+.card{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:8px 0}
+.card .hd{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:4px}
+.kv{width:100%;border-collapse:collapse;font-size:12px}.kv td{padding:2px 4px;border-top:1px solid var(--line);vertical-align:top;word-break:break-word}
+.kv td:first-child{color:var(--muted);width:38%}
+.nr{color:var(--muted);font-style:italic}
+ul.unc{margin:4px 0 0 16px;padding:0;font-size:12px}
+a{color:var(--accent)}
+.empty{color:var(--muted);padding:10px 0}
+@media (max-width:1100px){body{grid-template-columns:260px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto}
+ #detail{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);max-height:45vh}}
+details>summary{cursor:pointer;font-size:11.5px;margin:12px 0 5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+#facts{padding:4px 12px;border-top:1px solid var(--line);background:var(--panel);font-size:11.5px;color:var(--muted)}
+#facts b{color:var(--ink)}
+@media (max-width:900px){body{display:flex;flex-direction:column;height:auto;min-height:100vh;overflow:auto}
+ header{order:0;flex-wrap:wrap;gap:6px 10px;padding:6px 12px}header .small{flex-basis:100%;order:3}
+ main{order:1;height:58vh;min-height:300px;flex:none}#detail{order:2;border:0;border-top:1px solid var(--line);max-height:none}
+ aside{order:3;border:0;border-top:1px solid var(--line);max-height:none}}
+</style></head><body>
+<header>
+ <h1>Circuit evidence map</h1>
+ <span id="fixture">SYNTHETIC FIXTURE: interface test only, no biological claims</span>
+ <span class="small">Published evidence beside measured mouse neuron traces. An evidence map, not a circuit reconstruction. Local only: the traces must not be shared.</span>
+ <button class="btn" id="theme">light/dark</button>
+</header>
+<aside>
+ <div class="note">Placement is by atlas region only. Populations are never matched to individual traces, by region, marker or distance.</div>
+ <details id="d-filters" open><summary>Filters</summary>
+ <h2>Species</h2><div id="f-species"></div>
+ <h2>Kind of evidence</h2><div id="f-layer"></div>
+ <h2>How it was obtained</h2>
+ <label><input type="checkbox" id="f-meas" checked> <span class="badge b-meas">Measured</span> observed in the study</label>
+ <label><input type="checkbox" id="f-inf" checked> <span class="badge b-inf">Inferred</span> derived or predicted, not observed directly</label>
+ <label><input type="checkbox" id="f-oth" checked> <span class="badge b-oth">Annotation</span> study- or annotation-level statement</label>
+ <h2>Source study</h2><select id="f-study"></select>
+ </details>
+ <details id="d-pops" open><summary>Populations and regions</summary>
+ <input id="f-search" type="search" placeholder="Search by name" aria-label="Search populations and regions" style="width:100%;margin:2px 0 4px">
+ <div class="small">Regions are listed too: many source records name only a region, and their experiments are shown there.</div>
+ <div id="pops"></div>
+ </details>
+ <details id="d-cov"><summary>Coverage, counts and limits</summary>
+ <div class="small">No confidence scores are computed. Counts are counts of source items, not probabilities.</div>
+ <div id="coverage" class="small"></div></details>
+</aside>
+<main>
+ <iframe id="scene" title="Measured mouse neuron traces (Allen CCFv3)"></iframe>
+ <div id="status" class="small">Select a mouse population to highlight its atlas region in the 3D scene.</div>
+ <div id="facts"></div>
+</main>
+<section id="detail"><div class="empty">Select a population or region to see its evidence, sources and what is not reported.</div></section>
+<script>
+const EVIDENCE=/*__EVIDENCE_DATA__*/null;
+const G=EVIDENCE.graph,NODES=Object.fromEntries(G.nodes.map(n=>[n.id,n])),EDGES=G.edges;
+const STUDIES=Object.fromEntries((G.studies||[]).map(s=>[s.study_id||s.id,s]));
+const root=document.documentElement;
+const LAYER_NAMES={anatomical:'Measured anatomy',inference:'Inferred connection',sampling:'Retrograde labelling and collection',
+ functional:'Experiments: what was changed and what happened',identity:'Identity markers',molecular:'Measured gene expression',
+ mapping:'Population mapping'};
+const KIND_NAMES={measured_axon_projection:'measured axon projection',identified_synapse:'identified synapse',
+ inferred_connection:'inferred connection',retrograde_label:'retrograde label',retrograde_collection:'retrograde collection',
+ intervention_target:'what was changed',intervention_outcome:'what happened',functional_association:'functional association',
+ marker_identity:'marker identity',measured_gene_expression:'measured gene expression',population_mapping:'population mapping'};
+const LEVEL_NAMES={individual_cell:'individual cells',synapse:'synapses',population:'population',region:'region',animal:'animals',
+ pooled_animals:'pooled animals',nucleus:'nuclei',study:'study',population_annotation:'population annotation',inferred:'inferred',organ:'organ'};
+const UNKNOWN='__unknown_species__';
+const KEY_NAMES={n_animals:'animals (n)',n:'n',sex:'sex',unit:'unit',effect:'effect',age:'age',strain:'strain',
+ duration:'duration',readout:'readout',dose:'dose'};
+const EFFECT_NAMES={effect_size_value:'effect size',effect_size_type:'effect size type',effect_size_units:'unit',
+ ci_low:'interval low',ci_high:'interval high',n_treatment:'n treated',n_control:'n control'};
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const GAPS=Object.fromEntries(((EVIDENCE.coverage||{}).population_gaps||[]).map(x=>[x.node_id,x.gaps||[]]));
+function selfName(id){const k=NODES[id]?.kind;return k==='region'?'this region':k==='population'?'this population':'this item'}
+function isInferredType(n){return n.identity_status==='author_inferred_type'}
+function human(s){return LAYER_NAMES[s]||String(s||'').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase())}
+function canon(sp){return sp===null||sp===undefined?null:String(sp).trim().toLowerCase().replace(/_/g,' ')}
+function isMouse(sp){return ['mus musculus','mouse'].includes(canon(sp))}
+function isFly(sp){return (canon(sp)||'').includes('drosophila')}
+function spKey(sp){return sp===null||sp===undefined||sp===''?UNKNOWN:sp}
+function spName(sp){return spKey(sp)===UNKNOWN?'unknown species':canon(sp).replace(/^./,c=>c.toUpperCase())}
+function notMouseTag(sp){return isMouse(sp)?'':`<span class="badge b-fly">${isFly(sp)?'fly, not mouse anatomy':spKey(sp)===UNKNOWN?'species unknown, not placed':'not mouse anatomy'}</span>`}
+function level(e){const l=e.measurement_level;if(l==='inferred'||e.layer==='inference'||e.kind==='inferred_connection')return 'inf';
+ if(l==='study'||l==='population_annotation'||!l)return 'oth';return 'meas'}
+function badge(e){const v=level(e);const lv=LEVEL_NAMES[e.measurement_level]||e.measurement_level;
+ return `<span class="badge b-${v}">${v==='meas'?'Measured: '+esc(lv):v==='inf'?'Inferred':esc(lv?'Annotation: '+lv:'level not reported')}</span>`}
+function nr(){return '<span class="nr">not reported</span>'}
+if(EVIDENCE.fixture)document.getElementById('fixture').style.display='inline-block';
+
+// ---------------- filters
+const species=[...new Set(G.nodes.map(n=>spKey(n.species)).concat(EDGES.map(e=>spKey(e.species))))]
+ .sort((a,b)=>isMouse(b)-isMouse(a)||(a===UNKNOWN)-(b===UNKNOWN)||a.localeCompare(b));
+const layers=[...new Set(EDGES.map(e=>e.layer))].sort();
+document.getElementById('f-species').innerHTML=species.map(s=>`<label><input type="checkbox" data-sp="${esc(s)}" checked> <i>${esc(spName(s===UNKNOWN?null:s))}</i> ${notMouseTag(s===UNKNOWN?null:s)}</label>`).join('');
+document.getElementById('f-layer').innerHTML=layers.map(l=>`<label><input type="checkbox" data-ly="${esc(l)}" checked> ${esc(human(l))}</label>`).join('');
+const studySel=document.getElementById('f-study');
+studySel.innerHTML='<option value="">All studies</option>'+[...new Set(EDGES.map(e=>e.study_id))].filter(Boolean).sort()
+ .map(s=>`<option value="${esc(s)}">${esc(STUDIES[s]?.title||s)}</option>`).join('');
+function F(){return{sp:new Set([...document.querySelectorAll('[data-sp]:checked')].map(e=>e.dataset.sp)),
+ ly:new Set([...document.querySelectorAll('[data-ly]:checked')].map(e=>e.dataset.ly)),
+ lv:new Set(['meas','inf','oth'].filter(k=>document.getElementById('f-'+k).checked)),st:studySel.value}}
+function edgeVisible(e,f){return f.sp.has(spKey(e.species))&&f.ly.has(e.layer)&&f.lv.has(level(e))&&(!f.st||e.study_id===f.st)}
+
+// ---------------- population list
+let selected=null;
+function edgesOf(id,f){const direct=EDGES.filter(e=>(e.source===id||e.target===id)&&edgeVisible(e,f));
+ const interventions=new Set(direct.filter(e=>NODES[e.source]?.kind==='intervention'&&e.target===id).map(e=>e.source));
+ const outcomes=EDGES.filter(e=>interventions.has(e.source)&&e.target!==id&&edgeVisible(e,f));
+ return {direct,outcomes}}
+function regionText(n){const s=n._scene||{};const ap=n.atlas_placement;
+ if(!isMouse(n.species))return (isFly(n.species)?'fly data':spKey(n.species)===UNKNOWN?'species unknown':esc(spName(n.species)))+': no mouse placement';
+ if(s.display_binding)return `${esc(s.acronym)} mesh (${esc(s.display_binding)})`;
+ if(!ap)return n.kind==='region'?'region named by the source; no atlas id':'no atlas region given';
+ return `${esc(ap.region_id||ap.allen_id)} region${s.available?'':' (not in 3D scene)'}`}
+function renderPops(){const f=F();const q=(document.getElementById('f-search').value||'').trim().toLowerCase();
+ const pops=G.nodes.filter(n=>(n.kind==='population'||n.kind==='region')&&f.sp.has(spKey(n.species))&&(!q||String(n.label).toLowerCase().includes(q)));
+ const by={};for(const n of pops)(by[spKey(n.species)]=by[spKey(n.species)]||[]).push(n);
+ const box=document.getElementById('pops');box.innerHTML='';
+ if(!pops.length){box.innerHTML='<div class="empty">No populations or regions match the filters.</div>';return}
+ for(const sp of Object.keys(by).sort((a,b)=>isMouse(b)-isMouse(a)||(a===UNKNOWN)-(b===UNKNOWN)||a.localeCompare(b))){
+  const real=sp===UNKNOWN?null:sp;const g=document.createElement('div');g.className='grp'+(isMouse(real)?'':' fly');
+  g.innerHTML=`<i>${esc(spName(real))}</i>`+(isMouse(real)?'':' &middot; not mouse anatomy, not placed');box.appendChild(g);
+  for(const n of by[sp].sort((a,b)=>(a.kind==='region')-(b.kind==='region')||String(a.label).localeCompare(String(b.label)))){const k=edgesOf(n.id,f);
+   const d=document.createElement('div');d.className='pop'+(selected===n.id?' sel':'');
+   const tag=n.kind==='region'?' <span class="badge b-oth">region</span>':isInferredType(n)?' <span class="badge b-inf">inferred type</span>':'';
+   d.innerHTML=`<div>${esc(n.label)}${tag}</div><div class="r">${regionText(n)} &middot; ${k.direct.length+k.outcomes.length} evidence item(s) shown</div>`;
+   d.onclick=()=>select(n.id);box.appendChild(d)}}}
+
+// ---------------- detail
+function val(v){return v===undefined||v===null||v===''||v==='not_reported'||v==='not reported'?nr():esc(typeof v==='object'?JSON.stringify(v):String(v).replace(/_/g,' '))}
+function conditionsTable(e){const c=Object.assign({sex:null,n_animals:null},e.conditions||{});const rows=[];
+ for(const k of Object.keys(c))rows.push(`<tr><td>${esc(KEY_NAMES[k]||k.replace(/_/g,' '))}</td><td>${val(c[k])}</td></tr>`);
+ if(e.kind==='intervention_outcome'){const ef=Object.assign({effect_size_value:null,effect_size_units:null},e.effect||{});
+  for(const k of Object.keys(ef))rows.push(`<tr><td>${esc(EFFECT_NAMES[k]||k.replace(/_/g,' '))}</td><td>${val(ef[k])}</td></tr>`)}
+ return rows.join('')}
+function httpUrl(u){return typeof u==='string'&&/^https?:\/\//i.test(u)}
+function studyCell(e){const s=STUDIES[e.study_id]||{};const name=esc(s.title||e.study_id||'');
+ const paper=httpUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${name||esc(s.url)}</a>`:(name||nr());
+ const loc=e.source_locator;
+ return paper+(loc?`<br><span class="small">where in the paper: ${httpUrl(loc)?`<a href="${esc(loc)}" target="_blank" rel="noopener noreferrer">${esc(loc)}</a>`:esc(loc)}</span>`:'')}
+const SOURCE_TEXT=[['statement','statement'],['evidence_class','kind of evidence'],['method','method'],['actuator','tool used'],
+ ['valence','effect on activity'],['measurement_detail','what was measured'],['projection_target_raw','projection target as written'],
+ ['source_outcome_raw','outcome as written in the source'],
+ ['source_population_raw','population as written in the source'],['effect_missing_reason','why no effect size'],
+ ['n_animals_missing_reason','why no animal count'],['meaning','meaning']];
+function statsRows(e){const r=[];const st=e.reported_statistics;
+ if(st&&typeof st==='object'){const sig=st.significant===true?'yes, as reported':st.significant===false?'no, as reported':'not reported (unknown)';
+  r.push(`<tr><td>statistical test</td><td>${val(st.statistical_test)}</td></tr>`,`<tr><td>p value</td><td>${val(st.p_value)}</td></tr>`,
+   `<tr><td>significant</td><td>${st.significant===null||st.significant===undefined?nr().replace('not reported','not reported (unknown)'):esc(sig)}</td></tr>`);
+  if(st.reported_p_threshold!==undefined)r.push(`<tr><td>p threshold</td><td>${val(st.reported_p_threshold)}</td></tr>`)}
+ if(e.statistical_result&&typeof e.statistical_result==='object')
+  r.push(`<tr><td>statistics as reported</td><td>${Object.entries(e.statistical_result).map(([k,v])=>esc(k.replace(/_/g,' '))+': '+val(v)).join('; ')}</td></tr>`);
+ return r.join('')}
+function evidenceRows(e){const r=[];const ce=e.conditions_evidence;
+ if(ce&&!Array.isArray(ce)&&typeof ce==='object'){
+  if(ce.n_scope)r.push(`<tr><td>what n counts</td><td>${esc(String(ce.n_scope).replace(/_/g,' '))}</td></tr>`);
+  for(const [k,l] of [['n_locator','where n is reported'],['sex_locator','where sex is reported']])if(ce[k])r.push(`<tr><td>${l}</td><td>${esc(ce[k])}</td></tr>`)}
+ else if(Array.isArray(ce)&&ce.length)
+  r.push(`<tr><td>where conditions are reported</td><td>${ce.map(x=>esc(String(x.dimension||'').replace(/_/g,' '))+': '+esc(x.locator||'not reported')).join('; ')}</td></tr>`);
+ const a=e.cohort_age;if(a&&typeof a==='object')
+  r.push(`<tr><td>cohort age (this item only)</td><td>${val(a.value)} ${esc(a.unit||'')}${a.meaning?`<br><span class="small">${esc(a.meaning)}</span>`:''}</td></tr>`);
+ const mt=e.molecular_target;if(mt&&typeof mt==='object'&&(mt.raw||mt.id))r.push(`<tr><td>molecular target</td><td>${esc(mt.raw||mt.id)}</td></tr>`);
+ const rc=e.readout_context;if(rc&&typeof rc==='object'){const parts=[rc.assay,rc.assay_units&&('units: '+rc.assay_units),rc.tissue_raw||rc.tissue_id].filter(Boolean);
+  if(parts.length)r.push(`<tr><td>readout</td><td>${esc(parts.join('; '))}</td></tr>`)}
+ return r.join('')}
+function sourceContext(e){const r=SOURCE_TEXT.filter(([k])=>e[k]!==undefined&&e[k]!==null&&e[k]!=='')
+  .map(([k,l])=>`<tr><td>${esc(l)}</td><td>${k.endsWith('_raw')?'&ldquo;'+esc(e[k])+'&rdquo;':esc(String(e[k]).replace(/_/g,' '))}</td></tr>`);
+ if((e.controls||[]).length)r.push(`<tr><td>controls</td><td>${e.controls.map(esc).join('; ')}</td></tr>`);
+ return r.join('')}
+function card(e,pid){const other=e.source===pid?e.target:e.source;const on=NODES[other]||{};
+ const dir=e.source===pid?`${selfName(pid)} &rarr; ${esc(on.label||other)}`:`${esc(NODES[e.source]?.label||e.source)} &rarr; ${e.target===pid?selfName(pid):esc(NODES[e.target]?.label||e.target)}`;
+ return `<div class="card"><div class="hd">${badge(e)}<span class="badge b-oth">${esc(human(e.layer))}</span>${notMouseTag(e.species)}</div>
+ <div><b>${esc(KIND_NAMES[e.kind]||String(e.kind||'').replace(/_/g,' '))}</b>: ${dir}</div>
+ <table class="kv"><tr><td>direction</td><td>${val(e.direction)}</td></tr>
+ ${e.perturbation_class||e.perturbation_polarity?`<tr><td>manipulation</td><td>${esc([e.perturbation_class,e.perturbation_polarity].filter(Boolean).join(', ').replace(/_/g,' '))}</td></tr>`:''}
+ ${conditionsTable(e)}
+ ${evidenceRows(e)}${statsRows(e)}${sourceContext(e)}
+ <tr><td>species</td><td><i>${esc(spName(e.species))}</i></td></tr><tr><td>source</td><td>${studyCell(e)}</td></tr>
+ <tr><td>review</td><td>${e.review_status?esc(e.review_status):nr()}</td></tr></table>
+ ${(e.uncertainty||[]).length?`<div class="small" style="margin-top:4px">Stated limits:</div><ul class="unc">${e.uncertainty.map(u=>`<li>${esc(u)}</li>`).join('')}</ul>`:'<div class="small" style="margin-top:4px">Stated limits: '+nr()+'</div>'}</div>`}
+function select(id){selected=id;const n=NODES[id];const f=F();const k=edgesOf(id,f);renderPops();
+ const ap=n.atlas_placement||{};const s=n._scene||{};
+ const groups={};for(const e of k.direct)(groups[e.layer]=groups[e.layer]||[]).push(e);
+ const det=document.getElementById('detail');
+ det.innerHTML=`<h3>${esc(n.label)}</h3>
+ <table class="kv"><tr><td>species</td><td><i>${esc(spName(n.species))}</i> ${notMouseTag(n.species)}</td></tr>
+ <tr><td>region</td><td>${isMouse(n.species)?(ap.region_id||ap.allen_id?esc(ap.region_id||'')+(ap.allen_id?` (Allen id ${esc(ap.allen_id)})`:''):s.display_binding?`named by the source; no curated atlas id. Shown with the ${esc(s.acronym)} atlas mesh (Allen id ${esc(s.allen_id)}) as an ${esc(s.display_binding)}, not cell coordinates`:n.kind==='region'?'named by the source; no atlas id':nr()):'no mouse placement'}</td></tr>
+ <tr><td>placement</td><td>${ap.level?'atlas region only; no individual cell positions':nr()}</td></tr>
+ <tr><td>3D scene</td><td>${!isMouse(n.species)?'not shown: '+(isFly(n.species)?'fly data':spKey(n.species)===UNKNOWN?'species unknown':'not mouse anatomy'):s.available?`${esc(s.acronym)} mesh highlighted`:'region not available in this 3D scene'}</td></tr>
+ <tr><td>marker genes</td><td>${(n.marker_genes||[]).length?esc(n.marker_genes.join(', '))+' <span class="small">(identity annotation only, not measured expression)</span>':nr()}</td></tr>
+ <tr><td>identity</td><td>${isInferredType(n)?'<span class="badge b-inf">Inferred</span> author-inferred cell type, not a measured identity':n.identity_status?esc(n.identity_status.replace(/_/g,' ')):nr()}</td></tr>
+ ${n.identity_evidence?`<tr><td>identity basis</td><td>${esc(n.identity_evidence)}</td></tr>`:''}
+ ${n.region_id_missing_reason?`<tr><td>why no atlas id</td><td>${esc(n.region_id_missing_reason)}</td></tr>`:''}
+ <tr><td>animals / pools</td><td>${n.animals||n.pools?esc(JSON.stringify({animals:n.animals,pools:n.pools})):nr()}</td></tr></table>
+ ${(n.identity_limitations||[]).length?'<div class="small">Identity limits:</div><ul class="unc">'+n.identity_limitations.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':''}
+ ${(GAPS[id]||[]).length?'<div class="small">Not in this evidence layer (a gap, not a negative result):</div><ul class="unc">'+GAPS[id].map(x=>`<li>${esc(x.replace(/_/g,' '))}</li>`).join('')+'</ul>':''}
+ ${Object.keys(groups).length?Object.entries(groups).map(([l,es])=>`<h2>${esc(human(l))} (${es.length})</h2>`+es.map(e=>card(e,id)).join('')).join(''):'<div class="empty">No evidence matches the current filters.</div>'}
+ ${k.outcomes.length?`<h2>Recorded outcomes of these experiments (${k.outcomes.length})</h2><div class="small">Outcomes are attached to the experiment, not directly to the population.</div>`+k.outcomes.map(e=>card(e,id)).join(''):''}`;
+ highlight(n)}
+
+// ---------------- 3D scene bridge (region meshes only)
+const frame=document.getElementById('scene');let ready=false,pending=null;
+frame.src=EVIDENCE.neuron_viewer;
+function post(m){if(!ready){pending=m;return}frame.contentWindow.postMessage(m,'*')}
+function highlight(n){const st=document.getElementById('status');const s=n._scene||{};
+ if(!isMouse(n.species)){post({type:'synarch-clear-region'});st.textContent=(isFly(n.species)?'Fly data':spKey(n.species)===UNKNOWN?'Unknown-species data':spName(n.species)+' data')+': not placed in the mouse brain.';return}
+ if(!s.available){post({type:'synarch-clear-region'});const ap=n.atlas_placement||{};
+  st.textContent=ap.region_id||ap.allen_id?`${ap.region_id||ap.allen_id}: region not available in this 3D scene (no mesh). No coordinates are invented.`:`No atlas region given for ${selfName(n.id)}.`;return}
+ st.textContent=s.display_binding?`Highlighting the ${s.acronym} atlas mesh as an ${s.display_binding} for this source-named region (extra context, not hypothalamic). Not cell coordinates.`
+  :`Highlighting the ${s.acronym} atlas region. Traces inside it are not identified with this population.`;
+ post({type:'synarch-highlight-region',acronym:s.acronym,allen_id:s.allen_id,request:n.id})}
+addEventListener('message',ev=>{const m=ev.data||{};
+ if(m.type==='synarch-scene-ready'){ready=true;if(pending){const p=pending;pending=null;post(p)}}
+ else if(m.type==='synarch-region-status'&&m.available===false)document.getElementById('status').textContent='Region not available in this 3D scene.'});
+
+// ---------------- coverage and limits
+(function(){const c=EVIDENCE.coverage||{};const L=(G.limitations||[]).concat(G.curated_source_limitations||[]);
+ const byKind=c.edges_by_kind||{};const rec=EDGES.filter(e=>e.record_id&&e.source_collection);
+ const nRec=new Set(rec.map(e=>e.record_id)).size,nRecSt=new Set(rec.map(e=>e.study_id)).size,
+  nRecUnrev=new Set(rec.filter(e=>e.review_status==='unreviewed').map(e=>e.record_id)).size;
+ const head=`<div><b>${EDGES.length} evidence links</b>. These are not synapses and not independent observations; one experiment can give several links.</div>
+ <div>Identified synapses: <b>${byKind.identified_synapse||0}</b>. Measured axon projections (regional): <b>${byKind.measured_axon_projection||0}</b>.
+ Matched individual cells: <b>none</b> (cell coordinates inferred: ${esc(G.cell_coordinates_inferred??'not reported')}; marker or proximity joins: ${esc(G.automatic_marker_or_proximity_joins??'not reported')}).</div>
+ <div>Existing curated corpus: ${nRec} records from ${nRecSt} studies, ${nRecUnrev===nRec?'all':nRecUnrev+' of them'} unreviewed. New sources are also unreviewed.</div>
+ ${c.counts_meaning?`<div>${esc(c.counts_meaning)}</div>`:''}`;
+ document.getElementById('facts').innerHTML=`<b>${byKind.identified_synapse||0}</b> identified synapses &middot; <b>no</b> individual cells matched to populations &middot; `
+  +`<b>${EDGES.length}</b> evidence links (not synapses or independent observations) &middot; review: <b>${nRec?(nRecUnrev===nRec?'all curated records unreviewed':nRecUnrev+' of '+nRec+' curated records unreviewed'):'not reported'}</b>`;
+ const fmt=v=>v&&typeof v==='object'&&!Array.isArray(v)?Object.entries(v).map(([a,b])=>`${esc(a.replace(/_/g,' '))} ${esc(b)}`).join(', '):esc(v);
+ const rows=head+Object.entries(c).filter(([k])=>!['population_gaps','counts_meaning'].includes(k))
+  .map(([k,v])=>`<div><b>${esc(k.replace(/_/g,' '))}</b>: ${Array.isArray(v)?v.length+' entries':fmt(v)}</div>`).join('');
+ document.getElementById('coverage').innerHTML=(rows||'<div>'+nr()+'</div>')+(L.length?'<ul class="unc">'+L.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':'')
+  +`<div style="margin-top:6px">${G.nodes.length} nodes, ${EDGES.length} evidence items. 3D region meshes: ${esc(Object.keys(EVIDENCE.scene_regions).sort().join(', '))}. VTA and PAG, when listed, are extra context regions, not hypothalamic.</div>`})();
+
+document.querySelectorAll('aside input,aside select').forEach(e=>e.addEventListener('change',()=>{renderPops();if(selected)select(selected)}));
+document.getElementById('f-search').addEventListener('input',renderPops);
+if(matchMedia('(max-width:900px)').matches)document.getElementById('d-filters').open=false;   // 3D and evidence first
+document.getElementById('theme').onclick=()=>{const d=root.getAttribute('data-theme')==='dark'||(!root.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);root.setAttribute('data-theme',d?'light':'dark')};
+renderPops();
+// Start on a DMH Ppp1r17 population if present (marker annotation, region-only placement); all records stay filterable.
+{const start=G.nodes.find(n=>n.kind==='population'&&isMouse(n.species)&&(n.marker_genes||[]).some(m=>String(m).toLowerCase()==='ppp1r17'));
+ if(start)select(start.id)}
+</script></body></html>

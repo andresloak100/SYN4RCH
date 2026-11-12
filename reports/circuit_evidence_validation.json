@@ -1,0 +1,749 @@
+{
+  "checks_by_kind": {
+    "coverage_checked_not_reported_condition_fields_independent_exact": 1,
+    "coverage_edges_by_kind_independent_exact": 1,
+    "coverage_edges_by_layer_independent_exact": 1,
+    "coverage_edges_by_measurement_level_independent_exact": 1,
+    "coverage_edges_by_review_status_independent_exact": 1,
+    "coverage_edges_by_species_independent_exact": 1,
+    "coverage_edges_independent_exact": 1,
+    "coverage_missing_condition_fields_independent_exact": 1,
+    "coverage_nodes_by_kind_independent_exact": 1,
+    "coverage_nodes_independent_exact": 1,
+    "coverage_population_gaps_independent_exact": 1,
+    "coverage_schema_independent_exact": 1,
+    "coverage_studies_independent_exact": 1,
+    "distinct_intervention_node": 722,
+    "distinct_intervention_outcome_source": 722,
+    "distinct_intervention_target_source": 722,
+    "edge_source_species_consistent": 1489,
+    "edge_source_study_species_consistent": 1411,
+    "edge_target_species_consistent": 1489,
+    "exact_1444_legacy_edge_set": 1,
+    "exact_21_new_source_edges": 1,
+    "exact_4_measured_regional_projections": 1,
+    "exact_722_distinct_legacy_interventions": 1,
+    "exact_legacy_source_record_count": 1,
+    "graph_source_hash": 12,
+    "hou_relation_non_anatomical": 1,
+    "hou_relation_not_measured_axon": 1,
+    "intervention_record_identity": 722,
+    "legacy_actuator_exact": 1444,
+    "legacy_condition_age_group_exact": 1444,
+    "legacy_condition_age_unit_exact": 1444,
+    "legacy_condition_age_value_exact": 1444,
+    "legacy_condition_background_genotype_exact": 1444,
+    "legacy_condition_challenge_detail_exact": 1444,
+    "legacy_condition_challenge_exact": 1444,
+    "legacy_condition_diet_exact": 1444,
+    "legacy_condition_evidence_exact": 1444,
+    "legacy_condition_genetic_background_exact": 1444,
+    "legacy_condition_n_animals_exact": 1444,
+    "legacy_condition_sex_exact": 1444,
+    "legacy_condition_strain_exact": 1444,
+    "legacy_controls_exact": 1444,
+    "legacy_count_disclosure": 1,
+    "legacy_effect_ci_high_exact": 722,
+    "legacy_effect_ci_low_exact": 722,
+    "legacy_effect_dispersion_type_exact": 722,
+    "legacy_effect_dispersion_value_exact": 722,
+    "legacy_effect_effect_size_type_exact": 722,
+    "legacy_effect_effect_size_units_exact": 722,
+    "legacy_effect_effect_size_value_exact": 722,
+    "legacy_effect_n_control_exact": 722,
+    "legacy_effect_n_treatment_exact": 722,
+    "legacy_evidence_class_exact": 1444,
+    "legacy_explicit_perturbation_class_exact": 1440,
+    "legacy_explicit_perturbation_polarity_exact": 1440,
+    "legacy_extraction_method_exact": 1444,
+    "legacy_intervention_node_actuator": 722,
+    "legacy_intervention_node_method": 722,
+    "legacy_intervention_node_molecular_target": 722,
+    "legacy_interventions_not_anatomy": 1444,
+    "legacy_method_exact": 1444,
+    "legacy_molecular_target_exact": 1444,
+    "legacy_original_species_value_retained": 1444,
+    "legacy_outcome_direction_exact": 722,
+    "legacy_projection_specific_retained_not_anatomy": 722,
+    "legacy_projection_target_id_retained_not_anatomy": 722,
+    "legacy_projection_target_raw_retained_not_anatomy": 722,
+    "legacy_raw_outcome_exact": 722,
+    "legacy_readout_context_exact": 722,
+    "legacy_record_id_exact": 1444,
+    "legacy_reported_statistics_exact_no_significance_inference": 1444,
+    "legacy_review_status_exact": 1444,
+    "legacy_source_locator_exact": 1444,
+    "legacy_source_node_species": 1444,
+    "legacy_species_normalization_exact": 1444,
+    "legacy_study_id_exact": 1444,
+    "legacy_target_node_species": 1444,
+    "markers_are_identity_annotation": 25,
+    "missing_edges_not_biological_negatives": 1,
+    "new_llm_status_not_upgraded": 21,
+    "new_source_edge_field_challenge_exact": 1,
+    "new_source_edge_field_challenge_note_exact": 1,
+    "new_source_edge_field_cohort_age_exact": 2,
+    "new_source_edge_field_conditions_evidence_exact": 21,
+    "new_source_edge_field_conditions_exact": 21,
+    "new_source_edge_field_controls_exact": 21,
+    "new_source_edge_field_direction_exact": 21,
+    "new_source_edge_field_effect_exact": 21,
+    "new_source_edge_field_effect_missing_reason_exact": 21,
+    "new_source_edge_field_extraction_method_exact": 21,
+    "new_source_edge_field_id_exact": 21,
+    "new_source_edge_field_kind_exact": 21,
+    "new_source_edge_field_measurement_detail_exact": 21,
+    "new_source_edge_field_measurement_level_exact": 21,
+    "new_source_edge_field_method_exact": 21,
+    "new_source_edge_field_n_animals_missing_reason_exact": 21,
+    "new_source_edge_field_perturbation_class_exact": 21,
+    "new_source_edge_field_perturbation_polarity_exact": 21,
+    "new_source_edge_field_review_status_exact": 21,
+    "new_source_edge_field_source_exact": 21,
+    "new_source_edge_field_source_locator_exact": 21,
+    "new_source_edge_field_source_record_id_exact": 21,
+    "new_source_edge_field_species_exact": 21,
+    "new_source_edge_field_statement_exact": 21,
+    "new_source_edge_field_statistical_result_exact": 2,
+    "new_source_edge_field_study_id_exact": 21,
+    "new_source_edge_field_support_quote_exact": 21,
+    "new_source_edge_field_support_quote_missing_reason_exact": 17,
+    "new_source_edge_field_target_exact": 21,
+    "new_source_edge_field_tier_a_admitted_exact": 21,
+    "new_source_edge_field_uncertainty_exact": 21,
+    "new_source_edge_field_valence_exact": 21,
+    "new_source_edge_not_synapse": 21,
+    "new_source_node_identity_status_exact": 23,
+    "new_source_node_kind_exact": 23,
+    "new_source_node_label_exact": 23,
+    "new_source_node_marker_genes_exact": 23,
+    "new_source_node_region_id_exact": 23,
+    "new_source_node_species_exact": 23,
+    "new_source_study_provenance_exact": 2,
+    "no_automatic_marker_proximity_joins": 1,
+    "no_cross_study_population_identity_mapping_added": 1489,
+    "no_identified_synapse_claims": 1,
+    "no_individual_cell_identity_created": 1,
+    "no_individual_cell_position_from_region": 39,
+    "no_invented_cell_coordinates": 1,
+    "no_marker_to_expression_upgrade": 1,
+    "one_outcome_edge_per_legacy": 722,
+    "one_target_edge_per_legacy": 722,
+    "projection_population_level": 4,
+    "projection_target_region_not_cell": 4,
+    "pvh_author_inferred_identity": 12,
+    "pvh_collection_not_projection": 24,
+    "pvh_global_sampling_qualifiers_exact": 1,
+    "pvh_not_anatomical_edge": 24,
+    "pvh_nuclei_not_animal_count": 24,
+    "pvh_nucleus_sampling_count_exact": 24,
+    "pvh_original_edge_kind_retained": 24,
+    "pvh_original_node_preserved": 19,
+    "pvh_pool_kind": 4,
+    "pvh_pool_not_individual_mouse": 4,
+    "pvh_pooled_observation_level": 24,
+    "pvh_sampling_fraction_exact": 24,
+    "pvh_sampling_layer": 24,
+    "pvh_source_id_exact": 24,
+    "pvh_target_id_exact": 24,
+    "rat_unknown_not_mouse_atlas": 118,
+    "regional_only_atlas_placement": 39,
+    "required_source_in_graph_pins": 3,
+    "source_pin_repository_containment": 12,
+    "standalone_and_embedded_coverage_exact": 1,
+    "tokizane_new_short_quote_limit": 1,
+    "unique_edge_ids": 1,
+    "unique_node_ids": 1,
+    "unique_study_ids": 1
+  },
+  "copyright_and_source_limits": {
+    "hou_article_reuse": "Source front matter states CC BY4.0; attribution must be retained.",
+    "rule": "Do not publish long Tokizane full-text extracts or cached manuscript payloads based on this audit. Graph uses brief quotations plus paraphrased facts and source locators; original article/corpus rights remain with their stated owners.",
+    "tokizane_new_graph_support_quote_words": 7,
+    "tokizane_permissive_reuse_licence_confirmed": false,
+    "tokizane_raw_indexed_fulltext_redistribution_cleared": false
+  },
+  "created_utc": "2026-11-12T22:06:42.225744+00:00",
+  "diffs": [],
+  "errors": [],
+  "files": {
+    "builder_source": {
+      "path": "analysis/circuit_evidence_layer.py",
+      "sha256": "12bd1a96306f0d1a9dda4f717e820f998dd9edbb3acd4f6f4d7ed396651e665d"
+    },
+    "builder_tests": {
+      "path": "tests/test_circuit_evidence_layer.py",
+      "sha256": "68e8b38eb53075011ace38ec50c8314d7cb2f4e92e01a73e7bfdd2b7c4165a85"
+    },
+    "coverage": {
+      "path": "data/processed/circuit_evidence_v1/coverage.json",
+      "sha256": "576579c2d0221e669bd094c4d24cbfa2921be0835901d433a289e4230f7b4c0a"
+    },
+    "graph": {
+      "path": "data/processed/circuit_evidence_v1/graph.json",
+      "sha256": "5b6f15bae6295813b12b8ebc41fe7508faf9f5c3d3a18335f61f35b50b9d32fd"
+    },
+    "legacy_records": {
+      "path": "data/curated/records.jsonl",
+      "sha256": "1638e5ae81bda8cf53cffe4fa89eaddd7e2673e2613c02bde6a899792a93d85d"
+    },
+    "new_curated_sources": {
+      "path": "data/interim/circuit_evidence_v1/curated_sources.json",
+      "sha256": "6338df661ecf430dbb0f8fd5d70a9507caae30e0357e42ac32eb047dfb635d3d"
+    }
+  },
+  "independent_coverage": {
+    "checked_not_reported_condition_fields": {
+      "n_animals": 0,
+      "sex": 54
+    },
+    "edges": 1489,
+    "edges_by_kind": {
+      "functional_association": 2,
+      "intervention_outcome": 734,
+      "intervention_target": 724,
+      "marker_identity": 1,
+      "measured_axon_projection": 4,
+      "retrograde_collection": 24
+    },
+    "edges_by_layer": {
+      "anatomical": 4,
+      "functional": 1460,
+      "identity": 1,
+      "sampling": 24
+    },
+    "edges_by_measurement_level": {
+      "animal": 1453,
+      "pooled_animals": 24,
+      "population": 10,
+      "region": 1,
+      "study": 1
+    },
+    "edges_by_review_status": {
+      "source_metadata": 24,
+      "unreviewed": 1465
+    },
+    "edges_by_species": {
+      "mus_musculus": 1341,
+      "rattus_norvegicus": 70,
+      "unknown": 78
+    },
+    "missing_condition_fields": {
+      "n_animals": 1409,
+      "sex": 694
+    },
+    "nodes": 985,
+    "nodes_by_kind": {
+      "animal_pool": 4,
+      "collection_group": 2,
+      "gene": 1,
+      "intervention": 725,
+      "organ": 1,
+      "outcome": 71,
+      "population": 38,
+      "region": 143
+    },
+    "population_gaps": [
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "hou2026:lh_excitatory",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S1.Crh-Scgn",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S10.Npsr1-Npnt",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S11.Esr2-Abcc9",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S12.Npr3",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S13.Npy2r-Tll2",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S15.Brs3",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S16.Pde3a-Tmem215",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S17.Sfta3-ps",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S18.Ebf2",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S19.Onecut3",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S2.Trh-Satb2",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "pvh_sampling:type:Seq_S5.Oxt-Rxfp3",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:arc_agrp",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:arc_ghrh",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:arc_kisspeptin",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:arc_pomc",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:lha_mch",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:lha_orexin",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:lha_vgat",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:lha_vglut2",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:poa_galanin",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:pvh_crh",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:pvh_sim1",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:pvh_trh",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:scn_vip",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:tmn_histamine",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tier_a:mus_musculus:population:vmh_sf1",
+        "species": "mus_musculus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:rattus_norvegicus:population:lha_mch",
+        "species": "rattus_norvegicus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:rattus_norvegicus:population:pvh_oxt",
+        "species": "rattus_norvegicus"
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:unknown_species:population:arc_agrp",
+        "species": null
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:unknown_species:population:arc_pomc",
+        "species": null
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:unknown_species:population:lha_mch",
+        "species": null
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:unknown_species:population:lha_orexin",
+        "species": null
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:unknown_species:population:pvh_oxt",
+        "species": null
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:unknown_species:population:pvh_sim1",
+        "species": null
+      },
+      {
+        "gaps": [
+          "no_measured_axon_projection_in_layer",
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join",
+          "no_mouse_regional_atlas_placement"
+        ],
+        "node_id": "tier_a:unknown_species:population:scn_vip",
+        "species": null
+      },
+      {
+        "gaps": [
+          "no_identified_synapse_in_layer",
+          "population_identity_is_not_a_same_individual_cell_multimodal_join"
+        ],
+        "node_id": "tokizane2024:dmh_ppp1r17",
+        "species": "mus_musculus"
+      }
+    ],
+    "schema": "synarch_circuit_evidence_coverage_v1",
+    "studies": 112
+  },
+  "legacy_preservation": {
+    "distinct_intervention_nodes": 722,
+    "explicit_fields_checked": [
+      "direction",
+      "raw_outcome",
+      "method",
+      "actuator",
+      "molecular_target",
+      "reported_statistics",
+      "effect_and_dispersion",
+      "cohort_conditions",
+      "condition_evidence",
+      "controls",
+      "readout_context",
+      "projection_specific_context",
+      "review_status",
+      "extraction_method",
+      "original_species_value"
+    ],
+    "legacy_full_support_quotes": "Referenced in the original hashed record corpus rather than copied into graph support_quote.",
+    "nonnull_count_unit": "Field occurrences: cohort conditions appear on both target and outcome edges; effect and readout-context values appear on the outcome edge only. These are not independent biological observations.",
+    "nonnull_fields_preserved_counts": {
+      "condition_age_group": 330,
+      "condition_age_unit": 16,
+      "condition_age_value": 16,
+      "condition_background_genotype": 186,
+      "condition_challenge": 274,
+      "condition_challenge_detail": 138,
+      "condition_diet": 938,
+      "condition_genetic_background": 64,
+      "condition_n_animals": 70,
+      "condition_sex": 770,
+      "condition_strain": 18,
+      "context_assay": 138,
+      "context_assay_units": 35,
+      "context_tissue_raw": 71,
+      "effect_dispersion_type": 2,
+      "effect_dispersion_value": 3,
+      "effect_effect_size_type": 29,
+      "effect_effect_size_units": 25,
+      "effect_effect_size_value": 29,
+      "effect_n_control": 52,
+      "effect_n_treatment": 58
+    },
+    "outcome_edges": 722,
+    "source_record_review_counts": {
+      "unreviewed": 722
+    },
+    "source_record_species_counts": {
+      "mus_musculus": 648,
+      "other": 1,
+      "rattus_norvegicus": 35,
+      "unknown": 38
+    },
+    "source_records": 722,
+    "target_edges": 722
+  },
+  "limits": [
+    "Faithful integration audit; original722 unreviewed records were not re-curated or independently biologically validated.",
+    "Source taxonomy or outcome-label errors may remain in unreviewed inputs; exact raw outcomes and source identities are retained for inspection.",
+    "No count is an independent-animal replication count, edge probability, human treatment claim or complete-connectome coverage estimate.",
+    "No newly demonstrated mouse prediction gain, causal aging reversal or actuator validation follows from graph integration."
+  ],
+  "new_source_preservation": {
+    "all_input_edge_fields_exact": true,
+    "all_new_facts_llm_unreviewed": true,
+    "edges": 21,
+    "hou_lh_vta_relation": "functional_association only; no detailed3Daxon or identified synapse asserted",
+    "identified_synapses": 0,
+    "measured_regional_projections": 4,
+    "nodes": 23,
+    "studies": 2
+  },
+  "pvh_sampling": {
+    "author_inferred_types": 12,
+    "n_nuclei_is_not_n_animals": true,
+    "named_pools": 4,
+    "not_present": [
+      "coordinates or positions",
+      "individual animals",
+      "other-target negatives",
+      "dual projection",
+      "axon paths or synapses"
+    ],
+    "scope": "original-study nuclei only (reused SC nuclei excluded); counts are sampling counts",
+    "source_edges": 24,
+    "source_nodes": 19,
+    "unknown_pool_nuclei": 960
+  },
+  "resolved_audit_findings": [
+    "Preserved previously dropped background_genotype/genetic_background/strain/challenge_detail in legacy cohort conditions.",
+    "Preserved source dispersion values/types and assay/unit/tissue context.",
+    "Preserved PVH source scope,960unknown-pool-nuclei qualifier and explicit missing-data list."
+  ],
+  "schema": "synarch_circuit_evidence_source_validation_v1",
+  "scope": "Independent stdlib source-to-graph field and count audit; no builder imported or graph rebuilt; no fits, model predictions or primary scores run.",
+  "source_pins_checked": [
+    {
+      "path": "data/interim/circuit_evidence_v1/curated_sources.json",
+      "sha256": "6338df661ecf430dbb0f8fd5d70a9507caae30e0357e42ac32eb047dfb635d3d"
+    },
+    {
+      "path": "data/curated/records.jsonl",
+      "sha256": "1638e5ae81bda8cf53cffe4fa89eaddd7e2673e2613c02bde6a899792a93d85d"
+    },
+    {
+      "path": "viewer/data/allen_mapping.json",
+      "sha256": "b1a094956280458b833cad4b1ca6276cbe6ed84ec4cbaf97fa0619068db44084"
+    },
+    {
+      "path": "data/vocab/populations.json",
+      "sha256": "6c870a9203332e83edbda0cbaefe7b918288bb7d62746e892618d064abbe5a26"
+    },
+    {
+      "path": "data/vocab/outcomes.json",
+      "sha256": "19608663bddfca0ff27642646e927ddad914f42f07e5bee0623912d9d2cf034e"
+    },
+    {
+      "path": "data/processed/pvh_population_pilot_v1/evidence_graph.json",
+      "sha256": "100ad50aa0ce56f460e31795d9c15a8bbf27ecfa78d0cdcbf681d3e08702aad3"
+    },
+    {
+      "path": "data/interim/circuit_evidence_v1/hou2026_fulltext.xml",
+      "sha256": "3f330bced832a7bc3b9352440fd9c600ff0fa0598520ae695edfd6bbbbebc10d"
+    },
+    {
+      "path": "data/interim/circuit_evidence_v1/hou2026_fulltext.xml.receipt.json",
+      "sha256": "d560fd35a4ea4469c466bc565c48169eb770d594742d3c68eac4250ffdf9ed96"
+    },
+    {
+      "path": "data/interim/circuit_evidence_v1/tokizane2024_primary_indexed_passages.txt",
+      "sha256": "d4636e3e90b2d54686787cf29c07903312089a84bc419027a16ec6846394f02e"
+    },
+    {
+      "path": "data/interim/circuit_evidence_v1/tokizane2024_primary_indexed_passages.txt.receipt.json",
+      "sha256": "be3d8150c550403259721f2c129dc2886dc43dd2e4e53f2ec651101443da1c3f"
+    },
+    {
+      "path": "data/interim/circuit_evidence_v1/tokizane2024_lifespan_indexed_passages.txt",
+      "sha256": "e85a17214d06bad330a2ce4441e7c5204d1b32468482509bcc94305fc71a1f02"
+    },
+    {
+      "path": "data/interim/circuit_evidence_v1/tokizane2024_projection_indexed_passages.txt",
+      "sha256": "f6134eb2724fee9afaf946acd1c3bb890e7b481d0f3b8d0c1be556c0c8c23df2"
+    }
+  ],
+  "status": "PASS",
+  "total_checks": 67858
+}

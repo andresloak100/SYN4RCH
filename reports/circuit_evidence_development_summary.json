@@ -1,0 +1,195 @@
+{
+  "artifact_hashes": {
+    "analysis/circuit_evidence_layer.py": "12bd1a96306f0d1a9dda4f717e820f998dd9edbb3acd4f6f4d7ed396651e665d",
+    "analysis/circuit_evidence_viewer.py": "5691df7e7dae07c3ee4618b6dabf8277ef879be1f8d2d9108ff4e658fbb90992",
+    "data/interim/circuit_evidence_v1/atlas_context_manifest.json": "1f536d41b84196957ba43e623374878894c1f46d7e1da7a8783ad4b1dc97356c",
+    "data/interim/circuit_evidence_v1/curated_sources.json": "6338df661ecf430dbb0f8fd5d70a9507caae30e0357e42ac32eb047dfb635d3d",
+    "data/processed/circuit_evidence_v1/coverage.json": "576579c2d0221e669bd094c4d24cbfa2921be0835901d433a289e4230f7b4c0a",
+    "data/processed/circuit_evidence_v1/graph.json": "5b6f15bae6295813b12b8ebc41fe7508faf9f5c3d3a18335f61f35b50b9d32fd",
+    "reports/circuit_evidence_validation.json": "ddc23e82c9331bb25725008b0f9000c6a19d28d5271be7cb8fb37df91386f094",
+    "reports/fly_circuit_benchmark.json": "aeb65cc91c4b14d8e84407c5652443168a3c7ca38720907c6975a92ef624f123",
+    "reports/fly_circuit_benchmark_replay.json": "c0697d24ebb9b16e8891113ec5583555462faf4b0b906df91cac4a1917662dd0",
+    "reports/fly_mouse_transfer.json": "702cd8f577ad0a2264a74efc2b6e340ff57baf72ec457713f41aabd9dcdc73a8",
+    "reports/fly_mouse_transfer_replay.json": "679fb7531544d596a3ec6128c34cbc38cf0a1d21bfdd2dabe7c5e615bd96ce21",
+    "src/syn4rch/atlas/circuit_evidence_template.html": "002e2e4de681854e86a823af660ebc4e1714d5548c3a3d503cf13ccf3d49a1d3"
+  },
+  "fly_graph_completion": {
+    "beats_all_fixed_controls": true,
+    "hidden_source_profiles": 410,
+    "nodes": 2048,
+    "permitted_inputs": "Known incoming connections; whole hidden outgoing profiles removed before feature construction. No hidden axon geometry, genes or target labels used as query inputs.",
+    "scope": "Within-specimen development on FlyWire v630; no independent-animal validation. AP is average precision, not percent accuracy.",
+    "scores": {
+      "global_frequency": {
+        "average_precision": 0.0008651240358557431,
+        "brier": 0.0008643769940374062,
+        "log_loss": 0.006966942073400915,
+        "pairs": 671580,
+        "positives": 581
+      },
+      "incoming_degree_block": {
+        "average_precision": 0.003943918866687994,
+        "brier": 0.0008638125712627841,
+        "log_loss": 0.007481498869221235,
+        "pairs": 671580,
+        "positives": 581
+      },
+      "nearest_incoming_copy": {
+        "average_precision": 0.026150819185954507,
+        "brier": 0.0009220044298104542,
+        "log_loss": 0.006562493042076438,
+        "pairs": 671580,
+        "positives": 581
+      },
+      "reciprocity_logistic": {
+        "average_precision": 0.09360618633466024,
+        "brier": 0.0008436936428548786,
+        "log_loss": 0.005801101020716048,
+        "pairs": 671580,
+        "positives": 581
+      },
+      "shared_input_logistic": {
+        "average_precision": 0.09659533684762152,
+        "brier": 0.000842800534975475,
+        "log_loss": 0.005611825229196208,
+        "pairs": 671580,
+        "positives": 581
+      },
+      "target_frequency": {
+        "average_precision": 0.0025635103413960136,
+        "brier": 0.0008643105151462425,
+        "log_loss": 0.006874600585586094,
+        "pairs": 671580,
+        "positives": 581
+      }
+    },
+    "specimens": 1
+  },
+  "fly_mouse_transfer": {
+    "biological_transfer": "No fly cell identities, anatomical edges or neurotransmitter signs are copied into mouse biology.",
+    "finding": "Direct frozen fly parameter transfer performs worse than mouse-only training. A fly-informed slope prior has only a tiny descriptive gain over mouse-only shared_input_logistic: AP about +0.52% relative; log loss about -0.017%; Brier about -0.018%.",
+    "hidden_source_profiles": 72,
+    "mouse_specimens": 1,
+    "nodes": 362,
+    "region": "visual cortex L2/3, not hypothalamus",
+    "scope": "Nonblind development on one mouse, retaining metadata-defined isolated neurons. No hypothalamic or independent-animal transfer claim.",
+    "scores": {
+      "fly_informed_prior": {
+        "average_precision": 0.04198190380571073,
+        "brier": 0.01570731717634992,
+        "log_loss": 0.07794549520860024,
+        "pairs": 20880,
+        "positives": 337
+      },
+      "frozen_fly_residual": {
+        "average_precision": 0.0291992442707926,
+        "brier": 0.017233679017674485,
+        "log_loss": 0.08636630734733329,
+        "pairs": 20880,
+        "positives": 337
+      },
+      "global_frequency": {
+        "average_precision": 0.01613984674329502,
+        "brier": 0.015889862215847424,
+        "log_loss": 0.082991754471061,
+        "pairs": 20880,
+        "positives": 337
+      },
+      "incoming_degree_block": {
+        "average_precision": 0.0346900191417041,
+        "brier": 0.015815592333904654,
+        "log_loss": 0.08489095107350057,
+        "pairs": 20880,
+        "positives": 337
+      },
+      "nearest_incoming_copy": {
+        "average_precision": 0.025320196019799224,
+        "brier": 0.01852494561401294,
+        "log_loss": 0.09072938204268804,
+        "pairs": 20880,
+        "positives": 337
+      },
+      "reciprocity_logistic": {
+        "average_precision": 0.041544308713118996,
+        "brier": 0.015710058599618226,
+        "log_loss": 0.0779591706253444,
+        "pairs": 20880,
+        "positives": 337
+      },
+      "shared_input_logistic": {
+        "average_precision": 0.041766195973117176,
+        "brier": 0.015710205274104112,
+        "log_loss": 0.07795860462784243,
+        "pairs": 20880,
+        "positives": 337
+      },
+      "target_frequency": {
+        "average_precision": 0.024742276173645862,
+        "brier": 0.015835682921992434,
+        "log_loss": 0.08118970689399806,
+        "pairs": 20880,
+        "positives": 337
+      }
+    }
+  },
+  "limits": [
+    "No complete hypothalamic circuit reconstruction or new validated 3D axon predictor is established here.",
+    "These data do not demonstrate gas-vesicle-mediated lifespan extension, aging reversal or clinical efficacy.",
+    "The full generated 3D viewer remains local because its measured trace licences restrict redistribution.",
+    "This summary does not distribute raw papers, raw synapse data or licensed neuron geometry."
+  ],
+  "map": {
+    "counts_meaning": "Evidence links include paired intervention-target and intervention-outcome records. They are not independent observations or synapses.",
+    "curation_status": "All literature records remain unreviewed; source fidelity was independently audited.",
+    "evidence_links": 1489,
+    "existing_records_reused": 722,
+    "existing_studies_reused": 109,
+    "identified_synapses": 0,
+    "individual_cells_matched_across_datasets": 0,
+    "links_by_kind": {
+      "functional_association": 2,
+      "intervention_outcome": 734,
+      "intervention_target": 724,
+      "marker_identity": 1,
+      "measured_axon_projection": 4,
+      "retrograde_collection": 24
+    },
+    "local_scene": "reports/circuit_evidence_neurons.html",
+    "local_viewer": "reports/circuit_evidence_viewer.html",
+    "measured_example_neurons": 37,
+    "nodes": 985,
+    "placement": "Mouse region meshes only; no study population is assigned to an example traced neuron. Rat, unknown-species and fly anatomy are not placed in the mouse scene.",
+    "studies": 112
+  },
+  "next_scientific_requirements": [
+    "Review individual source assertions and retain study-specific controls, animal identities and uncertainty.",
+    "Evaluate any functional predictor on held-out intervention outcomes and independent studies or animals, with simple controls.",
+    "Establish same-system connection and functional response measurements before interpreting an anatomical path as a predictable intervention outcome."
+  ],
+  "schema": "synarch_circuit_evidence_development_summary_v1",
+  "source_studies": [
+    {
+      "doi": "10.1002/advs.78177",
+      "scope": "Published mouse LH-to-VTA mechanogenetic circuit evidence; no aging or lifespan endpoint. Functional evidence is not relabeled as identified synapses."
+    },
+    {
+      "doi": "10.1016/j.cmet.2023.12.011",
+      "scope": "Published chemogenetic DMH Ppp1r17 lifespan result in males, n=13 per group, log-rank p=0.0406. Chemogenetic rather than GV/ultrasound; lifespan animals were separate from the physiological-assay cohorts. No gas-vesicle longevity result."
+    }
+  ],
+  "status": "COMPLETED_DEVELOPMENT_ONLY",
+  "verification": {
+    "evidence_layer_unit_checks": 25,
+    "fly_synthetic_checks": 15,
+    "independent_source_and_metric_replays": "PASS",
+    "mouse_transfer_synthetic_checks": 17,
+    "viewer_browser_checks": [
+      "3D scene visible by default at 595x719",
+      "DMH selected and highlighted on open",
+      "VTA display-context binding highlights the verified Allen region",
+      "Original measured scene controls remain accessible",
+      "Paper DOI links, p value, N scope and cohort-specific age displayed"
+    ],
+    "viewer_unit_checks": 41
+  }
+}

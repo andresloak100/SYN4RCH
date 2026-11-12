@@ -1,0 +1,51 @@
+{
+  "schema": "synarch_circuit_context_meshes_v1",
+  "acquired_utc": "2026-11-12T21:47:02.045013+00:00",
+  "source": "Allen Institute for Brain Science CCF2017 structure meshes; ids verified against cachedstructure_graph_1.json",
+  "ontology_sha256": "b5f0d024d1df09ee18aef15093f55240f4a70b3924ee9689add612dadff80386",
+  "items": [
+    {
+      "acronym": "VTA",
+      "allen_id": 749,
+      "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/749.obj",
+      "path": "data/raw/atlas/circuit_context/749.obj",
+      "bytes": 76445,
+      "sha256": "9dd98e09e05b155b11606af662e1455eaf4e68a9959b714ba6d8abdcc37b0ba6",
+      "vertices": 666,
+      "faces": 1324,
+      "frame": "Allen CCFv3(2017), AP DV ML micrometres",
+      "placement_level": "regional_anatomical_mesh_not_cell_location"
+    },
+    {
+      "acronym": "PAG",
+      "allen_id": 795,
+      "source_url": "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/structure_meshes/795.obj",
+      "path": "data/raw/atlas/circuit_context/795.obj",
+      "bytes": 339430,
+      "sha256": "e819c2b07bcde880ec68962802365bce9ba437e43d9538347af643b3527ba8a3",
+      "vertices": 2737,
+      "faces": 5456,
+      "frame": "Allen CCFv3(2017), AP DV ML micrometres",
+      "placement_level": "regional_anatomical_mesh_not_cell_location"
+    }
+  ],
+  "scope": "Additional real anatomical context only. Does not supply synapses, axon trajectories or individual population coordinates. Original SWCscene/meshes unchanged.",
+  "evidence_node_region_bindings": [
+    {
+      "node_id": "hou2026:vta",
+      "region_id": "vta",
+      "allen_id": 749,
+      "acronym": "VTA",
+      "source_region_label": "Ventral tegmental area (VTA)",
+      "basis": "Exact source-named mouse region matched to verified Allen ontology; display context only, not a neuron coordinate or new biological edge."
+    },
+    {
+      "node_id": "tokizane2024:pag",
+      "region_id": "pag",
+      "allen_id": 795,
+      "acronym": "PAG",
+      "source_region_label": "Periaqueductal grey (PAG)",
+      "basis": "Exact source-named mouse region matched to verified Allen ontology; display context only, not a neuron coordinate or new biological edge."
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "absolute_metric_differences": {
+    "global_frequency": {
+      "average_precision": 1.0842021724855044e-19,
+      "brier": 0.0,
+      "log_loss": 2.688821387764051e-17
+    },
+    "incoming_degree_block": {
+      "average_precision": 0.0,
+      "brier": 0.0,
+      "log_loss": 1.1275702593849246e-17
+    },
+    "nearest_incoming_copy": {
+      "average_precision": 0.0,
+      "brier": 0.0,
+      "log_loss": 1.3010426069826053e-17
+    },
+    "reciprocity_logistic": {
+      "average_precision": 1.3877787807814457e-17,
+      "brier": 0.0,
+      "log_loss": 8.673617379884035e-18
+    },
+    "shared_input_logistic": {
+      "average_precision": 1.3877787807814457e-17,
+      "brier": 0.0,
+      "log_loss": 3.469446951953614e-18
+    },
+    "target_frequency": {
+      "average_precision": 4.336808689942018e-19,
+      "brier": 0.0,
+      "log_loss": 1.6479873021779667e-17
+    }
+  },
+  "candidate_beats_every_control": true,
+  "independent_metrics": {
+    "global_frequency": {
+      "average_precision": 0.0008651240358557432,
+      "brier": 0.0008643769940374062,
+      "log_loss": 0.006966942073400888
+    },
+    "incoming_degree_block": {
+      "average_precision": 0.003943918866687994,
+      "brier": 0.0008638125712627841,
+      "log_loss": 0.007481498869221224
+    },
+    "nearest_incoming_copy": {
+      "average_precision": 0.026150819185954507,
+      "brier": 0.0009220044298104542,
+      "log_loss": 0.006562493042076425
+    },
+    "reciprocity_logistic": {
+      "average_precision": 0.09360618633466025,
+      "brier": 0.0008436936428548786,
+      "log_loss": 0.0058011010207160395
+    },
+    "shared_input_logistic": {
+      "average_precision": 0.0965953368476215,
+      "brier": 0.000842800534975475,
+      "log_loss": 0.0056118252291962045
+    },
+    "target_frequency": {
+      "average_precision": 0.002563510341396013,
+      "brier": 0.0008643105151462425,
+      "log_loss": 0.006874600585586078
+    }
+  },
+  "method": "Independent raw Arrow-table filtering and scikit-learn AP/log-loss/Brier; no model fit or forecast regeneration.",
+  "pairs": 671580,
+  "positive_pairs": 581,
+  "query_sources": 410,
+  "raw_rows_admitted": 581,
+  "schema": "synarch_fly_circuit_independent_replay_v1",
+  "scope": "Single-fly masked graph-completion development. AP is not percentage accuracy. No mouse improvement, neural-control efficacy or longevity benefit established.",
+  "source_count_table_sha256": "94db8c650533bc36ffa3223f2e62325d5648b8d6bd31c3a4e1c804628c7557b3",
+  "source_report_sha256": "aeb65cc91c4b14d8e84407c5652443168a3c7ca38720907c6975a92ef624f123",
+  "status": "PASS",
+  "targets": 1638
+}

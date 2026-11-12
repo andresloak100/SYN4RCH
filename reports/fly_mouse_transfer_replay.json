@@ -1,0 +1,117 @@
+{
+  "absolute_metric_differences": {
+    "fly_informed_prior": {
+      "average_precision": 0.0,
+      "brier": 0.0,
+      "log_loss": 0.0
+    },
+    "frozen_fly_residual": {
+      "average_precision": 3.469446951953614e-18,
+      "brier": 0.0,
+      "log_loss": 1.3877787807814457e-17
+    },
+    "global_frequency": {
+      "average_precision": 0.0,
+      "brier": 0.0,
+      "log_loss": 4.163336342344337e-17
+    },
+    "incoming_degree_block": {
+      "average_precision": 0.0,
+      "brier": 0.0,
+      "log_loss": 0.0
+    },
+    "nearest_incoming_copy": {
+      "average_precision": 3.469446951953614e-18,
+      "brier": 0.0,
+      "log_loss": 0.0
+    },
+    "reciprocity_logistic": {
+      "average_precision": 6.938893903907228e-18,
+      "brier": 0.0,
+      "log_loss": 0.0
+    },
+    "shared_input_logistic": {
+      "average_precision": 0.0,
+      "brier": 0.0,
+      "log_loss": 0.0
+    },
+    "target_frequency": {
+      "average_precision": 0.0,
+      "brier": 0.0,
+      "log_loss": 0.0
+    }
+  },
+  "excluded_autapses": 2,
+  "independent_metrics": {
+    "fly_informed_prior": {
+      "average_precision": 0.04198190380571073,
+      "brier": 0.01570731717634992,
+      "log_loss": 0.07794549520860024
+    },
+    "frozen_fly_residual": {
+      "average_precision": 0.029199244270792596,
+      "brier": 0.017233679017674485,
+      "log_loss": 0.08636630734733328
+    },
+    "global_frequency": {
+      "average_precision": 0.01613984674329502,
+      "brier": 0.015889862215847424,
+      "log_loss": 0.08299175447106096
+    },
+    "incoming_degree_block": {
+      "average_precision": 0.0346900191417041,
+      "brier": 0.015815592333904654,
+      "log_loss": 0.08489095107350057
+    },
+    "nearest_incoming_copy": {
+      "average_precision": 0.02532019601979922,
+      "brier": 0.01852494561401294,
+      "log_loss": 0.09072938204268804
+    },
+    "reciprocity_logistic": {
+      "average_precision": 0.04154430871311899,
+      "brier": 0.015710058599618226,
+      "log_loss": 0.0779591706253444
+    },
+    "shared_input_logistic": {
+      "average_precision": 0.041766195973117176,
+      "brier": 0.015710205274104112,
+      "log_loss": 0.07795860462784243
+    },
+    "target_frequency": {
+      "average_precision": 0.024742276173645862,
+      "brier": 0.015835682921992434,
+      "log_loss": 0.08118970689399806
+    }
+  },
+  "isolates_retained": 28,
+  "no_fit_or_forecast_regeneration": true,
+  "nodes": 362,
+  "pairs": 20880,
+  "positive_pairs": 337,
+  "queries": 72,
+  "result_sha256": "702cd8f577ad0a2264a74efc2b6e340ff57baf72ec457713f41aabd9dcdc73a8",
+  "schema": "synarch_fly_mouse_transfer_independent_replay_v1",
+  "scope": "Nonblind development on one visual-cortex mouse. Frozen fly residual performs worse; the fly-prior gain is tiny and descriptive. No hypothalamic, independent-animal or longevity result.",
+  "source_synapse_rows": 1961,
+  "status": "PASS",
+  "targets": 290,
+  "transfer_beats_each_mouse_control_on_all_metrics": {
+    "fly_informed_prior": {
+      "global_frequency": true,
+      "incoming_degree_block": true,
+      "nearest_incoming_copy": true,
+      "reciprocity_logistic": true,
+      "shared_input_logistic": true,
+      "target_frequency": true
+    },
+    "frozen_fly_residual": {
+      "global_frequency": false,
+      "incoming_degree_block": false,
+      "nearest_incoming_copy": true,
+      "reciprocity_logistic": false,
+      "shared_input_logistic": false,
+      "target_frequency": false
+    }
+  }
+}
