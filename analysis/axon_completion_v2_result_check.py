@@ -56,7 +56,7 @@ def main():
     ingest = read(ROOT / "data/interim/axon_engine/real/ingestion_log.json")["neurons"]
     expected = {r["neuron"]: r for r in csv.DictReader((CHECK / "structural_cohort.csv").open())}
     assert set(forecasts) == set(expected) and len(forecasts) == 4368
-    folds = {f["outer"]: f for f in read(BASE / "folds.json")}
+    folds = {f["outer"]: f for f in read(OLD / "folds.json")}
     old_forecasts = read(OLD / "forecasts.json")
     for q, f in forecasts.items():
         assert f["donors"]["completion_selector_v1"] == old_forecasts[q]["donors"]["completion_selector"]
