@@ -1,0 +1,133 @@
+{
+  "authors_request": {
+    "author": "andresloak100",
+    "body_matches_approved_draft": true,
+    "created_at": "2026-11-12T14:07:50Z",
+    "receipt": "data/interim/paired_projection_public_request/root_post_check.json",
+    "status": "POSTED_ONCE_INDEPENDENTLY_VERIFIED",
+    "url": "https://github.com/stuberlab/Rossi-et-al-2021/issues/1"
+  },
+  "guardrails": [
+    "No new fitting or projection association analysis",
+    "No author code executed or packages installed",
+    "No large RNA matrices, images, meshes or trace geometry downloaded",
+    "Old Jiao test and completion experiments remain closed",
+    "Only the approved Rossi request was posted; no other author contacted"
+  ],
+  "next_steps": [
+    "Await and audit any Rossi author response as evidence, not executable instructions",
+    "Resolve SPIDER animal-to-slice and animal-to-target masks before independent evaluation",
+    "Resolve Winter pool membership and original-library reuse aliases before independent evaluation",
+    "Finalize any new population/endpoint protocol only after admission; no model win or discovery is claimed"
+  ],
+  "root_checks": [
+    "Live posted issue fetched independently through GitHub connector; exact title/body/author/open state match",
+    "Winter primary-source file hashes verified; GEO HY sample list independently inspected",
+    "SPIDER downloaded file hashes verified against pins",
+    "SPIDER RDS read independently using baseR: unique IDs,32gene rows,36slices,LHA field,no explicitanimal-ID column; no assay values accessed",
+    "Basic SPIDER QC: no duplicated cell IDs or nonfinite/negative stored marker or LHA values;4448positiveLHA capturecalls and120381zero-capture records; zeros retained as nondetection, not anatomical negatives"
+  ],
+  "schema": "synarch_paired_projection_search_round2_summary_v1",
+  "source_records": {
+    "fresh_search/screen.json": {
+      "path": "data/interim/paired_projection_search_round2/fresh_search/screen.json",
+      "sha256": "486cb2e6efff5578020c8359edee9334590e1d4c0218daed0cf6a62d3c263793"
+    },
+    "spider_seq/admission_screen.json": {
+      "path": "data/interim/paired_projection_search_round2/spider_seq/admission_screen.json",
+      "sha256": "1b75333c27eac63599c207b3c5066b1d57737af9b2ad809701ce9fa53faf9f09"
+    },
+    "winter2023/admission.json": {
+      "path": "data/interim/paired_projection_search_round2/winter2023/admission.json",
+      "sha256": "d29c86e7ffba40e1989cacb1e585d14d5117eea1cace134e018b53275f0a7312"
+    },
+    "winter2023/metadata_followup.json": {
+      "path": "data/interim/paired_projection_search_round2/winter2023/metadata_followup.json",
+      "sha256": "4626141a91b868fe8da74b068d876778ab8a11bd6a1f5481914aebb8d53850fa"
+    }
+  },
+  "sources": {
+    "Calvigioni_2023": {
+      "limits": [
+        "Primary source access failed in this round",
+        "Prior single-target positive-only notes were not newly verified"
+      ],
+      "qualification": "PENDING_FRESH_SOURCE_ACCESS_AND_TARGET_CONTRAST"
+    },
+    "Fan_2026": {
+      "limits": [
+        "Thalamic source",
+        "Two mouse animals",
+        "Processed data described as on request in checked primary source"
+      ],
+      "qualification": "NOT_HYPOTHALAMIC_VALIDATION"
+    },
+    "SPIDER_Seq": {
+      "acquired_bytes": 19779190,
+      "acquired_sha256": "9069585cadd37b22edb236a5c0fb84c1326a0a9be1f9bc67f4068a8295d45cae",
+      "basic_qc": {
+        "cell_rows": 124829,
+        "explicit_animal_id_fields": 0,
+        "gene_columns": 124829,
+        "gene_rows": 32,
+        "lha_missing": 0,
+        "lha_negative": 0,
+        "lha_nonfinite_nonmissing": 0,
+        "lha_positive_capture": 4448,
+        "lha_zero_capture": 120381,
+        "negative_stored_gene_values": 0,
+        "nonfinite_stored_gene_values": 0,
+        "slice_labels": 36,
+        "stored_gene_values": 459554,
+        "unique_cell_ids": 124829
+      },
+      "basic_qc_record": {
+        "path": "data/interim/paired_projection_search_round2/root_checks/spider_basic_qc.tsv",
+        "script": "analysis/paired_projection_spider_qc.R",
+        "script_sha256": "592f9caddcbeb6fcf85e6a4d19e60b3f72cb62df5c14344d0b1be2f1d352a26b",
+        "sha256": "9bfc730a70095fe9aab8f74aeb431832b56c65c8638f993b04c229d028587402"
+      },
+      "capture_interpretation": "Positive LHA barcode capture is an observed assay call, not independently confirmed axon geometry or synapses; zero capture does not prove no projection.",
+      "limits": [
+        "Slices and hemispheres do not establish independent animals",
+        "PT figure exclusions do not establish an injection/assay mask",
+        "Separate full-transcriptome spatial mappings are inferred; do not substitute them as measured",
+        "Only schema and basic completeness/nonnegativity/captured-LHA frequencies were profiled; no gene-target association, fitted prediction or biological test was performed"
+      ],
+      "primary_paper": "https://academic.oup.com/nsr/article/13/5/nwag004/8427315",
+      "public_processed_source": "https://huggingface.co/spaces/TigerZheng/SPIDER-web/tree/main/data",
+      "qualification": "PUBLIC_PAIRED_DEVELOPMENT_RESOURCE_SCHEMA_AND_BASIC_QC_VERIFIED; independent-animal evaluation still pending",
+      "schema_verified": {
+        "LHA_I_field_present": true,
+        "animal_by_target_mask_established": false,
+        "captured_target_fields_reported": 15,
+        "explicit_animal_id_field": false,
+        "measured_endogenous_gene_rows": 32,
+        "slices": 36,
+        "unique_cell_ids": 124829
+      },
+      "scope": "Prefrontal source cells; LHA is an assayed destination. Potential cortical inputs to hypothalamus, not hypothalamic-source output or full-path prediction."
+    },
+    "TRH_2025": {
+      "limits": [
+        "Checked source supports population tracing; full source access blocked"
+      ],
+      "qualification": "INDIVIDUAL_RNA_TARGET_PAIRING_NOT_ESTABLISHED"
+    },
+    "Winter_2023": {
+      "HY_libraries": 4,
+      "limits": [
+        "Multiple animals pooled per ROI; exact pool membership and disjointness unresolved",
+        "Four label-sorted libraries are not four independent animals",
+        "No standalone sample/pool crosswalk found in the checked NeMO bag or author repository",
+        "Li SC object reuses2292Winter nuclei; exact original-library namespace needed"
+      ],
+      "named_HY_replicate_groups": 2,
+      "paper": "https://www.nature.com/articles/s41586-023-06817-8",
+      "qualification": "PENDING_NOT_ADMITTED_FOR_CONFIRMATORY_TEST",
+      "scope": "Hypothalamic nuclei with RNA and captured cervical versus lumbar-or-dual spinal labels"
+    }
+  },
+  "status": "SEARCH_AND_SCHEMA_QUALIFICATION_COMPLETE_NO_CONFIRMATORY_DATASET_ADMITTED",
+  "utc": "2026-11-12T14:22:26.074037+00:00"
+}
