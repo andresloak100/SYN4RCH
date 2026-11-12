@@ -99,4 +99,18 @@ Forecasting for all 1,547 declared test queries x 16 methods started 16:38 EST, 
   * `referee/SCORE_COMPLETE.json` `4fb245d36c16c6e5849f7a8a82d64d5db8cac11435e2eb7fc1464a2db97fba39`
   * `tables.md` `efe54e56826a961755f0c6fe6593cbc33f4888958fe3ac81f51a52fddf721e05`
   * Logs: `data/interim/axon_engine/logs/test_{admit,seal,score}.log`.
-* Next (Root): independent check of the full wrapper gate.
+* **Root final verification: integrity and arithmetic PASS; full test gate FAILED.** Root recomputed the equal-brain-sample
+  means from all 1,475 saved per-neuron metric rows over 39 samples, matched both completion hashes and every referee
+  control delta, and re-verified the engine, protocol and freeze hashes as unchanged. No second geometric scoring was run.
+  E4 beats every copying control but loses on both measures to E1 and E2; wrapper `success = false` is correct.
+  * `data/interim/axon_engine/real/checks/test_arithmetic_gate_check.json` SHA-256 `98751a8ca051173f5fe2809f41b363cd5b1657afadd48bd37400adf08f5b727b`
+  * Exclusion check agrees: 72 excluded IDs, 73 rule violations (201228_036 broke rules 5 and 6); all 51 files from Nts
+    sample 201228 broke the rule 5 consistency check (Axon_only file containing dendrite nodes). Both same-sample test duplicates 202571_013/095 were admitted.
+    Counts and rules unchanged. The results apply to the admitted cohort of 39 brain samples.
+* Interpretation limits:
+  * E1 and E2 are predeclared matched controls. Their numbers here are descriptive; neither is a newly selected or
+    confirmed winner, and no unselected candidate replaces E4.
+  * The geometry traces were held out. Regional outcomes had prior aggregate modelling exposure, as already disclosed in the protocol.
+  * The claim that the regional state adds value remains unsupported.
+* **Experiment closed.** No viewer promotion, no rerun on these test animals, no further experiments or reviews for this test.
+  All artifacts are preserved, and website/viewer work stays parked.
