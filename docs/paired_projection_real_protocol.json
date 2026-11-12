@@ -1,0 +1,165 @@
+{
+  "schema": "synarch_paired_projection_real_protocol_v1",
+  "status": "FROZEN_EXPLORATORY_AUTHORIZED",
+  "date": "2026-11-12",
+  "code": "analysis/paired_projection_real_benchmark.py",
+  "tests": "tests/test_paired_projection_real_benchmark.py",
+  "outputs": "data/interim/paired_projection_real_benchmark/",
+  "relation_to_reviewed_code": "Separate runner. It imports pure helpers (name rules, endpoint derivation, weights, probability checks, metrics, calibration) from the reviewed synthetic-only analysis/paired_projection_reference.py without editing or bypassing it.",
+  "question": "On real neurons from separate animals, does measured endogenous gene expression plus measured position predict an observed captured projection label better than location-only and copying controls?",
+  "not_claimed": [
+    "full axon geometry",
+    "synapses or circuits",
+    "absence of other projections",
+    "biological projection probability (only captured-label probability)"
+  ],
+  "real_run_requirements_checked_before_any_data_file_is_parsed": [
+    "real runs only through execute(): fixed run_id; run directory created exclusively; duplicate run_id refused",
+    "admission record (path + SHA-256) with status ADMITTED for this dataset_id, binding: the four data-file hashes, analysis_config_sha256 (canonical: dataset_id, run_class, fold_scheme, endpoint_mode, targets in order, group_unit, groups with animal mappings, per_cell_join, genes, position columns/dims/source, technical columns, label semantics, frozen cohort, file hashes), runner_sha256 (executing file), reference_sha256 (imported analysis/paired_projection_reference.py), protocol_sha256",
+    "this protocol committed in git, unmodified, and with status FROZEN_EXPLORATORY_AUTHORIZED; the DRAFT status refuses every real run",
+    "run_class must be 'exploratory' for real runs; the confirmatory path is disabled; exploratory runs carry no power approval and never PASS",
+    "all reviewed checks: explicit endpoint mode; true animal/pool identities (non-blank, unpadded, disjoint); slice/section/hemisphere refused as groups; independence evidence; exact cell-ID joins; explicit complete target-by-group mask; forbidden reporter/vector/target/class names in every predictor role; disjoint unique schema names; canonical cell_id order; probabilities exact-shape, finite, in [0, 1]"
+  ],
+  "position": {
+    "dims": "1 to 3 measured axes, declared explicitly as position_columns and position_dims",
+    "provenance": "position_source must be 'measured_in_same_cell'; inferred, imputed, mapped or Tangram-type coordinates are refused (also refused by provenance keywords)"
+  },
+  "technical_control": "Only when authentic technical variables exist (technical_evidence required). With no technical columns the technical control is recorded as not available; no dummy covariates are invented.",
+  "frozen_cohort": "Before any fitting, the manifest pins per endpoint the SHA-256 and count of the sorted eligible cell IDs (assayed, QC-passed, endpoint-eligible). A mismatch refuses the run before the gene matrix is read.",
+  "candidate": {
+    "model": "sklearn 1.8 LogisticRegression, L2 (default), C=1.0, lbfgs, max_iter 2000, tol 1e-6, random_state 20261112",
+    "features": "log1p measured endogenous markers + measured position",
+    "scaling": "StandardScaler fitted on training animals only",
+    "fit_weights": "group-balanced 1/n_group, mean-normalised; no class_weight"
+  },
+  "controls": {
+    "constant_0.5": "reference only",
+    "train_frequency": "group-balanced weighted training captured rate",
+    "location_logistic": "same logistic settings and weights on fit-scaled measured position only",
+    "location_knn15": "KNN k=15 on fit-scaled position",
+    "molecular_knn15": "KNN k=15 on fit-scaled log1p genes",
+    "matched_knn15": "KNN k=15 on the candidate's exact fit-scaled gene+position representation (strong copying/averaging control)",
+    "copy_1nn_location": "label copied from the single nearest training-animal cell in fit-scaled position",
+    "copy_1nn_matched": "label copied from the single nearest training-animal cell in the candidate's exact representation",
+    "technical": "logistic on authentic technical variables, only when present",
+    "donor_rule": "every KNN/copy donor comes from training animals only; this is asserted per fold",
+    "knn_weighting": "KNN and copy controls are unweighted"
+  },
+  "location_and_copying_controls": [
+    "location_logistic",
+    "location_knn15",
+    "copy_1nn_location",
+    "copy_1nn_matched",
+    "matched_knn15",
+    "molecular_knn15",
+    "train_frequency"
+  ],
+  "folds": {
+    "preferred": "leave_one_group_out (each animal or verified pool held out once)",
+    "alternative": "grouped_kfold with declared k (groups shuffled with seed 20261112)",
+    "rule": "identical eligible IDs and folds for every method; any missing/invalid probability or one-class/too-small training set is a FAIL, never a dropped row or fallback"
+  },
+  "metrics": {
+    "primary": "animal-equal Brier and clipped log loss (clip 1e-6), per endpoint, plus every animal's values",
+    "calibration": "reported separately: 10-bin reliability table, ECE, per-animal mean p vs observed",
+    "discrimination": "pooled AUC, descriptive",
+    "paired_descriptive": "for every location/copying control: per-animal (control - candidate) Brier and log loss, mean, min, max and number of animals improved",
+    "macro": "target-equal mean of the animal-equal Brier and log loss over the declared targets; per-animal macro = mean over the targets for which that animal has eligible cells, with that coverage reported (complete_coverage flag); paired control-minus-candidate differences reported per target, target-equal, and per-animal macro for every location/copying control"
+  },
+  "confirmatory_margins": null,
+  "gate": {
+    "exploratory": "EXPLORATORY_NOT_POWERED: descriptive only, never PASS",
+    "confirmatory": "disabled in this version",
+    "synthetic": "software-only checks; says nothing about biology"
+  },
+  "closed": [
+    "VMHvl Kim 2019 pilot",
+    "Jiao",
+    "axon completion v1/v2",
+    "old validation/test data",
+    "viewer/website"
+  ],
+  "outputs_per_run": {
+    "STARTED.json": "written exclusively before any data file is parsed or any model fitted; kept on partial failure, so the run_id cannot be silently rerun",
+    "result.json": "summary (exclusive create)",
+    "predictions.csv": "keyed out-of-fold predictions: cell_id, group_id, endpoint, fold, method, probability (repr float), captured; one row per eligible cell x endpoint x method",
+    "RUN_COMPLETE.json": "immutable provenance: manifest, analysis config, admission record, source (from admission record), data files, runner, reference, protocol, STARTED, result and predictions hashes"
+  },
+  "frozen_scope": "Exploratory only: exactly one real run, run_id barseq2_a1_598_logo_v1, of the dataset below. Code, protocol and the admission-bound configuration are fixed before the run; no tuning, model selection, recalibration or rerun on its results.",
+  "dataset": {
+    "dataset_id": "barseq2_a1_598",
+    "run_id": "barseq2_a1_598_logo_v1",
+    "source": "BARseq2 (Sun et al., Nature Neuroscience 2021, DOI 10.1038/s41593-021-00842-4; Mendeley jnx89bmv4s/2) A1 pooled data, A1pooleddata.mat, SHA-256 d4b1ac270b90c15ccb21a5ce06e9baf02eb38eebd52388c1067147be8d8ffa31",
+    "extraction": "analysis/paired_projection_barseq2_extract.py (ROOT) -> data/interim/paired_projection_real_benchmark/barseq2_a1_inputs/{cells,genes,labels,mask,crosswalk}.csv; extraction_receipt.json SHA-256 8f3ef7e4e3261c237ec52da740991a4b5cb60e1cec6bb7802955c119ac01edca",
+    "animals": {
+      "XC95": 304,
+      "XC97": 294
+    },
+    "group_unit": "animal (two mice; all slices and cells of a mouse stay together; no pools)",
+    "cohort_qc": "598 cells: max raw projection count across the 12 collected target columns > 2 AND max(Slc17a7, Gad1) >= 5 (the published paired QC cohort). The cohort is conditional on an observed capture somewhere; it is not an all-neuron census and includes five inhibitory cells.",
+    "genes": [
+      "Cdh4",
+      "Cdh6",
+      "Cdh8",
+      "Cdh9",
+      "Cdh13",
+      "Cdh18",
+      "Pcdh20",
+      "Pcdh17",
+      "Pcdh8",
+      "Pcdh11x",
+      "Cdh10",
+      "Cdh11",
+      "Cdh12",
+      "Cdh15",
+      "Cdh20",
+      "Cdh22",
+      "Cdh24",
+      "Pcdh19",
+      "Pcdh7",
+      "Pcdh9",
+      "Slc17a7",
+      "Gad1",
+      "Slc30a3"
+    ],
+    "gene_transform": "log1p of measured counts",
+    "position": {
+      "columns": [
+        "depth_norm1200_um"
+      ],
+      "dims": 1,
+      "formula": "top_distance / (top_distance + bottom_distance) * 1200 um, from image-based soma centroid distances to the measured cortical top and bottom contours",
+      "limit": "one measured laminar axis; not absolute XYZ; no tangential anatomy control"
+    },
+    "targets": [
+      "OFC",
+      "M",
+      "Rstr",
+      "SS",
+      "Cstr",
+      "Amyg",
+      "VisIp",
+      "VisC",
+      "AudC",
+      "Thal",
+      "Tect"
+    ],
+    "target_rule": "11 shared anatomical targets assayed in both mice; the olfactory bulb control column is excluded",
+    "label": "captured = raw target molecule count > 2; <= 2 is nondetection in an assayed target, not biological absence",
+    "technical_columns": {
+      "log_panel_total": "log1p(sum of the 23 measured marker counts): a capture-size proxy that also contains biology",
+      "log_unused_spots": "log1p(sum of the two unused-code counts): an assay-background proxy"
+    },
+    "no_target_counts_as_predictors": true,
+    "folds": "leave_one_group_out: 2 folds (train XC95 -> test XC97, and train XC97 -> test XC95)",
+    "calibration_animal": "none (no separate calibration animal; calibration is reported descriptively only)",
+    "result_gate": "descriptive EXPLORATORY_NOT_POWERED; never PASS; 2-animal transfer",
+    "not_claimed": [
+      "hypothalamic generalisation",
+      "full anatomy or axon geometry",
+      "synapses or circuits",
+      "absence of projection",
+      "biological projection probability"
+    ]
+  }
+}

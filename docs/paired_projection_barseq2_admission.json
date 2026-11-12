@@ -1,0 +1,99 @@
+{
+  "admitted_by": "ROOT after source checks and independent extractor/runner reviews",
+  "analysis_config_sha256": "bdf6a43087621a218c8b6d82c723cf651e41cb4867cfb37142d6a3629d272c56",
+  "animal_crosswalk": {
+    "XC95": {
+      "brainidx": 1,
+      "original_rows_0based": "0:702",
+      "retained": 304,
+      "source_experiment": "bcdata20190814; Mseq063 first12 sample columns; XC96 excluded"
+    },
+    "XC97": {
+      "brainidx": 2,
+      "original_rows_0based": "702:1283",
+      "retained": 294,
+      "source_experiment": "bcdata20190916; Mseq079/sample304769"
+    }
+  },
+  "authorization": "Exactly one frozen exploratory two-fold evaluation; no retuning, recalibration or result-informed reruns; real execution requires this code/protocol/admission committed before fitting.",
+  "captured_endpoint": "raw target molecule count > 2; <=2 is nondetection, not biological absence",
+  "cohort_rule": "598 marker-QC cells conditional on some source projraw > 2; includes five inhibitory cells; not an all-neuron census",
+  "dataset_id": "barseq2_a1_598",
+  "extraction": {
+    "all_values_verified": {
+      "assay_mask_entries": 22,
+      "captured_labels": 6578,
+      "cells": 598,
+      "genes": 13754
+    },
+    "crosswalk_sha256": "3b29167000ac00951ac88e8736c8db1959105a783c62e219ca061480ebf10eea",
+    "independent_check_path": "data/interim/paired_projection_search_round4/barseq2/root_extraction_independent_check.json",
+    "independent_check_sha256": "bad0285c86df3a73b1f3b99ea337e0012bab88fc8397cd1d3d5ebbb75034601f",
+    "receipt_path": "data/interim/paired_projection_real_benchmark/barseq2_a1_inputs/extraction_receipt.json",
+    "receipt_sha256": "8f3ef7e4e3261c237ec52da740991a4b5cb60e1cec6bb7802955c119ac01edca"
+  },
+  "extractor_sha256": "abfde6c6604ed04cdb9173da5f4ae9b649cea5b1b8e2e607a9d82ef85f8151b0",
+  "file_sha256": {
+    "cells": "477323bf690ca0ce2078648ce7ead77335893f4c2af4c226efc3bb3d81281f8f",
+    "genes": "31718e50388006fe455a07bfda6a105edaa3abd99d49b5579f6859156e4fa39c",
+    "labels": "2de978a1fc8b9419006445ed2c7f84e805250cd4cd8e4d0391aa809829519d4c",
+    "mask": "e2160de2272d1c618fb72f6fbc97c5d9b705fd6d28550a8260873d8232162405"
+  },
+  "limits": [
+    "Two mice only; descriptive transfer, not population-confirmatory significance or discovery",
+    "598cells conditional on detected projection somewhere and markerQC; not all neurons",
+    "Position controls one measured laminar axis only; no tangential XYZ",
+    "Several targets have1-5capturedcells in a mouse; sparse/uncertain",
+    "Barcode nondetection is not proven projection absence",
+    "Auditory cortex sources; no hypothalamic generalisation/fullaxon/synaptic claim",
+    "Paper already analysed these data; new to this Synarch comparison, not newly acquired biological ground truth"
+  ],
+  "position_rule": "Image-based soma centroid distances to cortical top/bottom contours, normalized to a 1200-um cortical thickness; only one laminar dimension.",
+  "protocol_sha256": "d40320c3f47ac5158c6bec3f734ab67d56816d60ba12207f4d5dca352960259b",
+  "reference_sha256": "9ae3dd30a7fad55c6b7d232e8faad4ec678bf406c105faa61cade544039723a3",
+  "run_class": "exploratory",
+  "run_id": "barseq2_a1_598_logo_v1",
+  "runner_sha256": "7b23157a704cd6e34eb887a7b9ec59f3e2050e86435f9cd174efb0ec1250baac",
+  "schema": "synarch_barseq2_a1_admission_v1",
+  "shared_assays": "Each of11anatomicaltargets collected in both mice peroriginalsamplemetadata; OBnegativecontrol excluded. Every admittedtarget has both captured and nondetected cells in eachanimal.",
+  "software_review": {
+    "focused_tests_passed": 121,
+    "independent_synthetic_reproduction": "exact",
+    "path": "data/interim/paired_projection_real_benchmark/root_prerun_review/check.json",
+    "sha256": "4f5321ea11746ba3088c592a30834713c10d3afe9cfff3c1e15e3276df9eb224",
+    "source_code_review": "Four substantive initial findings fixed, then run_id bound to admission and keyed CSV escaped."
+  },
+  "source_records": {
+    "deposit": "https://data.mendeley.com/datasets/jnx89bmv4s/2",
+    "download_manifest_sha256": "73bbbe8a18d50c4d37b1be3abd221f86c28bce8aa9c236c52fd97b553c5fadc5",
+    "license": "CC BY 4.0",
+    "paper": "https://doi.org/10.1038/s41593-021-00842-4",
+    "primary_xml_sha256": "0928b4502ff79ea0cd60b7af273152af3fe54f68137768855bc49d3e87c062ba",
+    "source_notes_sha256": "4e5ed726824a9b9b24bd81610b0f8cbeab213d3ef1a16a44b3d82bc564847551",
+    "source_profile_sha256": "f44248fef6f16d7e60aa5249a82a010b703c6b3a438ddc67f61ced3027b61d23"
+  },
+  "source_sha256": {
+    "A1brainidx.mat": "b884bc60a27f5b517ec3dae92a9565d15e257692727aca825f5852396277f1c7",
+    "A1clusters.mat": "4e2aeafef833783df24b7cbe8dc50ac4d1572c37dc468a04f0997f40e46bf8d1",
+    "A1pooleddata.mat": "d4b1ac270b90c15ccb21a5ce06e9baf02eb38eebd52388c1067147be8d8ffa31",
+    "M1clusters.mat": "ba36f35a1bb9bc566b7e793c93511d25d9dde9dccf1c34bb1428cc28a94a24b8",
+    "M1codebook.mat": "ceec9d3d072b38f96fe190d7f7aae2f561f238c528ba1d0632981cfd8b536c91",
+    "M1codebookhyb.mat": "193f1b9e2345455202d04e9c81c7d1ce84529e21933a204d454a59b45d3618f8",
+    "M1pooleddata.mat": "5ab81c2ea22482c0bf9a574885b5cf3f05abbafce8c737f377f4d5194b12c12c",
+    "MSeq0102_sampleinfo.xlsx": "caef9b8e90a583ce4e03cf1eb9ac032e52ec5939cc80c93ec8cd2be408cad355",
+    "Mbcdata.mat": "c460fab2a333eaafd600d0770042bff144f16d53dc7220533f7c5d9f333b0b4d",
+    "Mseq063-YS_sampleinfo.xlsx": "0275958eb376311bcef48a361dbf944795ccc5f9f6aa06270e9cc7a7050e8d89",
+    "Mseq079_sampleinfo.xlsx": "e9d8e22f270dfda8681285faa30862c8d0ee2304f1449d620930b1a1113b5e6e",
+    "barseqanalysis-singleprojectionsonly-newthresh.ipynb": "116b4745bbbb44a2ee013471490a0d8d3c19c463f2fee9bd258ad0110024df92",
+    "bcdata20190814.mat": "6e97e2f4e64338cfb3517cd127aa84511136288165b4a213ff4d3c072cd79f89",
+    "bcdata20190916.mat": "28cbe14a2d22eb90d8ef54c57354d2e1e6e15c7293ec17cf1f5c4625070a3dc3",
+    "poolA1data.m": "9da14e26a7f1cbaa2e768c890e1ede191a50efc34c0df3281fc7f3d6b524b0e4",
+    "script20190814new.m": "6c52703af47d3860aa3efa156baf4c68b63ebb356f3ab20915836ba48da036f8",
+    "script20190916.m": "612548ebd87110228ea39cd9017efe5b1e906ff9daf8346ba1b04fed30f75b37",
+    "script20191216.m": "d663b7884956f32fa0d697929e00a4d25743b92a5e9af6505f4562b68501e052",
+    "scriptsplitbarcodematrices.m": "44be69ee8f25f99bb0cb6c54514006693fc75bdc1de87e133f45f43c1efd0737"
+  },
+  "status": "ADMITTED",
+  "technical_control": "log_panel_total is log1p(sum of 23 measured marker counts), a capture-size proxy that also contains biology; log_unused_spots is log1p of two unused-code counts, an assay-background proxy; no target barcode counts used as predictors",
+  "utc": "2026-11-12T16:10:11.491040+00:00"
+}
