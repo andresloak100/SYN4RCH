@@ -1,8 +1,13 @@
 # Paired molecular -> destination data admission audit (bounded, read-only)
 
-**Verdict: REJECT.** No source was admitted. Rossi 2021 is rejected, and the one backup screened (Luo 2025) is
-also rejected. There is no fitting, outcome association or analysis of assay values. The next step waits for ROOT's
-review.
+**Verdict: REJECT.** No source was admitted from the checked public sources. Rossi 2021 is rejected, and the one
+backup screened (Luo 2025) is also rejected. There is no fitting, outcome association or analysis of assay values.
+The next step waits for ROOT's review.
+
+**Corrected after ROOT's review.** This version was re-audited from the cached sources only: no new fetches, and
+all 10 fetch hashes were re-verified. It changes the wording on the RNA pools, the HCR availability and Luo's
+per-nucleus labels. The missing-data checklist is in `docs/paired_projection_data_request.txt`, unsent. ROOT's draft
+contract is `data/interim/paired_projection_v1/test_contract_draft.json`.
 
 **Scope:**
 * Only small public metadata and text were read, each file at most 50 MB.
@@ -11,10 +16,11 @@ review.
 * Excluded on instruction:
   * Kim 2019 VMHvl, the closed pilot;
   * Li 2026 PVH, which ROOT has already marked unqualified.
-* Code: `analysis/paired_projection_data_admission.py` (SHA-256 `171533e0…`).
-* Tests: `tests/test_paired_projection_data_admission.py`, 5 passing.
-* Output: `data/interim/paired_projection_data_admission/admission.json` (`f32aa182…`), with the raw copies in
-  `raw/`.
+* Code: `analysis/paired_projection_data_admission.py` (SHA-256 `da570875…`). The `cached` mode re-audits from
+  `raw/` after checking each fetch hash.
+* Tests: `tests/test_paired_projection_data_admission.py` (`f5f30a13…`), 7 passing.
+* Output: `data/interim/paired_projection_data_admission/admission.json`, corrected (`e10d1522…`; the first
+  version was `f32aa182…`), with the raw copies in `raw/`.
 
 ## 1. Rossi et al. 2021, LHA Vglut2 -> LHb / VTA: REJECT
 
@@ -29,29 +35,36 @@ review.
 |---|---|
 | GEO GSE169176 | 3 samples, GSM5179460–62, "LHA sample pool 1–3", each "pooled ... from LHA tissue of two animals (male and female)". Only filtered 10x h5 matrices (56.7, 66.6 and 68.3 MB; RAW.tar 191.7 MB). Not downloaded: over the cap, and they hold assay values. |
 | SRA SRP311270 / BioSamples | 3 runs, one per pool. No animal, sex or subject fields. |
+| Pooling, as each source puts it | **GEO:** three samples, each a two-animal pool (male and female). **Paper:** "tissue from all animals was ... pooled" before three reactions, which is ambiguous between all six together and within each pool. Both statements are kept. |
 | Paper, scRNA methods | 7 mice (4 male, 3 female). One was used for histology. "Tissue from all animals was ... pooled" before 3 Chromium reactions. Labelled neurons: eYFP (LHb) 257, tdTomato (VTA) 1,595. |
 | Paper, HCR methods | 3 mice (1 male, 2 female), separate from the RNA mice. 9 genes in 3 rounds: 7 markers (Pax6, Sostdc1, Vgat, Vglut2, Nptx2, Pdyn, Pitx2) plus eYFP and tdTomato. 6–12 sections per mouse, HALO puncta per cell, thresholds stated. |
 | Data availability | Only GEO, plus "All code ... on the Stuber lab Github". No HCR deposit. |
 | GitHub `stuberlab/Rossi-et-al-2021` @ `41e5b21f` | 10 code files only (notebooks and R scripts); no data files (`.xlsx`, `.csv`, `.h5` and so on). |
-| HCR notebook (`Fig3_S2_HCR analysis_Final.ipynb`) | Reads private Dropbox HALO exports `AG09_C1/C2`, `AG10_A2`, `AG11_C1/C2_quant.xlsx`, i.e. mice AG09, AG10, AG11. Derives mouse, slide, slice and hemisphere from the sheet names. Hand-assigns AP coordinates per slice. XY comes from cell bounding boxes. Printed: 92,866 cells, 816 YFP+ and 857 tdTomato+. Its SVM uses random 50% cell splits, not splits by animal. |
+| HCR notebook (`Fig3_S2_HCR analysis_Final.ipynb`) | Reads Dropbox HALO exports `AG09_C1/C2`, `AG10_A2`, `AG11_C1/C2_quant.xlsx`, i.e. mice AG09, AG10, AG11. Derives mouse, slide, slice and hemisphere from the sheet names. Hand-assigns AP coordinates per slice. XY comes from cell bounding boxes. Printed: 92,866 cells, 816 YFP+ and 857 tdTomato+. Its SVM uses random 50% cell splits, not splits by animal. |
 | Supplement PDF | PMC returned an empty body to a script. Europe PMC says the article is not open access. Not read. |
 
 **Requested items:**
 
 | item | public? |
 |---|---|
-| Per-cell HCR counts | **No** |
-| Exact cell -> animal / section join | **No**: the sheet-name scheme is visible in the code, but the tables are private |
-| Measured coordinates | **No**: bounding boxes and AP assignments exist only in the private tables |
-| Tracer labels per cell | RNA: in the h5 matrices (not opened). HCR: **no** |
-| Per-cell animal ID in the RNA data | **No**: 2 animals pooled per reaction |
+| Per-cell HCR counts | **Not found** in the checked sources |
+| Exact cell -> animal / section join | **Not found**: the sheet-name scheme is visible in the code, but the tables were not found |
+| Measured coordinates | **Not found**: bounding boxes and AP assignments are only in the HCR tables |
+| Tracer labels per cell | RNA: in the h5 matrices (not opened). HCR: **not found** |
+| Per-cell animal ID in the RNA data | **Not found**: there are 3 two-animal pools, and the IDs are not recoverable from the checked sources |
 | Assays | stated |
-| Animal counts | 6 RNA + 3 HCR |
+| Animal counts | 6 RNA mice in 3 pools + 3 HCR mice |
+
+Checked sources: GEO, SRA, BioSample, the PMC text and the authors' GitHub. Not retrieved: the PMC supplement PDF
+and the publisher's supplementary files. So "not found" means not found in the checked sources. It is not a claim
+that the data are non-public everywhere.
 
 **Hard blockers:**
-1. The HCR per-cell data are not public. Getting the tables, joins, coordinates and tracer calls would need author
-   contact, which is not allowed. So there are no external RNA -> HCR animals to test on.
-2. The RNA data are one training pool, not 6 replicates: 6 mice in 3 reactions, with no public per-cell animal ID.
+1. The HCR per-cell data (tables, joins, coordinates and tracer calls) were not found in the checked public sources.
+   Author contact is not allowed here. So no external RNA -> HCR animals are available for testing now.
+2. The RNA data come from three two-animal pools in three reactions.
+   * The pools may count as biologically independent units, but only if animal-disjointness is confirmed.
+   * They never give six recovered animal IDs.
 3. Tracer identity is confounded with destination in both assays:
    * eYFP (hSyn) always marks LHb, and tdTomato (CAG) always marks VTA;
    * only the separate ephys cohort was counterbalanced.
@@ -64,11 +77,17 @@ review.
 
 **Source:** Neuron (2025), DOI 10.1016/j.neuron.2025.09.006, PMC12581905, text-mining licence. Data are in GSA
 CRA019056; no raw data were downloaded. This confirms ROOT's check.
-* The Patch-seq Methods say "Two cells were collected in one tube as a sample." The 22 "high-quality profiles" in the
-  Results are therefore not single-cell molecule/target pairs.
-* For snRNA-seq, "Tissues from 5 mice of the same group were pooled together." The projection label is a pooled
-  library attribute, with no animal replication.
-* The targets are dDG and vDG only, neither in the Epi-retro-seq list.
+* **Patch-seq:** the Methods say "Two cells were collected in one tube as a sample." The 22 profiles therefore cannot
+  be taken as individually paired cells.
+* **snRNA-seq, labels:** eGFP was added to the reference, and nuclei with an eGFP count above 0 are called positive.
+  * So label-positive nuclei can pair RNA with a captured label.
+  * The checked text reports only four positives, all from vDG mice, and states no dDG count.
+  * The remaining nuclei are unknown (not captured), not negatives.
+* **snRNA-seq, animals:** the Methods say "Tissues from 5 mice of the same group were pooled together." The pool IDs,
+  the number of pools (replication) and the sample unit are unresolved, so independent evaluation animals are not
+  established.
+* **Endpoint:** dDG vs vDG is a different endpoint from the Epi-retro-seq list. It is not a hard blocker for a new
+  task.
 
 **Not screened:** this audit was bounded to one backup, and Li 2026 PVH was not re-checked. In the earlier search
 notes, Calvigioni 2023 and Chung 2017 have a single target with all cells positive, so they cannot give a

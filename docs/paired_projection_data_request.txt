@@ -1,0 +1,44 @@
+UNSENT DRAFT. Missing-data checklist for the paired projection admission audit. Do not send; there has been no author contact.
+The audit is in reports/paired_projection_data_admission.md and the contract draft is in data/interim/paired_projection_v1/test_contract_draft.json.
+Below, "Not found" means not found in the checked public sources (GEO, SRA, BioSample, the PMC text and the authors' GitHub).
+The PMC supplement and the publisher's supplement were not retrieved.
+
+A. Rossi et al. 2021, Neuron 109:3823 (PMC8812999; GEO GSE169176; github stuberlab/Rossi-et-al-2021 @41e5b21f)
+
+  HCR cohort (3 mice; the notebook refers to them as AG09, AG10, AG11)
+  [ ] The per-cell HALO exports read by Fig3_S2_HCR analysis_Final.ipynb:
+      - AG09_C1_quant.xlsx
+      - AG09_C2_quant.xlsx
+      - AG10_A2_quant.xlsx
+      - AG11_C1_quant.xlsx
+      - AG11_C2_quant.xlsx
+      Each should include all 9 probe count columns and the cell bounding-box columns.
+  [ ] The key for each sheet name, from sheet to mouse, slide, slice and hemisphere, plus each mouse's sex.
+  [ ] The AP coordinate for every slice, and how each was assigned.
+  [ ] The pixel size and image orientation, so the XY positions can be read as measured coordinates.
+  [ ] Per-cell segmentation and quality-control flags.
+      Also the final eYFP and tdTomato puncta thresholds: the paper gives 6/4, and the notebook first uses 3/3, then 6/4.
+  [ ] Any cells or sections that were excluded, with the reasons.
+  [ ] Injection-site verification for each mouse (LHb and VTA), and any mice that were excluded.
+
+  RNA cohort (6 mice; GEO lists 3 samples, each "two animals (male and female)")
+  [ ] Which animals went into each GEO pool (GSM5179460, GSM5179461, GSM5179462).
+      Please also confirm that no animal is in more than one pool.
+      This resolves the paper's "tissue from all animals was ... pooled" wording.
+  [ ] The per-cell retained barcodes, QC and doublet status, and the cell-to-cluster table: the 34,518 cells and the 17,378 neurons.
+  [ ] The per-cell eYFP and tdTomato calls with their thresholds.
+      The paper reports 257 eYFP and 1,595 tdTomato neurons; please give the double-labelled status too.
+  [ ] Any per-cell sex or animal demultiplexing, if it was done. If it was not, say so.
+  [ ] Confirm that the GEO filtered h5 matrices include the eYFP and tdTomato features.
+
+  Design facts to confirm
+  [ ] In both the RNA and HCR cohorts, eYFP (hSyn) went into LHb and tdTomato (CAG) went into VTA in every mouse.
+      Was any mouse counterbalanced?
+  [ ] Data licence or reuse terms for the HCR tables. The GitHub repo has no licence.
+
+B. Luo et al. 2025, Neuron (PMC12581905; GSA CRA019056). Optional; this is a backup.
+  [ ] snRNA-seq: the pool and library IDs, which mice are in each pool (5 per group), and the number of pools per group.
+  [ ] snRNA-seq: the per-nucleus eGFP count calls and which pool each nucleus came from.
+      The paper reports 4 positive nuclei in vDG mice; the dDG count is not stated.
+  [ ] Patch-seq: for each of the 22 profiles, is it 1 cell or 2 cells per tube, and which mouse and DG target does each tube come from?
+  [ ] Processed matrices and the reuse terms for CRA019056.

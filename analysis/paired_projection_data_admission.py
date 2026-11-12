@@ -6,7 +6,8 @@ It never downloads expression matrices or raw reads, never reads assay values, n
 and never relates molecules to projection outcomes. Output: admission.json with source hashes,
 extracted facts and an ADMIT / REJECT / PENDING verdict with hard blockers.
 
-Usage: /opt/anaconda3/bin/python -I analysis/paired_projection_data_admission.py run
+Usage: /opt/anaconda3/bin/python -I analysis/paired_projection_data_admission.py run|cached
+(cached = no network; re-audit the saved raw files after verifying their fetch hashes)
 """
 from datetime import datetime, timezone
 import hashlib
@@ -121,6 +122,14 @@ def parse_notebook(nb_json):
     }
 
 
+
+CHECKED_FOR_HCR = ['GEO GSE169176 series/sample text and suppl filelist', 'SRA SRP311270 run info',
+                   'BioSamples SAMN18350784/85/87', 'PMC8812999 full-text XML (incl. Data and Code Availability)',
+                   'GitHub stuberlab/Rossi-et-al-2021 tree @' + ROSSI_COMMIT[:8]]
+UNRETRIEVED = ['PMC supplement NIHMS1771318-supplement-1.pdf (empty body to a script; Europe PMC: '
+               'not open access)', 'publisher (Cell Press) supplementary files (not attempted)']
+
+
 def audit(raw):
     """raw: dict name -> text. Returns the facts and the verdicts."""
     geo = parse_geo_soft(raw['rossi_geo_soft'])
@@ -132,7 +141,8 @@ def audit(raw):
     lt = plain_text(raw['luo_pmc_xml'])
     repo_files = [x['path'] for x in tree.get('tree', []) if x['type'] == 'blob']
     data_like = [p for p in repo_files if re.search(r'\.(xlsx|csv|tsv|h5|h5ad|rds|mat|npy|zip)$', p, re.I)]
-    hcr_public = any(Path(f).name in nb['input_files'] for f in repo_files)
+    hcr_found = any(Path(f).name in nb['input_files'] for f in repo_files)
+    two_animal_pools = sum('two animals' in s.get('description', '') for s in geo['samples'])
     rossi = {
         'citation': 'Rossi MA et al. Neuron 109:3823-3837.e6 (2021). DOI 10.1016/j.neuron.2021.09.020; PMC8812999',
         'article_licence': 'PMC author manuscript; "available for text mining ... fair use" (not CC)',
@@ -140,8 +150,10 @@ def audit(raw):
         'github_licence': repo.get('license'),
         'geo_samples': geo['samples'], 'geo_series_files': geo['series_files'], 'geo_filelist': files,
         'github_repo_files': repo_files, 'github_data_like_files': data_like,
-        'hcr_notebook': nb, 'hcr_input_tables_public': hcr_public,
-        'epmc_supplement_response': raw['rossi_epmc_supp'][:300],
+        'hcr_notebook': nb,
+        'hcr_input_tables_found_in_checked_sources': hcr_found,
+        'checked_sources_for_hcr_inputs': CHECKED_FOR_HCR, 'unretrieved_sources': UNRETRIEVED,
+        'epmc_supp_response': raw['rossi_epmc_supp'][:300],
         'quotes': {k: quote(rt, p, n) for k, (p, n) in {
             'data_availability': ('Data and Code Availability', 420),
             'scrna_animals': ('Single-Cell sequencing C57BL/6J mice', 330),
@@ -154,77 +166,124 @@ def audit(raw):
             'ephys_counterbalanced': ('viruses counterbalanced between brain regions', 60),
         }.items()},
         'facts': {
-            'rna_mice': 6, 'rna_reactions': 3, 'rna_animals_per_reaction': 2,
-            'rna_per_cell_animal_id_public': False,
+            'rna_mice_sequenced': 6, 'rna_reactions': 3,
+            'rna_geo_pools_of_two_animals': two_animal_pools,
+            'rna_pooling_sources': {
+                'GEO': 'each of 3 samples: "pooled live single-cell suspension generated from LHA tissue of '
+                       'two animals (male and female)"',
+                'paper': '"tissue from all animals was ... pooled" before 3 reactions (ambiguous: all six '
+                         'together, or within each two-animal pool)'},
+            'rna_pools_independence': 'three two-animal pools; biologically independent only if animal-'
+                                      'disjointness is confirmed; per-cell animal IDs are not recoverable '
+                                      'from checked sources (never six recovered animal IDs)',
             'rna_labelled_neurons_reported': {'eYFP_LHb': 257, 'tdTomato_VTA': 1595},
             'hcr_mice': 3, 'hcr_genes': 9, 'hcr_marker_genes_shared_with_rna': 7,
-            'hcr_per_cell_counts_public': hcr_public,
+            'hcr_per_cell_counts_found_in_checked_sources': hcr_found,
             'fluorophore_target_counterbalanced_rna': False, 'fluorophore_target_counterbalanced_hcr': False,
             'tracer_assignment': 'retroAAV2-hSyn-eYFP -> LHb; retroAAV2-CAG-tdTomato -> VTA (both assays)',
         },
     }
     rossi['hard_blockers'] = [
-        'Per-cell HCR counts, cell->mouse/slide/section/hemisphere joins, XY positions and tracer calls are '
-        'not public: the authors\' notebook reads private Dropbox HALO exports '
-        + ', '.join(nb['input_files'][:5]) + '; no data file is in the GitHub repo, GEO or PMC text.',
-        'Obtaining them would need author contact, which this audit may not do.',
-        'RNA: 6 mice pooled into 3 droplet reactions (2 per reaction) before library prep; no public '
-        'per-cell animal ID. One training pool, not 6 independent replicates.',
+        'Per-cell HCR counts, cell->mouse/slide/section/hemisphere joins, XY positions and tracer calls were '
+        'NOT FOUND in the checked public sources (GEO, SRA, BioSample, PMC text, authors\' GitHub). The '
+        'authors\' notebook reads Dropbox HALO exports ' + ', '.join(nb['input_files'][:5]) + '. The PMC '
+        'supplement could not be retrieved, so this is not a claim that the data are universally non-public.',
+        'Author contact is not permitted in this audit, so the missing items cannot be requested here.',
+        'RNA: three two-animal pools (GEO) in three reactions; no per-cell animal ID in checked sources. '
+        'Pools may count as independent units only if animal-disjointness is confirmed.',
         'Tracer identity is confounded with destination in both assays (eYFP/hSyn always LHb, '
         'tdTomato/CAG always VTA); only the separate ephys cohort was counterbalanced.',
-        'Even if released, HCR is 3 mice with 7 shared marker genes: feasibility/development only, '
-        'not a powered confirmatory test, and the RNA->HCR transform would have to be locked and '
-        'calibrated outside the HCR test animals.',
+        'Even if the HCR tables were obtained, 3 HCR mice with 7 shared marker genes are feasibility/'
+        'development only, not a powered confirmatory test; an RNA->HCR transform would have to be locked '
+        'and calibrated outside the HCR test animals.',
     ]
-    rossi['verdict'] = 'REJECT' if not hcr_public else 'PENDING'
+    rossi['verdict'] = 'REJECT' if not hcr_found else 'PENDING'
+    rossi['verdict_scope'] = 'not admitted from the checked public sources; re-screen only if the missing items appear'
     luo = {
         'citation': 'Luo YJ et al. Neuron (2025). DOI 10.1016/j.neuron.2025.09.006; PMC12581905',
         'article_licence': 'PMC: "available for text mining ... fair use" (not CC)',
-        'data': 'GSA CRA019056 (raw reads; not downloaded)',
+        'data': 'GSA CRA019056 (no raw download)',
         'quotes': {
             'patchseq_two_cells_per_tube': quote(lt, 'Two cells were collected in one tube as a sample', 60),
             'patchseq_results_22': quote(lt, 'yielding 22 high-quality profiles', 60),
             'snrna_pooling': quote(lt, 'Tissues from 5 mice of the same group were pooled together', 70),
+            'snrna_egfp_reference': quote(lt, 'The eGFP gene was added to GRCm39', 140),
+            'snrna_egfp_threshold': quote(lt, 'Cells with eGFP count values greater than 0', 110),
+            'snrna_egfp_positives': quote(lt, 'Among the four eGFP-labeled cells recovered from SuM-vDG mice', 120),
             'data_availability': quote(lt, 'Single-nucleus RNA-seq and patch-seq data in this study were deposited', 200),
         },
+        'facts': {
+            'snrna_label_detected_per_nucleus': True,
+            'snrna_label_rule': 'eGFP count > 0 in a reference with eGFP added',
+            'snrna_vdg_positive_nuclei_reported': 4,
+            'snrna_ddg_positive_nuclei_reported': 'not stated in checked text',
+            'snrna_label_negative_meaning': 'unknown (not captured), not a verified absence',
+            'snrna_mice_per_pool': 5,
+            'unresolved': ['pool IDs and pool-to-library mapping', 'number of pools per group (replication)',
+                           'the sample unit of the 22 Patch-seq profiles', 'per-nucleus eGFP status for dDG mice'],
+            'endpoint_note': 'dDG vs vDG is an endpoint difference from the Epi-retro-seq list, not a hard '
+                             'blocker for a new task',
+        },
         'hard_blockers': [
-            'Patch-seq Methods: two cells per tube as one sample, so the 22 profiles are not '
-            'single-cell molecule/target pairs.',
-            'snRNA-seq: 5 mice pooled per group (group = projection label), so no animal-level '
-            'replication and the label is a library-level, not per-nucleus, attribute.',
-            'Targets are dorsal vs ventral dentate gyrus only (not in the Epi-retro-seq list).',
+            'Patch-seq Methods: "Two cells were collected in one tube as a sample", so the 22 profiles cannot '
+            'be taken as individually paired cells.',
+            'snRNA-seq: label-positive nuclei can pair RNA with a captured label (eGFP > 0), but only four '
+            'positives (all from vDG mice) are reported in the checked text; the remaining nuclei are '
+            'unknown, not negatives.',
+            'snRNA-seq: 5 mice pooled per group; pool IDs, replication and the sample unit are unresolved in '
+            'the checked text, so independent evaluation animals are not established.',
         ],
         'verdict': 'REJECT',
     }
     return {'rossi2021_lha': rossi, 'luo2025_sum': luo}
 
 
-def run():
-    OUT.mkdir(parents=True, exist_ok=True)
-    receipts = [fetch(n, u) for n, u in SOURCES.items()]
-    raw = {n: (RAW / n).read_text(encoding='utf-8', errors='replace') for n in SOURCES}
-    result = audit(raw)
+def write(result, sources, mode):
+    path = OUT / 'admission.json'
     result['_meta'] = {
         'script_sha256': sha256_bytes(Path(__file__).read_bytes()),
-        'finished_utc': datetime.now(timezone.utc).isoformat(),
-        'sources': receipts,
+        'mode': mode, 'finished_utc': datetime.now(timezone.utc).isoformat(),
+        'sources': sources,
         'not_downloaded': ['GSE169176_RAW.tar (191,692,800 B) and its three h5 matrices (57-68 MB each): '
                            'over the 50 MB cap and assay values',
-                           'SRA reads SRR14001610-12', 'GSA CRA019056 raw data',
-                           'PMC supplement NIHMS1771318-supplement-1.pdf (PMC returned an empty body to a '
-                           'script; Europe PMC says the article is not open access)'],
+                           'SRA reads SRR14001610-12', 'GSA CRA019056 raw data'] + UNRETRIEVED,
         'excluded_by_instruction': ['Kim 2019 VMHvl (closed pilot)', 'Li 2026 PVH (already unqualified)',
                                     'Jiao 2025', 'MouseLight'],
-        'overall': 'REJECT',
+        'overall': 'REJECT (no source admitted)',
     }
-    path = OUT / 'admission.json'
     path.write_text(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
     print('wrote', path, sha256_bytes(path.read_bytes()))
     return result
 
 
+def load_cached(sources):
+    """Re-read cached raw files; refuse if any hash differs from its fetch receipt."""
+    raw = {}
+    for s in sources:
+        b = (RAW / s['name']).read_bytes()
+        if sha256_bytes(b) != s['sha256']:
+            raise ValueError(f"{s['name']}: cached hash differs from fetch receipt")
+        raw[s['name']] = b.decode('utf-8', errors='replace')
+    return raw
+
+
+def run():
+    OUT.mkdir(parents=True, exist_ok=True)
+    receipts = [fetch(n, u) for n, u in SOURCES.items()]
+    return write(audit(load_cached(receipts)), receipts, 'fetch')
+
+
+def cached():
+    """Correction pass: no network; reuse the original fetch receipts and verify every hash."""
+    prior = json.loads((OUT / 'admission.json').read_text())
+    receipts = prior['_meta']['sources']
+    return write(audit(load_cached(receipts)), receipts, 'cached')
+
+
 if __name__ == '__main__':
     if sys.argv[1:] == ['run']:
         run()
+    elif sys.argv[1:] == ['cached']:
+        cached()
     else:
         sys.exit(__doc__)
