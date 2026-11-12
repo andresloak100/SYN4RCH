@@ -1,0 +1,34 @@
+{
+  "schema": "synarch_circuit_evidence_reproduction_note_v1",
+  "scope": "Source-backed evidence integration and bounded, development-only graph-completion/transfer pilots.",
+  "environment": {
+    "python": "CPython 3.12",
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "scikit-learn": "1.8.0",
+    "pyarrow": "14.0.2",
+    "pytest": "7.4.4"
+  },
+  "synthetic_checks": {
+    "command_from_repository_root": "python -c 'import sys, pytest; sys.path.insert(0, \".\"); sys.exit(pytest.main([\"tests/test_circuit_evidence_layer.py\", \"tests/test_circuit_evidence_viewer.py\", \"tests/test_fly_circuit_benchmark.py\", \"tests/test_fly_mouse_transfer.py\", \"-q\"]))'",
+    "meaning": "Implementation and leakage checks, not additional biological experiments. Some viewer checks require the retained original local measured scene and pinned atlas context assets."
+  },
+  "public_source_receipts": [
+    "data/interim/fly_circuit_benchmark/source/download_receipts.json",
+    "data/interim/fly_mouse_transfer/source/download_receipts.json"
+  ],
+  "archived_state": {
+    "public": "Code, tests, protocols, source URLs/hashes, frozen node partitions, fitted fly coefficients/scalers, prediction commitments, completion receipts and primary/independent-replay metric reports.",
+    "not_bundled": "Raw synapse tables, cached papers, .npy forecast arrays, complete generated HTML scenes and measured neuron geometry.",
+    "exact_replay_requirement": "The replay scripts require both the pinned raw inputs and original hash-matching forecast arrays. Those arrays are retained locally and were independently replayed, but are not included in this publication. The public package alone is therefore not a complete saved-forecast replay bundle.",
+    "historical_identity": "The mouse protocol pins the original fly FROZEN.json and PREDICTIONS_COMMITTED.json bytes; the latter contains the frozen parameters and standardizers. Preserve these archived bytes when inspecting transfer. Regenerating fly fits or timestamps creates a different run and does not replace this record.",
+    "future_replication": "Use an isolated development workspace and explicitly new run identity/protocol for regeneration. Never overwrite the archived receipts, bypass the one-run gates, or describe a repeat on these exposed specimens as an independent test."
+  },
+  "local_map": {
+    "build_graph": "python -I analysis/circuit_evidence_layer.py build --curated-sources data/interim/circuit_evidence_v1/curated_sources.json",
+    "build_viewer": "python -I analysis/circuit_evidence_viewer.py",
+    "prerequisites": "Existing curated records/vocabulary, the local PVH sampling evidence graph, pinned original reports/swc_viewer.html, the pinned Allen ontology and context meshes specified in atlas_context_manifest.json. These are not all bundled by this checkpoint.",
+    "distribution": "Generated full scene stays local under the measured trace terms. Context bindings are regional display annotations, never matched individual-cell coordinates."
+  },
+  "interpretation": "All pilots are development only. Fly results are within one fly; transfer is within one mouse visual-cortex volume. Neither establishes independent-animal, hypothalamic, whole-axon-path, intervention-response or longevity prediction."
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "soma_valence_v185.csv",
+    "url": "https://zenodo.org/records/3710459/files/soma_valence_v185.csv?download=1",
+    "bytes": 30881,
+    "md5": "a8ce8aa4e5cdf4202caa5ae10411c333",
+    "sha256": "e0845382e88a51d22b296f0d8cdcc7f74561868f98fb4fdf8056b0627ee8e95f",
+    "utc": "2026-11-12T22:04:59.324327+00:00",
+    "http_status": 200
+  },
+  {
+    "name": "soma_subgraph_synapses_spines_v185.csv",
+    "url": "https://zenodo.org/records/3710459/files/soma_subgraph_synapses_spines_v185.csv?download=1",
+    "bytes": 274298,
+    "md5": "5bbb8ff59dcad4ccea6d46930920cd04",
+    "sha256": "ac22845bf2078fad27f895b0d4ab1f8b1bf980a2f00056be3f1eec6183770ae4",
+    "utc": "2026-11-12T22:05:00.412145+00:00",
+    "http_status": 200
+  }
+]
