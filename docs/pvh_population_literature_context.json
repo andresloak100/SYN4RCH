@@ -1,0 +1,55 @@
+{
+  "schema": "synarch_pvh_literature_context_v1",
+  "checked_date": "2026-11-12",
+  "scope": "Bounded review of directly relevant primary studies; not an exhaustive priority search.",
+  "references": [
+    {
+      "title": "Connecting single-cell transcriptomes to projectomes in the mouse visual cortex",
+      "year": 2026,
+      "journal": "Nature",
+      "url": "https://www.nature.com/articles/s41586-026-10424-8",
+      "accessible_primary_record": "https://pubmed.ncbi.nlm.nih.gov/42386969/",
+      "established": "Integrated separate Patch-seq and whole-neuron morphology datasets through cell-type classification; reported relationships of gene expression and anatomical location with neuronal projection targets.",
+      "boundary": "Cortical multimodal integration is established prior art. Its separate cohorts do not imply transcriptomes and complete axons were measured in every same neuron."
+    },
+    {
+      "title": "Projectome-based characterization of hypothalamic peptidergic neurons in male mice",
+      "year": 2025,
+      "journal": "Nature Neuroscience",
+      "url": "https://www.nature.com/articles/s41593-025-01919-0",
+      "established": "Measured whole-brain projections from over 7000 hypothalamic neurons and characterized projectome types.",
+      "boundary": "Some Synarch trace data derive from this prior study; displaying or reassembling these measurements is not a new anatomical discovery by Synarch."
+    },
+    {
+      "title": "A spatial and projection-based transcriptomic atlas of paraventricular hypothalamic cell types",
+      "year": 2026,
+      "journal": "Cell Reports",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13007250/",
+      "doi": "10.1016/j.celrep.2025.116904",
+      "established": "Integrated PVH molecular classification, spatial profiling and projection-enriched samples for parabrachial and spinal cord populations.",
+      "boundary": "The pilot reuses this study. Public pooled projection RNA records and separate spatial cohorts must retain their distinct observation units."
+    },
+    {
+      "title": "Integrating barcoded neuroanatomy with spatial transcriptional profiling enables identification of gene correlates of projections",
+      "year": 2021,
+      "journal": "Nature Neuroscience",
+      "url": "https://www.nature.com/articles/s41593-021-00842-4",
+      "accessible_primary_record": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8178227/",
+      "established": "BARseq2 jointly measured gene expression and projection destinations in individual cortical neurons and identified molecular associations.",
+      "boundary": "Synarch's cortical development scores use data from this existing study; they are not evidence of newly discovered hypothalamic circuits."
+    }
+  ],
+  "proposed_new_contribution": "A demonstrably transferable method that uses incomplete biological measurements to improve predictions of independently withheld hypothalamic connectivity properties over strong published and simple controls, with useful uncertainty and new biological insight.",
+  "current_pilot_claim": "A provenance-backed PVH population evidence map and exploratory raw-gene prediction of retrograde collection labels across pooled samples. Not an independent-animal validation or complete circuit reconstruction.",
+  "journal_assessment": {
+    "current_nature_level_claim_supported": false,
+    "acceptance_guaranteed": false,
+    "official_criteria_url": "https://www.nature.com/nature/for-authors/editorial-criteria-and-processes",
+    "summary": "Nature assesses original research for major scientific importance and broad interest. A future validated breakthrough could be considered; journal placement cannot be inferred from the project ambition or a small pilot. Nature and Nature Neuroscience are distinct journals."
+  },
+  "user_constraints": [
+    "No lab collaboration or further author contact",
+    "Use existing public data and explicitly labeled simulations",
+    "Do not treat cross-dataset inferred matches as same-cell measurements"
+  ]
+}

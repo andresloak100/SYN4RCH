@@ -1,0 +1,161 @@
+{
+  "schema": "synarch_pvh_population_pilot_protocol_v1",
+  "status": "FROZEN_PVH_PILOT_AUTHORIZED",
+  "status_values": {
+    "DRAFT_FOR_ROOT_REVIEW_NO_REAL_RUNS": "code, protocol and toy tests only; no real RNA value is read and nothing is fitted",
+    "FROZEN_PVH_PILOT_AUTHORIZED": "one atlas run, one RNA extraction run and one exploratory fit run, each with its fixed run ID"
+  },
+  "date": "2026-11-12",
+  "files": {
+    "code": "analysis/pvh_population_pilot.py",
+    "extractor": "analysis/pvh_population_extract.R",
+    "tests": "tests/test_pvh_population_pilot.py",
+    "outputs": "data/interim/pvh_population_pilot/<run_id>/"
+  },
+  "question": "In one nucleus (PVH), what does public existing data say about which molecular populations were collected from parabrachial (PB) versus spinal cord (SC) retrograde labelling, and can raw nuclear gene counts predict the collection label across sex-swapped pools better than simple controls?",
+  "not_claimed": [
+    "absolute projection probabilities or prevalence",
+    "absence of projection to any other target, or dual projection",
+    "individual-animal generalisation (mice were pooled; 4-10 per pool)",
+    "spatial position, 3D geometry, axon paths, synapses or circuits",
+    "new discovery or novelty of any kind"
+  ],
+  "source": {
+    "study": "Li, Resch et al. 2026, PVH spatial and projection atlas (Cell Reports 45:116904; PMC13007250; GEO GSE303256; Zenodo 10.5281/zenodo.15983704)",
+    "objects": {
+      "PB_projecting.rds": {
+        "sha256": "5906291e03984e4f16bc99d3e82bfe8598ef1b80e3a805a39bc11d8ee2937e50",
+        "nuclei": 598,
+        "genes": 31015
+      },
+      "SC_projecting.rds": {
+        "sha256": "833ea4bb5e9414665433306f39458140fa3b9d4de0e9af8f3ef3ef112b8dfd21",
+        "nuclei": 3125,
+        "genes": 35627
+      }
+    },
+    "metadata": {
+      "paired_nucleus_metadata_manifest.json": "35e49bea63120564128e3e217a136b55ec6b600a7aab7ec9b7a29187c6a6ddfd",
+      "PB_cell_metadata.csv": "b4b3498c40384a7041a1bdde6d67c156d456e6d3246bc109e9179c44f0845d33",
+      "SC_cell_metadata.csv": "5843c00af964078c8dd238cb3e89baa1aa42cd47d1dbde55010aa858ffdc70de",
+      "feasibility.json": "eba4867d9251fa2bc7b0335bc291500192deec827ee8a8fe94741de0df4d06a9"
+    },
+    "existing_feasibility_code_sha256": "735a5b9e0ebe8a5b2666369cfddb59d2ffeb03cdb45d4aaa32d3c25fcb01755a"
+  },
+  "label_meaning": {
+    "PB": "nucleus belongs to the author's PB-projecting retrograde collection group",
+    "SC": "nucleus belongs to the author's SC-projecting retrograde collection group",
+    "other_targets": "unknown; never treated as negatives",
+    "endpoint": "P(PB collection group | nucleus is in this PB-or-SC collected cohort). Not a projection probability."
+  },
+  "atlas": {
+    "run_id": "pvh_population_atlas_v1",
+    "cohort": "original-study nuclei only: PB 598 + SC 627 = 1225; the 2498 reused SC nuclei (Winter 2023, Beine 2022) are excluded",
+    "content": "one record per nucleus (object, cell ID, source study, object batch, encoded pool if known, sex if known, positive collection target, AUTHOR_INFERRED type) plus counts by AUTHOR_INFERRED type x positive collection target, by pool and by object batch",
+    "nulls": "individual animal, measured location/coordinates and other-target status stay null; no coordinates are invented",
+    "author_inferred_type": "predicted.celltype from the author object is an inferred label, used only to group atlas counts; never a fit feature or gold label",
+    "counts_meaning": "sampling counts within collected nuclei, not prevalence",
+    "outputs": "atlas_nuclei.csv, atlas_counts.csv, evidence_graph.json (nodes, edges, provenance), RUN_COMPLETE.json"
+  },
+  "fit_cohort": {
+    "rule": "manifest rows with original_study = true and exact_first_MUX_barcode_join = true (GEO GEX GSM9117450)",
+    "expected_pools": {
+      "Mm_PVH_11F_PBprojecting": 144,
+      "Mm_PVH_12M_PBprojecting": 53,
+      "Mm_PVH_13F_SCprojecting": 39,
+      "Mm_PVH_14M_SCprojecting": 29
+    },
+    "total": 265,
+    "cell_key": "object (PB or SC) + exact cell ID",
+    "pools_are_not_animals": "each encoded pool combines 4-10 mice; only one pool per sex x target"
+  },
+  "extraction": {
+    "run_id": "pvh_rna_extract_v1",
+    "method": "own base-R reader (Rscript --vanilla analysis/pvh_population_extract.R); no author code, no Seurat or other package installed or loaded",
+    "layer": "assay RNA, layer counts only",
+    "checks": [
+      "object SHA-256 equals the pin before reading",
+      "assay is RNA (not prediction.score.celltype); layer is counts (not data or scale.data)",
+      "counts are finite, >= 0 and whole numbers; the data layer, if present, is not identical",
+      "layer cell order taken from the object's cell map or layer dimnames and must equal meta.data row names exactly",
+      "layer gene IDs taken from the object's feature map for the counts layer or layer dimnames; counts must match",
+      "every cohort cell found exactly once; no other cells exported"
+    ],
+    "outputs": "per object: genes.txt, cells.tsv, triplets.tsv (gene index, cell index, count) for the cohort cells only; receipt.tsv"
+  },
+  "features": {
+    "allowed": "raw RNA counts only, on the exact common gene ID panel (intersection of PB and SC count-layer gene IDs)",
+    "excluded_genes": "Reviewed reference.forbidden_name token rules plus ERCC[-_] prefixes and exact reporter/spike tokens DsRed, BFP, EBFP, EBFP2, mRFP, mRFP1, TotalSeq and HTO. Every excluded common gene ID is listed. Native Creb/Creld/Gfpt symbols remain eligible.",
+    "transform": "per cell: count / total count over the common panel x 10,000, then log1p",
+    "selection": "top min(500, number of non-constant genes) by variance on TRAINING cells only; ties broken by gene ID (lexical)",
+    "scaling": "StandardScaler fitted on training cells only",
+    "never_features": [
+      "collection target",
+      "sex",
+      "pool",
+      "library or barcode ID",
+      "author clusters or predicted types",
+      "embeddings or scaled/integrated layers",
+      "tracer or reporter values",
+      "positions (none are measured)"
+    ]
+  },
+  "folds": {
+    "fold_F_to_M": {
+      "train": [
+        "Mm_PVH_11F_PBprojecting",
+        "Mm_PVH_13F_SCprojecting"
+      ],
+      "test": [
+        "Mm_PVH_12M_PBprojecting",
+        "Mm_PVH_14M_SCprojecting"
+      ]
+    },
+    "fold_M_to_F": {
+      "train": [
+        "Mm_PVH_12M_PBprojecting",
+        "Mm_PVH_14M_SCprojecting"
+      ],
+      "test": [
+        "Mm_PVH_11F_PBprojecting",
+        "Mm_PVH_13F_SCprojecting"
+      ]
+    },
+    "meaning": "Cross-sex pool transfer within the same first-MUX sequencing run. Only one preparation pool per sex x target; pool/preparation effects cannot be disentangled. No individual-animal claim."
+  },
+  "methods": {
+    "logistic_frozen_recipe": "L2 logistic C=0.1, lbfgs, max_iter 2000, tol 1e-6, seed 20261112; alpha 0.1 shrinkage; reuses fixed C/alpha, not cortical coefficients; CP10k/HVG preprocessing is an explicitly declared new RNA-modality adapter",
+    "hgbt_fixed": "the fixed HistGradientBoostingClassifier structure from analysis/paired_projection_nonlinear.py (100 trees, depth 2, 4 leaves, min leaf 20, L2 1.0, rate 0.05, no early stopping, seed 20261112); alpha 0.1",
+    "molecular_knn31": "KNN k=31 on scaled selected genes; alpha 0.1",
+    "gene_copy_1nn": "label of the single nearest training nucleus on scaled selected genes; alpha 0.5",
+    "train_prior": "pool-balanced training PB rate",
+    "technical_logistic": "L2 logistic C=0.1 on log1p(common-panel library total) and log1p(detected common genes); alpha 0.1",
+    "location_comparator": "NONE AVAILABLE: no measured positions exist in these RNA data",
+    "shrinkage": "p' = (1 - alpha) p + alpha q, q = pool-balanced training PB rate",
+    "weights": "pool-balanced sample weights (1/n_pool, mean-normalised) for logistic and HGBT; KNN and copy unweighted",
+    "no_tuning": true,
+    "pool_weighted_knn31": "Same 31 nearest training nuclei as molecular_knn31; average labels using inverse training-pool size, then alpha 0.1 shrinkage. Added before any expression inspection to strengthen the pool-balanced control."
+  },
+  "metrics": {
+    "primary": "log loss (clip 1e-6) and Brier: mean over cells within each test pool, then mean over the test pools of a fold, then mean over the two folds",
+    "reported": "every method, per pool, per fold, macro; AUROC per fold as a descriptive number only",
+    "not_done": "no cell-level p-values, no promotion or gate regardless of score"
+  },
+  "fit_run": {
+    "run_id": "pvh_population_pilot_v1",
+    "saved": "protocol snapshot, STARTED, cohort, common panel, per-fold selected genes, scalers, priors, training cell IDs, model artifacts, keyed out-of-fold raw and shrunk probabilities, metrics, RUN_COMPLETE; complete hash-pinned fold inference states and feature-only serialization roundtrip checks"
+  },
+  "pins_checked_before_any_data_is_read": [
+    "protocol status FROZEN_PVH_PILOT_AUTHORIZED, committed and unmodified",
+    "canonical code and extractor committed and unmodified",
+    "imported modules: analysis/paired_projection_nonlinear.py, analysis/paired_projection_simulation.py, analysis/paired_projection_reference.py",
+    "RDS, manifest and metadata SHA-256 as above",
+    "fit run: the completed extraction run's receipt and file hashes, and the cohort hash"
+  ],
+  "imports_sha256": {
+    "analysis/paired_projection_nonlinear.py": "20988e42b544c68df833c7e2967b21e90832287a2982a607db4e90be30db8adc",
+    "analysis/paired_projection_simulation.py": "a789a103ec1940143afc0d95fc596d40358a2cd0093d659e34a33ed111082f67",
+    "analysis/paired_projection_reference.py": "9ae3dd30a7fad55c6b7d232e8faad4ec678bf406c105faa61cade544039723a3",
+    "analysis/paired_projection_real_benchmark.py": "7b23157a704cd6e34eb887a7b9ec59f3e2050e86435f9cd174efb0ec1250baac"
+  }
+}
