@@ -10,9 +10,9 @@
 
 On 12 fresh synthetic cases, the nonlinear model met the gate in 2. Both were batch-shift/missing cases, and
 even that scenario passed only 2 of 3. Its failures are informative:
-* **location only:** a depth-only nonlinear model wins;
+* **location only:** a position-only nonlinear model wins;
 * **complementarity:** matched-input KNN wins;
-* **hidden latent signal:** the constant 0.5 (the null) wins.
+* **hidden latent signal:** the constant 0.5 or training-frequency baseline wins.
 
 **Scope:**
 * The real data are 598 cortical cells from 2 mice (XC95, XC97), both already seen during development.
@@ -30,8 +30,10 @@ even that scenario passed only 2 of 3. Its failures are informative:
   shrinkage `p' = (1 - α) p + α q_fit` toward the training animals' capture rate.
 
 **Families:**
-* gene + depth: log1p of 23 measured genes plus measured laminar depth;
-* depth only, which shows what the genes add beyond nonlinear position.
+* gene + position: on A1, log1p of 23 measured genes plus measured laminar depth (one axis); in the simulations,
+  log1p of 16 simulated genes plus three simulated position coordinates;
+* position only (A1: depth only; simulations: three coordinates), which shows what the genes add beyond
+  nonlinear position.
 
 **Selection:**
 * α from {0, 0.1, 0.25} only, one global α per family.
@@ -80,12 +82,12 @@ Ordered by log loss. Each is the target-equal mean of the animal-equal scores, w
 
 | configuration | log loss | Brier | XC95 log loss | XC97 log loss |
 |---|---:|---:|---:|---:|
-| `hgbt_gene_position|alpha=0.0` (raw, α=0) | 0.3276 | 0.0961 | 0.3589 | 0.2963 |
-| `hgbt_gene_position|alpha=0.1` | 0.3251 | 0.0960 | 0.3536 | 0.2966 |
-| `hgbt_gene_position|alpha=0.25` | 0.3259 | 0.0968 | 0.3524 | 0.2995 |
-| `hgbt_position|alpha=0.0` (raw, α=0) | 0.3601 | 0.1109 | 0.3901 | 0.3301 |
-| `hgbt_position|alpha=0.1` | 0.3564 | 0.1099 | 0.3849 | 0.3279 |
-| `hgbt_position|alpha=0.25` | 0.3539 | 0.1092 | 0.3810 | 0.3268 |
+| `hgbt_gene_position\|alpha=0.0` (raw, α=0) | 0.3276 | 0.0961 | 0.3589 | 0.2963 |
+| `hgbt_gene_position\|alpha=0.1` | 0.3251 | 0.0960 | 0.3536 | 0.2966 |
+| `hgbt_gene_position\|alpha=0.25` | 0.3259 | 0.0968 | 0.3524 | 0.2995 |
+| `hgbt_position\|alpha=0.0` (raw, α=0) | 0.3601 | 0.1109 | 0.3901 | 0.3301 |
+| `hgbt_position\|alpha=0.1` | 0.3564 | 0.1099 | 0.3849 | 0.3279 |
+| `hgbt_position\|alpha=0.25` | 0.3539 | 0.1092 | 0.3810 | 0.3268 |
 
 ### Selected gene + depth HGBT against every comparator
 
@@ -123,23 +125,25 @@ copy/averaging control): **NOT MET.**
 * Every method was refit on the training animals only. Test labels, masks and oracle values never reached any
   fitter.
 * The settings were the ones frozen from stage 1; none were chosen from these outcomes.
+* Features here are simulated genes plus **three** position coordinates, so the families are "gene + position"
+  and "position only". The A1 "gene + depth" and "depth" labels apply to the real data only.
 
 ### Each case
 
 | case (scenario · seed) | candidate log loss | Brier | constant 0.5 log loss | best log loss (method) | gate | failed against |
 |---|---:|---:|---:|---|---|---|
-| batch_shift_missing · 876241 | 0.6355 | 0.2217 | 0.6931 | 0.6355 (**gene + depth HGBT (selected α=0.1)**) | **met** | — |
-| batch_shift_missing · 876242 | 0.6464 | 0.2272 | 0.6931 | 0.6464 (**gene + depth HGBT (selected α=0.1)**) | **met** | — |
+| batch_shift_missing · 876241 | 0.6355 | 0.2217 | 0.6931 | 0.6355 (**gene + position HGBT (selected α=0.1)**) | **met** | — |
+| batch_shift_missing · 876242 | 0.6464 | 0.2272 | 0.6931 | 0.6464 (**gene + position HGBT (selected α=0.1)**) | **met** | — |
 | batch_shift_missing · 876243 | 0.6181 | 0.2144 | 0.6931 | 0.6121 (molecular KNN (k=31, α=0.1)) | not met | matched KNN, molecular KNN |
 | complementarity · 876221 | 0.5692 | 0.1926 | 0.6931 | 0.5630 (matched KNN (k=31, α=0.1)) | not met | matched KNN, molecular KNN |
 | complementarity · 876222 | 0.5811 | 0.1973 | 0.6931 | 0.5683 (matched KNN (k=31, α=0.1)) | not met | frozen logistic, matched KNN, molecular KNN |
 | complementarity · 876223 | 0.5768 | 0.1960 | 0.6931 | 0.5649 (matched KNN (k=31, α=0.1)) | not met | frozen logistic, matched KNN, molecular KNN |
-| latent_unobserved · 876231 | 0.7071 | 0.2567 | 0.6931 | 0.6931 (constant 0.5) | not met | depth HGBT, depth KNN |
-| latent_unobserved · 876232 | 0.7038 | 0.2552 | 0.6931 | 0.6931 (constant 0.5) | not met | frozen logistic, depth HGBT, depth KNN |
-| latent_unobserved · 876233 | 0.7129 | 0.2595 | 0.6931 | 0.6923 (training frequency) | not met | frozen logistic, depth HGBT, depth KNN, matched KNN, molecular KNN |
-| location_only · 876211 | 0.6112 | 0.2110 | 0.6931 | 0.6013 (**depth-only HGBT (selected α=0.25)**) | not met | depth HGBT, depth KNN |
-| location_only · 876212 | 0.6141 | 0.2115 | 0.6931 | 0.6086 (**depth-only HGBT (selected α=0.25)**) | not met | depth HGBT, depth KNN |
-| location_only · 876213 | 0.6130 | 0.2116 | 0.6931 | 0.6099 (**depth-only HGBT (selected α=0.25)**) | not met | depth HGBT |
+| latent_unobserved · 876231 | 0.7071 | 0.2567 | 0.6931 | 0.6931 (constant 0.5) | not met | position-only HGBT, position KNN |
+| latent_unobserved · 876232 | 0.7038 | 0.2552 | 0.6931 | 0.6931 (constant 0.5) | not met | frozen logistic, position-only HGBT, position KNN |
+| latent_unobserved · 876233 | 0.7129 | 0.2595 | 0.6931 | 0.6923 (training frequency) | not met | frozen logistic, position-only HGBT, position KNN, matched KNN, molecular KNN |
+| location_only · 876211 | 0.6112 | 0.2110 | 0.6931 | 0.6013 (**position-only HGBT (selected α=0.25)**) | not met | position-only HGBT, position KNN |
+| location_only · 876212 | 0.6141 | 0.2115 | 0.6931 | 0.6086 (**position-only HGBT (selected α=0.25)**) | not met | position-only HGBT, position KNN |
+| location_only · 876213 | 0.6130 | 0.2116 | 0.6931 | 0.6099 (**position-only HGBT (selected α=0.25)**) | not met | position-only HGBT |
 
 ### By scenario
 
@@ -150,12 +154,12 @@ Control minus candidate: positive means the nonlinear model is better.
 | comparator | mean log-loss diff [range] | mean Brier diff [range] | cases candidate lower log loss | cases Brier not higher |
 |---|---|---|---|---|
 | frozen logistic, operational (C=0.1, α=0.1) | +0.0138 [+0.0066, +0.0239] | +0.0052 [+0.0023, +0.0090] | 3/3 | 3/3 |
-| **depth-only HGBT (selected α=0.25)** | +0.0225 [+0.0172, +0.0294] | +0.0103 [+0.0079, +0.0130] | 3/3 | 3/3 |
-| depth logistic | +0.0219 [+0.0199, +0.0254] | +0.0103 [+0.0093, +0.0114] | 3/3 | 3/3 |
-| depth KNN (k=31, α=0.5) | +0.0168 [+0.0118, +0.0254] | +0.0078 [+0.0056, +0.0112] | 3/3 | 3/3 |
+| **position-only HGBT (selected α=0.25)** | +0.0225 [+0.0172, +0.0294] | +0.0103 [+0.0079, +0.0130] | 3/3 | 3/3 |
+| position logistic | +0.0219 [+0.0199, +0.0254] | +0.0103 [+0.0093, +0.0114] | 3/3 | 3/3 |
+| position KNN (k=31, α=0.5) | +0.0168 [+0.0118, +0.0254] | +0.0078 [+0.0056, +0.0112] | 3/3 | 3/3 |
 | molecular KNN (k=31, α=0.1) | +0.0005 [-0.0060, +0.0053] | +0.0004 [-0.0030, +0.0023] | 2/3 | 2/3 |
 | matched KNN (k=31, α=0.1) | +0.0002 [-0.0034, +0.0023] | +0.0005 [-0.0014, +0.0019] | 2/3 | 2/3 |
-| copy-1NN depth (α=0.5) | +0.1534 [+0.1234, +0.1781] | +0.0681 [+0.0548, +0.0795] | 3/3 | 3/3 |
+| copy-1NN position (α=0.5) | +0.1534 [+0.1234, +0.1781] | +0.0681 [+0.0548, +0.0795] | 3/3 | 3/3 |
 | copy-1NN matched (α=0.5) | +0.1021 [+0.0929, +0.1076] | +0.0453 [+0.0415, +0.0480] | 3/3 | 3/3 |
 | training frequency | +0.0205 [+0.0141, +0.0282] | +0.0095 [+0.0067, +0.0124] | 3/3 | 3/3 |
 | constant 0.5 | +0.0598 [+0.0468, +0.0750] | +0.0289 [+0.0228, +0.0356] | 3/3 | 3/3 |
@@ -165,12 +169,12 @@ Control minus candidate: positive means the nonlinear model is better.
 | comparator | mean log-loss diff [range] | mean Brier diff [range] | cases candidate lower log loss | cases Brier not higher |
 |---|---|---|---|---|
 | frozen logistic, operational (C=0.1, α=0.1) | -0.0023 [-0.0075, +0.0035] | -0.0008 [-0.0030, +0.0017] | 1/3 | 1/3 |
-| **depth-only HGBT (selected α=0.25)** | +0.0897 [+0.0847, +0.0926] | +0.0410 [+0.0383, +0.0429] | 3/3 | 3/3 |
-| depth logistic | +0.0907 [+0.0863, +0.0982] | +0.0415 [+0.0390, +0.0446] | 3/3 | 3/3 |
-| depth KNN (k=31, α=0.5) | +0.0901 [+0.0844, +0.0976] | +0.0412 [+0.0383, +0.0444] | 3/3 | 3/3 |
+| **position-only HGBT (selected α=0.25)** | +0.0897 [+0.0847, +0.0926] | +0.0410 [+0.0383, +0.0429] | 3/3 | 3/3 |
+| position logistic | +0.0907 [+0.0863, +0.0982] | +0.0415 [+0.0390, +0.0446] | 3/3 | 3/3 |
+| position KNN (k=31, α=0.5) | +0.0901 [+0.0844, +0.0976] | +0.0412 [+0.0383, +0.0444] | 3/3 | 3/3 |
 | molecular KNN (k=31, α=0.1) | +0.0001 [-0.0028, +0.0019] | -0.0006 [-0.0014, -0.0001] | 2/3 | 0/3 |
 | matched KNN (k=31, α=0.1) | -0.0103 [-0.0128, -0.0061] | -0.0047 [-0.0055, -0.0033] | 0/3 | 0/3 |
-| copy-1NN depth (α=0.5) | +0.2210 [+0.2183, +0.2234] | +0.0980 [+0.0965, +0.0998] | 3/3 | 3/3 |
+| copy-1NN position (α=0.5) | +0.2210 [+0.2183, +0.2234] | +0.0980 [+0.0965, +0.0998] | 3/3 | 3/3 |
 | copy-1NN matched (α=0.5) | +0.1048 [+0.0989, +0.1104] | +0.0459 [+0.0439, +0.0481] | 3/3 | 3/3 |
 | training frequency | +0.1022 [+0.0982, +0.1074] | +0.0471 [+0.0458, +0.0491] | 3/3 | 3/3 |
 | constant 0.5 | +0.1175 [+0.1120, +0.1240] | +0.0547 [+0.0527, +0.0574] | 3/3 | 3/3 |
@@ -180,12 +184,12 @@ Control minus candidate: positive means the nonlinear model is better.
 | comparator | mean log-loss diff [range] | mean Brier diff [range] | cases candidate lower log loss | cases Brier not higher |
 |---|---|---|---|---|
 | frozen logistic, operational (C=0.1, α=0.1) | +0.0004 [-0.0018, +0.0037] | +0.0003 [-0.0009, +0.0018] | 1/3 | 1/3 |
-| **depth-only HGBT (selected α=0.25)** | -0.0078 [-0.0115, -0.0022] | -0.0038 [-0.0055, -0.0011] | 0/3 | 0/3 |
-| depth logistic | -0.0093 [-0.0131, -0.0034] | -0.0044 [-0.0062, -0.0016] | 0/3 | 0/3 |
-| depth KNN (k=31, α=0.5) | -0.0111 [-0.0175, -0.0038] | -0.0053 [-0.0084, -0.0018] | 0/3 | 0/3 |
+| **position-only HGBT (selected α=0.25)** | -0.0078 [-0.0115, -0.0022] | -0.0038 [-0.0055, -0.0011] | 0/3 | 0/3 |
+| position logistic | -0.0093 [-0.0131, -0.0034] | -0.0044 [-0.0062, -0.0016] | 0/3 | 0/3 |
+| position KNN (k=31, α=0.5) | -0.0111 [-0.0175, -0.0038] | -0.0053 [-0.0084, -0.0018] | 0/3 | 0/3 |
 | molecular KNN (k=31, α=0.1) | -0.0023 [-0.0139, +0.0065] | -0.0012 [-0.0067, +0.0031] | 2/3 | 2/3 |
 | matched KNN (k=31, α=0.1) | +0.0003 [-0.0098, +0.0077] | +0.0001 [-0.0048, +0.0038] | 2/3 | 2/3 |
-| copy-1NN depth (α=0.5) | +0.1414 [+0.1137, +0.1553] | +0.0608 [+0.0483, +0.0672] | 3/3 | 3/3 |
+| copy-1NN position (α=0.5) | +0.1414 [+0.1137, +0.1553] | +0.0608 [+0.0483, +0.0672] | 3/3 | 3/3 |
 | copy-1NN matched (α=0.5) | +0.1280 [+0.1105, +0.1511] | +0.0547 [+0.0468, +0.0651] | 3/3 | 3/3 |
 | training frequency | -0.0139 [-0.0206, -0.0084] | -0.0067 [-0.0099, -0.0041] | 0/3 | 0/3 |
 | constant 0.5 | -0.0148 [-0.0198, -0.0106] | -0.0071 [-0.0095, -0.0052] | 0/3 | 0/3 |
@@ -195,12 +199,12 @@ Control minus candidate: positive means the nonlinear model is better.
 | comparator | mean log-loss diff [range] | mean Brier diff [range] | cases candidate lower log loss | cases Brier not higher |
 |---|---|---|---|---|
 | frozen logistic, operational (C=0.1, α=0.1) | +0.0153 [+0.0112, +0.0198] | +0.0073 [+0.0053, +0.0093] | 3/3 | 3/3 |
-| **depth-only HGBT (selected α=0.25)** | -0.0062 [-0.0100, -0.0031] | -0.0025 [-0.0045, -0.0012] | 0/3 | 0/3 |
-| depth logistic | +0.0047 [+0.0011, +0.0098] | +0.0028 [+0.0012, +0.0052] | 3/3 | 3/3 |
-| depth KNN (k=31, α=0.5) | -0.0005 [-0.0053, +0.0061] | -0.0001 [-0.0026, +0.0028] | 1/3 | 1/3 |
+| **position-only HGBT (selected α=0.25)** | -0.0062 [-0.0100, -0.0031] | -0.0025 [-0.0045, -0.0012] | 0/3 | 0/3 |
+| position logistic | +0.0047 [+0.0011, +0.0098] | +0.0028 [+0.0012, +0.0052] | 3/3 | 3/3 |
+| position KNN (k=31, α=0.5) | -0.0005 [-0.0053, +0.0061] | -0.0001 [-0.0026, +0.0028] | 1/3 | 1/3 |
 | molecular KNN (k=31, α=0.1) | +0.0456 [+0.0359, +0.0519] | +0.0206 [+0.0160, +0.0237] | 3/3 | 3/3 |
 | matched KNN (k=31, α=0.1) | +0.0194 [+0.0118, +0.0271] | +0.0088 [+0.0054, +0.0120] | 3/3 | 3/3 |
-| copy-1NN depth (α=0.5) | +0.1025 [+0.0979, +0.1096] | +0.0441 [+0.0417, +0.0472] | 3/3 | 3/3 |
+| copy-1NN position (α=0.5) | +0.1025 [+0.0979, +0.1096] | +0.0441 [+0.0417, +0.0472] | 3/3 | 3/3 |
 | copy-1NN matched (α=0.5) | +0.1314 [+0.1294, +0.1351] | +0.0567 [+0.0551, +0.0587] | 3/3 | 3/3 |
 | training frequency | +0.0337 [+0.0258, +0.0404] | +0.0156 [+0.0115, +0.0186] | 3/3 | 3/3 |
 | constant 0.5 | +0.0804 [+0.0790, +0.0819] | +0.0386 [+0.0384, +0.0390] | 3/3 | 3/3 |
@@ -210,20 +214,20 @@ Control minus candidate: positive means the nonlinear model is better.
 | comparator | mean log-loss diff [range] | mean Brier diff [range] | cases candidate lower log loss | cases Brier not higher |
 |---|---|---|---|---|
 | frozen logistic, operational (C=0.1, α=0.1) | +0.0068 [-0.0075, +0.0239] | +0.0030 [-0.0030, +0.0093] | 8/12 | 8/12 |
-| **depth-only HGBT (selected α=0.25)** | +0.0246 [-0.0115, +0.0926] | +0.0113 [-0.0055, +0.0429] | 6/12 | 6/12 |
-| depth logistic | +0.0270 [-0.0131, +0.0982] | +0.0125 [-0.0062, +0.0446] | 9/12 | 9/12 |
-| depth KNN (k=31, α=0.5) | +0.0238 [-0.0175, +0.0976] | +0.0109 [-0.0084, +0.0444] | 7/12 | 7/12 |
+| **position-only HGBT (selected α=0.25)** | +0.0246 [-0.0115, +0.0926] | +0.0113 [-0.0055, +0.0429] | 6/12 | 6/12 |
+| position logistic | +0.0270 [-0.0131, +0.0982] | +0.0125 [-0.0062, +0.0446] | 9/12 | 9/12 |
+| position KNN (k=31, α=0.5) | +0.0238 [-0.0175, +0.0976] | +0.0109 [-0.0084, +0.0444] | 7/12 | 7/12 |
 | molecular KNN (k=31, α=0.1) | +0.0110 [-0.0139, +0.0519] | +0.0048 [-0.0067, +0.0237] | 9/12 | 7/12 |
 | matched KNN (k=31, α=0.1) | +0.0024 [-0.0128, +0.0271] | +0.0012 [-0.0055, +0.0120] | 7/12 | 7/12 |
-| copy-1NN depth (α=0.5) | +0.1546 [+0.0979, +0.2234] | +0.0678 [+0.0417, +0.0998] | 12/12 | 12/12 |
+| copy-1NN position (α=0.5) | +0.1546 [+0.0979, +0.2234] | +0.0678 [+0.0417, +0.0998] | 12/12 | 12/12 |
 | copy-1NN matched (α=0.5) | +0.1166 [+0.0929, +0.1511] | +0.0507 [+0.0415, +0.0651] | 12/12 | 12/12 |
 | training frequency | +0.0357 [-0.0206, +0.1074] | +0.0164 [-0.0099, +0.0491] | 9/12 | 9/12 |
 | constant 0.5 | +0.0607 [-0.0198, +0.1240] | +0.0288 [-0.0095, +0.0574] | 9/12 | 9/12 |
 
 ### Reading the failures
 
-* **location_only:** projection depends on position alone, and a depth-only model wins.
-  * Depth-only HGBT beats the gene + depth model in all 3 seeds, by −0.0062 log loss on average.
+* **location_only:** projection depends on position alone, and a position-only model wins.
+  * Position-only HGBT beats the gene + position model in all 3 seeds, by −0.0062 log loss on average.
   * Extra gene inputs only add noise here.
 * **complementarity:** matched-input KNN wins all 3 seeds (−0.0103 log loss on average).
   * The frozen logistic model also wins 2 of 3.
@@ -231,9 +235,9 @@ Control minus candidate: positive means the nonlinear model is better.
 * **latent_unobserved:** the signal comes from a hidden state, so nothing observed predicts it.
   * The expected best observable risk is that of the constant 0.5: log loss log 2 ≈ 0.6931, Brier 0.25.
   * The constant 0.5 or training frequency gives the lowest log loss in every seed.
-  * The nonlinear model overfits slightly (0.704–0.713), and depth-only models also beat it.
+  * The nonlinear model overfits slightly (0.704–0.713), and position-only models also beat it.
 * **batch_shift_missing:** the gate was met in 2 of 3 seeds.
-  * It beats the frozen logistic model and all depth and copy controls in 3 of 3.
+  * It beats the frozen logistic model and all position and copy controls in 3 of 3.
   * It roughly ties molecular and matched KNN, which win seed 876243. The result is not consistent.
 
 **Overall:**
