@@ -1,0 +1,7 @@
+{
+  "status": "UNSENT_REQUIRES_USER_AUTHORIZATION",
+  "repository": "stuberlab/Rossi-et-al-2021",
+  "repository_url": "https://github.com/stuberlab/Rossi-et-al-2021",
+  "title": "Availability of per-cell HCR tables and sample metadata for Figure 3",
+  "body": "Hello,\n\nI am checking whether the paired molecular and projection measurements in Rossi et al. (2021) can support an evaluation across independent animals for a computational reconstruction project.\n\nThe Figure 3 HCR notebook references the AG09_C1/C2, AG10_A2 and AG11_C1/C2 HALO quantification exports, as well as HCR_data.csv. I could not find those tables in the repository or the GEO deposit. Is there a public location for the per-cell tables, including the mouse/section identifiers, gene and reporter counts, coordinate metadata, and final QC/reporter thresholds? A public data pointer would be ideal.\n\nGSE169176 describes three pools, each containing two animals. Could you also clarify whether the pools contain disjoint animals and whether a pool-to-animal mapping is available? If additional independent HCR animals or tracer-counterbalanced samples are available, a pointer would help assess whether a sufficiently powered validation is feasible.\n\nPlease also indicate the applicable data reuse terms. We would retain double-labelled and unlabelled cells as separate statuses rather than treating lack of reporter detection as proof of no projection.\n\nThank you."
+}

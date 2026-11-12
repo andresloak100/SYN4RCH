@@ -117,3 +117,26 @@ destination contrast.
 
 The GEO and GitHub API responses can change over time, so a re-fetch may give different hashes. The values above
 are from this run.
+
+## ROOT verification
+
+**Result: PASS.** ROOT independently checked the following and found them all correct:
+* all 10 cached source hashes and the code pin;
+* its own parse of GEO, which gives three two-animal pools;
+* that the HCR tables are missing from the pinned repo;
+* Luo's actual methods, including the eGFP-positive statements;
+* that the contract copy is unchanged;
+* that the old test and the v1/v2 result hashes are unchanged.
+
+ROOT ran the 9 tests itself, and all passed.
+
+**Receipt:** `data/interim/paired_projection_data_admission_root/check.json`, SHA-256
+`82a55d6554ce9cf609e868f5fb7f1067518ef5cfc651b37c4ba92d5def0612e9`.
+
+**Contract:** it stays ADMISSION_ONLY. No model run is justified.
+
+**Public request draft:** ROOT's draft GitHub issue is `docs/paired_projection_public_data_request.json`, SHA-256
+`009e5be6a2f717531c68e524da489132863f672f760841b251d681f433cf211b`.
+* Status: UNSENT_REQUIRES_USER_AUTHORIZATION.
+* It has not been posted, and no one has been contacted.
+* If the user approves a post, ROOT will make it separately.
