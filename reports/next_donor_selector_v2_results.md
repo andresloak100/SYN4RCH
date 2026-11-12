@@ -1,7 +1,8 @@
 # Next donor selector v2: DEVELOPMENT result (TRAIN nested CV)
 
 **This is a development result, not an unseen test.** The 101 TRAIN brain samples have already informed the design.
-The 25 validation and 40 test samples were not opened or scored. Any claim needs fresh independent data.
+The 25 validation and 40 test samples (already opened by the closed E4 evaluation) were NOT REOPENED and not
+scored by this experiment. Any claim needs fresh independent data.
 
 * **Protocol:** `reports/next_donor_selector_v2_protocol.md` (FINAL, SHA-256 `fbd05b06…`).
 * **Code:** `analysis/next_donor_selector_v2.py` (`90567075…`). **Tests:** `tests/test_next_donor_selector_v2.py` (`5dfe55c2…`, 14 passed).
@@ -34,7 +35,7 @@ The 25 validation and 40 test samples were not opened or scored. Any claim needs
 | local_nearest / local_label_nearest | 783.4 / 760.1 | 0.2222 / 0.2262 |
 | switch_nearest / switch_random | 689.3 / 688.7 | 0.2518 / 0.2479 |
 | permuted_labels | 758.4 | 0.2266 |
-| oracle best of 16 (truth-informed ceiling, descriptive) | 397.0 | 0.3838 |
+| oracle best of 16 by truth distance (descriptive; distance ceiling only, its F1 is not an F1 ceiling) | 397.0 | 0.3838 |
 
 Selector minus control. Brackets are paired brain-sample bootstrap 95% intervals (10,000 draws). Negative distance
 and positive F1 favour the selector.
@@ -96,15 +97,19 @@ and positive F1 favour the selector.
 
 **Wording limitation (disclosed, protocol not edited during the run).** The protocol says distal coordinates are
 "preserved exactly". That holds only when the compact attachment succeeds (500 or 1,000 µm). The translation
-fallback moves the whole arbor rigidly to the table soma. That happened for 60 selector forecasts, 60–71 for the
-local methods, and every copy.
+fallback moves the whole arbor rigidly to the table soma. That happened for 60 selector forecasts, for the other local
+methods as counted in the table above (7 for local_nearest, 41 for switch_nearest, 64–71 for the rest), and for every
+copy.
 
 ## Caveats
 
 * Development only: TRAIN informed the design, so this is not evidence of generalisation.
 * The distance improvement over E1/E2 is not established: all three intervals cross zero, and against E2 it is a tie.
 * The F1 improvement is small and not resolved against E2.
-* The oracle gap (397 µm) shows room remains, but the permitted inputs recover little of it.
+* The oracle picks the candidate with the lowest truth distance; its 397 µm shows distance room remains, which the
+  permitted inputs recover little of. Its F1 (0.3838) is only the F1 of that distance-chosen donor, not an F1 ceiling.
+* Isolation: the TRAIN labels are shared on disk across fit calls; each fit is isolated by code guards (the fit-only
+  door and its probe), not by operating-system blindness to those files.
 * Labels are exact recomputations for the emitted geometry. Cached D was used only for the medoids and centrality.
   Parity with the engine's committed development forecasts: E1/E2 donors 919/919, copy donors 3,676/3,676, and 240
   of 240 arrays checked, with bit-identical metrics.
@@ -124,3 +129,16 @@ local methods, and every copy.
 
 Also in that folder: `labels_fit.jsonl` (186,757 exact fit labels), `labels_score.jsonl` (91,941 outer scoring pairs),
 `run.log` (progress), and `donor_summaries.npz`.
+
+## ROOT verification (reporting-only update)
+
+ROOT independently checked the following and found the arithmetic agrees within 2.3e-13. No refit and no rescore.
+* all 91,941 saved score pairs and all 4,368 forecasts;
+* the sample means and the exact fallback arrays;
+* the source pins and the old test hash.
+
+Receipt: `data/interim/next_donor_selector_v2/root_arithmetic_gate_check.json`, SHA-256 `6910aa551f286c015e7d3ff0d1de595133d76bc0c23d2ae605f91593ed37271e`.
+
+**Conclusion:** a tiny, unresolved DEVELOPMENT gain. This is not a validated joint win, and there is no viewer
+promotion. The website stays parked, and no further model search is planned now. The frozen code, protocol and run
+outputs are unchanged.
