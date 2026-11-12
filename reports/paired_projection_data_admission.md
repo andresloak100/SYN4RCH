@@ -16,11 +16,18 @@ contract is `data/interim/paired_projection_v1/test_contract_draft.json`.
 * Excluded on instruction:
   * Kim 2019 VMHvl, the closed pilot;
   * Li 2026 PVH, which ROOT has already marked unqualified.
-* Code: `analysis/paired_projection_data_admission.py` (SHA-256 `da570875…`). The `cached` mode re-audits from
-  `raw/` after checking each fetch hash.
-* Tests: `tests/test_paired_projection_data_admission.py` (`f5f30a13…`), 7 passing.
-* Output: `data/interim/paired_projection_data_admission/admission.json`, corrected (`e10d1522…`; the first
-  version was `f32aa182…`), with the raw copies in `raw/`.
+* Code: `analysis/paired_projection_data_admission.py` (SHA-256 `acb52e10…`).
+  * The `cached` mode re-audits from `raw/` after checking each fetch hash.
+  * Only per-cell HCR file names count as found HCR data: HALO `*_quant.xlsx` exports or `HCR_data.csv`. RNA DEG or
+    Seurat CSVs never count.
+  * Finding such a file can only move a source to PENDING. It never verifies cell pairs.
+* Tests: `tests/test_paired_projection_data_admission.py` (`93626f48…`), 9 passing. They include a fixture where an RNA
+  DEG CSV is present and the verdict is still REJECT.
+* Output: `data/interim/paired_projection_data_admission/admission.json` (`0f0316be…`), with the raw copies in
+  `raw/`. Earlier versions were `f32aa182…` and `e10d1522…`.
+* ROOT's admission-only contract draft is `docs/paired_projection_test_contract.json` (`1dec9a86…`). It authorizes
+  no evaluation.
+* The data request stays unsent until the user authorizes it.
 
 ## 1. Rossi et al. 2021, LHA Vglut2 -> LHb / VTA: REJECT
 

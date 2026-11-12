@@ -90,5 +90,19 @@ def test_public_hcr_tables_only_move_to_pending_never_admit():
     assert r['rossi2021_lha']['verdict'] == 'PENDING'
 
 
+def test_rna_deg_csv_in_repo_does_not_count_as_hcr():
+    nbf = ('AG09_C1_quant.xlsx', 'YFPvTOM_DEGs_ALL_UPDATED210130.csv', 'HCR_data.csv')
+    r = A.audit(raw(['out/YFPvTOM_DEGs_ALL_UPDATED210130.csv',
+                     'Seurat_SCT_YFP_Cells_subset_genes_UPDATED210130.csv'], nb_files=nbf))
+    assert r['rossi2021_lha']['verdict'] == 'REJECT'
+    assert r['rossi2021_lha']['hcr_candidate_files_found'] == []
+
+
+def test_hcr_candidate_names():
+    assert A.is_hcr_candidate('AG10_A2_quant.xlsx') and A.is_hcr_candidate('HCR_data.csv')
+    assert not A.is_hcr_candidate('HRC_seurat_deg_output.csv')
+    assert not A.is_hcr_candidate('Correlate_logFC_SEQvHCR.csv')
+
+
 def test_fetch_cap_is_50mb():
     assert A.MAX_BYTES == 50 * 1024 * 1024

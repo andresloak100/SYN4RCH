@@ -1,0 +1,100 @@
+{
+  "actions_performed": "Contract design only; no new molecular model fitted and no old evaluation data reopened",
+  "candidate": {
+    "configuration": "Must be finalized and committed before any candidate fitting or evaluation",
+    "family": "One regularized logistic model after admission",
+    "preprocessing": "Fit-only or separately declared calibration groups; no labelled evaluation scaling, tuning, prior adjustment or calibration"
+  },
+  "candidate_question": {
+    "endpoint": "Captured LHb-only versus VTA-only retrograde label among singly labelled eligible neurons",
+    "not_claimed": [
+      "absolute projection probability",
+      "absence of other projections",
+      "complete axon paths",
+      "synaptic circuit reconstruction",
+      "de novo biological discovery"
+    ],
+    "population": "Lateral hypothalamic neurons, subject to verified source eligibility"
+  },
+  "current_feasibility_limits": {
+    "closed_sources": [
+      "Kim2019 VMHvl pilot",
+      "Jiao validation and test cohorts",
+      "axon completion v1 and v2"
+    ],
+    "fresh_geometry": "MouseLight trace geometry stays unopened",
+    "rossi_hcr": "Three reported animals may support feasibility; independent identity, public per-cell files, assay transfer and confirmatory power remain to be established",
+    "rossi_rna": "GEO describes three two-animal RNA pools, while the paper uses ambiguous all-animals pooling wording. Distinct pools may support pool-level biological replication if disjoint membership is established; six recoverable individual-animal groups are not established",
+    "three_animal_sign_resolution": "Even all three animal differences favouring a method gives one-sided exact sign-test p=1/8, not population-level confirmation at 0.05"
+  },
+  "objective": "Test whether measured molecular features improve prediction of captured projection labels for a declared hypothalamic population in independent animals.",
+  "permitted_features": {
+    "candidate_fixed_genes_if_rossi_admitted": [
+      "Pax6",
+      "Sostdc1",
+      "Slc32a1",
+      "Slc17a6",
+      "Nptx2",
+      "Pdyn",
+      "Pitx2"
+    ],
+    "excluded": [
+      "reporter and vector genes",
+      "target labels",
+      "target-derived cell classes",
+      "animal/run/section IDs as identity predictors",
+      "hidden geometry",
+      "Jiao or MouseLight trace matches inferred from type labels"
+    ],
+    "location": "Only actual measured location, when available for fitting and evaluation cells",
+    "molecular": "Only endogenous genes measured in each admitted assay"
+  },
+  "required_admission_evidence": [
+    "Exact unique cell identifiers linking measured endogenous genes to measured reporter labels",
+    "Explicit animal identifiers or explicit pooling membership; technical reactions are not biological replicates",
+    "Documented assayed targets, reporter/QC thresholds and double-labelled/unlabelled statuses",
+    "Evaluation animals independent of fitting and calibration animals, with study reuse aliases checked",
+    "Target, tracer/promoter, sex and technical-batch relationships documented; confounding limits identified",
+    "Actual per-cell source coordinates before any beyond-location claim",
+    "Accessible data files, source versions, hashes and applicable reuse terms",
+    "Compatible assays or a locked cross-assay representation established outside labelled evaluation cells",
+    "Prospective animal-level power sufficient for the complete declared comparison rule"
+  ],
+  "required_controls": [
+    "Constant probability 0.5",
+    "Fitting-population frequency",
+    "Measured technical-variable control with endogenous genes excluded",
+    "Measured source location and valid coarse identity control, when available",
+    "Molecular nearest-neighbour voting under fitting-only preprocessing"
+  ],
+  "sampling_rules": {
+    "double_labelled": "Preserve a separate observed status; not silently assigned to either exclusive class",
+    "prediction_population": "Condition probabilities on the declared retrograde sampling scheme",
+    "source_position": "Measured coordinates only; no nearest-atlas-cell coordinates substituted as measured",
+    "two_cell_tube": "A pooled tube is the measured sample; it cannot be represented as individually paired cells",
+    "unlabelled": "Unknown or not captured under this assay, not a verified absence of projection"
+  },
+  "schema": "synarch_paired_projection_test_contract_v1",
+  "scoring": {
+    "aggregation": "Cells within animal, then animals equally; preserve every declared prediction and failure",
+    "calibration": "Report intercept/slope and fixed-bin reliability with animal-level uncertainty; no refit on evaluation labels",
+    "current_margins_and_power": "UNRESOLVED: no evaluation is authorized under this draft",
+    "pass_rule": "Before fitting, finalize practical margins, familywise inference, and prospective joint power of at least 80%; require both proper scores to improve over every required control",
+    "primary": [
+      "Brier score",
+      "log loss"
+    ],
+    "secondary": [
+      "discrimination",
+      "target-specific precision and recall"
+    ]
+  },
+  "status": "ADMISSION_ONLY_NOT_A_FROZEN_EXPERIMENT",
+  "stop_before_fitting_if": [
+    "Any required pairing, biological-unit, assay-mask or independence evidence is unresolved",
+    "Cross-assay normalization or calibration needs labelled evaluation data",
+    "Only cell-random splits or technical replicate splits can be constructed",
+    "Independent animal-level power is inadequate or cannot be justified",
+    "Source terms or availability do not support the intended analysis"
+  ]
+}

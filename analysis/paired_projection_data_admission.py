@@ -130,6 +130,14 @@ UNRETRIEVED = ['PMC supplement NIHMS1771318-supplement-1.pdf (empty body to a sc
                'not open access)', 'publisher (Cell Press) supplementary files (not attempted)']
 
 
+HCR_CANDIDATE = re.compile(r'^(?:AG\d+_[A-Z]\d+_quant\.xlsx|.*_quant\.xlsx|HCR_data\.csv)$')
+
+
+def is_hcr_candidate(name):
+    """True only for per-cell HCR table names (HALO *_quant.xlsx or HCR_data.csv)."""
+    return bool(HCR_CANDIDATE.match(name))
+
+
 def audit(raw):
     """raw: dict name -> text. Returns the facts and the verdicts."""
     geo = parse_geo_soft(raw['rossi_geo_soft'])
@@ -141,7 +149,10 @@ def audit(raw):
     lt = plain_text(raw['luo_pmc_xml'])
     repo_files = [x['path'] for x in tree.get('tree', []) if x['type'] == 'blob']
     data_like = [p for p in repo_files if re.search(r'\.(xlsx|csv|tsv|h5|h5ad|rds|mat|npy|zip)$', p, re.I)]
-    hcr_found = any(Path(f).name in nb['input_files'] for f in repo_files)
+    # Only per-cell HCR candidates count: HALO '*_quant.xlsx' exports or HCR_data.csv. RNA DEG/Seurat CSVs never
+    # count. Presence alone can only move the verdict to PENDING; it never verifies cell pairs.
+    hcr_candidates = sorted(f for f in repo_files if is_hcr_candidate(Path(f).name))
+    hcr_found = bool(hcr_candidates)
     two_animal_pools = sum('two animals' in s.get('description', '') for s in geo['samples'])
     rossi = {
         'citation': 'Rossi MA et al. Neuron 109:3823-3837.e6 (2021). DOI 10.1016/j.neuron.2021.09.020; PMC8812999',
@@ -152,6 +163,7 @@ def audit(raw):
         'github_repo_files': repo_files, 'github_data_like_files': data_like,
         'hcr_notebook': nb,
         'hcr_input_tables_found_in_checked_sources': hcr_found,
+        'hcr_candidate_files_found': hcr_candidates,
         'checked_sources_for_hcr_inputs': CHECKED_FOR_HCR, 'unretrieved_sources': UNRETRIEVED,
         'epmc_supp_response': raw['rossi_epmc_supp'][:300],
         'quotes': {k: quote(rt, p, n) for k, (p, n) in {
